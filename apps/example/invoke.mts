@@ -69,6 +69,7 @@ async function invokeStep(
     body: JSON.stringify({ arguments: args }),
   });
   const body = await res.json();
+
   if (res.status === 200) {
     console.log("Step completed", body);
     return body;
