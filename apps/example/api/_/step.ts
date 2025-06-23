@@ -16,8 +16,13 @@ export function useStep<Args extends unknown[], Result>(stepId: string) {
         const stepIndex = globalThis[STEP_INDEX]++;
         const event = globalThis[STATE][stepIndex];
         if (event) {
-            // Step has already completed
-            return event.result;
+            if (event.error) {
+                // Step failed - bubble up to workflow
+                throw new Error(event.error);
+            } else {
+                // Step has already completed
+                return event.result;
+            }
         } else {
             // Notify orchestrator that this step has not been run
             throw Response.json({
