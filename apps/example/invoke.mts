@@ -2,85 +2,85 @@
  * This script is a simple CLI "orchestrator" for the workflow which
  * is ran locally and in-memory.
  */
-const baseURL = 'https://w-uncurated-tests.vercel.app/api/';
+const baseURL = "https://w-uncurated-tests.vercel.app/api/";
 
 interface WorkflowTriggerEvent {
-    arguments: unknown[];
+  t: number;
+  arguments: unknown[];
 }
 
-interface WorkflowStepResult {
-    result: unknown;
+interface WorkflowStepEvent {
+  t: number;
+  result: unknown;
 }
 
-interface WorkflowStepFatalError {
-    error: string;
-    stack?: string;
-    fatal: true;
-}
-
-type WorkflowEvent = { t: number } & (WorkflowTriggerEvent | WorkflowStepResult | WorkflowStepFatalError);
+type WorkflowEvent = WorkflowTriggerEvent | WorkflowStepEvent;
 
 interface WorkflowInvokePayload {
-    runId: string;
-    state: WorkflowEvent[];
+  runId: string;
+  state: WorkflowEvent[];
 }
 
-async function invokeWorkflow(baseURL: string, payload: WorkflowInvokePayload): Promise<unknown> {
-    const res = await fetch(baseURL, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
+const payload: WorkflowInvokePayload = {
+  runId: crypto.randomUUID(),
+  state: [{ t: Date.now(), arguments: [10] }],
+};
+
+async function invokeWorkflow(baseURL: string, payload: WorkflowInvokePayload) {
+  const res = await fetch(baseURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+while (true) {
+  const res = await fetch(baseURL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const body = await res.json();
+  console.log(res.status, body);
+
+  if (res.status === 200) {
+    // Workflow completed
+    console.log("Workflow completed", body);
+    break;
+  } else if (res.status === 409) {
+    // Need to invoke user step
+    console.log("Invoking user step", body);
+    const stepRes = await fetch(new URL(body.stepId, baseURL), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ arguments: body.arguments }),
     });
-    const body = await res.json();
-
-    if (res.status === 200) {
-        // Workflow completed
-        console.log('Workflow completed', body);
-        return body.result;
-    } else if (res.status === 409) {
-        const result = await invokeStep(baseURL, body.stepId, body.arguments);
-        payload.state.push({ t: Date.now(), ...result });
+    const stepBody = await stepRes.json();
+    if (stepRes.status === 200) {
+      payload.state.push({ t: Date.now(), result: stepBody.result });
+      console.log(stepRes.status, stepBody);
+    } else if (stepRes.status === 500) {
+      // Step failed - retry by default, unless `fatal: true`
+      // in which case we need to bubble up to the workflow
+      console.log("Step failed", stepBody);
+      payload.state.push({
+        t: Date.now(),
+        error: stepBody.error,
+        stack: stepBody.stack,
+        fatal: stepBody.fatal,
+      });
+      console.log(stepRes.status, stepBody);
     } else {
-        throw new Error(`Unexpected status: ${res.status}`);
+      throw new Error(`Unexpected status: ${stepRes.status}`);
     }
-
-    return invokeWorkflow(baseURL, payload);
+  } else {
+    throw new Error(`Unexpected status: ${res.status}`);
+  }
 }
-
-async function invokeStep(baseURL: string, stepId: string, args: unknown[]): Promise<WorkflowStepResult | WorkflowStepFatalError> {
-    const res = await fetch(new URL(stepId, baseURL), {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ arguments: args }),
-    });
-    const body = await res.json();
-    if (res.status === 200) {
-        console.log('Step completed', body);
-        return body;
-    } else if (res.status === 500) {
-        // Step failed - retry by default, unless `fatal: true`
-        // in which case we need to bubble up to the workflow
-        console.log('Step failed', body);
-        if (body.fatal) {
-            return body;
-        } else {
-            return invokeStep(baseURL, stepId, args);
-        }
-    } else {
-        throw new Error(`Unexpected status: ${res.status}`);
-    }
-}
-
-const input = parseInt(process.argv[2], 10) || 6;
-
-const result = await invokeWorkflow(baseURL, {
-    runId: crypto.randomUUID(),
-    state: [
-        { t: Date.now(), arguments: [input] },
-    ]
-});
-console.log('Result', result);
