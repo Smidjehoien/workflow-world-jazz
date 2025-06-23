@@ -1,7 +1,3 @@
-# @vercel/workflow
+# Workflows
 
-## Local Dev
-
-```bash
-$ vc link --repo --yes --scope uncurated-tests
-```
+Vercel workflow monorepo
