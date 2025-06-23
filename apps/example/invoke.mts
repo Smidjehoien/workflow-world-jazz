@@ -1,3 +1,7 @@
+/**
+ * This script is a simple CLI "orchestrator" for the workflow which
+ * is ran locally and in-memory.
+ */
 const baseURL = 'https://w-uncurated-tests.vercel.app/api/';
 
 interface WorkflowTriggerEvent {
@@ -23,6 +27,16 @@ const payload: WorkflowInvokePayload = {
         { t: Date.now(), arguments: [10] },
     ]
 };
+
+async function invokeWorkflow(baseURL: string, payload: WorkflowInvokePayload) {
+    const res = await fetch(baseURL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+    });
+}
 
 while (true) {
     const res = await fetch(baseURL, {
@@ -55,10 +69,15 @@ while (true) {
             payload.state.push({ t: Date.now(), result: stepBody.result });
             console.log(stepRes.status, stepBody);
         } else if (stepRes.status === 500) {
-            // Step failed, retry by default, unless `fatal: true`
+            // Step failed - retry by default, unless `fatal: true`
             // in which case we need to bubble up to the workflow
             console.log('Step failed', stepBody);
-            payload.state.push({ t: Date.now(), error: stepBody.error, stack: stepBody.stack, fatal: stepBody.fatal });
+            payload.state.push({
+                t: Date.now(),
+                error: stepBody.error,
+                stack: stepBody.stack,
+                fatal: stepBody.fatal,
+            });
             console.log(stepRes.status, stepBody);
         } else {
             throw new Error(`Unexpected status: ${stepRes.status}`);
