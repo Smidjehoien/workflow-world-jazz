@@ -1,4 +1,4 @@
-import { STATE, STEP_INDEX } from "./global";
+import { FatalError, STATE, STEP_INDEX } from "./global";
 
 /**
  * Generates a "step wrapper" function that can be used to invoke a step
@@ -18,6 +18,9 @@ export function useStep<Args extends unknown[], Result>(stepId: string) {
     if (event) {
       if (event.error) {
         // Step failed - bubble up to workflow
+        if (event.fatal) {
+          throw new FatalError(event.error);
+        }
         throw new Error(event.error);
       } else {
         // Step has already completed
