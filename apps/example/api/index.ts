@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       {
         error: err instanceof Error ? err.message : String(err),
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

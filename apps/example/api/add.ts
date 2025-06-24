@@ -25,7 +25,7 @@ export async function POST(req: Request) {
         stack: err instanceof Error ? err.stack : undefined,
         fatal: err instanceof FatalError ? true : undefined,
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

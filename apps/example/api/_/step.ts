@@ -33,7 +33,7 @@ export function useStep<Args extends unknown[], Result>(stepId: string) {
           stepId,
           arguments: args,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
   };

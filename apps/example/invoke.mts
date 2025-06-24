@@ -31,7 +31,7 @@ interface WorkflowInvokePayload {
 
 async function invokeWorkflow(
   baseURL: string,
-  payload: WorkflowInvokePayload,
+  payload: WorkflowInvokePayload
 ): Promise<unknown> {
   const res = await fetch(baseURL, {
     method: "POST",
@@ -59,7 +59,7 @@ async function invokeWorkflow(
 async function invokeStep(
   baseURL: string,
   stepId: string,
-  args: unknown[],
+  args: unknown[]
 ): Promise<WorkflowStepResult | WorkflowStepFatalError> {
   const res = await fetch(new URL(stepId, baseURL), {
     method: "POST",
