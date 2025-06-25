@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
+    "build": "mkdir -p public && echo 'Hello, world!' > public/index.html",
     "invoke": "node invoke.mts"
   },
   "devDependencies": {
