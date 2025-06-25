@@ -1,7 +1,7 @@
 import {
-  createContext as vmCreateContext,
-  runInContext,
   type Context,
+  runInContext,
+  createContext as vmCreateContext,
 } from 'node:vm';
 import seedrandom from 'seedrandom';
 

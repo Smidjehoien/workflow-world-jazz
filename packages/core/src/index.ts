@@ -2,6 +2,7 @@ import { runInContext } from 'node:vm';
 import { handleCallback, send } from '@vercel/queue';
 import { createContext } from '@vercel/workflow-vm';
 import { STATE, STEP_INDEX } from './global';
+import type { WorkflowInvokePayload } from './schemas';
 
 const WORKFLOW_TOPIC = 'workflow';
 
@@ -65,8 +66,10 @@ export async function start(workflowId: string, options: StartOptions = {}) {
 
 export function handleWorkflow(workflowCode: string, workflowName: string) {
   return handleCallback({
-    async [WORKFLOW_TOPIC](message, metadata) {
+    async [WORKFLOW_TOPIC](message_, metadata) {
       // TODO: validate `message` schema
+      const message = message_ as WorkflowInvokePayload;
+
       console.log('Received workflow message:', message, metadata);
 
       const context = createContext({
@@ -74,7 +77,9 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
         fixedTimestamp: message.state[0].t,
       });
 
+      // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
       context[STATE] = message.state;
+      // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
       context[STEP_INDEX] = 1;
 
       // Consume starting step

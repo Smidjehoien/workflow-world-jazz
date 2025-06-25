@@ -1,5 +1,5 @@
 {
-  "name": "@vercel/workflow-vm",
+  "name": "@vercel/workflow-cli",
   "version": "0.0.0",
   "type": "module",
   "bin": {
