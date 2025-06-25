@@ -2,12 +2,12 @@
  * Global state that is shared between the workflow wrapper
  * and the step stub functions.
  */
-export const STATE = Symbol('STATE');
+export const STATE = Symbol.for('STATE');
 
 /**
  * The index of the current step of the running workflow.
  */
-export const STEP_INDEX = Symbol('STEP_INDEX');
+export const STEP_INDEX = Symbol.for('STEP_INDEX');
 
 /**
  * A fatal error is an error that cannot be retried.

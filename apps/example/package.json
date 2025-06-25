@@ -7,7 +7,8 @@
     "invoke": "node invoke.mts"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3"
+    "@types/node": "^24.0.3",
+    "esbuild": "^0.25.5"
   },
   "dependencies": {
     "@vercel/functions": "^2.2.2",

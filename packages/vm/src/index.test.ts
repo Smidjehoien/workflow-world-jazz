@@ -121,4 +121,15 @@ describe('createContext', () => {
     );
     expect(fooValue).toEqual('bar');
   });
+
+  it('should allow setting a Symbol.for on the globalThis object', async () => {
+    const context = createContext({ seed, fixedTimestamp });
+    const symbol = Symbol.for('foo');
+
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    context[symbol] = 'bar';
+
+    const fooValue = vm.runInContext(`globalThis[Symbol.for('foo')]`, context);
+    expect(fooValue).toEqual('bar');
+  });
 });

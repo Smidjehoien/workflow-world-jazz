@@ -11,10 +11,13 @@ import { FatalError, STATE, STEP_INDEX } from './global';
  * @param stepId - The ID of the step to invoke.
  * @returns A function that can be used to invoke the step.
  */
-export function useStep<Args extends unknown[], Result>(stepId: string) {
+export function useStep<Args extends unknown[], Result>(
+  stepId: string,
+  context: any = globalThis
+) {
   return async (...args: Args): Promise<Result> => {
-    const stepIndex = globalThis[STEP_INDEX]++;
-    const event = globalThis[STATE][stepIndex];
+    const stepIndex = context[STEP_INDEX]++;
+    const event = context[STATE][stepIndex];
     if (event) {
       if (event.error) {
         // Step failed - bubble up to workflow

@@ -59,7 +59,7 @@ export async function start(workflowId: string, options: StartOptions = {}) {
     },
   });
   console.log('Sent workflow message:', messageId);
-  return runId;
+  return { runId };
 }
 
 // ---------------------------------------------------------
@@ -69,21 +69,19 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
     async [WORKFLOW_TOPIC](message_, metadata) {
       // TODO: validate `message` schema
       const message = message_ as WorkflowInvokePayload;
+      const initialState = message.state[0];
 
       console.log('Received workflow message:', message, metadata);
 
       const context = createContext({
         seed: message.runId,
-        fixedTimestamp: message.state[0].t,
+        fixedTimestamp: initialState.t,
       });
 
       // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
       context[STATE] = message.state;
       // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
       context[STEP_INDEX] = 1;
-
-      // Consume starting step
-      const initialState = message.state[0];
 
       // Invoke user workflow
       try {
@@ -110,3 +108,5 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
     },
   });
 }
+
+export function handleStep() {}

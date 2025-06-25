@@ -39,6 +39,9 @@ importers:
       '@types/node':
         specifier: ^24.0.3
         version: 24.0.3
+      esbuild:
+        specifier: ^0.25.5
+        version: 0.25.5
 
   packages/cli:
     dependencies:
