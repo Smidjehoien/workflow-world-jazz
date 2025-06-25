@@ -88,7 +88,7 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
       // Invoke user workflow
       try {
         const workflowFn = runInContext(
-          `(${workflowCode});${workflowName}`,
+          `${workflowCode};${workflowName}`,
           context
         );
         if (typeof workflowFn !== 'function') {
