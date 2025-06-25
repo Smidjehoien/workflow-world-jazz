@@ -1,4 +1,7 @@
+import { runInContext } from 'node:vm';
 import { handleCallback, send } from '@vercel/queue';
+import { createContext } from '@vercel/workflow-vm';
+import { STATE, STEP_INDEX } from './global';
 
 const WORKFLOW_TOPIC = 'workflow';
 
@@ -16,6 +19,9 @@ export interface StartOptions {
  */
 export async function start(workflowId: string, options: StartOptions = {}) {
   let baseUrl = options.baseUrl;
+
+  // Infer the base URL from the VERCEL_URL environment variable
+  // when no `baseUrl` option is provided.
   if (!options.baseUrl) {
     const vercelUrl = process.env.VERCEL_URL;
     if (!vercelUrl) {
@@ -23,27 +29,79 @@ export async function start(workflowId: string, options: StartOptions = {}) {
     }
     baseUrl = `https://${vercelUrl}`;
   }
-  const callbackUrl = new URL(`/api/workflows/${workflowId}`, baseUrl).href;
+
+  const callbackUrl = new URL(`/api/workflows/${workflowId}`, baseUrl);
+
+  // Add the protection bypass token to the callback URL
+  // when the `VERCEL_AUTOMATION_BYPASS_SECRET` environment variable is set
+  // and the `baseUrl` option is not provided.
+  if (!options.baseUrl) {
+    const vercelAutomationBypassSecret =
+      process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
+    if (vercelAutomationBypassSecret) {
+      callbackUrl.searchParams.set(
+        'x-vercel-protection-bypass',
+        vercelAutomationBypassSecret
+      );
+    }
+  }
+
   const runId = crypto.randomUUID();
   const initialState = {
     runId,
-    callbackUrl,
-    state: [[{ t: Date.now(), arguments: options.arguments ?? [] }]],
+    callbackUrl: callbackUrl.href,
+    state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
   };
-  await send(WORKFLOW_TOPIC, initialState, {
+  const { messageId } = await send(WORKFLOW_TOPIC, initialState, {
     callback: {
-      url: callbackUrl,
+      url: callbackUrl.href,
     },
   });
+  console.log('Sent workflow message:', messageId);
   return runId;
 }
 
 // ---------------------------------------------------------
 
-export function handleWorkflow() {
+export function handleWorkflow(workflowCode: string, workflowName: string) {
   return handleCallback({
-    [WORKFLOW_TOPIC]: (message, metadata) => {
+    async [WORKFLOW_TOPIC](message, metadata) {
+      // TODO: validate `message` schema
       console.log('Received workflow message:', message, metadata);
+
+      const context = createContext({
+        seed: message.runId,
+        fixedTimestamp: message.state[0].t,
+      });
+
+      context[STATE] = message.state;
+      context[STEP_INDEX] = 1;
+
+      // Consume starting step
+      const initialState = message.state[0];
+
+      // Invoke user workflow
+      try {
+        const workflowFn = runInContext(
+          `(${workflowCode});${workflowName}`,
+          context
+        );
+        if (typeof workflowFn !== 'function') {
+          throw new Error('Workflow code must be a function');
+        }
+        const result = await workflowFn(...initialState.arguments);
+        console.log({ result });
+        //return Response.json({ result });
+      } catch (err) {
+        console.log({ err });
+        //if (err instanceof Response) return err;
+        //return Response.json(
+        //  {
+        //    error: err instanceof Error ? err.message : String(err),
+        //  },
+        //  { status: 500 }
+        //);
+      }
     },
   });
 }

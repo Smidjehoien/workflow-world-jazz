@@ -73,6 +73,9 @@ importers:
       '@vercel/workflow-tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      '@vercel/workflow-vm':
+        specifier: workspace:*
+        version: link:../vm
 
   packages/tsconfig: {}
 

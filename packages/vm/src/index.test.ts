@@ -107,4 +107,18 @@ describe('createContext', () => {
       'hello,world,0.45558666071890863,1234567890000,26556528-6a20-4017-bbc9-a891206c6f69'
     );
   });
+
+  it('should allow setting a Symbol on the globalThis object', async () => {
+    const context = createContext({ seed, fixedTimestamp });
+    const symbol = Symbol('foo');
+
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    context[symbol] = 'bar';
+
+    const fooValue = vm.runInContext(
+      `const s = Object.getOwnPropertySymbols(globalThis)[0]; globalThis[s]`,
+      context
+    );
+    expect(fooValue).toEqual('bar');
+  });
 });
