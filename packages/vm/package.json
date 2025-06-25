@@ -1,7 +1,7 @@
 {
   "name": "@vercel/workflow-vm",
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

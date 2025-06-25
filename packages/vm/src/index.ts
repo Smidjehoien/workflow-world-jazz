@@ -1,4 +1,8 @@
-import * as vm from 'node:vm';
+import {
+  createContext as vmCreateContext,
+  runInContext,
+  type Context,
+} from 'node:vm';
 import seedrandom from 'seedrandom';
 
 export interface CreateContextOptions {
@@ -14,12 +18,12 @@ export interface CreateContextOptions {
  * @param options - The options for the context.
  * @returns The context.
  */
-export function createContext(options: CreateContextOptions): vm.Context {
+export function createContext(options: CreateContextOptions): Context {
   const { seed, fixedTimestamp } = options;
   const rng = seedrandom(seed);
-  const context = vm.createContext();
+  const context = vmCreateContext();
 
-  const g = vm.runInContext('globalThis', context);
+  const g = runInContext('globalThis', context);
 
   // Deterministic `Math.random()`
   g.Math.random = rng;

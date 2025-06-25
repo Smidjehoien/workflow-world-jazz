@@ -8,6 +8,7 @@ const fixedTimestamp = 1234567890000;
 describe('createContext', () => {
   it('should have a deterministic `Math.random()` function', () => {
     const context = createContext({ seed, fixedTimestamp });
+
     expect(vm.runInContext('Math.random()', context)).toEqual(
       0.45558666071890863
     );
@@ -51,42 +52,35 @@ describe('createContext', () => {
   it('should have deterministic `crypto.getRandomValues()`', () => {
     const context = createContext({ seed, fixedTimestamp });
 
-    // Test if crypto is available in the context
-    const hasCrypto = vm.runInContext('typeof crypto !== "undefined"', context);
-    if (hasCrypto) {
-      const result1 = vm.runInContext(
-        'crypto.getRandomValues(new Uint8Array(4))',
-        context
-      );
-      const result2 = vm.runInContext(
-        'crypto.getRandomValues(new Uint8Array(4))',
-        context
-      );
+    const result1 = vm.runInContext(
+      'crypto.getRandomValues(new Uint8Array(4))',
+      context
+    );
+    const result2 = vm.runInContext(
+      'crypto.getRandomValues(new Uint8Array(4))',
+      context
+    );
 
-      // Results should be arrays with same seed-based values
-      expect(Array.from(result1 as Uint8Array)).toEqual([116, 46, 96, 94]);
-      expect(Array.from(result2 as Uint8Array)).toEqual([95, 100, 80, 41]);
-    }
+    // Results should be arrays with same seed-based values
+    expect(Array.from(result1 as Uint8Array)).toEqual([116, 46, 96, 94]);
+    expect(Array.from(result2 as Uint8Array)).toEqual([95, 100, 80, 41]);
   });
 
   it('should have deterministic `crypto.randomUUID()`', () => {
     const context = createContext({ seed, fixedTimestamp });
 
-    const hasCrypto = vm.runInContext('typeof crypto !== "undefined"', context);
-    if (hasCrypto) {
-      const uuid1 = vm.runInContext('crypto.randomUUID()', context);
-      const uuid2 = vm.runInContext('crypto.randomUUID()', context);
+    const uuid1 = vm.runInContext('crypto.randomUUID()', context);
+    const uuid2 = vm.runInContext('crypto.randomUUID()', context);
 
-      expect(typeof uuid1).toBe('string');
-      expect(typeof uuid2).toBe('string');
-      expect(uuid1).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
-      );
-      expect(uuid2).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
-      );
-      expect(uuid1).not.toEqual(uuid2); // Should be different UUIDs
-    }
+    expect(uuid1).toBeTypeOf('string');
+    expect(uuid2).toBeTypeOf('string');
+    expect(uuid1).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
+    expect(uuid2).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+    );
+    expect(uuid1).not.toEqual(uuid2); // Should be different UUIDs
   });
 
   it('should maintain consistency across different context instances with same seed', () => {
@@ -109,7 +103,7 @@ describe('createContext', () => {
     const workflowFn = vm.runInContext(`${workflow};workflow`, context);
     expect(workflowFn).toBeTypeOf('function');
     expect(workflowFn).toBeInstanceOf(vm.runInContext('Function', context));
-    expect(await workflowFn('world')).toBe(
+    expect(await workflowFn('world')).toEqual(
       'hello,world,0.45558666071890863,1234567890000,26556528-6a20-4017-bbc9-a891206c6f69'
     );
   });

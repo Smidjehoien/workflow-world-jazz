@@ -1,9 +1,14 @@
 {
   "name": "workflow",
   "version": "0.0.0",
-  "type": "module",
+  "type": "commonjs",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "@vercel/queue": "0.0.0-alpha.4",
+    "@vercel/workflow-tsconfig": "workspace:*"
   }
 }
