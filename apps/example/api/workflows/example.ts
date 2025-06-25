@@ -1,7 +1,7 @@
 import { handleWorkflow } from 'workflow';
 
 export const POST = handleWorkflow(
-  `async function wflow(i: number) {
+  `async function wflow(i) {
   const a = await add(i, 7);
   const b = await add(a, 8);
   return b;
