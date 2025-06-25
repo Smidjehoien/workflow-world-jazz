@@ -1,4 +1,4 @@
-import { FatalError, STATE, STEP_INDEX } from './global';
+import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
 
 /**
  * Generates a "step wrapper" function that can be used to invoke a step
@@ -30,14 +30,8 @@ export function useStep<Args extends unknown[], Result>(
         return event.result;
       }
     } else {
-      // Notify orchestrator that this step has not been run
-      throw Response.json(
-        {
-          stepId,
-          arguments: args,
-        },
-        { status: 409 }
-      );
+      // Notify workflow dispatcher that this step has not been run
+      throw new StepNotRunError(stepId, args);
     }
   };
 }

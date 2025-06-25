@@ -10,7 +10,7 @@
  * If running in a script where that is not defined, then the `baseUrl` option
  * must be provided.
  */
-import { start } from 'workflow';
+import { start } from '@vercel/workflow-core';
 
 export const POST = async () => {
   const workflowId = 'example';

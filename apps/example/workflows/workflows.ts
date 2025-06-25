@@ -1,4 +1,7 @@
-import { add } from './steps.ts';
+//import { add } from './steps.ts';
+import { useStep } from '@vercel/workflow-core/dist/step';
+
+const add = useStep('add');
 
 export async function workflow(i: number) {
   'use workflow';
