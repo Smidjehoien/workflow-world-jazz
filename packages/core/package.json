@@ -1,5 +1,5 @@
 {
-  "name": "workflow",
+  "name": "@vercel/workflow-core",
   "version": "0.0.0",
   "type": "commonjs",
   "main": "dist/index.js",

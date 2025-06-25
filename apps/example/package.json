@@ -12,6 +12,6 @@
   },
   "dependencies": {
     "@vercel/functions": "^2.2.2",
-    "workflow": "workspace:*"
+    "@vercel/workflow-core": "workspace:*"
   }
 }
