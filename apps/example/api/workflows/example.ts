@@ -48,9 +48,6 @@ async function workflow(i) {
   const b = await add(a, 8);
   return b;
 }
-export {
-  workflow
-};
   `,
   'wflow'
 );
