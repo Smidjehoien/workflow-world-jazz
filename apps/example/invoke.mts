@@ -2,7 +2,7 @@
  * This script is a simple CLI "orchestrator" for the workflow which
  * is ran locally and in-memory.
  */
-const baseURL = "https://w-uncurated-tests.vercel.app/api/";
+const baseURL = 'https://w-uncurated-tests.vercel.app/api/';
 
 interface WorkflowTriggerEvent {
   arguments: unknown[];
@@ -34,9 +34,9 @@ async function invokeWorkflow(
   payload: WorkflowInvokePayload
 ): Promise<unknown> {
   const res = await fetch(baseURL, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify(payload),
   });
@@ -44,7 +44,7 @@ async function invokeWorkflow(
 
   if (res.status === 200) {
     // Workflow completed
-    console.log("Workflow completed", body);
+    console.log('Workflow completed', body);
     return body.result;
   } else if (res.status === 409) {
     const result = await invokeStep(baseURL, body.stepId, body.arguments);
@@ -62,21 +62,21 @@ async function invokeStep(
   args: unknown[]
 ): Promise<WorkflowStepResult | WorkflowStepFatalError> {
   const res = await fetch(new URL(stepId, baseURL), {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({ arguments: args }),
   });
   const body = await res.json();
 
   if (res.status === 200) {
-    console.log("Step completed", body);
+    console.log('Step completed', body);
     return body;
   } else if (res.status === 500) {
     // Step failed - retry by default, unless `fatal: true`
     // in which case we need to bubble up to the workflow
-    console.log("Step failed", body);
+    console.log('Step failed', body);
     if (body.fatal) {
       return body;
     } else {
@@ -93,4 +93,4 @@ const result = await invokeWorkflow(baseURL, {
   runId: crypto.randomUUID(),
   state: [{ t: Date.now(), arguments: [input] }],
 });
-console.log("Result", result);
+console.log('Result', result);

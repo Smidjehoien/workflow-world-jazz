@@ -1,9 +1,9 @@
-import { FatalError } from "./_/global";
+import { FatalError } from './_/global';
 
 // user step code
 async function add(a: number, b: number): Promise<number> {
   if (Math.random() < 0.5) {
-    throw new Error("Retryable error");
+    throw new Error('Retryable error');
   }
   if (Math.random() < 0.2) {
     throw new FatalError("We're cooked yo!");

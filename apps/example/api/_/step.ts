@@ -1,4 +1,4 @@
-import { FatalError, STATE, STEP_INDEX } from "./global";
+import { FatalError, STATE, STEP_INDEX } from './global';
 
 /**
  * Generates a "step wrapper" function that can be used to invoke a step

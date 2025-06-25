@@ -1,0 +1,116 @@
+import * as vm from 'node:vm';
+import { describe, expect, it } from 'vitest';
+import { createContext } from './index.js';
+
+const seed = 'entropy seed';
+const fixedTimestamp = 1234567890000;
+
+describe('createContext', () => {
+  it('should have a deterministic `Math.random()` function', () => {
+    const context = createContext({ seed, fixedTimestamp });
+    expect(vm.runInContext('Math.random()', context)).toEqual(
+      0.45558666071890863
+    );
+    expect(vm.runInContext('Math.random()', context)).toEqual(
+      0.17985294630429577
+    );
+    expect(vm.runInContext('Math.random()', context)).toEqual(
+      0.37680233072529035
+    );
+  });
+
+  it('should have deterministic `Date.now()`', () => {
+    const context = createContext({ seed, fixedTimestamp });
+
+    expect(vm.runInContext('Date.now()', context)).toEqual(fixedTimestamp);
+    expect(vm.runInContext('Date.now()', context)).toEqual(fixedTimestamp);
+  });
+
+  it('should have deterministic `Date` constructor when called without arguments', () => {
+    const fixedTimestamp = 1234567890000;
+    const context = createContext({ seed, fixedTimestamp });
+
+    const result1 = vm.runInContext('new Date().getTime()', context);
+    const result2 = vm.runInContext('new Date().getTime()', context);
+
+    expect(result1).toEqual(fixedTimestamp);
+    expect(result2).toEqual(fixedTimestamp);
+  });
+
+  it('should preserve `Date` constructor behavior with arguments', () => {
+    const context = createContext({ seed, fixedTimestamp });
+    const specificTime = 946684800000; // Y2K
+
+    const result = vm.runInContext(
+      `new Date(${specificTime}).getTime()`,
+      context
+    );
+    expect(result).toEqual(specificTime);
+  });
+
+  it('should have deterministic `crypto.getRandomValues()`', () => {
+    const context = createContext({ seed, fixedTimestamp });
+
+    // Test if crypto is available in the context
+    const hasCrypto = vm.runInContext('typeof crypto !== "undefined"', context);
+    if (hasCrypto) {
+      const result1 = vm.runInContext(
+        'crypto.getRandomValues(new Uint8Array(4))',
+        context
+      );
+      const result2 = vm.runInContext(
+        'crypto.getRandomValues(new Uint8Array(4))',
+        context
+      );
+
+      // Results should be arrays with same seed-based values
+      expect(Array.from(result1 as Uint8Array)).toEqual([116, 46, 96, 94]);
+      expect(Array.from(result2 as Uint8Array)).toEqual([95, 100, 80, 41]);
+    }
+  });
+
+  it('should have deterministic `crypto.randomUUID()`', () => {
+    const context = createContext({ seed, fixedTimestamp });
+
+    const hasCrypto = vm.runInContext('typeof crypto !== "undefined"', context);
+    if (hasCrypto) {
+      const uuid1 = vm.runInContext('crypto.randomUUID()', context);
+      const uuid2 = vm.runInContext('crypto.randomUUID()', context);
+
+      expect(typeof uuid1).toBe('string');
+      expect(typeof uuid2).toBe('string');
+      expect(uuid1).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      );
+      expect(uuid2).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+      );
+      expect(uuid1).not.toEqual(uuid2); // Should be different UUIDs
+    }
+  });
+
+  it('should maintain consistency across different context instances with same seed', () => {
+    const context1 = createContext({ seed, fixedTimestamp: 1000000000000 });
+    const context2 = createContext({ seed, fixedTimestamp: 1000000000000 });
+
+    expect(vm.runInContext('Math.random()', context1)).toEqual(
+      vm.runInContext('Math.random()', context2)
+    );
+    expect(vm.runInContext('Date.now()', context1)).toEqual(
+      vm.runInContext('Date.now()', context2)
+    );
+  });
+
+  it('should return workflow function that can be invoked', async () => {
+    async function workflow(w: string) {
+      return `hello,${w},${Math.random()},${Date.now()},${crypto.randomUUID()}`;
+    }
+    const context = createContext({ seed, fixedTimestamp });
+    const workflowFn = vm.runInContext(`${workflow};workflow`, context);
+    expect(workflowFn).toBeTypeOf('function');
+    expect(workflowFn).toBeInstanceOf(vm.runInContext('Function', context));
+    expect(await workflowFn('world')).toBe(
+      'hello,world,0.45558666071890863,1234567890000,26556528-6a20-4017-bbc9-a891206c6f69'
+    );
+  });
+});

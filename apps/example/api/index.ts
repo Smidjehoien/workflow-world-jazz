@@ -1,5 +1,5 @@
-import { STATE, STEP_INDEX } from "./_/global";
-import { add } from "./_/steps";
+import { STATE, STEP_INDEX } from './_/global';
+import { add } from './_/steps';
 
 // user code
 async function wflow(i: number) {

@@ -9,6 +9,7 @@
     "@types/node": "^24.0.3"
   },
   "dependencies": {
-    "@vercel/functions": "^2.2.2"
+    "@vercel/functions": "^2.2.2",
+    "workflow": "workspace:*"
   }
 }
