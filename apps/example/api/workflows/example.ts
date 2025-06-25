@@ -49,5 +49,5 @@ async function workflow(i) {
   return b;
 }
   `,
-  'wflow'
+  'workflow'
 );
