@@ -24,5 +24,11 @@ export type WorkflowEvent =
 
 export interface WorkflowInvokePayload {
   runId: string;
+  callbackUrl: string;
   state: [WorkflowEventCommon<WorkflowTriggerEvent>, ...WorkflowEvent[]];
+}
+
+export interface StepInvokePayload extends WorkflowInvokePayload {
+  stepId: string;
+  arguments: unknown[];
 }

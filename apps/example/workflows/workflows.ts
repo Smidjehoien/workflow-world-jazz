@@ -1,7 +1,8 @@
-//import { add } from './steps.ts';
-import { useStep } from '@vercel/workflow-core/dist/step';
+import { add } from './steps.ts';
 
-const add = useStep('add');
+// Example of how the dev tooling / build step would transform this before bundling
+//import { useStep } from '@vercel/workflow-core/dist/step';
+//const add = useStep('add');
 
 export async function workflow(i: number) {
   'use workflow';

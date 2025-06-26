@@ -1,8 +1,9 @@
 import { runInContext } from 'node:vm';
 import { handleCallback, send } from '@vercel/queue';
 import { createContext } from '@vercel/workflow-vm';
-import { STATE, STEP_INDEX } from './global';
-import type { WorkflowInvokePayload } from './schemas';
+import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
+import type { StepInvokePayload, WorkflowInvokePayload } from './schemas';
+import { getErrorName, isError } from './types';
 
 const WORKFLOW_TOPIC = 'workflow';
 
@@ -48,12 +49,12 @@ export async function start(workflowId: string, options: StartOptions = {}) {
   }
 
   const runId = crypto.randomUUID();
-  const initialState = {
+  const payload: WorkflowInvokePayload = {
     runId,
     callbackUrl: callbackUrl.href,
     state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
   };
-  const { messageId } = await send(WORKFLOW_TOPIC, initialState, {
+  const { messageId } = await send(WORKFLOW_TOPIC, payload, {
     callback: {
       url: callbackUrl.href,
     },
@@ -93,22 +94,65 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
           throw new Error('Workflow code must be a function');
         }
         const result = await workflowFn(...initialState.arguments);
-        console.log({ result });
-        //return Response.json({ result });
+        console.log('Workflow result:', result);
       } catch (err) {
-        console.log({ err });
-        //if (err instanceof Response) return err;
-        //return Response.json(
-        //  {
-        //    error: err instanceof Error ? err.message : String(err),
-        //  },
-        //  { status: 500 }
-        //);
+        if (isError(StepNotRunError, err)) {
+          console.log('Step not run:', err.stepId, err.args);
+          const stepInvokePayload: StepInvokePayload = {
+            runId: message.runId,
+            callbackUrl: message.callbackUrl,
+            state: message.state,
+            stepId: err.stepId,
+            arguments: err.args as unknown[],
+          };
+          const callbackUrl = new URL(message.callbackUrl);
+          const stepCallbackUrl = new URL(
+            `/api/steps/${err.stepId}${callbackUrl.search}`,
+            callbackUrl
+          );
+          await send(WORKFLOW_TOPIC, stepInvokePayload, {
+            callback: {
+              url: stepCallbackUrl.href,
+            },
+          });
+        } else {
+          console.error(
+            `Unexpected error while running workflow (Run ID: ${message.runId}): ${err}`
+          );
+        }
       }
     },
   });
 }
 
-export function handleStep() {}
+export function handleStep(stepFn: (...args: unknown[]) => Promise<unknown>) {
+  return handleCallback({
+    async [WORKFLOW_TOPIC](message_, metadata) {
+      // TODO: validate `message` schema
+      const message = message_ as StepInvokePayload;
+
+      console.log('Received step invoke message:', message, metadata);
+
+      let result: unknown;
+      try {
+        result = await stepFn(...message.arguments);
+        console.log('Step result:', result);
+      } catch (err) {
+        console.error(
+          `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
+        );
+        // TODO: retry the step if it's not a fatal error,
+        // respect the retry count… backoff configuration… etc.
+        throw err;
+      }
+
+      // Update the event log with the step result, and send the
+      // updated state payload back to the workflow via the queue
+      message.state.push({ t: Date.now(), result });
+
+      await send(WORKFLOW_TOPIC, message);
+    },
+  });
+}
 
 export * from './step';
