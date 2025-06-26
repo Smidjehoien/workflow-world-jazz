@@ -14,9 +14,10 @@ import { start } from '@vercel/workflow-core';
 
 export const POST = async () => {
   const workflowId = 'example';
-  const runId = await start(workflowId, {
+  const { runId } = await start(workflowId, {
     arguments: [42],
   });
+
   return new Response(
     `Starting "${workflowId}" workflow with run ID "${runId}"`
   );

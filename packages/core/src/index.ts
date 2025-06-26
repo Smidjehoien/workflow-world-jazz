@@ -115,6 +115,10 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
               url: stepCallbackUrl.href,
             },
           });
+        } else if (isError(FatalError, err)) {
+          console.error(
+            `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
+          );
         } else {
           console.error(
             `Unexpected error while running workflow (Run ID: ${message.runId}): ${err}`
@@ -125,7 +129,7 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
   });
 }
 
-export function handleStep(stepFn: (...args: unknown[]) => Promise<unknown>) {
+export function handleStep(stepFn: (...args: any[]) => Promise<unknown>) {
   return handleCallback({
     async [WORKFLOW_TOPIC](message_, metadata) {
       // TODO: validate `message` schema
@@ -137,20 +141,40 @@ export function handleStep(stepFn: (...args: unknown[]) => Promise<unknown>) {
       try {
         result = await stepFn(...message.arguments);
         console.log('Step result:', result);
+
+        // Update the event log with the step result, and send the
+        // updated state payload back to the workflow via the queue
+        message.state.push({ t: Date.now(), result });
       } catch (err) {
         console.error(
           `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
         );
-        // TODO: retry the step if it's not a fatal error,
-        // respect the retry count… backoff configuration… etc.
-        throw err;
+        if (isError(FatalError, err)) {
+          // Fatal error - store the error in the event log and re-invoke the workflow
+          message.state.push({
+            t: Date.now(),
+            error: String(err),
+            stack: err.stack,
+            fatal: true,
+          });
+        } else {
+          // it's a retryable error - so have the queue keep the message visible so that it gets retried
+          // TODO: respect the retry count… backoff configuration… etc.
+          return {
+            timeoutSeconds: 1,
+          };
+        }
       }
 
-      // Update the event log with the step result, and send the
-      // updated state payload back to the workflow via the queue
-      message.state.push({ t: Date.now(), result });
-
-      await send(WORKFLOW_TOPIC, message);
+      console.log(
+        'Sending updated state payload back to the workflow:',
+        message
+      );
+      await send(WORKFLOW_TOPIC, message, {
+        callback: {
+          url: message.callbackUrl,
+        },
+      });
     },
   });
 }
