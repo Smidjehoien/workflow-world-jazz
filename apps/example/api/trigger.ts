@@ -12,10 +12,13 @@
  */
 import { start } from '@vercel/workflow-core';
 
-export const POST = async () => {
+export const POST = async (req: Request) => {
+  const url = new URL(req.url);
+  const valueParam = url.searchParams.get('v');
+  const value = typeof valueParam === 'string' ? parseInt(valueParam, 10) : 42;
   const workflowId = 'example';
   const { runId } = await start(workflowId, {
-    arguments: [42],
+    arguments: [value],
   });
 
   return new Response(
