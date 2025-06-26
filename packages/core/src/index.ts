@@ -5,6 +5,8 @@ import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
 import type { StepInvokePayload, WorkflowInvokePayload } from './schemas';
 import { getErrorName, isError } from './types';
 
+export { FatalError, StepNotRunError } from './global';
+
 const WORKFLOW_TOPIC = 'workflow';
 
 export interface StartOptions {
