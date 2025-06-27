@@ -8,6 +8,7 @@
   ],
   "scripts": {
     "build": "tsc",
+    "clean": "tsc --build --clean",
     "test": "vitest"
   },
   "devDependencies": {

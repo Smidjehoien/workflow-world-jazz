@@ -16,7 +16,7 @@
     "prepare": "husky",
     "test": "vitest",
     "typecheck": "biome check",
-    "clean": "rm -rf node_modules"
+    "clean": "turbo clean"
   },
   "lint-staged": {
     "**/*": "biome format --write"

@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "build": "workflow build && mkdir -p public && echo 'Hello, world!' > public/index.html",
-    "clean": "rm -r public && rm -r api/generated",
+    "clean": "rm -r public; rm -r api/generated ||:",
     "invoke": "node invoke.mts"
   },
   "devDependencies": {
