@@ -1,0 +1,17 @@
+{
+  "name": "swc-plugin-workflow",
+  "version": "0.1.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "keywords": [
+    "swc-plugin"
+  ],
+  "main": "target/wasm32-wasip1/debug/swc_plugin_workflow.wasm",
+  "scripts": {
+    "build": "cargo build-wasip1",
+    "prepublishOnly": "cargo build-wasip1 --release"
+  },
+  "files": [],
+  "preferUnplugged": true
+}
