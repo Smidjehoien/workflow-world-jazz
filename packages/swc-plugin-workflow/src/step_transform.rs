@@ -205,8 +205,23 @@ impl VisitMut for StepTransform {
                 Program::Module(module) => {
                     module.body.insert(0, self.create_use_step_import());
                 }
-                Program::Script(_) => {
-                    // Scripts don't support imports
+                Program::Script(script) => {
+                    // Scripts don't support imports, but we need to convert to module
+                    // if we have step functions
+                    let mut module_items = Vec::new();
+                    module_items.push(self.create_use_step_import());
+                    
+                    // Convert script statements to module items
+                    for stmt in &script.body {
+                        module_items.push(ModuleItem::Stmt(stmt.clone()));
+                    }
+                    
+                    // Replace program with module
+                    *program = Program::Module(Module {
+                        span: script.span,
+                        body: module_items,
+                        shebang: script.shebang.clone(),
+                    });
                 }
             }
         }
@@ -214,6 +229,11 @@ impl VisitMut for StepTransform {
 
     fn visit_mut_module(&mut self, module: &mut Module) {
         self.visit_mut_module_items(&mut module.body);
+    }
+
+    fn visit_mut_script(&mut self, script: &mut Script) {
+        // Scripts are simpler - just process statements
+        self.visit_mut_stmts(&mut script.body);
     }
 
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
@@ -233,67 +253,134 @@ impl VisitMut for StepTransform {
 
         // First pass: identify all step functions
         for item in items.iter() {
-            if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(fn_decl))) = item {
-                let fn_name = fn_decl.ident.sym.to_string();
-                let has_directive = self.has_use_step_directive(&fn_decl.function.body);
-                
-                // For individual functions with "use step", we don't need to check in_exported_expr
-                if has_directive {
-                    if fn_decl.function.is_async {
-                        self.step_function_names.insert(fn_name);
-                    }
-                } else if self.has_file_directive && self.in_exported_expr {
-                    // Only check exported status for file-level directive
-                    if fn_decl.function.is_async {
+            match item {
+                // Check regular function declarations
+                ModuleItem::Stmt(Stmt::Decl(Decl::Fn(fn_decl))) => {
+                    let fn_name = fn_decl.ident.sym.to_string();
+                    let has_directive = self.has_use_step_directive(&fn_decl.function.body);
+                    
+                    if has_directive && fn_decl.function.is_async {
                         self.step_function_names.insert(fn_name);
                     }
                 }
+                // Check exported function declarations
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
+                    if let Decl::Fn(fn_decl) = &export_decl.decl {
+                        let fn_name = fn_decl.ident.sym.to_string();
+                        let has_directive = self.has_use_step_directive(&fn_decl.function.body);
+                        
+                        // For exported functions with "use step" directive
+                        if has_directive && fn_decl.function.is_async {
+                            self.step_function_names.insert(fn_name);
+                        } else if self.has_file_directive && fn_decl.function.is_async {
+                            // For file-level directive, all exported async functions are steps
+                            self.step_function_names.insert(fn_name);
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
         let mut new = Vec::new();
 
-        // If we have any step functions, add the useStep import first
-        if !self.step_function_names.is_empty() {
-            new.push(self.create_use_step_import());
-        }
-
         // Second pass: process module items and filter out step functions
         for mut item in items.drain(..) {
             let mut should_remove = false;
+            let mut replacement_item = None;
             
-            // Check if this is a function declaration we need to transform
-            if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(fn_decl))) = &item {
-                let fn_name = fn_decl.ident.sym.to_string();
-                
-                if self.step_function_names.contains(&fn_name) {
-                    if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
-                        // Collect the function (with directive removed)
-                        let mut function = *fn_decl.function.clone();
-                        if let Some(body) = &mut function.body {
-                            if !body.stmts.is_empty() {
-                                if let Stmt::Expr(ExprStmt { expr, .. }) = &body.stmts[0] {
-                                    if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                                        if value == "use step" {
-                                            body.stmts.remove(0);
+            match &item {
+                // Check regular function declarations
+                ModuleItem::Stmt(Stmt::Decl(Decl::Fn(fn_decl))) => {
+                    let fn_name = fn_decl.ident.sym.to_string();
+                    
+                    if self.step_function_names.contains(&fn_name) {
+                        if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                            // Collect the function (with directive removed)
+                            let mut function = *fn_decl.function.clone();
+                            if let Some(body) = &mut function.body {
+                                if !body.stmts.is_empty() {
+                                    if let Stmt::Expr(ExprStmt { expr, .. }) = &body.stmts[0] {
+                                        if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                                            if value == "use step" {
+                                                body.stmts.remove(0);
+                                            }
                                         }
                                     }
                                 }
                             }
+                            
+                            self.step_functions.push(StepFunction {
+                                name: fn_name.clone(),
+                                function,
+                            });
+                            
+                            // Remove this function declaration
+                            should_remove = true;
                         }
-                        
-                        self.step_functions.push(StepFunction {
-                            name: fn_name.clone(),
-                            function,
-                        });
-                        
-                        // Remove this function declaration
-                        should_remove = true;
                     }
                 }
+                // Check exported function declarations
+                ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) => {
+                    if let Decl::Fn(fn_decl) = &export_decl.decl {
+                        let fn_name = fn_decl.ident.sym.to_string();
+                        
+                        if self.step_function_names.contains(&fn_name) {
+                            if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                                // Collect the function (with directive removed)
+                                let mut function = *fn_decl.function.clone();
+                                if let Some(body) = &mut function.body {
+                                    if !body.stmts.is_empty() {
+                                        if let Stmt::Expr(ExprStmt { expr, .. }) = &body.stmts[0] {
+                                            if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                                                if value == "use step" {
+                                                    body.stmts.remove(0);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                self.step_functions.push(StepFunction {
+                                    name: fn_name.clone(),
+                                    function,
+                                });
+                                
+                                // For file-level directive, transform to const export
+                                if self.has_file_directive {
+                                    replacement_item = Some(ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(ExportDecl {
+                                        span: export_decl.span,
+                                        decl: Decl::Var(Box::new(VarDecl {
+                                            span: DUMMY_SP,
+                                            ctxt: SyntaxContext::empty(),
+                                            kind: VarDeclKind::Const,
+                                            declare: false,
+                                            decls: vec![VarDeclarator {
+                                                span: DUMMY_SP,
+                                                name: Pat::Ident(BindingIdent::from(Ident::new(
+                                                    fn_name.clone().into(),
+                                                    DUMMY_SP,
+                                                    SyntaxContext::empty(),
+                                                ))),
+                                                init: Some(Box::new(self.create_step_proxy(&fn_name))),
+                                                definite: false,
+                                            }],
+                                        })),
+                                    })));
+                                } else {
+                                    // For function-level directive, remove the function
+                                    should_remove = true;
+                                }
+                            }
+                        }
+                    }
+                }
+                _ => {}
             }
             
-            if !should_remove {
+            if let Some(replacement) = replacement_item {
+                new.push(replacement);
+            } else if !should_remove {
                 item.visit_mut_with(self);
                 new.push(item);
             }
@@ -313,49 +400,7 @@ impl VisitMut for StepTransform {
         let old_in_exported = self.in_exported_expr;
         self.in_exported_expr = true;
         
-        // Check if this is an exported function that should be transformed
-        if self.has_file_directive {
-            if let Decl::Fn(fn_decl) = &export.decl {
-                let fn_name = fn_decl.ident.sym.to_string();
-                if fn_decl.function.is_async {
-                    self.step_function_names.insert(fn_name.clone());
-                    
-                    // Collect the function
-                    self.step_functions.push(StepFunction {
-                        name: fn_name,
-                        function: *fn_decl.function.clone(),
-                    });
-                }
-            }
-        }
-        
         export.visit_mut_children_with(self);
-        
-        // Transform exported functions to const declarations
-        if self.has_file_directive {
-            if let Decl::Fn(fn_decl) = &export.decl {
-                let fn_name = fn_decl.ident.sym.to_string();
-                if self.step_function_names.contains(&fn_name) {
-                    // Replace with const export
-                    export.decl = Decl::Var(Box::new(VarDecl {
-                        span: DUMMY_SP,
-                        ctxt: SyntaxContext::empty(),
-                        kind: VarDeclKind::Const,
-                        declare: false,
-                        decls: vec![VarDeclarator {
-                            span: DUMMY_SP,
-                            name: Pat::Ident(BindingIdent::from(Ident::new(
-                                fn_name.clone().into(),
-                                DUMMY_SP,
-                                SyntaxContext::empty(),
-                            ))),
-                            init: Some(Box::new(self.create_step_proxy(&fn_name))),
-                            definite: false,
-                        }],
-                    }));
-                }
-            }
-        }
         
         self.in_exported_expr = old_in_exported;
     }

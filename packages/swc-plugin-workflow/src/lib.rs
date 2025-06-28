@@ -24,7 +24,8 @@ pub fn process_transform(
     program
 }
 
-// An example to test plugin transform
+// Test cases
+
 test_inline!(
     Default::default(),
     |_| visit_mut_pass(StepTransform::new()),
@@ -36,7 +37,32 @@ test_inline!(
 }
 add(1, 2);"#,
     // Output codes after transformed with plugin
-    r#"useStep("add")(1, 2);"#
+    r#"import { useStep } from "@vercel/workflow-core/dist/step";
+async function add(a, b) {
+    "use step";
+    return a + b;
+}
+useStep("add")(1, 2);"#
+);
+
+// Exporting a step should work too
+test_inline!(
+    Default::default(),
+    |_| visit_mut_pass(StepTransform::new()),
+    exported_step,
+    // Input codes
+    r#"export async function add(a, b) {
+    "use step";
+    return a + b;
+}
+add(1, 2);"#,
+    // Output codes after transformed with plugin
+    r#"import { useStep } from "@vercel/workflow-core/dist/step";
+export async function add(a, b) {
+    "use step";
+    return a + b;
+}
+useStep("add")(1, 2);"#
 );
 
 test_inline!(

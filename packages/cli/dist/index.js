@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 import multi from '@rollup/plugin-multi-entry';
-import swc from '@rollup/plugin-swc';
 import { rollup } from 'rollup';
+import { swc } from 'rollup-plugin-swc3';
 import { createEntryPointManager } from './entrypoints.js';
+
 // TODO: resolve local config
 const resolvedConfig = {
     dirs: ['./workflows'],
@@ -39,13 +40,12 @@ const bundle = await rollup({
     plugins: [
         // @ts-expect-error - default export is a function
         multi(),
-        // @ts-expect-error - default export is a function
         swc({
-            swc: {
-                jsc: {
-                    experimental: {
-                        plugins: [['swc-plugin-workflow', {}]],
-                    },
+            tsconfig: false,
+            jsc: {
+                experimental: {
+                    // plugins: [[swcPluginPath, {}]],
+                    plugins: [['swc-plugin-workflow', {}]],
                 },
             },
         }),
@@ -57,4 +57,3 @@ await bundle.write({
     file: resolvedConfig.outputPath,
     format: 'esm',
 });
-//# sourceMappingURL=index.js.map
