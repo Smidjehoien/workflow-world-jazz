@@ -2,6 +2,25 @@
 
 This is an SWC transform plugin that handles the `"use step"` directive for Vercel Workflow.
 
+## Development
+
+[Install rust](https://www.rust-lang.org/tools/install)
+
+Add build target using rustup
+```bash
+rustup target add wasm32-unknown-unknown
+```
+
+Ensure you can test/build
+
+```bash
+cargo test
+cargo check
+cargo build
+```
+
+Release builds are done using `pnpm build`
+
 ## Overview
 
 The `"use step"` directive works similarly to React's `"use server"` directive. Functions marked with `"use step"` are:
@@ -26,9 +45,8 @@ add(1, 2);
 **Original file:**
 ```typescript
 import { useStep } from '@vercel/workflow-core/dist/step';
-const add = useStep('add');
 
-add(1, 2);
+useStep('add')(1, 2);
 ```
 
 **Generated file (api/steps/add.ts):**
