@@ -3,7 +3,7 @@ import { handleCallback, send } from '@vercel/queue';
 import { createContext } from '@vercel/workflow-vm';
 import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
 import type { StepInvokePayload, WorkflowInvokePayload } from './schemas';
-import { getErrorName, isError } from './types';
+import { getErrorName, isInstanceOf } from './types';
 
 export { FatalError, StepNotRunError } from './global';
 
@@ -98,7 +98,7 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
         const result = await workflowFn(...initialState.arguments);
         console.log('Workflow result:', result);
       } catch (err) {
-        if (isError(StepNotRunError, err)) {
+        if (isInstanceOf(err, StepNotRunError)) {
           console.log('Step not run:', err.stepId, err.args);
           const stepInvokePayload: StepInvokePayload = {
             runId: message.runId,
@@ -117,7 +117,7 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
               url: stepCallbackUrl.href,
             },
           });
-        } else if (isError(FatalError, err)) {
+        } else if (isInstanceOf(err, FatalError)) {
           console.error(
             `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
           );
@@ -151,7 +151,7 @@ export function handleStep(stepFn: (...args: any[]) => Promise<unknown>) {
         console.error(
           `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
         );
-        if (isError(FatalError, err)) {
+        if (isInstanceOf(err, FatalError)) {
           // Fatal error - store the error in the event log and re-invoke the workflow
           message.state.push({
             t: Date.now(),
@@ -160,11 +160,23 @@ export function handleStep(stepFn: (...args: any[]) => Promise<unknown>) {
             fatal: true,
           });
         } else {
-          // it's a retryable error - so have the queue keep the message visible so that it gets retried
-          // TODO: respect the retry count… backoff configuration… etc.
-          return {
-            timeoutSeconds: 1,
-          };
+          const deliveryCount = metadata.deliveryCount;
+          if (deliveryCount >= stepConfiguration.maxRetries) {
+            // Max retries reached - store the error in the event log and re-invoke the workflow
+            const error = `Max retries reached for step "${message.stepId}" (Workflow run ID: ${message.runId})`;
+            message.state.push({
+              t: Date.now(),
+              error,
+              //stack: err.stack,
+              fatal: true,
+            });
+          } else {
+            const timeoutSeconds = 1;
+            // it's a retryable error - so have the queue keep the message visible so that it gets retried
+            return {
+              timeoutSeconds,
+            };
+          }
         }
       }
 

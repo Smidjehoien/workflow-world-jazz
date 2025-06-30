@@ -1,3 +1,4 @@
+import type { Context } from 'node:vm';
 import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
 
 /**
@@ -9,15 +10,24 @@ import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
  * has not been run yet.
  *
  * @param stepId - The ID of the step to invoke.
+ * @param context - The `vm.Context` or `globalThis` object to retrieve global state from.
  * @returns A function that can be used to invoke the step.
  */
 export function useStep<Args extends unknown[], Result>(
   stepId: string,
-  context: any = globalThis
+  context: Context | typeof globalThis = globalThis
 ) {
   return async (...args: Args): Promise<Result> => {
-    const stepIndex = context[STEP_INDEX]++;
-    const event = context[STATE][stepIndex];
+    const stepIndex = (context as any)[STEP_INDEX];
+    if (typeof stepIndex !== 'number') {
+      throw new Error(
+        'Invalid context: `useStep` must be called from a within a workflow execution environment'
+      );
+    } else {
+      // Increment the step index for the next invocation
+      (context as any)[STEP_INDEX]++;
+    }
+    const event = (context as any)[STATE][stepIndex];
     if (event) {
       if (event.error) {
         // Step failed - bubble up to workflow
