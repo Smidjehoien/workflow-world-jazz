@@ -42,7 +42,7 @@ export function createContext(options: CreateContextOptions): Context {
   g.Date.now = () => fixedTimestamp;
 
   // Deterministic `crypto`
-  g.crypto = Object.create(Object.getPrototypeOf(crypto));
+  g.crypto = globalThis.crypto;
 
   g.crypto.getRandomValues = (
     array: Parameters<(typeof globalThis)['crypto']['getRandomValues']>['0']

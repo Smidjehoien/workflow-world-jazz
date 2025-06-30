@@ -132,4 +132,17 @@ describe('createContext', () => {
     const fooValue = vm.runInContext(`globalThis[Symbol.for('foo')]`, context);
     expect(fooValue).toEqual('bar');
   });
+
+  it('should have functional `crypto.subtle`', async () => {
+    const context = createContext({ seed, fixedTimestamp });
+
+    const promise = vm.runInContext(
+      'crypto.subtle.digest("SHA-256", new TextEncoder().encode("hello"))',
+      context
+    );
+    const result = await promise;
+    expect(Buffer.from(result).toString('hex')).toEqual(
+      '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
+    );
+  });
 });
