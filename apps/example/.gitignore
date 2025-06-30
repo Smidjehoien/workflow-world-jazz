@@ -2,3 +2,6 @@ public
 
 # Generated bundles
 api/generated
+
+# SWC plugin cache
+.swc

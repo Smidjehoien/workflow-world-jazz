@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-import swc from '@rollup/plugin-swc';
 import multi from '@rollup/plugin-multi-entry';
 import { rollup } from 'rollup';
+import { swc } from 'rollup-plugin-swc3';
 import { createEntryPointManager } from './entrypoints.js';
+
 // TODO: resolve local config
 const resolvedConfig = {
     dirs: ['./workflows'],
@@ -36,8 +37,19 @@ console.log('Creating Vercel API route at', resolvedConfig.outputPath);
 const bundle = await rollup({
     input: entryPointManager.entryPoints,
     // TODO: use typescript plugin to support user tsconfig
-    // @ts-expect-error - default export is a function
-    plugins: [multi(), swc()],
+    plugins: [
+        // @ts-expect-error - default export is a function
+        multi(),
+        swc({
+            tsconfig: false,
+            jsc: {
+                experimental: {
+                    // plugins: [[swcPluginPath, {}]],
+                    plugins: [['swc-plugin-workflow', {}]],
+                },
+            },
+        }),
+    ],
 });
 // Or use `bundle.generate` to keep the bundle in memory for use in a vite
 // plugin/nextjs plugin for instance
@@ -45,4 +57,3 @@ await bundle.write({
     file: resolvedConfig.outputPath,
     format: 'esm',
 });
-//# sourceMappingURL=index.js.map

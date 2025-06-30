@@ -1,0 +1,27 @@
+{
+  "name": "swc-plugin-workflow",
+  "version": "0.1.0",
+  "description": "",
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "main": "swc_plugin_workflow.wasm",
+  "files": [
+    "swc_plugin_workflow.wasm"
+  ],
+  "exports": {
+    ".": "./swc_plugin_workflow.wasm"
+  },
+  "peerDependencies": {
+    "@swc/core": "1.11.24"
+  },
+  "keywords": [
+    "swc-plugin"
+  ],
+  "scripts": {
+    "build": "cargo build-wasm32 --release && cp target/wasm32-unknown-unknown/release/swc_plugin_workflow.wasm .",
+    "test": "cargo test",
+    "prepublishOnly": "pnpm build"
+  },
+  "preferUnplugged": true
+}

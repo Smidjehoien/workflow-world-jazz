@@ -1,10 +1,15 @@
 #!/usr/bin/env node
 
-import swc from '@rollup/plugin-swc';
 import multi from '@rollup/plugin-multi-entry';
-import { rollup, type RollupBuild } from 'rollup';
+// import swc from '@rollup/plugin-swc';
+import { dirname, join } from 'path';
+import { type RollupBuild, rollup } from 'rollup';
+import { swc } from 'rollup-plugin-swc3';
+import { fileURLToPath } from 'url';
 
 import { createEntryPointManager } from './entrypoints.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // TODO: resolve local config
 const resolvedConfig = {
@@ -46,11 +51,26 @@ if (entryPointManager.entryPoints.length === 0) {
 
 console.log('Creating Vercel API route at', resolvedConfig.outputPath);
 
+// Get the path to the SWC plugin WASM file
+// const swcPluginPath = join(__dirname, '../../swc-plugin-workflow');
+// console.log('Using SWC plugin at:', swcPluginPath);
+
 const bundle: RollupBuild = await rollup({
   input: entryPointManager.entryPoints,
   // TODO: use typescript plugin to support user tsconfig
-  // @ts-expect-error - default export is a function
-  plugins: [multi(), swc()],
+  plugins: [
+    // @ts-expect-error - default export is a function
+    multi(),
+    swc({
+      tsconfig: false,
+      jsc: {
+        experimental: {
+          // plugins: [[swcPluginPath, {}]],
+          plugins: [['swc-plugin-workflow', {}]],
+        },
+      },
+    }),
+  ],
 });
 
 // Or use `bundle.generate` to keep the bundle in memory for use in a vite

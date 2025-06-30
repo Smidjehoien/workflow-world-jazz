@@ -1,7 +1,7 @@
-import * as chokidar from 'chokidar';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { glob, escapePath, isDynamicPattern } from 'tinyglobby';
+import * as chokidar from 'chokidar';
+import { escapePath, glob, isDynamicPattern } from 'tinyglobby';
 
 // This is the equivalent of __dirname in a node module
 const sourceDir = fileURLToPath(new URL('.', import.meta.url));
