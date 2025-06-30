@@ -71,5 +71,9 @@ export function createContext(options: CreateContextOptions): Context {
     return uuid;
   };
 
+  // Web APIs that are made available in the context
+  g.TextEncoder = globalThis.TextEncoder;
+  g.TextDecoder = globalThis.TextDecoder;
+
   return context;
 }
