@@ -1,8 +1,4 @@
-import {
-  type Context,
-  runInContext,
-  createContext as vmCreateContext,
-} from 'node:vm';
+import { runInContext, createContext as vmCreateContext } from 'node:vm';
 import seedrandom from 'seedrandom';
 
 export interface CreateContextOptions {
@@ -18,8 +14,9 @@ export interface CreateContextOptions {
  * @param options - The options for the context.
  * @returns The context.
  */
-export function createContext(options: CreateContextOptions): Context {
-  const { seed, fixedTimestamp } = options;
+export function createContext(options: CreateContextOptions) {
+  let { fixedTimestamp } = options;
+  const { seed } = options;
   const rng = seedrandom(seed);
   const context = vmCreateContext();
 
@@ -80,5 +77,10 @@ export function createContext(options: CreateContextOptions): Context {
   g.TextEncoder = globalThis.TextEncoder;
   g.TextDecoder = globalThis.TextDecoder;
 
-  return context;
+  return {
+    context,
+    updateTimestamp: (timestamp: number) => {
+      fixedTimestamp = timestamp;
+    },
+  };
 }

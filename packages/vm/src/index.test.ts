@@ -7,7 +7,7 @@ const fixedTimestamp = 1234567890000;
 
 describe('createContext', () => {
   it('should have a deterministic `Math.random()` function', () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     expect(vm.runInContext('Math.random()', context)).toEqual(
       0.45558666071890863
@@ -21,7 +21,7 @@ describe('createContext', () => {
   });
 
   it('should have deterministic `Date.now()`', () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     expect(vm.runInContext('Date.now()', context)).toEqual(fixedTimestamp);
     expect(vm.runInContext('Date.now()', context)).toEqual(fixedTimestamp);
@@ -29,7 +29,7 @@ describe('createContext', () => {
 
   it('should have deterministic `Date` constructor when called without arguments', () => {
     const fixedTimestamp = 1234567890000;
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     const result1 = vm.runInContext('new Date().getTime()', context);
     const result2 = vm.runInContext('new Date().getTime()', context);
@@ -39,7 +39,7 @@ describe('createContext', () => {
   });
 
   it('should preserve `Date` constructor behavior with arguments', () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
     const specificTime = 946684800000; // Y2K
 
     const result = vm.runInContext(
@@ -50,7 +50,7 @@ describe('createContext', () => {
   });
 
   it('should have deterministic `crypto.getRandomValues()`', () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     const result1 = vm.runInContext(
       'crypto.getRandomValues(new Uint8Array(4))',
@@ -67,7 +67,7 @@ describe('createContext', () => {
   });
 
   it('should have deterministic `crypto.randomUUID()`', () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     const uuid1 = vm.runInContext('crypto.randomUUID()', context);
     const uuid2 = vm.runInContext('crypto.randomUUID()', context);
@@ -84,8 +84,14 @@ describe('createContext', () => {
   });
 
   it('should maintain consistency across different context instances with same seed', () => {
-    const context1 = createContext({ seed, fixedTimestamp: 1000000000000 });
-    const context2 = createContext({ seed, fixedTimestamp: 1000000000000 });
+    const { context: context1 } = createContext({
+      seed,
+      fixedTimestamp: 1000000000000,
+    });
+    const { context: context2 } = createContext({
+      seed,
+      fixedTimestamp: 1000000000000,
+    });
 
     expect(vm.runInContext('Math.random()', context1)).toEqual(
       vm.runInContext('Math.random()', context2)
@@ -99,7 +105,7 @@ describe('createContext', () => {
     async function workflow(w: string) {
       return `hello,${w},${Math.random()},${Date.now()},${crypto.randomUUID()}`;
     }
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
     const workflowFn = vm.runInContext(`${workflow};workflow`, context);
     expect(workflowFn).toBeTypeOf('function');
     expect(workflowFn).toBeInstanceOf(vm.runInContext('Function', context));
@@ -109,7 +115,7 @@ describe('createContext', () => {
   });
 
   it('should allow setting a Symbol on the globalThis object', async () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
     const symbol = Symbol('foo');
 
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
@@ -123,7 +129,7 @@ describe('createContext', () => {
   });
 
   it('should allow setting a Symbol.for on the globalThis object', async () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
     const symbol = Symbol.for('foo');
 
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
@@ -134,7 +140,7 @@ describe('createContext', () => {
   });
 
   it('should have functional `crypto.subtle.digest()`', async () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     const promise = vm.runInContext(
       'crypto.subtle.digest("SHA-256", new TextEncoder().encode("hello"))',
@@ -148,7 +154,7 @@ describe('createContext', () => {
 
   it('should throw an error for `crypto.subtle.generateKey()`', async () => {
     let err: Error | undefined;
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     try {
       vm.runInContext(
@@ -164,7 +170,7 @@ describe('createContext', () => {
   });
 
   it('should call `onWorkflowError` when a workflow error occurs', async () => {
-    const context = createContext({ seed, fixedTimestamp });
+    const { context } = createContext({ seed, fixedTimestamp });
 
     const createUseStep =
       (ctx: { onWorkflowError: (err: Error) => void }) => () => () =>
@@ -204,5 +210,15 @@ describe('createContext', () => {
 
     const result = await Promise.race([workflowFn(), workflowErrorDeferred]);
     expect(result.message).toEqual('workflow error');
+  });
+
+  it('should allow updating the fixed timestamp', async () => {
+    const { context, updateTimestamp } = createContext({
+      seed,
+      fixedTimestamp,
+    });
+    expect(vm.runInContext('Date.now()', context)).toEqual(fixedTimestamp);
+    updateTimestamp(1234567890009);
+    expect(vm.runInContext('Date.now()', context)).toEqual(1234567890009);
   });
 });
