@@ -17,7 +17,7 @@ export function getConstructorNames(obj: unknown): string[] {
   if (name === null) {
     return [];
   }
-  return [name, ...getConstructorNames(Object.getPrototypeOf(obj))];
+  return [name, ...getConstructorNames(proto)];
 }
 
 /**
