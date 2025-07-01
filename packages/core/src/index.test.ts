@@ -105,7 +105,7 @@ describe('start', () => {
 });
 
 describe('handleWorkflow', () => {
-  it.only('should return a handleCallback configuration', () => {
+  it('should return a handleCallback configuration', () => {
     const result = handleWorkflow('async function workflow () {}', 'workflow');
 
     expect(result).toBeDefined();

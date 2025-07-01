@@ -22,11 +22,16 @@ export type WorkflowEvent =
   | WorkflowEventCommon<WorkflowStepResult>
   | WorkflowEventCommon<WorkflowStepFatalError>;
 
+export type WorkflowState = [
+  WorkflowEventCommon<WorkflowTriggerEvent>,
+  ...WorkflowEvent[],
+];
+
 export interface WorkflowInvokePayload {
   workflowId: string;
   runId: string;
   callbackUrl: string;
-  state: [WorkflowEventCommon<WorkflowTriggerEvent>, ...WorkflowEvent[]];
+  state: WorkflowState;
 }
 
 export interface StepInvokePayload extends WorkflowInvokePayload {

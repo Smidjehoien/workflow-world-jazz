@@ -152,7 +152,7 @@ function workflowMessageHandler(
         const stepInvokePayload: StepInvokePayload = {
           ...message,
           stepId: err.stepId,
-          arguments: err.args as unknown[],
+          arguments: err.args,
         };
         const callbackUrl = new URL(message.callbackUrl);
         const stepCallbackUrl = new URL(

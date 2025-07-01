@@ -29,10 +29,11 @@ export function getStepFunction(stepName: string): StepFunction | undefined {
  * A serializable value:
  * Any valid JSON object is serializable
  *
- * @example ```ts
+ * @example
+ *
+ * ```ts
  * // any valid JSON object is serializable
  * const anyJson: Serializable = { foo: "bar" };
- *
  * ```
  */
 export type Serializable =
@@ -44,4 +45,4 @@ export type Serializable =
   | Serializable[]
   | { [key: string]: Serializable };
 // TODO: add support for binary data and streams using @vercel/queue
-// | ArrayBuffer; // TODO:
+// | ArrayBuffer;

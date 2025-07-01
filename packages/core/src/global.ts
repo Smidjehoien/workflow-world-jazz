@@ -15,6 +15,8 @@ export const STEP_INDEX = Symbol.for('STEP_INDEX');
  * be bubbled up to the workflow logic.
  */
 export class FatalError extends Error {
+  fatal = true;
+
   constructor(message: string) {
     super(message);
     this.name = 'FatalError';
