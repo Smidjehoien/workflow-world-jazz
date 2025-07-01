@@ -40,13 +40,12 @@ export async function start(workflowId: string, options: StartOptions = {}) {
     callbackUrl: callbackUrl.href,
     state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
   };
-  const { messageId } = await send(WORKFLOW_TOPIC, payload, {
+  const queueResult = await send(WORKFLOW_TOPIC, payload, {
     callback: {
       url: callbackUrl.href,
     },
   });
-  console.log('Sent workflow message:', messageId);
-  return { runId };
+  return { runId, ...queueResult };
 }
 
 // ---------------------------------------------------------
