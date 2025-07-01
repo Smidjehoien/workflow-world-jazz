@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": [
+        "target/wasm32-unknown-unknown/release/**",
+        "swc_plugin_workflow.wasm"
+      ]
+    }
+  }
+}
