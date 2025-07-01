@@ -38,20 +38,18 @@ export function createContext(options: CreateContextOptions) {
   Object.setPrototypeOf(g.Date, Date_);
   g.Date.now = () => fixedTimestamp;
 
-  // Deterministic `crypto`
-  g.crypto = globalThis.crypto;
+  // Deterministic `crypto` using Proxy to avoid mutating global objects
+  const originalCrypto = globalThis.crypto;
+  const originalSubtle = originalCrypto.subtle;
 
-  g.crypto.getRandomValues = (
-    array: Parameters<(typeof globalThis)['crypto']['getRandomValues']>['0']
-  ) => {
+  function getRandomValues(array: Uint8Array) {
     for (let i = 0; i < array.length; i++) {
       array[i] = Math.floor(rng() * 256);
     }
     return array;
-  };
+  }
 
-  // Simple deterministic `crypto.randomUUID()` (not cryptographically secure)
-  g.crypto.randomUUID = () => {
+  function randomUUID() {
     const chars = '0123456789abcdef';
     let uuid = '';
     for (let i = 0; i < 36; i++) {
@@ -66,12 +64,35 @@ export function createContext(options: CreateContextOptions) {
       }
     }
     return uuid;
-  };
+  }
 
-  // TODO: implement `crypto.subtle.generateKey()` deterministically
-  g.crypto.subtle.generateKey = () => {
-    throw new Error('Not implemented');
-  };
+  const boundDigest = originalSubtle.digest.bind(originalSubtle);
+
+  g.crypto = new Proxy(originalCrypto, {
+    get(target, prop) {
+      if (prop === 'getRandomValues') {
+        return getRandomValues;
+      }
+      if (prop === 'randomUUID') {
+        return randomUUID;
+      }
+      if (prop === 'subtle') {
+        return new Proxy(originalSubtle, {
+          get(target, prop) {
+            if (prop === 'generateKey') {
+              return () => {
+                throw new Error('Not implemented');
+              };
+            } else if (prop === 'digest') {
+              return boundDigest;
+            }
+            return target[prop as keyof typeof originalSubtle];
+          },
+        });
+      }
+      return target[prop as keyof typeof originalCrypto];
+    },
+  });
 
   // Web APIs that are made available in the context
   g.TextEncoder = globalThis.TextEncoder;
