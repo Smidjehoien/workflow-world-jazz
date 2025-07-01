@@ -1,6 +1,7 @@
 import { runInContext } from 'node:vm';
 import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
 import { createContext } from '@vercel/workflow-vm';
+import { getBaseUrl } from './base-url';
 import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
 import type { StepInvokePayload, WorkflowInvokePayload } from './schemas';
 import { getErrorName, isInstanceOf } from './types';
@@ -27,33 +28,11 @@ export type StepFunction<
  * @returns The unique run ID for the newly started workflow invocation.
  */
 export async function start(workflowId: string, options: StartOptions = {}) {
-  let baseUrl = options.baseUrl;
-
-  // Infer the base URL from the VERCEL_URL environment variable
-  // when no `baseUrl` option is provided.
-  if (!options.baseUrl) {
-    const vercelUrl = process.env.VERCEL_URL;
-    if (!vercelUrl) {
-      throw new Error('The `baseUrl` option must be provided');
-    }
-    baseUrl = `https://${vercelUrl}`;
-  }
-
-  const callbackUrl = new URL(`/api/workflows/${workflowId}`, baseUrl);
-
-  // Add the protection bypass token to the callback URL
-  // when the `VERCEL_AUTOMATION_BYPASS_SECRET` environment variable is set
-  // and the `baseUrl` option is not provided.
-  if (!options.baseUrl) {
-    const vercelAutomationBypassSecret =
-      process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
-    if (vercelAutomationBypassSecret) {
-      callbackUrl.searchParams.set(
-        'x-vercel-protection-bypass',
-        vercelAutomationBypassSecret
-      );
-    }
-  }
+  const baseUrl = getBaseUrl(options.baseUrl);
+  const callbackUrl = new URL(
+    `/api/workflows/${workflowId}${baseUrl.search}`,
+    baseUrl
+  );
 
   const runId = crypto.randomUUID();
   const payload: WorkflowInvokePayload = {
