@@ -59,7 +59,7 @@ export function handleWorkflow(workflowCode: string, workflowName: string) {
 
       console.log('Received workflow message:', message, metadata);
 
-      const context = createContext({
+      const { context } = createContext({
         seed: message.runId,
         fixedTimestamp: initialState.t,
       });
