@@ -71,6 +71,11 @@ export function createContext(options: CreateContextOptions): Context {
     return uuid;
   };
 
+  // TODO: implement `crypto.subtle.generateKey()` deterministically
+  g.crypto.subtle.generateKey = () => {
+    throw new Error('Not implemented');
+  };
+
   // Web APIs that are made available in the context
   g.TextEncoder = globalThis.TextEncoder;
   g.TextDecoder = globalThis.TextDecoder;

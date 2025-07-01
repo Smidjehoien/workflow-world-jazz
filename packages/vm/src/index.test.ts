@@ -133,7 +133,7 @@ describe('createContext', () => {
     expect(fooValue).toEqual('bar');
   });
 
-  it('should have functional `crypto.subtle`', async () => {
+  it('should have functional `crypto.subtle.digest()`', async () => {
     const context = createContext({ seed, fixedTimestamp });
 
     const promise = vm.runInContext(
@@ -144,5 +144,65 @@ describe('createContext', () => {
     expect(Buffer.from(result).toString('hex')).toEqual(
       '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
     );
+  });
+
+  it('should throw an error for `crypto.subtle.generateKey()`', async () => {
+    let err: Error | undefined;
+    const context = createContext({ seed, fixedTimestamp });
+
+    try {
+      vm.runInContext(
+        'crypto.subtle.generateKey({name: "RSA-OAEP",modulusLength: 4096,publicExponent: new Uint8Array([1, 0, 1]),hash: "SHA-256",},true,["encrypt", "decrypt"],)',
+        context
+      );
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeDefined();
+    expect(err).toBeInstanceOf(Error);
+    expect(err?.message).toEqual('Not implemented');
+  });
+
+  it('should call `onWorkflowError` when a workflow error occurs', async () => {
+    const context = createContext({ seed, fixedTimestamp });
+
+    const createUseStep =
+      (ctx: { onWorkflowError: (err: Error) => void }) => () => () =>
+        new Promise(() => {
+          setTimeout(() => {
+            ctx.onWorkflowError(new Error('workflow error'));
+          }, 100);
+        });
+
+    let workflowErrorResolve: (err: Error) => void;
+    const workflowErrorDeferred = new Promise<Error>((resolve) => {
+      workflowErrorResolve = resolve;
+    });
+
+    function onWorkflowError(err: Error) {
+      workflowErrorResolve?.(err);
+    }
+
+    context.useStep = createUseStep({
+      onWorkflowError,
+    });
+
+    const workflowFn = await vm.runInContext(
+      `
+      const add = useStep('add');
+
+      async function workflow() {
+        await add(1, 2);
+        return 'should not be returned';
+      }
+
+      workflow;
+    `,
+      context
+    );
+    expect(workflowFn).toBeTypeOf('function');
+
+    const result = await Promise.race([workflowFn(), workflowErrorDeferred]);
+    expect(result.message).toEqual('workflow error');
   });
 });
