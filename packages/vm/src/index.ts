@@ -77,6 +77,9 @@ export function createContext(options: CreateContextOptions) {
   g.TextEncoder = globalThis.TextEncoder;
   g.TextDecoder = globalThis.TextDecoder;
 
+  // Shim exports for bundle
+  g.exports = {};
+
   return {
     context,
     updateTimestamp: (timestamp: number) => {

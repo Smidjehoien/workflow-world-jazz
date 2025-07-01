@@ -1,5 +1,5 @@
 import type { Context } from 'node:vm';
-import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
+import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global.js';
 
 /**
  * Generates a "step wrapper" function that can be used to invoke a step

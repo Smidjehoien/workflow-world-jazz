@@ -23,6 +23,7 @@ export type WorkflowEvent =
   | WorkflowEventCommon<WorkflowStepFatalError>;
 
 export interface WorkflowInvokePayload {
+  workflowId: string;
   runId: string;
   callbackUrl: string;
   state: [WorkflowEventCommon<WorkflowTriggerEvent>, ...WorkflowEvent[]];

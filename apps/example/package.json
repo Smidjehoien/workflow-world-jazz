@@ -1,10 +1,11 @@
 {
   "name": "@workflow/example-app",
   "private": true,
+  "type": "module",
   "version": "0.0.1",
   "scripts": {
     "build": "workflow build && mkdir -p public && echo 'Hello, world!' > public/index.html",
-    "clean": "rm -r public; rm -r api/generated ||:",
+    "clean": "rm -r public; rm -r generated; rm -r api/generated ||:",
     "invoke": "node invoke.mts"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
   "dependencies": {
     "@vercel/functions": "^2.2.2",
     "@vercel/workflow-core": "workspace:*",
+    "mixpart": "^0.0.4",
     "swc-plugin-workflow": "workspace:*"
   }
 }

@@ -15,9 +15,11 @@
  */
 export function getBaseUrl(baseUrl?: string, env = process.env): URL {
   if (baseUrl) {
+    const protocol = baseUrl.includes('localhost') ? 'http' : 'https';
+
     // Adds implicit `https://` prefix to the base URL
-    if (!baseUrl.startsWith('https://')) {
-      baseUrl = `https://${baseUrl}`;
+    if (!baseUrl.startsWith(`${protocol}://`)) {
+      baseUrl = `${protocol}://${baseUrl}`;
     }
     return new URL(baseUrl);
   }
@@ -31,7 +33,8 @@ export function getBaseUrl(baseUrl?: string, env = process.env): URL {
     );
   }
 
-  const vercelUrl = new URL(`https://${vercelUrlVal}`);
+  const protocol = vercelUrlVal.includes('localhost') ? 'http' : 'https';
+  const vercelUrl = new URL(`${protocol}://${vercelUrlVal}`);
 
   // Add the protection bypass token to the Vercel URL when the
   // `VERCEL_AUTOMATION_BYPASS_SECRET` environment variable is set

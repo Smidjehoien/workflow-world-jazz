@@ -1,24 +1,25 @@
 import { runInContext } from 'node:vm';
-import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
+import {
+  InvalidCallbackError,
+  type MessageHandler,
+  parseCallbackRequest,
+  QueueClient,
+  send,
+  Topic,
+} from '@vercel/queue';
 import { createContext } from '@vercel/workflow-vm';
-import { getBaseUrl } from './base-url';
-import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
-import type { StepInvokePayload, WorkflowInvokePayload } from './schemas';
-import { getErrorName, isInstanceOf } from './types';
+import { getBaseUrl } from './base-url.js';
+import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global.js';
+import { getStepFunction, type StepFunction } from './private.js';
+import type { StepInvokePayload, WorkflowInvokePayload } from './schemas.js';
+import { getErrorName, isInstanceOf } from './types.js';
 
-export { FatalError, StepNotRunError } from './global';
-
-export const WORKFLOW_TOPIC = 'workflow';
+export { FatalError, StepNotRunError } from './global.js';
 
 export interface StartOptions {
   arguments?: unknown[];
   baseUrl?: string;
 }
-
-export type StepFunction<
-  Args extends Serializable[] = any[],
-  Result extends Serializable | unknown = unknown,
-> = (...args: Args) => Promise<Result>;
 
 /**
  * Starts a workflow run.
@@ -30,17 +31,18 @@ export type StepFunction<
 export async function start(workflowId: string, options: StartOptions = {}) {
   const baseUrl = getBaseUrl(options.baseUrl);
   const callbackUrl = new URL(
-    `/api/workflows/${workflowId}${baseUrl.search}`,
+    `/api/generated/workflows${baseUrl.search}`,
     baseUrl
   );
 
   const runId = crypto.randomUUID();
   const payload: WorkflowInvokePayload = {
+    workflowId,
     runId,
     callbackUrl: callbackUrl.href,
     state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
   };
-  const queueResult = await send(WORKFLOW_TOPIC, payload, {
+  const queueResult = await send(`workflow-${workflowId}`, payload, {
     callback: {
       url: callbackUrl.href,
     },
@@ -50,81 +52,190 @@ export async function start(workflowId: string, options: StartOptions = {}) {
 
 // ---------------------------------------------------------
 
-export function handleWorkflow(workflowCode: string, workflowName: string) {
-  return handleCallback({
-    async [WORKFLOW_TOPIC](message_, metadata) {
-      // TODO: validate `message` schema
-      const message = message_ as WorkflowInvokePayload;
-      const initialState = message.state[0];
+/**
+ * A single route that handles any workflow execution request and routes to the
+ * appropriate workflow function.
+ *
+ * @param workflowCode - The workflow bundle code containing all the workflow
+ * functions at the top level.
+ * @returns A function that can be used as a Vercel API route.
+ */
+export function vercelAPIWorkflowsEntrypoint(
+  workflowCode: string
+): (request: Request) => Promise<Response> {
+  return async (request: Request) => {
+    try {
+      // Parse the queue callback information
+      const { queueName, consumerGroup, messageId } =
+        parseCallbackRequest(request);
 
-      console.log('Received workflow message:', message, metadata);
+      // Ensure we're handling a `workflow` topic
+      if (!queueName.startsWith('workflow-')) {
+        throw new Error(`Expected 'workflow-*' topic, got '${queueName}'`);
+      }
 
-      const { context } = createContext({
-        seed: message.runId,
-        fixedTimestamp: initialState.t,
+      // Ensure the consumer group is 'default'
+      if (consumerGroup !== 'default') {
+        throw new Error(
+          `Expected 'default' consumer group, got '${consumerGroup}'`
+        );
+      }
+
+      // extract the workflow name from the queue name
+      const workflowName = queueName.slice('workflow-'.length);
+      // TODO: validate `workflowName` exists before consuming message?
+
+      // Create client and process the message
+      const client = new QueueClient();
+      const topic = new Topic(client, queueName);
+      const cg = topic.consumerGroup(consumerGroup);
+
+      await cg.consume(workflowMessageHandler(workflowCode, workflowName), {
+        messageId,
       });
 
-      // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-      context[STATE] = message.state;
-      // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-      context[STEP_INDEX] = 1;
+      return Response.json({ status: 'success' });
+    } catch (error) {
+      console.error('Callback error:', error);
 
-      // Invoke user workflow
-      try {
-        const workflowFn = runInContext(
-          `${workflowCode};${workflowName}`,
-          context
+      if (error instanceof InvalidCallbackError) {
+        return Response.json(
+          { error: 'Invalid callback request' },
+          { status: 400 }
         );
-        if (typeof workflowFn !== 'function') {
-          throw new Error('Workflow code must be a function');
-        }
-        const result = await workflowFn(...initialState.arguments);
-        console.log('Workflow result:', result);
-      } catch (err) {
-        if (isInstanceOf(err, StepNotRunError)) {
-          console.log('Step not run:', err.stepId, err.args);
-          const stepInvokePayload: StepInvokePayload = {
-            runId: message.runId,
-            callbackUrl: message.callbackUrl,
-            state: message.state,
-            stepId: err.stepId,
-            arguments: err.args as unknown[],
-          };
-          const callbackUrl = new URL(message.callbackUrl);
-          const stepCallbackUrl = new URL(
-            `/api/steps/${err.stepId}${callbackUrl.search}`,
-            callbackUrl
-          );
-          await send(WORKFLOW_TOPIC, stepInvokePayload, {
-            callback: {
-              url: stepCallbackUrl.href,
-            },
-          });
-        } else if (isInstanceOf(err, FatalError)) {
-          console.error(
-            `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
-          );
-        } else {
-          console.error(
-            `Unexpected error while running workflow (Run ID: ${message.runId}): ${err}`
-          );
-        }
       }
-    },
-  });
+
+      return Response.json(
+        { error: 'Failed to process callback' },
+        { status: 500 }
+      );
+    }
+  };
 }
 
-/** @deprecated Single step route handler */
-export function handleStep(stepFn: StepFunction) {
-  return handleCallback({
-    async [WORKFLOW_TOPIC](message_, metadata) {
-      return _handleStep(stepFn)(message_, metadata);
-    },
-  });
+function workflowMessageHandler(
+  workflowCode: string,
+  workflowName: string
+): MessageHandler<unknown> {
+  return async (message_, metadata) => {
+    // TODO: validate `message` schema
+    const message = message_ as WorkflowInvokePayload;
+
+    const initialState = message.state[0];
+
+    console.log('Received workflow message:', message, metadata);
+
+    const { context } = createContext({
+      seed: message.runId,
+      fixedTimestamp: initialState.t,
+    });
+
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    context[STATE] = message.state;
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    context[STEP_INDEX] = 1;
+
+    // Invoke user workflow
+    try {
+      const workflowFn = runInContext(
+        `${workflowCode};${workflowName}`,
+        context
+      );
+      if (typeof workflowFn !== 'function') {
+        throw new Error('Workflow code must be a function');
+      }
+      const result = await workflowFn(...initialState.arguments);
+      console.log('Workflow result:', result);
+    } catch (err) {
+      if (isInstanceOf(err, StepNotRunError)) {
+        console.log('Step not run:', err.stepId, err.args);
+        const stepInvokePayload: StepInvokePayload = {
+          ...message,
+          stepId: err.stepId,
+          arguments: err.args as unknown[],
+        };
+        const callbackUrl = new URL(message.callbackUrl);
+        const stepCallbackUrl = new URL(
+          `/api/generated/steps${callbackUrl.search}`,
+          callbackUrl
+        );
+        await send(`step-${err.stepId}`, stepInvokePayload, {
+          callback: {
+            url: stepCallbackUrl.href,
+          },
+        });
+      } else if (isInstanceOf(err, FatalError)) {
+        console.error(
+          `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
+        );
+      } else {
+        console.error(
+          `Unexpected error while running workflow (Run ID: ${message.runId}): ${err}`
+        );
+      }
+    }
+  };
 }
 
-export function _handleStep(stepFn: StepFunction) {
-  return async (message_: unknown, metadata: MessageMetadata) => {
+/**
+ * A single route that handles any step execution request and routes to the
+ * appropriate step function. We may eventually want to create different bundles
+ * for each step, this is temporary.
+ */
+export async function vercelAPIStepsEntrypoint(
+  request: Request
+): Promise<Response> {
+  try {
+    // Parse the queue callback information
+    const { queueName, consumerGroup, messageId } =
+      parseCallbackRequest(request);
+
+    // Ensure we're handling a `step` topic
+    if (!queueName.startsWith('step-')) {
+      throw new Error(`Expected 'step-*' topic, got '${queueName}'`);
+    }
+
+    // Ensure the consumer group is 'default'
+    if (consumerGroup !== 'default') {
+      throw new Error(
+        `Expected 'default' consumer group, got '${consumerGroup}'`
+      );
+    }
+
+    // extract the step name from the queue name
+    const stepName = queueName.slice('step-'.length);
+    const stepFn = getStepFunction(stepName);
+    if (!stepFn) {
+      throw new Error(`Step ${stepName} not found`);
+    }
+
+    // Create client and process the message
+    const client = new QueueClient();
+    const topic = new Topic(client, queueName);
+    const cg = topic.consumerGroup(consumerGroup);
+
+    await cg.consume(stepMessageHandler(stepFn), { messageId });
+
+    return Response.json({ status: 'success' });
+  } catch (error) {
+    console.error('Callback error:', error);
+
+    if (error instanceof InvalidCallbackError) {
+      return Response.json(
+        { error: 'Invalid callback request' },
+        { status: 400 }
+      );
+    }
+
+    return Response.json(
+      { error: 'Failed to process callback' },
+      { status: 500 }
+    );
+  }
+}
+
+function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
+  return async (message_, metadata) => {
     // TODO: validate `message` schema
     const message = message_ as StepInvokePayload;
 
@@ -152,7 +263,6 @@ export function _handleStep(stepFn: StepFunction) {
         });
       } else {
         const deliveryCount = metadata.deliveryCount;
-        // @ts-expect-error - quick hack
         const maxRetries = stepFn.maxRetries ?? 32;
         if (deliveryCount >= maxRetries) {
           // Max retries reached - store the error in the event log and re-invoke the workflow
@@ -174,7 +284,7 @@ export function _handleStep(stepFn: StepFunction) {
     }
 
     console.log('Sending updated state payload back to the workflow:', message);
-    await send(WORKFLOW_TOPIC, message, {
+    await send(`workflow-${message.workflowId}`, message, {
       callback: {
         url: message.callbackUrl,
       },
@@ -182,25 +292,4 @@ export function _handleStep(stepFn: StepFunction) {
   };
 }
 
-/**
- * A serializable value:
- *  Any valid JSON object is serializable
- *
- * @example ```ts
- * // any valid JSON object is serializable
- * const anyJson: Serializable = { foo: "bar" };
- *
- * ```
- */
-export type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Serializable[]
-  | { [key: string]: Serializable };
-// TODO: add support for binary data and streams using vqs
-// | ArrayBuffer; // TODO:
-
-export * from './step';
+export * from './step.js';

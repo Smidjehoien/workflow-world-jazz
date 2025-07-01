@@ -22,7 +22,7 @@ export async function add(a, b) {
 Server output code
 ```
 // api/generated/steps.js
-import { registerStepFunction } from "@vercel/workflow-core/bundler-utils"
+import { registerStepFunction } from "@vercel/workflow-core/private"
 
 export async function add(a, b) {
   return a + b

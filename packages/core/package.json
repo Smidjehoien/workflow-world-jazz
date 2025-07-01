@@ -1,24 +1,26 @@
 {
   "name": "@vercel/workflow-core",
   "version": "0.0.0",
-  "type": "commonjs",
+  "type": "module",
   "main": "dist/index.js",
   "files": [
     "dist"
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./bundler-utils": "./dist/bundler-utils.js"
+    "./private": "./dist/private.js"
   },
   "scripts": {
     "build": "tsc",
     "clean": "tsc --build --clean",
     "test": "vitest"
   },
+  "dependencies": {
+    "@vercel/queue": "0.0.0-alpha.4",
+    "@vercel/workflow-vm": "workspace:*"
+  },
   "devDependencies": {
     "@types/node": "^24.0.3",
-    "@vercel/queue": "0.0.0-alpha.4",
-    "@vercel/workflow-tsconfig": "workspace:*",
-    "@vercel/workflow-vm": "workspace:*"
+    "@vercel/workflow-tsconfig": "workspace:*"
   }
 }
