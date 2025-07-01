@@ -6,6 +6,10 @@
   "files": [
     "dist"
   ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./bundler-utils": "./dist/bundler-utils.js"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "tsc --build --clean",

@@ -2,42 +2,59 @@
 
 ## The 'use step' directive
 
-The use step directive works similarly to the 'use server' in react. A function marked at 'use step' will be bundled and executed on the server
+The use step directive works similarly to the 'use server' in react. A function marked at 'use step' will be bundled and executed on the server.
 
-When calling a Server Function on the client, it will make a network request to enqueue the step on the Vercel queue, along with a serialized copy of any arguments passed. The result of the calling the server function will be an object containing the message ID of the enqueued message, not the actual return value of the function.
+The swc plugin has 2 modes - 'server' mode and 'workflow' mode.
 
-The logic to encapsulate enqueueing a step lives in the `useStep` function in '@vercel/workflow-core'. So, the compiler transform to call a step simply looks like this:
+### Server Mode
 
-Input code
+When executed in 'server' mode, each step is kept as is and is simply registered using `registerStepFunction` from `@vercel/workflow-core`. For example:
+
+Input code:
 ```
-// index.ts
-async function add(a, b) {
+// workflow/steps.js
+export async function add(a, b) {
   "use step";
   return a + b
 }
+```
 
-add(1, 2)
+Server output code
+```
+// api/generated/steps.js
+import { registerStepFunction } from "@vercel/workflow-core/bundler-utils"
 
+export async function add(a, b) {
+  return a + b
+}
+registerStepFunction(add)
+```
+
+Upstream, this plugin will be used in server mode by a bundler to combine multiple entry points and create a server bundle that's stored at `api/generated/steps.ts`
+
+### Workflow Mode
+
+When executed in 'workflow' mode, step definitions are replaced with a `useStep` call from `@vercel/workflow-core`. `useStep` will handle the logic to resolve the step invoke result from cache, or making network request to enqueue the step on Vercel queue with a serialized copy of any arguments passed. 
+
+
+Input code
+```
+// workflow/steps.js
+export async function add(a, b) {
+  "use step";
+  return a + b
+}
 ```
 
 Output code
 ```
-// api/steps/add.ts
-import { handleStep } from '@vercel/workflow-core';
+// workflow/generated/steps.js
+import { useStep } from '@vercel/workflow-core';
 
-async function add(a, b) {
-  return a + b
-}
-
-export const POST = handleStep(add);
-
-// index.ts
-import { useStep } from '@vercel/workflow-core/dist/step';
-
-useStep('add')(1, 2)
+export const add = useStep('add')
 ```
 
-Instead of individually marking functions with 'use server', you can add the directive to the top of a file to mark all exports within that file as Step Functions that can be used anywhere.
+Instead of individually marking functions with 'use step', you can also add the directive to the top of a file to mark all exports within that file as step functions
 
 
 ### Caveats 

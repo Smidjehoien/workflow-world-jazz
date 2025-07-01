@@ -22,6 +22,7 @@
   "dependencies": {
     "@rollup/plugin-multi-entry": "^6.0.1",
     "@swc/core": "1.11.24",
+    "@vercel/workflow-core": "workspace:*",
     "chokidar": "^4.0.3",
     "rollup": "^4.44.0",
     "rollup-plugin-swc3": "0.12.1",
