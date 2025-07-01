@@ -22,7 +22,6 @@ export function registerStepFunction(stepFn: StepFunction) {
  * Find a registered step function by name
  */
 export function getStepFunction(stepName: string): StepFunction | undefined {
-  console.log('getStepFunction', stepName, registeredSteps);
   return registeredSteps.get(stepName);
 }
 
