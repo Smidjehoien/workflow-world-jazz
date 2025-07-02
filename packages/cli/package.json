@@ -3,23 +3,35 @@
   "version": "0.0.0",
   "type": "module",
   "bin": {
-    "workflow": "dist/index.js",
-    "wf": "dist/index.js"
+    "workflow": "./bin/run.js",
+    "wf": "./bin/run.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
+    "build": "tsc && chmod +x bin/run.js",
     "clean": "tsc --build --clean",
     "watch": "tsc --watch",
     "test": "vitest"
+  },
+  "oclif": {
+    "bin": "workflow",
+    "dirname": "workflow",
+    "commands": "./dist/commands",
+    "plugins": [
+      "@oclif/plugin-help"
+    ],
+    "topicSeparator": " "
   },
   "devDependencies": {
     "@types/node": "^24.0.3",
     "@vercel/workflow-tsconfig": "workspace:*"
   },
   "dependencies": {
+    "@oclif/core": "^4.0.0",
+    "@oclif/plugin-help": "^6.0.0",
     "@rollup/plugin-commonjs": "^28.0.6",
     "@rollup/plugin-multi-entry": "^6.0.1",
     "@rollup/plugin-node-resolve": "^16.0.1",

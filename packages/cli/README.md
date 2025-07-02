@@ -1,94 +1,88 @@
 # Workflow CLI
 
-A CLI tool for building workflow bundles for Vercel.
+A CLI tool for building and developing Vercel workflow
 
 ## Installation
 
-This package isn't published yet. Just make sure build this package `pnpm run build` or let turbo do it from the repo root and install it as a dev dependency in any package that uses it.
+Include it as a local workspace dependency directly in your package.json for now. This hasn't been published to npm and is only accessible in this workspace at the moment.
 
 ## Usage
 
-The CLI is available as both `workflow` (Or `wf` for shorthand):
+The CLI provides both `workflow` and `wf` (shorthand) commands:
 
 ```bash
-workflow [options]
-# OR, for short
-wf [options]
+# Build workflows (main functionality)
+workflow build
+workflow build --target vercel-static
+workflow build --target vercel-build-output-api
+
+# Coming soon commands
+workflow dev          # Development server with file watching
+workflow init         # Initialize new workflow project  
+workflow validate     # Validate workflow files
 ```
 
-## Options
+## Commands
 
-### `--target <target>`
+### `workflow build [TARGET]`
 
-Specify the build target for your workflow bundles. Available targets:
+Build workflow bundles for deployment.
 
-- `vercel-static` (default) - Creates static bundles in an `/api` directory according to the vercel `static-build` format. Will be picked up by `vc dev` locally.
-- `vercel-build-output-api` - Creates Vercel Build Output API structure with serverless functions
+**Options:**
+- `--target, -t` - Build target (`vercel-static` | `vercel-build-output-api`)
 
-### `--help, -h`
-
-Show help information.
-
-## Examples
-
-### Default Build Target (Vercel Static)
-
+**Examples:**
 ```bash
-# Uses vercel-static target by default
-wf
-
-# Explicitly specify vercel-static target
-wf --target vercel-static
-
-# Using pnpm build (in example app)
-pnpm build
+workflow build
+workflow build --target vercel-build-output-api
 ```
 
-This creates:
-- `./api/generated/steps.js` - Steps bundle
-- `./api/generated/workflows.js` - Workflows bundle
+### `workflow dev` *(Coming Soon)*
 
-### Vercel Build Output API
+Start development server with file watching, hot reloading, and enhanced debugging.
 
-```bash
-wf --target vercel-build-output-api
-```
+### `workflow init` *(Coming Soon)*
 
-This creates a `.vercel/output` directory structure compatible with the [Vercel Build Output API](https://vercel.com/docs/build-output-api):
+Initialize a new workflow project with templates and interactive setup.
 
-```
-.vercel/output/
-├── config.json
-└── functions/
-    └── api/
-        └── generated/
-            ├── steps.func/
-            │   ├── .vc-config.json
-            │   └── index.js
-            └── workflows.func/
-                ├── .vc-config.json
-                └── index.js
-```
+### `workflow validate` *(Coming Soon)*
 
-The functions will be available at:
-- `/api/generated/steps` - Step execution endpoint
-- `/api/generated/workflows` - Workflow execution endpoint
+Validate workflow files with syntax checking, type validation, and best practice recommendations.
+
+## Build Targets
+
+### `vercel-static` (default)
+- Creates bundles at `api/generated/steps.js` and `api/generated/workflows.js`
+- Uses standard Vercel deployment process
+- Functions available at `/api/generated/steps` and `/api/generated/workflows`
+
+### `vercel-build-output-api`
+- Creates `.vercel/output` directory structure
+- Generates serverless functions at:
+  - `/api/generated/steps.func/`
+  - `/api/generated/workflows.func/`
+- Compatible with Vercel Build Output API v3
 
 ## Configuration
 
-Currently configuration is hardcoded but will be made configurable in future versions:
+The CLI looks for workflow files in the `./workflows/` directory by default. You can organize your files as:
 
-```typescript
-const resolvedConfig = {
-  dirs: ['./workflows'],
-  workingDir: process.cwd(),
-  buildTarget: 'vercel-static', // or 'vercel-build-output-api'
-  
-  // vercel-static paths
-  stepsBundlePath: './api/generated/steps.js',
-  workflowBundle: './api/generated/workflows.js',
-  
-  // vercel-build-output-api paths
-  buildOutputDir: './.vercel/output',
-};
+```
+workflows/
+├── steps.ts       # Step definitions
+├── workflows.ts   # Workflow definitions
+└── utils/         # Shared utilities
+```
+
+## Development
+
+```bash
+# Build the CLI
+pnpm build
+
+# Run tests
+pnpm test
+
+# Watch mode
+pnpm watch
 ```
