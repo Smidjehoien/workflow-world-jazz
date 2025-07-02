@@ -12,8 +12,5 @@ pnpm run build:workflow
 
 # setup a trigger function
 mkdir -p .vercel/output/functions/api
+rm -rf .vercel/output/functions/api/trigger.func
 cp -r .prebuilt/trigger.func .vercel/output/functions/api/trigger.func
-
-# setup a static file
-mkdir -p .vercel/output/static
-echo 'Hello, world!' > .vercel/output/static/index.html
