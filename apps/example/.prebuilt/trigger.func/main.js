@@ -4,14 +4,12 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-var __commonJS = (cb, mod) => function __require2() {
+var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, { get: all[name], enumerable: true });
 };
 var __copyProps = (to, from, except, desc) => {
   if (from && typeof from === "object" || typeof from === "function") {
@@ -29,11 +27,12 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js
 var require_alea = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function Alea(seed) {
         var me = this, mash = Mash();
         me.next = function() {
@@ -102,8 +101,8 @@ var require_alea = __commonJS({
         };
         return mash;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -112,8 +111,8 @@ var require_alea = __commonJS({
         this.alea = impl;
       }
     })(
-      exports,
-      typeof module == "object" && module,
+      exports2,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -123,8 +122,8 @@ var require_alea = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js
 var require_xor128 = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
         me.x = 0;
@@ -175,8 +174,8 @@ var require_xor128 = __commonJS({
         }
         return prng;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -185,8 +184,8 @@ var require_xor128 = __commonJS({
         this.xor128 = impl;
       }
     })(
-      exports,
-      typeof module == "object" && module,
+      exports2,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -196,8 +195,8 @@ var require_xor128 = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js
 var require_xorwow = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
         me.next = function() {
@@ -255,8 +254,8 @@ var require_xorwow = __commonJS({
         }
         return prng;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -265,8 +264,8 @@ var require_xorwow = __commonJS({
         this.xorwow = impl;
       }
     })(
-      exports,
-      typeof module == "object" && module,
+      exports2,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -276,8 +275,8 @@ var require_xorwow = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js
 var require_xorshift7 = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function XorGen(seed) {
         var me = this;
         me.next = function() {
@@ -346,8 +345,8 @@ var require_xorshift7 = __commonJS({
         }
         return prng;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -356,8 +355,8 @@ var require_xorshift7 = __commonJS({
         this.xorshift7 = impl;
       }
     })(
-      exports,
-      typeof module == "object" && module,
+      exports2,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -367,8 +366,8 @@ var require_xorshift7 = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js
 var require_xor4096 = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function XorGen(seed) {
         var me = this;
         me.next = function() {
@@ -454,8 +453,8 @@ var require_xor4096 = __commonJS({
         }
         return prng;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -464,9 +463,9 @@ var require_xor4096 = __commonJS({
         this.xor4096 = impl;
       }
     })(
-      exports,
+      exports2,
       // window object or global
-      typeof module == "object" && module,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -476,8 +475,8 @@ var require_xor4096 = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js
 var require_tychei = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js"(exports, module) {
-    (function(global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js"(exports2, module2) {
+    (function(global, module3, define2) {
       function XorGen(seed) {
         var me = this, strseed = "";
         me.next = function() {
@@ -534,8 +533,8 @@ var require_tychei = __commonJS({
         }
         return prng;
       }
-      if (module2 && module2.exports) {
-        module2.exports = impl;
+      if (module3 && module3.exports) {
+        module3.exports = impl;
       } else if (define2 && define2.amd) {
         define2(function() {
           return impl;
@@ -544,8 +543,8 @@ var require_tychei = __commonJS({
         this.tychei = impl;
       }
     })(
-      exports,
-      typeof module == "object" && module,
+      exports2,
+      typeof module2 == "object" && module2,
       // present in node.js
       typeof define == "function" && define
       // present with an AMD loader
@@ -555,7 +554,7 @@ var require_tychei = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js
 var require_seedrandom = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js"(exports, module) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js"(exports2, module2) {
     (function(global, pool, math) {
       var width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
       function seedrandom(seed, options, callback) {
@@ -676,10 +675,10 @@ var require_seedrandom = __commonJS({
         return String.fromCharCode.apply(0, a);
       }
       mixkey(math.random(), pool);
-      if (typeof module == "object" && module.exports) {
-        module.exports = seedrandom;
+      if (typeof module2 == "object" && module2.exports) {
+        module2.exports = seedrandom;
         try {
-          nodecrypto = __require("crypto");
+          nodecrypto = require("crypto");
         } catch (ex) {
         }
       } else if (typeof define == "function" && define.amd) {
@@ -692,7 +691,7 @@ var require_seedrandom = __commonJS({
     })(
       // global: `self` in browsers (including strict mode and web workers),
       // otherwise `this` in Node and other environments
-      typeof self !== "undefined" ? self : exports,
+      typeof self !== "undefined" ? self : exports2,
       [],
       // pool: entropy pool starts empty
       Math
@@ -703,7 +702,7 @@ var require_seedrandom = __commonJS({
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js
 var require_seedrandom2 = __commonJS({
-  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js"(exports, module) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js"(exports2, module2) {
     var alea = require_alea();
     var xor128 = require_xor128();
     var xorwow = require_xorwow();
@@ -717,20 +716,20 @@ var require_seedrandom2 = __commonJS({
     sr.xorshift7 = xorshift7;
     sr.xor4096 = xor4096;
     sr.tychei = tychei;
-    module.exports = sr;
+    module2.exports = sr;
   }
 });
 
 // ../../packages/vm/dist/index.js
 var require_dist = __commonJS({
-  "../../packages/vm/dist/index.js"(exports) {
+  "../../packages/vm/dist/index.js"(exports2) {
     "use strict";
-    var __importDefault = exports && exports.__importDefault || function(mod) {
+    var __importDefault = exports2 && exports2.__importDefault || function(mod) {
       return mod && mod.__esModule ? mod : { "default": mod };
     };
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.createContext = createContext2;
-    var node_vm_1 = __require("node:vm");
+    Object.defineProperty(exports2, "__esModule", { value: true });
+    exports2.createContext = createContext2;
+    var node_vm_1 = require("node:vm");
     var seedrandom_1 = __importDefault(require_seedrandom2());
     function createContext2(options) {
       let { fixedTimestamp } = options;
@@ -810,6 +809,13 @@ var require_dist = __commonJS({
     }
   }
 });
+
+// api/trigger.ts
+var trigger_exports = {};
+__export(trigger_exports, {
+  POST: () => POST
+});
+module.exports = __toCommonJS(trigger_exports);
 
 // ../../node_modules/.pnpm/mixpart@0.0.4/node_modules/mixpart/dist/index.mjs
 var MultipartParseError = class extends Error {
@@ -1255,7 +1261,7 @@ var StreamingMultipartParser = class {
 };
 
 // ../../node_modules/.pnpm/@vercel+queue@0.0.0-alpha.4/node_modules/@vercel/queue/dist/index.mjs
-import { spawn } from "child_process";
+var import_child_process = require("child_process");
 function isLocalhostWithPort(url) {
   try {
     const parsedUrl = new URL(url);
@@ -1357,7 +1363,7 @@ function fireAndForgetWaitForHttpReady(url, port, initialDelaySeconds = 0, retry
       sleep ${retryFrequencySeconds}
     done
   `;
-  const childProcess = spawn("bash", ["-c", bashScript], {
+  const childProcess = (0, import_child_process.spawn)("bash", ["-c", bashScript], {
     stdio: "ignore",
     detached: true
   });
@@ -2050,6 +2056,7 @@ var POST = async (req) => {
     `Starting "${workflowId}" workflow with run ID "${runId}"`
   );
 };
-export {
+// Annotate the CommonJS export names for ESM import in node:
+0 && (module.exports = {
   POST
-};
+});
