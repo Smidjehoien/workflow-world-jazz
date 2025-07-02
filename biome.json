@@ -10,7 +10,8 @@
       "**/*.json",
       "!**/node_modules/**",
       "!**/dist/**",
-      "!**/.vercel/**"
+      "!**/.vercel/**",
+      "!**/api/generated/**"
     ],
     "ignoreUnknown": false
   },
