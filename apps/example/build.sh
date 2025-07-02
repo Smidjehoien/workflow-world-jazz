@@ -13,4 +13,4 @@ pnpm run build:workflow
 # setup a trigger function
 mkdir -p .vercel/output/functions/api
 rm -rf .vercel/output/functions/api/trigger.func
-cp -r .prebuilt/trigger.func .vercel/output/functions/api/trigger.func
+cp -ra .prebuilt/trigger.func .vercel/output/functions/api/trigger.func
