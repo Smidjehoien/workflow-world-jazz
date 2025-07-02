@@ -4,70 +4,48 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __require = /* @__PURE__ */ ((x) =>
-  typeof require !== 'undefined'
-    ? require
-    : typeof Proxy !== 'undefined'
-      ? new Proxy(x, {
-          get: (a, b) => (typeof require !== 'undefined' ? require : a)[b],
-        })
-      : x)(function (x) {
-  if (typeof require !== 'undefined') return require.apply(this, arguments);
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
+  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
+}) : x)(function(x) {
+  if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
 });
-var __commonJS = (cb, mod) =>
-  function __require2() {
-    return (
-      mod ||
-        (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod),
-      mod.exports
-    );
-  };
+var __commonJS = (cb, mod) => function __require2() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
 var __copyProps = (to, from, except, desc) => {
-  if ((from && typeof from === 'object') || typeof from === 'function') {
+  if (from && typeof from === "object" || typeof from === "function") {
     for (let key of __getOwnPropNames(from))
       if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, {
-          get: () => from[key],
-          enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable,
-        });
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
   }
   return to;
 };
-var __toESM = (mod, isNodeMode, target) => (
-  (target = mod != null ? __create(__getProtoOf(mod)) : {}),
-  __copyProps(
-    // If the importer is in node compatibility mode or this is not an ESM
-    // file that has been converted to a CommonJS file using a Babel-
-    // compatible transform (i.e. "__esModule" has not been set), then set
-    // "default" to the CommonJS "module.exports" for node compatibility.
-    isNodeMode || !mod || !mod.__esModule
-      ? __defProp(target, 'default', { value: mod, enumerable: true })
-      : target,
-    mod
-  )
-);
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js
 var require_alea = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/alea.js"(exports, module) {
+    (function(global, module2, define2) {
       function Alea(seed) {
-        var me = this,
-          mash = Mash();
-        me.next = function () {
+        var me = this, mash = Mash();
+        me.next = function() {
           var t = 2091639 * me.s0 + me.c * 23283064365386963e-26;
           me.s0 = me.s1;
           me.s1 = me.s2;
-          return (me.s2 = t - (me.c = t | 0));
+          return me.s2 = t - (me.c = t | 0);
         };
         me.c = 1;
-        me.s0 = mash(' ');
-        me.s1 = mash(' ');
-        me.s2 = mash(' ');
+        me.s0 = mash(" ");
+        me.s1 = mash(" ");
+        me.s2 = mash(" ");
         me.s0 -= mash(seed);
         if (me.s0 < 0) {
           me.s0 += 1;
@@ -90,19 +68,17 @@ var require_alea = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new Alea(seed),
-          state = opts && opts.state,
-          prng = xg.next;
-        prng.int32 = function () {
-          return (xg.next() * 4294967296) | 0;
+        var xg = new Alea(seed), state = opts && opts.state, prng = xg.next;
+        prng.int32 = function() {
+          return xg.next() * 4294967296 | 0;
         };
-        prng.double = function () {
-          return prng() + ((prng() * 2097152) | 0) * 11102230246251565e-32;
+        prng.double = function() {
+          return prng() + (prng() * 2097152 | 0) * 11102230246251565e-32;
         };
         prng.quick = prng;
         if (state) {
-          if (typeof state == 'object') copy(state, xg);
-          prng.state = function () {
+          if (typeof state == "object") copy(state, xg);
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -110,7 +86,7 @@ var require_alea = __commonJS({
       }
       function Mash() {
         var n = 4022871197;
-        var mash = function (data) {
+        var mash = function(data) {
           data = String(data);
           for (var i = 0; i < data.length; i++) {
             n += data.charCodeAt(i);
@@ -129,7 +105,7 @@ var require_alea = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -137,34 +113,30 @@ var require_alea = __commonJS({
       }
     })(
       exports,
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js
 var require_xor128 = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor128.js"(exports, module) {
+    (function(global, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = '';
+        var me = this, strseed = "";
         me.x = 0;
         me.y = 0;
         me.z = 0;
         me.w = 0;
-        me.next = function () {
-          var t = me.x ^ (me.x << 11);
+        me.next = function() {
+          var t = me.x ^ me.x << 11;
           me.x = me.y;
           me.y = me.z;
           me.z = me.w;
-          return (me.w ^= (me.w >>> 19) ^ t ^ (t >>> 8));
+          return me.w ^= me.w >>> 19 ^ t ^ t >>> 8;
         };
         if (seed === (seed | 0)) {
           me.x = seed;
@@ -184,24 +156,20 @@ var require_xor128 = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
         prng.int32 = xg.next;
         prng.quick = prng;
         if (state) {
-          if (typeof state == 'object') copy(state, xg);
-          prng.state = function () {
+          if (typeof state == "object") copy(state, xg);
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -210,7 +178,7 @@ var require_xor128 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -218,35 +186,27 @@ var require_xor128 = __commonJS({
       }
     })(
       exports,
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js
 var require_xorwow = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorwow.js"(exports, module) {
+    (function(global, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = '';
-        me.next = function () {
-          var t = me.x ^ (me.x >>> 2);
+        var me = this, strseed = "";
+        me.next = function() {
+          var t = me.x ^ me.x >>> 2;
           me.x = me.y;
           me.y = me.z;
           me.z = me.w;
           me.w = me.v;
-          return (
-            ((me.d = (me.d + 362437) | 0) +
-              (me.v = me.v ^ (me.v << 4) ^ (t ^ (t << 1)))) |
-            0
-          );
+          return (me.d = me.d + 362437 | 0) + (me.v = me.v ^ me.v << 4 ^ (t ^ t << 1)) | 0;
         };
         me.x = 0;
         me.y = 0;
@@ -261,7 +221,7 @@ var require_xorwow = __commonJS({
         for (var k = 0; k < strseed.length + 64; k++) {
           me.x ^= strseed.charCodeAt(k) | 0;
           if (k == strseed.length) {
-            me.d = (me.x << 10) ^ (me.x >>> 4);
+            me.d = me.x << 10 ^ me.x >>> 4;
           }
           me.next();
         }
@@ -276,24 +236,20 @@ var require_xorwow = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
         prng.int32 = xg.next;
         prng.quick = prng;
         if (state) {
-          if (typeof state == 'object') copy(state, xg);
-          prng.state = function () {
+          if (typeof state == "object") copy(state, xg);
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -302,7 +258,7 @@ var require_xorwow = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -310,61 +266,50 @@ var require_xorwow = __commonJS({
       }
     })(
       exports,
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js
 var require_xorshift7 = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xorshift7.js"(exports, module) {
+    (function(global, module2, define2) {
       function XorGen(seed) {
         var me = this;
-        me.next = function () {
-          var X = me.x,
-            i = me.i,
-            t,
-            v,
-            w;
+        me.next = function() {
+          var X = me.x, i = me.i, t, v, w;
           t = X[i];
           t ^= t >>> 7;
-          v = t ^ (t << 24);
-          t = X[(i + 1) & 7];
-          v ^= t ^ (t >>> 10);
-          t = X[(i + 3) & 7];
-          v ^= t ^ (t >>> 3);
-          t = X[(i + 4) & 7];
-          v ^= t ^ (t << 7);
-          t = X[(i + 7) & 7];
-          t = t ^ (t << 13);
-          v ^= t ^ (t << 9);
+          v = t ^ t << 24;
+          t = X[i + 1 & 7];
+          v ^= t ^ t >>> 10;
+          t = X[i + 3 & 7];
+          v ^= t ^ t >>> 3;
+          t = X[i + 4 & 7];
+          v ^= t ^ t << 7;
+          t = X[i + 7 & 7];
+          t = t ^ t << 13;
+          v ^= t ^ t << 9;
           X[i] = v;
-          me.i = (i + 1) & 7;
+          me.i = i + 1 & 7;
           return v;
         };
         function init(me2, seed2) {
-          var j,
-            w,
-            X = [];
+          var j, w, X = [];
           if (seed2 === (seed2 | 0)) {
             w = X[0] = seed2;
           } else {
-            seed2 = '' + seed2;
+            seed2 = "" + seed2;
             for (j = 0; j < seed2.length; ++j) {
-              X[j & 7] =
-                (X[j & 7] << 15) ^
-                ((seed2.charCodeAt(j) + X[(j + 1) & 7]) << 13);
+              X[j & 7] = X[j & 7] << 15 ^ seed2.charCodeAt(j) + X[j + 1 & 7] << 13;
             }
           }
           while (X.length < 8) X.push(0);
-          for (j = 0; j < 8 && X[j] === 0; ++j);
+          for (j = 0; j < 8 && X[j] === 0; ++j) ;
           if (j == 8) w = X[7] = -1;
           else w = X[j];
           me2.x = X;
@@ -381,17 +326,13 @@ var require_xorshift7 = __commonJS({
         return t;
       }
       function impl(seed, opts) {
-        if (seed == null) seed = +(/* @__PURE__ */ new Date());
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        if (seed == null) seed = +/* @__PURE__ */ new Date();
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -399,7 +340,7 @@ var require_xorshift7 = __commonJS({
         prng.quick = prng;
         if (state) {
           if (state.x) copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -408,7 +349,7 @@ var require_xorshift7 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -416,53 +357,40 @@ var require_xorshift7 = __commonJS({
       }
     })(
       exports,
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js
 var require_xor4096 = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/xor4096.js"(exports, module) {
+    (function(global, module2, define2) {
       function XorGen(seed) {
         var me = this;
-        me.next = function () {
-          var w = me.w,
-            X = me.X,
-            i = me.i,
-            t,
-            v;
-          me.w = w = (w + 1640531527) | 0;
-          v = X[(i + 34) & 127];
-          t = X[(i = (i + 1) & 127)];
+        me.next = function() {
+          var w = me.w, X = me.X, i = me.i, t, v;
+          me.w = w = w + 1640531527 | 0;
+          v = X[i + 34 & 127];
+          t = X[i = i + 1 & 127];
           v ^= v << 13;
           t ^= t << 17;
           v ^= v >>> 15;
           t ^= t >>> 12;
           v = X[i] = v ^ t;
           me.i = i;
-          return (v + (w ^ (w >>> 16))) | 0;
+          return v + (w ^ w >>> 16) | 0;
         };
         function init(me2, seed2) {
-          var t,
-            v,
-            i,
-            j,
-            w,
-            X = [],
-            limit = 128;
+          var t, v, i, j, w, X = [], limit = 128;
           if (seed2 === (seed2 | 0)) {
             v = seed2;
             seed2 = null;
           } else {
-            seed2 = seed2 + '\0';
+            seed2 = seed2 + "\0";
             v = 0;
             limit = Math.max(limit, seed2.length);
           }
@@ -474,18 +402,18 @@ var require_xor4096 = __commonJS({
             v ^= v << 4;
             v ^= v >>> 13;
             if (j >= 0) {
-              w = (w + 1640531527) | 0;
+              w = w + 1640531527 | 0;
               t = X[j & 127] ^= v + w;
               i = 0 == t ? i + 1 : 0;
             }
           }
           if (i >= 128) {
-            X[((seed2 && seed2.length) || 0) & 127] = -1;
+            X[(seed2 && seed2.length || 0) & 127] = -1;
           }
           i = 127;
           for (j = 4 * 128; j > 0; --j) {
-            v = X[(i + 34) & 127];
-            t = X[(i = (i + 1) & 127)];
+            v = X[i + 34 & 127];
+            t = X[i = i + 1 & 127];
             v ^= v << 13;
             t ^= t << 17;
             v ^= v >>> 15;
@@ -504,18 +432,15 @@ var require_xor4096 = __commonJS({
         t.X = f.X.slice();
         return t;
       }
+      ;
       function impl(seed, opts) {
-        if (seed == null) seed = +(/* @__PURE__ */ new Date());
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        if (seed == null) seed = +/* @__PURE__ */ new Date();
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
@@ -523,7 +448,7 @@ var require_xor4096 = __commonJS({
         prng.quick = prng;
         if (state) {
           if (state.X) copy(state, xg);
-          prng.state = function () {
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -532,7 +457,7 @@ var require_xor4096 = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -541,44 +466,37 @@ var require_xor4096 = __commonJS({
     })(
       exports,
       // window object or global
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js
 var require_tychei = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js'(
-    exports,
-    module
-  ) {
-    (function (global, module2, define2) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/lib/tychei.js"(exports, module) {
+    (function(global, module2, define2) {
       function XorGen(seed) {
-        var me = this,
-          strseed = '';
-        me.next = function () {
-          var b = me.b,
-            c = me.c,
-            d = me.d,
-            a = me.a;
-          b = (b << 25) ^ (b >>> 7) ^ c;
-          c = (c - d) | 0;
-          d = (d << 24) ^ (d >>> 8) ^ a;
-          a = (a - b) | 0;
-          me.b = b = (b << 20) ^ (b >>> 12) ^ c;
-          me.c = c = (c - d) | 0;
-          me.d = (d << 16) ^ (c >>> 16) ^ a;
-          return (me.a = (a - b) | 0);
+        var me = this, strseed = "";
+        me.next = function() {
+          var b = me.b, c = me.c, d = me.d, a = me.a;
+          b = b << 25 ^ b >>> 7 ^ c;
+          c = c - d | 0;
+          d = d << 24 ^ d >>> 8 ^ a;
+          a = a - b | 0;
+          me.b = b = b << 20 ^ b >>> 12 ^ c;
+          me.c = c = c - d | 0;
+          me.d = d << 16 ^ c >>> 16 ^ a;
+          return me.a = a - b | 0;
         };
         me.a = 0;
         me.b = 0;
         me.c = 2654435769 | 0;
         me.d = 1367130551;
         if (seed === Math.floor(seed)) {
-          me.a = (seed / 4294967296) | 0;
+          me.a = seed / 4294967296 | 0;
           me.b = seed | 0;
         } else {
           strseed += seed;
@@ -595,25 +513,22 @@ var require_tychei = __commonJS({
         t.d = f.d;
         return t;
       }
+      ;
       function impl(seed, opts) {
-        var xg = new XorGen(seed),
-          state = opts && opts.state,
-          prng = function () {
-            return (xg.next() >>> 0) / 4294967296;
-          };
-        prng.double = function () {
+        var xg = new XorGen(seed), state = opts && opts.state, prng = function() {
+          return (xg.next() >>> 0) / 4294967296;
+        };
+        prng.double = function() {
           do {
-            var top = xg.next() >>> 11,
-              bot = (xg.next() >>> 0) / 4294967296,
-              result = (top + bot) / (1 << 21);
+            var top = xg.next() >>> 11, bot = (xg.next() >>> 0) / 4294967296, result = (top + bot) / (1 << 21);
           } while (result === 0);
           return result;
         };
         prng.int32 = xg.next;
         prng.quick = prng;
         if (state) {
-          if (typeof state == 'object') copy(state, xg);
-          prng.state = function () {
+          if (typeof state == "object") copy(state, xg);
+          prng.state = function() {
             return copy(xg, {});
           };
         }
@@ -622,7 +537,7 @@ var require_tychei = __commonJS({
       if (module2 && module2.exports) {
         module2.exports = impl;
       } else if (define2 && define2.amd) {
-        define2(function () {
+        define2(function() {
           return impl;
         });
       } else {
@@ -630,49 +545,29 @@ var require_tychei = __commonJS({
       }
     })(
       exports,
-      typeof module == 'object' && module,
+      typeof module == "object" && module,
       // present in node.js
-      typeof define == 'function' && define
+      typeof define == "function" && define
       // present with an AMD loader
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js
 var require_seedrandom = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js'(
-    exports,
-    module
-  ) {
-    (function (global, pool, math) {
-      var width = 256,
-        chunks = 6,
-        digits = 52,
-        rngname = 'random',
-        startdenom = math.pow(width, chunks),
-        significance = math.pow(2, digits),
-        overflow = significance * 2,
-        mask = width - 1,
-        nodecrypto;
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/seedrandom.js"(exports, module) {
+    (function(global, pool, math) {
+      var width = 256, chunks = 6, digits = 52, rngname = "random", startdenom = math.pow(width, chunks), significance = math.pow(2, digits), overflow = significance * 2, mask = width - 1, nodecrypto;
       function seedrandom(seed, options, callback) {
         var key = [];
         options = options == true ? { entropy: true } : options || {};
-        var shortseed = mixkey(
-          flatten(
-            options.entropy
-              ? [seed, tostring(pool)]
-              : seed == null
-                ? autoseed()
-                : seed,
-            3
-          ),
-          key
-        );
+        var shortseed = mixkey(flatten(
+          options.entropy ? [seed, tostring(pool)] : seed == null ? autoseed() : seed,
+          3
+        ), key);
         var arc4 = new ARC4(key);
-        var prng = function () {
-          var n = arc4.g(chunks),
-            d = startdenom,
-            x = 0;
+        var prng = function() {
+          var n = arc4.g(chunks), d = startdenom, x = 0;
           while (n < significance) {
             n = (n + x) * width;
             d *= width;
@@ -685,45 +580,36 @@ var require_seedrandom = __commonJS({
           }
           return (n + x) / d;
         };
-        prng.int32 = function () {
+        prng.int32 = function() {
           return arc4.g(4) | 0;
         };
-        prng.quick = function () {
+        prng.quick = function() {
           return arc4.g(4) / 4294967296;
         };
         prng.double = prng;
         mixkey(tostring(arc4.S), pool);
-        return (
-          options.pass ||
-          callback ||
-          function (prng2, seed2, is_math_call, state) {
-            if (state) {
-              if (state.S) {
-                copy(state, arc4);
-              }
-              prng2.state = function () {
-                return copy(arc4, {});
-              };
+        return (options.pass || callback || function(prng2, seed2, is_math_call, state) {
+          if (state) {
+            if (state.S) {
+              copy(state, arc4);
             }
-            if (is_math_call) {
-              math[rngname] = prng2;
-              return seed2;
-            } else return prng2;
+            prng2.state = function() {
+              return copy(arc4, {});
+            };
           }
-        )(
+          if (is_math_call) {
+            math[rngname] = prng2;
+            return seed2;
+          } else return prng2;
+        })(
           prng,
           shortseed,
-          'global' in options ? options.global : this == math,
+          "global" in options ? options.global : this == math,
           options.state
         );
       }
       function ARC4(key) {
-        var t,
-          keylen = key.length,
-          me = this,
-          i = 0,
-          j = (me.i = me.j = 0),
-          s = (me.S = []);
+        var t, keylen = key.length, me = this, i = 0, j = me.i = me.j = 0, s = me.S = [];
         if (!keylen) {
           key = [keylen++];
         }
@@ -731,22 +617,14 @@ var require_seedrandom = __commonJS({
           s[i] = i++;
         }
         for (i = 0; i < width; i++) {
-          s[i] = s[(j = mask & (j + key[i % keylen] + (t = s[i])))];
+          s[i] = s[j = mask & j + key[i % keylen] + (t = s[i])];
           s[j] = t;
         }
-        (me.g = function (count) {
-          var t2,
-            r = 0,
-            i2 = me.i,
-            j2 = me.j,
-            s2 = me.S;
+        (me.g = function(count) {
+          var t2, r = 0, i2 = me.i, j2 = me.j, s2 = me.S;
           while (count--) {
-            t2 = s2[(i2 = mask & (i2 + 1))];
-            r =
-              r * width +
-              s2[
-                mask & ((s2[i2] = s2[(j2 = mask & (j2 + t2))]) + (s2[j2] = t2))
-              ];
+            t2 = s2[i2 = mask & i2 + 1];
+            r = r * width + s2[mask & (s2[i2] = s2[j2 = mask & j2 + t2]) + (s2[j2] = t2)];
           }
           me.i = i2;
           me.j = j2;
@@ -759,26 +637,23 @@ var require_seedrandom = __commonJS({
         t.S = f.S.slice();
         return t;
       }
+      ;
       function flatten(obj, depth) {
-        var result = [],
-          typ = typeof obj,
-          prop;
-        if (depth && typ == 'object') {
+        var result = [], typ = typeof obj, prop;
+        if (depth && typ == "object") {
           for (prop in obj) {
             try {
               result.push(flatten(obj[prop], depth - 1));
-            } catch (e) {}
+            } catch (e) {
+            }
           }
         }
-        return result.length ? result : typ == 'string' ? obj : obj + '\0';
+        return result.length ? result : typ == "string" ? obj : obj + "\0";
       }
       function mixkey(seed, key) {
-        var stringseed = seed + '',
-          smear,
-          j = 0;
+        var stringseed = seed + "", smear, j = 0;
         while (j < stringseed.length) {
-          key[mask & j] =
-            mask & ((smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++));
+          key[mask & j] = mask & (smear ^= key[mask & j] * 19) + stringseed.charCodeAt(j++);
         }
         return tostring(key);
       }
@@ -793,51 +668,42 @@ var require_seedrandom = __commonJS({
           }
           return tostring(out);
         } catch (e) {
-          var browser = global.navigator,
-            plugins = browser && browser.plugins;
-          return [
-            +(/* @__PURE__ */ new Date()),
-            global,
-            plugins,
-            global.screen,
-            tostring(pool),
-          ];
+          var browser = global.navigator, plugins = browser && browser.plugins;
+          return [+/* @__PURE__ */ new Date(), global, plugins, global.screen, tostring(pool)];
         }
       }
       function tostring(a) {
         return String.fromCharCode.apply(0, a);
       }
       mixkey(math.random(), pool);
-      if (typeof module == 'object' && module.exports) {
+      if (typeof module == "object" && module.exports) {
         module.exports = seedrandom;
         try {
-          nodecrypto = __require('crypto');
-        } catch (ex) {}
-      } else if (typeof define == 'function' && define.amd) {
-        define(function () {
+          nodecrypto = __require("crypto");
+        } catch (ex) {
+        }
+      } else if (typeof define == "function" && define.amd) {
+        define(function() {
           return seedrandom;
         });
       } else {
-        math['seed' + rngname] = seedrandom;
+        math["seed" + rngname] = seedrandom;
       }
     })(
       // global: `self` in browsers (including strict mode and web workers),
       // otherwise `this` in Node and other environments
-      typeof self !== 'undefined' ? self : exports,
+      typeof self !== "undefined" ? self : exports,
       [],
       // pool: entropy pool starts empty
       Math
       // math: package containing random, pow, and seedrandom
     );
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js
 var require_seedrandom2 = __commonJS({
-  '../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js'(
-    exports,
-    module
-  ) {
+  "../../node_modules/.pnpm/seedrandom@3.0.5/node_modules/seedrandom/index.js"(exports, module) {
     var alea = require_alea();
     var xor128 = require_xor128();
     var xorwow = require_xorwow();
@@ -852,28 +718,26 @@ var require_seedrandom2 = __commonJS({
     sr.xor4096 = xor4096;
     sr.tychei = tychei;
     module.exports = sr;
-  },
+  }
 });
 
 // ../../packages/vm/dist/index.js
 var require_dist = __commonJS({
-  '../../packages/vm/dist/index.js'(exports) {
-    'use strict';
-    var __importDefault =
-      (exports && exports.__importDefault) ||
-      function (mod) {
-        return mod && mod.__esModule ? mod : { default: mod };
-      };
-    Object.defineProperty(exports, '__esModule', { value: true });
+  "../../packages/vm/dist/index.js"(exports) {
+    "use strict";
+    var __importDefault = exports && exports.__importDefault || function(mod) {
+      return mod && mod.__esModule ? mod : { "default": mod };
+    };
+    Object.defineProperty(exports, "__esModule", { value: true });
     exports.createContext = createContext2;
-    var node_vm_1 = __require('node:vm');
+    var node_vm_1 = __require("node:vm");
     var seedrandom_1 = __importDefault(require_seedrandom2());
     function createContext2(options) {
       let { fixedTimestamp } = options;
       const { seed } = options;
       const rng = (0, seedrandom_1.default)(seed);
       const context = (0, node_vm_1.createContext)();
-      const g = (0, node_vm_1.runInContext)('globalThis', context);
+      const g = (0, node_vm_1.runInContext)("globalThis", context);
       g.Math.random = rng;
       const Date_ = g.Date;
       g.Date = function Date2(...args) {
@@ -893,13 +757,13 @@ var require_dist = __commonJS({
         return array;
       }
       function randomUUID() {
-        const chars = '0123456789abcdef';
-        let uuid = '';
+        const chars = "0123456789abcdef";
+        let uuid = "";
         for (let i = 0; i < 36; i++) {
           if (i === 8 || i === 13 || i === 18 || i === 23) {
-            uuid += '-';
+            uuid += "-";
           } else if (i === 14) {
-            uuid += '4';
+            uuid += "4";
           } else if (i === 19) {
             uuid += chars[Math.floor(rng() * 4) + 8];
           } else {
@@ -911,28 +775,28 @@ var require_dist = __commonJS({
       const boundDigest = originalSubtle.digest.bind(originalSubtle);
       g.crypto = new Proxy(originalCrypto, {
         get(target, prop) {
-          if (prop === 'getRandomValues') {
+          if (prop === "getRandomValues") {
             return getRandomValues;
           }
-          if (prop === 'randomUUID') {
+          if (prop === "randomUUID") {
             return randomUUID;
           }
-          if (prop === 'subtle') {
+          if (prop === "subtle") {
             return new Proxy(originalSubtle, {
               get(target2, prop2) {
-                if (prop2 === 'generateKey') {
+                if (prop2 === "generateKey") {
                   return () => {
-                    throw new Error('Not implemented');
+                    throw new Error("Not implemented");
                   };
-                } else if (prop2 === 'digest') {
+                } else if (prop2 === "digest") {
                   return boundDigest;
                 }
                 return target2[prop2];
-              },
+              }
             });
           }
           return target[prop];
-        },
+        }
       });
       g.TextEncoder = globalThis.TextEncoder;
       g.TextDecoder = globalThis.TextDecoder;
@@ -941,23 +805,22 @@ var require_dist = __commonJS({
         context,
         updateTimestamp: (timestamp) => {
           fixedTimestamp = timestamp;
-        },
+        }
       };
     }
-  },
+  }
 });
 
 // ../../node_modules/.pnpm/mixpart@0.0.4/node_modules/mixpart/dist/index.mjs
 var MultipartParseError = class extends Error {
   constructor(message) {
     super(message);
-    this.name = 'MultipartParseError';
+    this.name = "MultipartParseError";
   }
 };
 function createSearch(pattern) {
   const needle = new TextEncoder().encode(pattern);
-  return (haystack, start2 = 0) =>
-    Buffer.prototype.indexOf.call(haystack, needle, start2);
+  return (haystack, start2 = 0) => Buffer.prototype.indexOf.call(haystack, needle, start2);
 }
 function createPartialTailSearch(pattern) {
   const needle = new TextEncoder().encode(pattern);
@@ -967,16 +830,12 @@ function createPartialTailSearch(pattern) {
     if (byteIndexes[byte] === void 0) byteIndexes[byte] = [];
     byteIndexes[byte].push(i);
   }
-  return function (haystack) {
+  return function(haystack) {
     const haystackEnd = haystack.length - 1;
     if (haystack[haystackEnd] in byteIndexes) {
       const indexes = byteIndexes[haystack[haystackEnd]];
       for (let i = indexes.length - 1; i >= 0; --i) {
-        for (
-          let j = indexes[i], k = haystackEnd;
-          j >= 0 && haystack[k] === needle[j];
-          --j, --k
-        ) {
+        for (let j = indexes[i], k = haystackEnd; j >= 0 && haystack[k] === needle[j]; --j, --k) {
           if (j === 0) return k;
         }
       }
@@ -985,11 +844,11 @@ function createPartialTailSearch(pattern) {
   };
 }
 function parseHeaders(headerBytes) {
-  const headerText = new TextDecoder('iso-8859-1').decode(headerBytes);
+  const headerText = new TextDecoder("iso-8859-1").decode(headerBytes);
   const lines = headerText.trim().split(/\r?\n/);
   const headerInit = [];
   for (const line of lines) {
-    const colonIndex = line.indexOf(':');
+    const colonIndex = line.indexOf(":");
     if (colonIndex > 0) {
       const name = line.slice(0, colonIndex).trim();
       const value = line.slice(colonIndex + 1).trim();
@@ -1001,7 +860,7 @@ function parseHeaders(headerBytes) {
 function extractBoundary(contentType) {
   const boundaryMatch = contentType.match(/boundary=(?:"([^"]+)"|([^;]+))/i);
   if (!boundaryMatch) {
-    throw new MultipartParseError('No boundary found in Content-Type header');
+    throw new MultipartParseError("No boundary found in Content-Type header");
   }
   return boundaryMatch[1] ?? boundaryMatch[2];
 }
@@ -1074,11 +933,11 @@ var AsyncMessageQueue = class {
 };
 async function* parseMultipartStream(response, options) {
   if (!response.body) {
-    throw new MultipartParseError('Response body is null');
+    throw new MultipartParseError("Response body is null");
   }
-  const contentType = response.headers.get('content-type');
+  const contentType = response.headers.get("content-type");
   if (!contentType) {
-    throw new MultipartParseError('Missing Content-Type header');
+    throw new MultipartParseError("Missing Content-Type header");
   }
   const boundary = extractBoundary(contentType);
   const parser = new StreamingMultipartParser(boundary, options);
@@ -1108,7 +967,7 @@ var StreamingMultipartParser = class {
     this.findPartialTailBoundary = createPartialTailSearch(`\r
 --${boundary}`);
     this.boundaryLength = 4 + boundary.length;
-    this.findDoubleNewline = createSearch('\r\n\r\n');
+    this.findDoubleNewline = createSearch("\r\n\r\n");
     this.maxHeaderSize = options.maxHeaderSize ?? 65536;
     this.maxBoundaryBuffer = options.maxBoundaryBuffer ?? 8192;
   }
@@ -1123,7 +982,8 @@ var StreamingMultipartParser = class {
       this.closeCurrentPayload();
       try {
         await reader.cancel();
-      } catch (error) {}
+      } catch (error) {
+      }
       await producer;
     }
   }
@@ -1137,13 +997,7 @@ var StreamingMultipartParser = class {
         try {
           result = await reader.read();
         } catch (readError) {
-          if (
-            readError instanceof Error &&
-            (readError.name === 'AbortError' ||
-              readError.constructor.name === 'AbortError' ||
-              readError.name === 'TimeoutError' ||
-              readError.constructor.name === 'TimeoutError')
-          ) {
+          if (readError instanceof Error && (readError.name === "AbortError" || readError.constructor.name === "AbortError" || readError.name === "TimeoutError" || readError.constructor.name === "TimeoutError")) {
             break;
           }
           throw readError;
@@ -1160,10 +1014,10 @@ var StreamingMultipartParser = class {
           if (this.state !== 4) {
             if (this.state === 0) {
               throw new MultipartParseError(
-                'Invalid multipart stream: missing initial boundary'
+                "Invalid multipart stream: missing initial boundary"
               );
             }
-            throw new MultipartParseError('Unexpected end of stream');
+            throw new MultipartParseError("Unexpected end of stream");
           }
           break;
         }
@@ -1189,7 +1043,8 @@ var StreamingMultipartParser = class {
     } finally {
       try {
         reader.releaseLock();
-      } catch (error) {}
+      } catch (error) {
+      }
     }
   }
   /**
@@ -1214,17 +1069,16 @@ var StreamingMultipartParser = class {
   write(chunk) {
     const newMessages = [];
     if (this.state === 4) {
-      throw new MultipartParseError('Unexpected data after end of stream');
+      throw new MultipartParseError("Unexpected data after end of stream");
     }
     let index = 0;
     let chunkLength = chunk.length;
     if (this.buffer !== null) {
       const newSize = this.buffer.length + chunkLength;
-      const maxAllowedSize =
-        this.state === 2 ? this.maxHeaderSize : this.maxBoundaryBuffer;
+      const maxAllowedSize = this.state === 2 ? this.maxHeaderSize : this.maxBoundaryBuffer;
       if (newSize > maxAllowedSize) {
         throw new MultipartParseError(
-          `Buffer size limit exceeded: ${newSize} bytes > ${maxAllowedSize} bytes. This may indicate malformed multipart data with ${this.state === 2 ? 'oversized headers' : 'invalid boundaries'}.`
+          `Buffer size limit exceeded: ${newSize} bytes > ${maxAllowedSize} bytes. This may indicate malformed multipart data with ${this.state === 2 ? "oversized headers" : "invalid boundaries"}.`
         );
       }
       const newChunk = new Uint8Array(newSize);
@@ -1236,7 +1090,7 @@ var StreamingMultipartParser = class {
     }
     if (chunkLength === 0 && this.state === 0) {
       throw new MultipartParseError(
-        'Invalid multipart stream: missing initial boundary'
+        "Invalid multipart stream: missing initial boundary"
       );
     }
     while (true) {
@@ -1313,7 +1167,7 @@ var StreamingMultipartParser = class {
         let headerEndIndex = this.findDoubleNewline(chunk, index);
         let headerEndOffset = 4;
         if (headerEndIndex === -1) {
-          const lfDoubleNewline = createSearch('\n\n');
+          const lfDoubleNewline = createSearch("\n\n");
           headerEndIndex = lfDoubleNewline(chunk, index);
           headerEndOffset = 2;
         }
@@ -1348,7 +1202,7 @@ var StreamingMultipartParser = class {
         const boundaryIndex = this.findOpeningBoundary(chunk);
         if (boundaryIndex !== 0) {
           throw new MultipartParseError(
-            'Invalid multipart stream: missing initial boundary'
+            "Invalid multipart stream: missing initial boundary"
           );
         }
         index = this.openingBoundaryLength;
@@ -1362,12 +1216,12 @@ var StreamingMultipartParser = class {
     const payload = new ReadableStream({
       start: (controller) => {
         this.currentPayloadController = controller;
-      },
+      }
     });
     this.currentHeaders = new Headers();
     return {
       headers,
-      payload,
+      payload
     };
   }
   writeBody(chunk) {
@@ -1393,18 +1247,19 @@ var StreamingMultipartParser = class {
         } else {
           this.currentPayloadController.close();
         }
-      } catch (controllerError) {}
+      } catch (controllerError) {
+      }
       this.currentPayloadController = null;
     }
   }
 };
 
 // ../../node_modules/.pnpm/@vercel+queue@0.0.0-alpha.4/node_modules/@vercel/queue/dist/index.mjs
-import { spawn } from 'child_process';
+import { spawn } from "child_process";
 function isLocalhostWithPort(url) {
   try {
     const parsedUrl = new URL(url);
-    const isLocalhost = parsedUrl.hostname === 'localhost';
+    const isLocalhost = parsedUrl.hostname === "localhost";
     const port = parsedUrl.port ? parseInt(parsedUrl.port, 10) : 0;
     return { isLocalhost, port };
   } catch {
@@ -1413,10 +1268,10 @@ function isLocalhostWithPort(url) {
 }
 function isSupportedPlatform() {
   const platform = process.platform;
-  return platform === 'darwin' || platform === 'linux';
+  return platform === "darwin" || platform === "linux";
 }
 function processDevelopmentCallbacks(callbacks) {
-  const isDevelopment = process.env.NODE_ENV === 'development';
+  const isDevelopment = process.env.NODE_ENV === "development";
   if (!isDevelopment) {
     return [];
   }
@@ -1448,9 +1303,9 @@ function processDevelopmentCallbacks(callbacks) {
 function fireLocalhostCallbacks(localhostCallbacks, queueName, responseData) {
   localhostCallbacks.forEach(({ group, config, port }) => {
     const callbackHeaders = new Headers();
-    callbackHeaders.set('Vqs-Message-Id', responseData.messageId);
-    callbackHeaders.set('Vqs-Queue-Name', queueName);
-    callbackHeaders.set('Vqs-Consumer-Group', group);
+    callbackHeaders.set("Vqs-Message-Id", responseData.messageId);
+    callbackHeaders.set("Vqs-Queue-Name", queueName);
+    callbackHeaders.set("Vqs-Consumer-Group", group);
     fireAndForgetWaitForHttpReady(
       config.url,
       port,
@@ -1461,26 +1316,20 @@ function fireLocalhostCallbacks(localhostCallbacks, queueName, responseData) {
     );
   });
 }
-function fireAndForgetWaitForHttpReady(
-  url,
-  port,
-  initialDelaySeconds = 0,
-  retryFrequencySeconds = 3,
-  headers
-) {
+function fireAndForgetWaitForHttpReady(url, port, initialDelaySeconds = 0, retryFrequencySeconds = 3, headers) {
   if (!isSupportedPlatform()) {
     console.warn(
       `Queue: fireAndForgetWaitForHttpReady is not supported on ${process.platform}. This function requires bash, nc, and curl which are available on macOS and Linux only.`
     );
     return;
   }
-  let headerArgs = '';
+  let headerArgs = "";
   if (headers) {
     const headerArray = [];
     headers.forEach((value, key) => {
       headerArray.push(`-H '${key}: ${value}'`);
     });
-    headerArgs = headerArray.join(' ');
+    headerArgs = headerArray.join(" ");
   }
   const bashScript = `
     # Wait for any initial boot time
@@ -1508,30 +1357,30 @@ function fireAndForgetWaitForHttpReady(
       sleep ${retryFrequencySeconds}
     done
   `;
-  const childProcess = spawn('bash', ['-c', bashScript], {
-    stdio: 'ignore',
-    detached: true,
+  const childProcess = spawn("bash", ["-c", bashScript], {
+    stdio: "ignore",
+    detached: true
   });
   childProcess.unref();
 }
 var MessageNotFoundError = class extends Error {
   constructor(messageId) {
     super(`Message ${messageId} not found`);
-    this.name = 'MessageNotFoundError';
+    this.name = "MessageNotFoundError";
   }
 };
 var MessageNotAvailableError = class extends Error {
   constructor(messageId, reason) {
     super(
-      `Message ${messageId} not available for processing${reason ? `: ${reason}` : ''}`
+      `Message ${messageId} not available for processing${reason ? `: ${reason}` : ""}`
     );
-    this.name = 'MessageNotAvailableError';
+    this.name = "MessageNotAvailableError";
   }
 };
 var MessageCorruptedError = class extends Error {
   constructor(messageId, reason) {
     super(`Message ${messageId} is corrupted: ${reason}`);
-    this.name = 'MessageCorruptedError';
+    this.name = "MessageCorruptedError";
   }
 };
 var QueueEmptyError = class extends Error {
@@ -1539,36 +1388,34 @@ var QueueEmptyError = class extends Error {
     super(
       `No messages available in queue "${queueName}" for consumer group "${consumerGroup}"`
     );
-    this.name = 'QueueEmptyError';
+    this.name = "QueueEmptyError";
   }
 };
 var MessageLockedError = class extends Error {
   retryAfter;
   constructor(messageId, retryAfter) {
-    const retryMessage = retryAfter
-      ? ` Retry after ${retryAfter} seconds.`
-      : ' Try again later.';
+    const retryMessage = retryAfter ? ` Retry after ${retryAfter} seconds.` : " Try again later.";
     super(`Message ${messageId} is temporarily locked.${retryMessage}`);
-    this.name = 'MessageLockedError';
+    this.name = "MessageLockedError";
     this.retryAfter = retryAfter;
   }
 };
 var UnauthorizedError = class extends Error {
-  constructor(message = 'Missing or invalid authentication token') {
+  constructor(message = "Missing or invalid authentication token") {
     super(message);
-    this.name = 'UnauthorizedError';
+    this.name = "UnauthorizedError";
   }
 };
 var ForbiddenError = class extends Error {
   constructor(message = "Queue environment doesn't match token environment") {
     super(message);
-    this.name = 'ForbiddenError';
+    this.name = "ForbiddenError";
   }
 };
 var BadRequestError = class extends Error {
   constructor(message) {
     super(message);
-    this.name = 'BadRequestError';
+    this.name = "BadRequestError";
   }
 };
 var FailedDependencyError = class extends Error {
@@ -1576,19 +1423,19 @@ var FailedDependencyError = class extends Error {
     super(
       `Failed dependency: FIFO ordering violation for message ${messageId}`
     );
-    this.name = 'FailedDependencyError';
+    this.name = "FailedDependencyError";
   }
 };
 var InternalServerError = class extends Error {
-  constructor(message = 'Unexpected server error') {
+  constructor(message = "Unexpected server error") {
     super(message);
-    this.name = 'InternalServerError';
+    this.name = "InternalServerError";
   }
 };
 var InvalidLimitError = class extends Error {
   constructor(limit, min = 1, max = 10) {
     super(`Invalid limit: ${limit}. Limit must be between ${min} and ${max}.`);
-    this.name = 'InvalidLimitError';
+    this.name = "InvalidLimitError";
   }
 };
 async function consumeStream(stream) {
@@ -1603,11 +1450,11 @@ async function consumeStream(stream) {
   }
 }
 function parseQueueHeaders(headers) {
-  const messageId = headers.get('Vqs-Message-Id');
-  const deliveryCountStr = headers.get('Vqs-Delivery-Count') || '0';
-  const timestamp = headers.get('Vqs-Timestamp');
-  const contentType = headers.get('Content-Type') || 'application/octet-stream';
-  const ticket = headers.get('Vqs-Ticket');
+  const messageId = headers.get("Vqs-Message-Id");
+  const deliveryCountStr = headers.get("Vqs-Delivery-Count") || "0";
+  const timestamp = headers.get("Vqs-Timestamp");
+  const contentType = headers.get("Content-Type") || "application/octet-stream";
+  const ticket = headers.get("Vqs-Ticket");
   if (!messageId || !timestamp || !ticket) {
     return null;
   }
@@ -1620,7 +1467,7 @@ function parseQueueHeaders(headers) {
     deliveryCount,
     timestamp,
     contentType,
-    ticket,
+    ticket
   };
 }
 var QueueClient = class _QueueClient {
@@ -1636,7 +1483,7 @@ var QueueClient = class _QueueClient {
    * @param options Client configuration options (optional - will auto-detect Vercel Function environment)
    */
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || 'https://vqs.vercel.sh';
+    this.baseUrl = options.baseUrl || "https://vqs.vercel.sh";
     if (options.token) {
       this.token = options.token;
     } else {
@@ -1665,12 +1512,10 @@ var QueueClient = class _QueueClient {
    */
   getVercelOidcTokenSync() {
     try {
-      const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
+      const SYMBOL_FOR_REQ_CONTEXT = Symbol.for("@vercel/request-context");
       const fromSymbol = globalThis;
       const context = fromSymbol[SYMBOL_FOR_REQ_CONTEXT]?.get?.() ?? {};
-      const token =
-        context.headers?.['x-vercel-oidc-token'] ??
-        process.env.VERCEL_OIDC_TOKEN;
+      const token = context.headers?.["x-vercel-oidc-token"] ?? process.env.VERCEL_OIDC_TOKEN;
       return token || null;
     } catch {
       return null;
@@ -1687,22 +1532,21 @@ var QueueClient = class _QueueClient {
    * @throws {InternalServerError} When server encounters an error
    */
   async sendMessage(options, transport) {
-    const { queueName, payload, idempotencyKey, retentionSeconds, callback } =
-      options;
+    const { queueName, payload, idempotencyKey, retentionSeconds, callback } = options;
     const headers = new Headers({
       Authorization: `Bearer ${this.token}`,
-      'Vqs-Queue-Name': queueName,
-      'Content-Type': transport.contentType,
+      "Vqs-Queue-Name": queueName,
+      "Content-Type": transport.contentType
     });
     if (idempotencyKey) {
-      headers.set('Vqs-Idempotency-Key', idempotencyKey);
+      headers.set("Vqs-Idempotency-Key", idempotencyKey);
     }
     if (retentionSeconds !== void 0) {
-      headers.set('Vqs-Retention-Seconds', retentionSeconds.toString());
+      headers.set("Vqs-Retention-Seconds", retentionSeconds.toString());
     }
     let normalizedCallbacks;
     if (callback) {
-      if ('url' in callback && typeof callback.url === 'string') {
+      if ("url" in callback && typeof callback.url === "string") {
         normalizedCallbacks = { default: callback };
       } else {
         normalizedCallbacks = callback;
@@ -1710,43 +1554,34 @@ var QueueClient = class _QueueClient {
     }
     let localhostCallbacks = [];
     if (normalizedCallbacks) {
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      const isDevelopment = process.env.NODE_ENV === "development";
       if (isDevelopment) {
         localhostCallbacks = processDevelopmentCallbacks(normalizedCallbacks);
       } else {
-        const endpoints = Object.entries(normalizedCallbacks)
-          .map(
-            ([group, config]) =>
-              `${group}=${Buffer.from(config.url).toString('base64')}`
-          )
-          .join(',');
-        headers.set('Vqs-Callback-Url', endpoints);
-        const delays = Object.entries(normalizedCallbacks)
-          .filter(([, config]) => config.delay !== void 0)
-          .map(([group, config]) => `${group}=${config.delay}`)
-          .join(',');
+        const endpoints = Object.entries(normalizedCallbacks).map(
+          ([group, config]) => `${group}=${Buffer.from(config.url).toString("base64")}`
+        ).join(",");
+        headers.set("Vqs-Callback-Url", endpoints);
+        const delays = Object.entries(normalizedCallbacks).filter(([, config]) => config.delay !== void 0).map(([group, config]) => `${group}=${config.delay}`).join(",");
         if (delays) {
-          headers.set('Vqs-Callback-Delay', delays);
+          headers.set("Vqs-Callback-Delay", delays);
         }
-        const frequencies = Object.entries(normalizedCallbacks)
-          .filter(([, config]) => config.frequency !== void 0)
-          .map(([group, config]) => `${group}=${config.frequency}`)
-          .join(',');
+        const frequencies = Object.entries(normalizedCallbacks).filter(([, config]) => config.frequency !== void 0).map(([group, config]) => `${group}=${config.frequency}`).join(",");
         if (frequencies) {
-          headers.set('Vqs-Callback-Frequency', frequencies);
+          headers.set("Vqs-Callback-Frequency", frequencies);
         }
       }
     }
     const body = transport.serialize(payload);
     const response = await fetch(`${this.baseUrl}/api/v2/messages`, {
-      method: 'POST',
+      method: "POST",
       headers,
-      body,
+      body
     });
     if (!response.ok) {
       if (response.status === 400) {
         const errorText = await response.text();
-        throw new BadRequestError(errorText || 'Invalid parameters');
+        throw new BadRequestError(errorText || "Invalid parameters");
       }
       if (response.status === 401) {
         throw new UnauthorizedError();
@@ -1755,7 +1590,7 @@ var QueueClient = class _QueueClient {
         throw new ForbiddenError();
       }
       if (response.status === 409) {
-        throw new Error('Duplicate idempotency key detected');
+        throw new Error("Duplicate idempotency key detected");
       }
       if (response.status >= 500) {
         throw new InternalServerError(
@@ -1786,29 +1621,28 @@ var QueueClient = class _QueueClient {
    * @throws {InternalServerError} When server encounters an error
    */
   async *receiveMessages(options, transport) {
-    const { queueName, consumerGroup, visibilityTimeoutSeconds, limit } =
-      options;
+    const { queueName, consumerGroup, visibilityTimeoutSeconds, limit } = options;
     if (limit !== void 0 && (limit < 1 || limit > 10)) {
       throw new InvalidLimitError(limit);
     }
     const headers = new Headers({
       Authorization: `Bearer ${this.token}`,
-      'Vqs-Queue-Name': queueName,
-      'Vqs-Consumer-Group': consumerGroup,
-      Accept: 'multipart/mixed',
+      "Vqs-Queue-Name": queueName,
+      "Vqs-Consumer-Group": consumerGroup,
+      Accept: "multipart/mixed"
     });
     if (visibilityTimeoutSeconds !== void 0) {
       headers.set(
-        'Vqs-Visibility-Timeout',
+        "Vqs-Visibility-Timeout",
         visibilityTimeoutSeconds.toString()
       );
     }
     if (limit !== void 0) {
-      headers.set('Vqs-Limit', limit.toString());
+      headers.set("Vqs-Limit", limit.toString());
     }
     const response = await fetch(`${this.baseUrl}/api/v2/messages`, {
-      method: 'GET',
-      headers,
+      method: "GET",
+      headers
     });
     if (response.status === 204) {
       throw new QueueEmptyError(queueName, consumerGroup);
@@ -1816,7 +1650,7 @@ var QueueClient = class _QueueClient {
     if (!response.ok) {
       if (response.status === 400) {
         const errorText = await response.text();
-        throw new BadRequestError(errorText || 'Invalid parameters');
+        throw new BadRequestError(errorText || "Invalid parameters");
       }
       if (response.status === 401) {
         throw new UnauthorizedError();
@@ -1825,13 +1659,13 @@ var QueueClient = class _QueueClient {
         throw new ForbiddenError();
       }
       if (response.status === 423) {
-        const retryAfterHeader = response.headers.get('Retry-After');
+        const retryAfterHeader = response.headers.get("Retry-After");
         let retryAfter;
         if (retryAfterHeader) {
           const parsed = parseInt(retryAfterHeader, 10);
           retryAfter = isNaN(parsed) ? void 0 : parsed;
         }
-        throw new MessageLockedError('next message in FIFO queue', retryAfter);
+        throw new MessageLockedError("next message in FIFO queue", retryAfter);
       }
       if (response.status >= 500) {
         throw new InternalServerError(
@@ -1846,7 +1680,7 @@ var QueueClient = class _QueueClient {
       try {
         const parsedHeaders = parseQueueHeaders(multipartMessage.headers);
         if (!parsedHeaders) {
-          console.warn('Missing required queue headers in multipart part');
+          console.warn("Missing required queue headers in multipart part");
           await consumeStream(multipartMessage.payload);
           continue;
         }
@@ -1855,11 +1689,11 @@ var QueueClient = class _QueueClient {
         );
         const message = {
           ...parsedHeaders,
-          payload: deserializedPayload,
+          payload: deserializedPayload
         };
         yield message;
       } catch (error) {
-        console.warn('Failed to process multipart message:', error);
+        console.warn("Failed to process multipart message:", error);
         await consumeStream(multipartMessage.payload);
       }
     }
@@ -1870,34 +1704,34 @@ var QueueClient = class _QueueClient {
       consumerGroup,
       messageId,
       visibilityTimeoutSeconds,
-      skipPayload,
+      skipPayload
     } = options;
     const headers = new Headers({
       Authorization: `Bearer ${this.token}`,
-      'Vqs-Queue-Name': queueName,
-      'Vqs-Consumer-Group': consumerGroup,
-      Accept: 'multipart/mixed',
+      "Vqs-Queue-Name": queueName,
+      "Vqs-Consumer-Group": consumerGroup,
+      Accept: "multipart/mixed"
     });
     if (visibilityTimeoutSeconds !== void 0) {
       headers.set(
-        'Vqs-Visibility-Timeout',
+        "Vqs-Visibility-Timeout",
         visibilityTimeoutSeconds.toString()
       );
     }
     if (skipPayload) {
-      headers.set('Vqs-Skip-Payload', '1');
+      headers.set("Vqs-Skip-Payload", "1");
     }
     const response = await fetch(
       `${this.baseUrl}/api/v2/messages/${encodeURIComponent(messageId)}`,
       {
-        method: 'GET',
-        headers,
+        method: "GET",
+        headers
       }
     );
     if (!response.ok) {
       if (response.status === 400) {
         const errorText = await response.text();
-        throw new BadRequestError(errorText || 'Invalid parameters');
+        throw new BadRequestError(errorText || "Invalid parameters");
       }
       if (response.status === 401) {
         throw new UnauthorizedError();
@@ -1909,7 +1743,7 @@ var QueueClient = class _QueueClient {
         throw new MessageNotFoundError(messageId);
       }
       if (response.status === 423) {
-        const retryAfterHeader = response.headers.get('Retry-After');
+        const retryAfterHeader = response.headers.get("Retry-After");
         let retryAfter;
         if (retryAfterHeader) {
           const parsed = parseInt(retryAfterHeader, 10);
@@ -1937,24 +1771,24 @@ var QueueClient = class _QueueClient {
       if (!parsedHeaders) {
         throw new MessageCorruptedError(
           messageId,
-          'Missing required queue headers in 204 response'
+          "Missing required queue headers in 204 response"
         );
       }
       const message = {
         ...parsedHeaders,
-        payload: void 0,
+        payload: void 0
       };
       return { message };
     }
     if (!transport) {
-      throw new Error('Transport is required when skipPayload is not true');
+      throw new Error("Transport is required when skipPayload is not true");
     }
     try {
       for await (const multipartMessage of parseMultipartStream(response)) {
         try {
           const parsedHeaders = parseQueueHeaders(multipartMessage.headers);
           if (!parsedHeaders) {
-            console.warn('Missing required queue headers in multipart part');
+            console.warn("Missing required queue headers in multipart part");
             await consumeStream(multipartMessage.payload);
             continue;
           }
@@ -1963,11 +1797,11 @@ var QueueClient = class _QueueClient {
           );
           const message = {
             ...parsedHeaders,
-            payload: deserializedPayload,
+            payload: deserializedPayload
           };
           return { message };
         } catch (error) {
-          console.warn('Failed to deserialize message by ID:', error);
+          console.warn("Failed to deserialize message by ID:", error);
           await consumeStream(multipartMessage.payload);
           throw new MessageCorruptedError(
             messageId,
@@ -2002,18 +1836,18 @@ var QueueClient = class _QueueClient {
     const response = await fetch(
       `${this.baseUrl}/api/v2/messages/${encodeURIComponent(messageId)}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
         headers: new Headers({
           Authorization: `Bearer ${this.token}`,
-          'Vqs-Queue-Name': queueName,
-          'Vqs-Consumer-Group': consumerGroup,
-          'Vqs-Ticket': ticket,
-        }),
+          "Vqs-Queue-Name": queueName,
+          "Vqs-Consumer-Group": consumerGroup,
+          "Vqs-Ticket": ticket
+        })
       }
     );
     if (!response.ok) {
       if (response.status === 400) {
-        throw new BadRequestError('Missing or invalid ticket');
+        throw new BadRequestError("Missing or invalid ticket");
       }
       if (response.status === 401) {
         throw new UnauthorizedError();
@@ -2027,7 +1861,7 @@ var QueueClient = class _QueueClient {
       if (response.status === 409) {
         throw new MessageNotAvailableError(
           messageId,
-          'Invalid ticket, message not in correct state, or already processed'
+          "Invalid ticket, message not in correct state, or already processed"
         );
       }
       if (response.status >= 500) {
@@ -2058,25 +1892,25 @@ var QueueClient = class _QueueClient {
       consumerGroup,
       messageId,
       ticket,
-      visibilityTimeoutSeconds,
+      visibilityTimeoutSeconds
     } = options;
     const response = await fetch(
       `${this.baseUrl}/api/v2/messages/${encodeURIComponent(messageId)}`,
       {
-        method: 'PATCH',
+        method: "PATCH",
         headers: new Headers({
           Authorization: `Bearer ${this.token}`,
-          'Vqs-Queue-Name': queueName,
-          'Vqs-Consumer-Group': consumerGroup,
-          'Vqs-Ticket': ticket,
-          'Vqs-Visibility-Timeout': visibilityTimeoutSeconds.toString(),
-        }),
+          "Vqs-Queue-Name": queueName,
+          "Vqs-Consumer-Group": consumerGroup,
+          "Vqs-Ticket": ticket,
+          "Vqs-Visibility-Timeout": visibilityTimeoutSeconds.toString()
+        })
       }
     );
     if (!response.ok) {
       if (response.status === 400) {
         throw new BadRequestError(
-          'Missing ticket or invalid visibility timeout'
+          "Missing ticket or invalid visibility timeout"
         );
       }
       if (response.status === 401) {
@@ -2091,7 +1925,7 @@ var QueueClient = class _QueueClient {
       if (response.status === 409) {
         throw new MessageNotAvailableError(
           messageId,
-          'Invalid ticket, message not in correct state, or already processed'
+          "Invalid ticket, message not in correct state, or already processed"
         );
       }
       if (response.status >= 500) {
@@ -2107,9 +1941,9 @@ var QueueClient = class _QueueClient {
   }
 };
 var JsonTransport = class {
-  contentType = 'application/json';
+  contentType = "application/json";
   serialize(value) {
-    return Buffer.from(JSON.stringify(value), 'utf8');
+    return Buffer.from(JSON.stringify(value), "utf8");
   }
   async deserialize(stream) {
     const reader = stream.getReader();
@@ -2130,7 +1964,7 @@ var JsonTransport = class {
       buffer.set(chunk, offset);
       offset += chunk.length;
     }
-    return JSON.parse(Buffer.from(buffer).toString('utf8'));
+    return JSON.parse(Buffer.from(buffer).toString("utf8"));
   }
 };
 async function send(topicName, payload, options) {
@@ -2142,7 +1976,7 @@ async function send(topicName, payload, options) {
       payload,
       idempotencyKey: options?.idempotencyKey,
       retentionSeconds: options?.retentionSeconds,
-      callback: options?.callback,
+      callback: options?.callback
     },
     transport
   );
@@ -2155,7 +1989,7 @@ var import_workflow_vm = __toESM(require_dist(), 1);
 // ../../packages/core/dist/base-url.js
 function getBaseUrl(baseUrl, env = process.env) {
   if (baseUrl) {
-    const protocol2 = baseUrl.includes('localhost') ? 'http' : 'https';
+    const protocol2 = baseUrl.includes("localhost") ? "http" : "https";
     if (!baseUrl.startsWith(`${protocol2}://`)) {
       baseUrl = `${protocol2}://${baseUrl}`;
     }
@@ -2163,49 +1997,42 @@ function getBaseUrl(baseUrl, env = process.env) {
   }
   const vercelUrlVal = env.VERCEL_URL;
   if (!vercelUrlVal) {
-    throw new Error(
-      'The `baseUrl` option must be provided when not running on Vercel'
-    );
+    throw new Error("The `baseUrl` option must be provided when not running on Vercel");
   }
-  const protocol = vercelUrlVal.includes('localhost') ? 'http' : 'https';
+  const protocol = vercelUrlVal.includes("localhost") ? "http" : "https";
   const vercelUrl = new URL(`${protocol}://${vercelUrlVal}`);
   const vercelAutomationBypassSecret = env.VERCEL_AUTOMATION_BYPASS_SECRET;
   if (vercelAutomationBypassSecret) {
-    vercelUrl.searchParams.set(
-      'x-vercel-protection-bypass',
-      vercelAutomationBypassSecret
-    );
+    vercelUrl.searchParams.set("x-vercel-protection-bypass", vercelAutomationBypassSecret);
   }
   return vercelUrl;
 }
 
 // ../../packages/core/dist/global.js
-var STATE = Symbol.for('STATE');
-var STEP_INDEX = Symbol.for('STEP_INDEX');
+var STATE = Symbol.for("STATE");
+var STEP_INDEX = Symbol.for("STEP_INDEX");
 
 // ../../packages/core/dist/sleep.js
-var sleep =
+var sleep = (
   // @ts-expect-error - Meant to be used within a workflow file - will evaluate to undefined outside of the workflow VM context
-  globalThis[Symbol.for('WORKFLOW_USE_STEP')]?.('__builtin_sleep');
+  globalThis[Symbol.for("WORKFLOW_USE_STEP")]?.("__builtin_sleep")
+);
 
 // ../../packages/core/dist/index.js
 async function start(workflowId, options = {}) {
   const baseUrl = getBaseUrl(options.baseUrl);
-  const callbackUrl = new URL(
-    `/api/generated/workflows${baseUrl.search}`,
-    baseUrl
-  );
+  const callbackUrl = new URL(`/api/generated/workflows${baseUrl.search}`, baseUrl);
   const runId = crypto.randomUUID();
   const payload = {
     workflowId,
     runId,
     callbackUrl: callbackUrl.href,
-    state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
+    state: [{ t: Date.now(), arguments: options.arguments ?? [] }]
   };
   const queueResult = await send(`workflow-${workflowId}`, payload, {
     callback: {
-      url: callbackUrl.href,
-    },
+      url: callbackUrl.href
+    }
   });
   return { runId, ...queueResult };
 }
@@ -2213,14 +2040,16 @@ async function start(workflowId, options = {}) {
 // api/trigger.ts
 var POST = async (req) => {
   const url = new URL(req.url);
-  const valueParam = url.searchParams.get('v');
-  const value = typeof valueParam === 'string' ? parseInt(valueParam, 10) : 42;
-  const workflowId = 'example';
+  const valueParam = url.searchParams.get("v");
+  const value = typeof valueParam === "string" ? parseInt(valueParam, 10) : 42;
+  const workflowId = "example";
   const { runId } = await start(workflowId, {
-    arguments: [value],
+    arguments: [value]
   });
   return new Response(
     `Starting "${workflowId}" workflow with run ID "${runId}"`
   );
 };
-export { POST };
+export {
+  POST
+};
