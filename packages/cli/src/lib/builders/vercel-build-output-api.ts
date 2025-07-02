@@ -34,6 +34,15 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       format: 'esm',
     });
 
+    // Create package.json for ESM support
+    const packageJson = {
+      type: 'module',
+    };
+    await writeFile(
+      join(stepsFuncDir, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+
     // Create .vc-config.json for steps function
     const stepsConfig = {
       runtime: 'nodejs22.x',
@@ -92,6 +101,15 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       file: join(workflowsFuncDir, 'index.js'),
       format: 'esm',
     });
+
+    // Create package.json for ESM support
+    const packageJson = {
+      type: 'module',
+    };
+    await writeFile(
+      join(workflowsFuncDir, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
 
     // Create .vc-config.json for workflows function
     const workflowsConfig = {
