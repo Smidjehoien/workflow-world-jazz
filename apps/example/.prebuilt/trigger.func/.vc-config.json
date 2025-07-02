@@ -7,6 +7,7 @@
   "shouldAddHelpers": true,
   "shouldAddSourcemapSupport": true,
   "awsLambdaHandler": "",
+  "useWebApi": false,
   "filePathMap": {
     "apps/example/node_modules/@vercel/workflow-core": "apps/example/node_modules/@vercel/workflow-core",
     "packages/core/node_modules/@vercel/queue": "packages/core/node_modules/@vercel/queue",
