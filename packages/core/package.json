@@ -16,7 +16,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@vercel/queue": "0.0.0-alpha.4",
+    "@vercel/queue": "0.0.0-alpha.5",
     "@vercel/workflow-vm": "workspace:*"
   },
   "devDependencies": {
