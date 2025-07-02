@@ -292,4 +292,5 @@ function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
   };
 }
 
+export * from './sleep.js';
 export * from './step.js';
