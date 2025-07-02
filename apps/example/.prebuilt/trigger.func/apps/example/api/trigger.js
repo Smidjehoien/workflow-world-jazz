@@ -1,6 +1,3 @@
-'use strict';
-Object.defineProperty(exports, '__esModule', { value: true });
-exports.POST = void 0;
 /**
  * This is a simple trigger for the "example" workflow.
  *
@@ -13,18 +10,17 @@ exports.POST = void 0;
  * If running in a script where that is not defined, then the `baseUrl` option
  * must be provided.
  */
-const workflow_core_1 = require('@vercel/workflow-core');
-const POST = async (req) => {
+import { start } from '@vercel/workflow-core';
+
+export const POST = async (req) => {
   const url = new URL(req.url);
   const valueParam = url.searchParams.get('v');
   const value = typeof valueParam === 'string' ? parseInt(valueParam, 10) : 42;
   const workflowId = 'example';
-  const { runId } = await (0, workflow_core_1.start)(workflowId, {
+  const { runId } = await start(workflowId, {
     arguments: [value],
   });
   return new Response(
     `Starting "${workflowId}" workflow with run ID "${runId}"`
   );
 };
-exports.POST = POST;
-//# sourceMappingURL=trigger.js.map
