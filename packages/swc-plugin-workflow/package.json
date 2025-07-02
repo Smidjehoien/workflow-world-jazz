@@ -19,7 +19,7 @@
     "swc-plugin"
   ],
   "scripts": {
-    "build": "cargo build-wasm32 --release && cp target/wasm32-unknown-unknown/release/swc_plugin_workflow.wasm .",
+    "build": "./build.sh",
     "test": "cargo test",
     "prepublishOnly": "pnpm build"
   },

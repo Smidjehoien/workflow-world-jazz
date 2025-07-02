@@ -1,0 +1,22 @@
+{
+  "name": "@vercel/workflow-vm",
+  "version": "0.0.0",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "tsc --build --clean",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.3",
+    "@types/seedrandom": "^3.0.8",
+    "@vercel/workflow-tsconfig": "workspace:*"
+  },
+  "dependencies": {
+    "seedrandom": "^3.0.5"
+  }
+}

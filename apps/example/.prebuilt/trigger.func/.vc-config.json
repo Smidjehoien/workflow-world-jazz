@@ -1,0 +1,17 @@
+{
+  "handler": "apps/example/api/trigger.js",
+  "runtime": "nodejs22.x",
+  "architecture": "arm64",
+  "environment": {},
+  "launcherType": "Nodejs",
+  "shouldAddHelpers": true,
+  "shouldAddSourcemapSupport": true,
+  "awsLambdaHandler": "",
+  "filePathMap": {
+    "apps/example/node_modules/@vercel/workflow-core": "apps/example/node_modules/@vercel/workflow-core",
+    "packages/core/node_modules/@vercel/queue": "packages/core/node_modules/@vercel/queue",
+    "packages/core/node_modules/@vercel/workflow-vm": "packages/core/node_modules/@vercel/workflow-vm",
+    "packages/vm/node_modules/seedrandom": "packages/vm/node_modules/seedrandom",
+    "node_modules/.pnpm/@vercel+queue@0.0.0-alpha.4/node_modules/mixpart": "node_modules/.pnpm/@vercel+queue@0.0.0-alpha.4/node_modules/mixpart"
+  }
+}
