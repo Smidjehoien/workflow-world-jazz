@@ -4,8 +4,7 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "build:workflow": "workflow --target vercel-build-output-api",
-    "build": "./build.sh",
+    "workflow": "workflow",
     "clean": "rm -r public; rm -r generated; rm -r api/generated; rm -r .vercel/output;:"
   },
   "devDependencies": {

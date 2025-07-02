@@ -1,0 +1,39 @@
+---
+description: Workflow CLI usage guide for building workflow code
+globs: 
+alwaysApply: false
+---
+# Workflow CLI Guide
+
+The Workflow CLI is implemented in [packages/cli/src/index.ts](mdc:packages/cli/src/index.ts) and provides two build targets for creating workflow bundles:
+
+1. `vercel-static` (default) - Creates static bundles in `api/generated/`
+2. `vercel-build-output-api` - Creates Vercel Build Output API structure in `.vercel/output/`
+
+## Usage
+
+The CLI is available as both `workflow` and `wf` (shorthand) through the binary configuration in [packages/cli/package.json](mdc:packages/cli/package.json).
+
+In the example app [apps/example](mdc:apps/example), the CLI is included as a workspace dependency and can be run via `pnpm build`, which is configured in [apps/example/package.json](mdc:apps/example/package.json).
+
+## Implementation Details
+
+The CLI processes workflow files from the configured directories (default: `./workflows/`):
+- [apps/example/workflows/steps.ts](mdc:apps/example/workflows/steps.ts) - Contains step definitions
+- [apps/example/workflows/workflows.ts](mdc:apps/example/workflows/workflows.ts) - Contains workflow definitions
+
+### Build Targets
+
+1. **vercel-static** (default):
+   - Creates bundles at `api/generated/steps.js` and `api/generated/workflows.js`
+   - Uses standard Vercel deployment process
+   - Selected with `wf --target vercel-static` or just `wf`
+
+2. **vercel-build-output-api**:
+   - Creates `.vercel/output` directory structure
+   - Generates serverless functions at:
+     - `/api/generated/steps.func/`
+     - `/api/generated/workflows.func/`
+   - Selected with `wf --target vercel-build-output-api`
+
+Both targets maintain the same function paths (`/api/generated/steps` and `/api/generated/workflows`) for compatibility.
