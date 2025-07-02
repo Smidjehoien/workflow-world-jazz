@@ -34,7 +34,7 @@ Upstream, this plugin will be used in server mode by a bundler to combine multip
 
 ### Workflow Mode
 
-When executed in 'workflow' mode, step definitions are replaced with a `useStep` call from `@vercel/workflow-core`. `useStep` will handle the logic to resolve the step invoke result from cache, or making network request to enqueue the step on Vercel queue with a serialized copy of any arguments passed. 
+When executed in 'workflow' mode, step definitions are replaced with a `useStep` call, which is a function accessible at the global scope behind the `Symbol.for("WORKFLOW_USE_STEP")` symbol. `useStep` will handle the logic to resolve the step invoke result from cache, or making network request to enqueue the step on Vercel queue with a serialized copy of any arguments passed. 
 
 
 Input code
@@ -42,16 +42,14 @@ Input code
 // workflow/steps.js
 export async function add(a, b) {
   "use step";
-  return a + b
+  return a + b;
 }
 ```
 
 Output code
 ```
 // workflow/generated/steps.js
-import { useStep } from '@vercel/workflow-core';
-
-export const add = useStep('add')
+export const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
 ```
 
 Instead of individually marking functions with 'use step', you can also add the directive to the top of a file to mark all exports within that file as step functions

@@ -1,4 +1,3 @@
-import { runInContext } from 'node:vm';
 import {
   InvalidCallbackError,
   type MessageHandler,
@@ -7,12 +6,12 @@ import {
   send,
   Topic,
 } from '@vercel/queue';
-import { createContext } from '@vercel/workflow-vm';
 import { getBaseUrl } from './base-url.js';
-import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global.js';
+import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction, type StepFunction } from './private.js';
 import type { StepInvokePayload, WorkflowInvokePayload } from './schemas.js';
 import { getErrorName, isInstanceOf } from './types.js';
+import { runWorkflow } from './workflow.js';
 
 export { FatalError, StepNotRunError } from './global.js';
 
@@ -120,32 +119,13 @@ function workflowMessageHandler(
   return async (message_, metadata) => {
     // TODO: validate `message` schema
     const message = message_ as WorkflowInvokePayload;
-
-    const initialState = message.state[0];
-
     console.log('Received workflow message:', message, metadata);
-
-    const { context } = createContext({
-      seed: message.runId,
-      fixedTimestamp: initialState.t,
-    });
-
-    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-    context[STATE] = message.state;
-    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-    context[STEP_INDEX] = 1;
 
     // Invoke user workflow
     try {
-      const workflowFn = runInContext(
-        `${workflowCode};${workflowName}`,
-        context
-      );
-      if (typeof workflowFn !== 'function') {
-        throw new Error('Workflow code must be a function');
-      }
-      const result = await workflowFn(...initialState.arguments);
+      const result = await runWorkflow(workflowCode, workflowName, message);
       console.log('Workflow result:', result);
+      // TODO: update the event log (in database) with the workflow result
     } catch (err) {
       if (isInstanceOf(err, StepNotRunError)) {
         console.log('Step not run:', err.stepId, err.args);
@@ -293,4 +273,3 @@ function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
 }
 
 export * from './sleep.js';
-export * from './step.js';

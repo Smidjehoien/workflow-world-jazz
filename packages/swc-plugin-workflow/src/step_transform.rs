@@ -78,26 +78,7 @@ impl StepTransform {
         }
     }
 
-    // Generate the import for useStep (workflow mode)
-    fn create_use_step_import(&self) -> ModuleItem {
-        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-            span: DUMMY_SP,
-            specifiers: vec![ImportSpecifier::Named(ImportNamedSpecifier {
-                span: DUMMY_SP,
-                local: Ident::new("useStep".into(), DUMMY_SP, SyntaxContext::empty()),
-                imported: None,
-                is_type_only: false,
-            })],
-            src: Box::new(Str {
-                span: DUMMY_SP,
-                value: "@vercel/workflow-core".into(),
-                raw: None,
-            }),
-            type_only: false,
-            with: None,
-            phase: ImportPhase::Evaluation,
-        }))
-    }
+
 
     // Generate the import for registerStepFunction (server mode)
     fn create_register_import(&self) -> ModuleItem {
@@ -124,16 +105,47 @@ impl StepTransform {
         }))
     }
 
-    // Create a proxy call to useStep (workflow mode)
+    // Create a proxy call to globalThis[Symbol.for("WORKFLOW_USE_STEP")] (workflow mode)
     fn create_step_proxy(&self, name: &str) -> Expr {
         Expr::Call(CallExpr {
             span: DUMMY_SP,
             ctxt: SyntaxContext::empty(),
-            callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
-                "useStep".into(),
-                DUMMY_SP,
-                SyntaxContext::empty(),
-            )))),
+            callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+                span: DUMMY_SP,
+                obj: Box::new(Expr::Ident(Ident::new(
+                    "globalThis".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                ))),
+                prop: MemberProp::Computed(ComputedPropName {
+                    span: DUMMY_SP,
+                    expr: Box::new(Expr::Call(CallExpr {
+                        span: DUMMY_SP,
+                        ctxt: SyntaxContext::empty(),
+                        callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+                            span: DUMMY_SP,
+                            obj: Box::new(Expr::Ident(Ident::new(
+                                "Symbol".into(),
+                                DUMMY_SP,
+                                SyntaxContext::empty(),
+                            ))),
+                            prop: MemberProp::Ident(IdentName::new(
+                                "for".into(),
+                                DUMMY_SP,
+                            )),
+                        }))),
+                        args: vec![ExprOrSpread {
+                            spread: None,
+                            expr: Box::new(Expr::Lit(Lit::Str(Str {
+                                span: DUMMY_SP,
+                                value: "WORKFLOW_USE_STEP".into(),
+                                raw: None,
+                            }))),
+                        }],
+                        type_args: None,
+                    })),
+                }),
+            }))),
             args: vec![ExprOrSpread {
                 spread: None,
                 expr: Box::new(Expr::Lit(Lit::Str(Str {
@@ -213,9 +225,7 @@ impl VisitMut for StepTransform {
 
                 match self.mode {
                     TransformMode::Workflow => {
-                        if !self.step_function_names.is_empty() {
-                            imports_to_add.push(self.create_use_step_import());
-                        }
+                        // No imports needed for workflow mode
                     }
                     TransformMode::Server => {
                         if !self.registration_calls.is_empty() {
@@ -243,7 +253,7 @@ impl VisitMut for StepTransform {
 
                     match self.mode {
                         TransformMode::Workflow => {
-                            module_items.push(self.create_use_step_import());
+                            // No imports needed for workflow mode
                         }
                         TransformMode::Server => {
                             if !self.registration_calls.is_empty() {

@@ -1,24 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FatalError, STATE, STEP_INDEX, StepNotRunError } from './global';
-
-describe('Global Constants', () => {
-  it('should have STATE symbol', () => {
-    expect(STATE).toBeDefined();
-    expect(typeof STATE).toBe('symbol');
-    expect(STATE.toString()).toBe('Symbol(STATE)');
-  });
-
-  it('should have STEP_INDEX symbol', () => {
-    expect(STEP_INDEX).toBeDefined();
-    expect(typeof STEP_INDEX).toBe('symbol');
-    expect(STEP_INDEX.toString()).toBe('Symbol(STEP_INDEX)');
-  });
-
-  it('should use global symbols that can be accessed from different contexts', () => {
-    expect(STATE).toBe(Symbol.for('STATE'));
-    expect(STEP_INDEX).toBe(Symbol.for('STEP_INDEX'));
-  });
-});
+import { FatalError, StepNotRunError } from './global';
 
 describe('FatalError', () => {
   it('should create a FatalError instance', () => {

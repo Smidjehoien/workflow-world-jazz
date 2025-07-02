@@ -46,8 +46,7 @@ test_inline!(
 }
 "#,
     // Output codes after transformed with plugin
-    r#"import { useStep } from "@vercel/workflow-core";
-const add = useStep("add");
+    r#"const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
 "#
 );
 
@@ -63,8 +62,7 @@ test_inline!(
 }
 "#,
     // Output codes after transformed with plugin
-    r#"import { useStep } from "@vercel/workflow-core";
-export const add = useStep("add");
+    r#"export const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
 "#
 );
 
@@ -85,11 +83,8 @@ export async function sendEmail(to, subject) {
 }
 "#,
     // Output codes after transformed with plugin
-    r#"import { useStep } from "@vercel/workflow-core";
-
-export const processOrder = useStep("processOrder");
-
-export const sendEmail = useStep("sendEmail");
+    r#"export const processOrder = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("processOrder");
+export const sendEmail = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("sendEmail");
 "#
 );
 
@@ -150,7 +145,6 @@ test_inline!(
 };
 "#,
     // Output codes after transformed with plugin
-    r#"import { useStep } from "@vercel/workflow-core";
-const multiply = useStep("multiply");
+    r#"const multiply = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("multiply");
 "#
 );
