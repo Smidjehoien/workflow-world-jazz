@@ -26,6 +26,7 @@ export function getConstructorNames(obj: unknown): string[] {
  */
 export function isInstanceOf<T>(
   v: unknown,
+  // biome-ignore lint/suspicious/noExplicitAny: Fine for this case
   ctor: new (...args: any[]) => T
 ): v is T {
   return getConstructorNames(v).includes(ctor.name);

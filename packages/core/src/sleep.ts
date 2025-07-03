@@ -1,3 +1,5 @@
+import type { StringValue } from 'ms';
+
 /**
  * Sleep within a workflow for a given duration.
  *
@@ -5,6 +7,6 @@
  * of `"1000ms"`, `"1s"`, `"1m"`, `"1h"`, or `"1d"`.
  * @returns A promise that resolves when the sleep is complete.
  */
-export const sleep: (duration: string) => Promise<void> =
+export const sleep: (duration: StringValue) => Promise<null> =
   // @ts-expect-error - Meant to be used within a workflow file - will evaluate to undefined outside of the workflow VM context
   globalThis[Symbol.for('WORKFLOW_USE_STEP')]?.('__builtin_sleep');

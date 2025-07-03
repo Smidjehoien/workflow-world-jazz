@@ -6,10 +6,15 @@ import {
   send,
   Topic,
 } from '@vercel/queue';
+import ms, { type StringValue } from 'ms';
 import { getBaseUrl } from './base-url.js';
 import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction, type StepFunction } from './private.js';
-import type { StepInvokePayload, WorkflowInvokePayload } from './schemas.js';
+import type {
+  StepInvokePayload,
+  WorkflowEvent,
+  WorkflowInvokePayload,
+} from './schemas.js';
 import { getErrorName, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
 
@@ -44,6 +49,7 @@ export async function start(workflowId: string, options: StartOptions = {}) {
   const queueResult = await send(`workflow-${workflowId}`, payload, {
     callback: {
       url: callbackUrl.href,
+      delay: 0,
     },
   });
   return { runId, ...queueResult };
@@ -126,7 +132,35 @@ function workflowMessageHandler(
       const result = await runWorkflow(workflowCode, workflowName, message);
       console.log('Workflow result:', result);
       // TODO: update the event log (in database) with the workflow result
-    } catch (err) {
+    } catch (err_) {
+      let err = err_;
+      let delay = 0;
+      let stepTopic: string | undefined;
+      let stepCallbackUrl: URL | undefined;
+      const extraState: WorkflowEvent[] = [];
+
+      // The builtin sleep function is special, we just re-invoke the workflow
+      // after the specified delay.
+      if (
+        isInstanceOf(err, StepNotRunError) &&
+        err.stepId === '__builtin_sleep'
+      ) {
+        const msVal = err.args[0] as StringValue;
+        if (typeof msVal !== 'string') {
+          err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
+        }
+        delay = Math.floor(ms(msVal) / 1000);
+        if (typeof delay !== 'number' || Number.isNaN(delay) || delay < 0) {
+          err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
+        }
+        stepCallbackUrl = new URL(message.callbackUrl);
+        stepTopic = `workflow-${workflowName}`;
+        extraState.push({
+          t: Date.now() + delay * 1000,
+          result: null,
+        });
+      }
+
       if (isInstanceOf(err, StepNotRunError)) {
         console.log('Step not run:', err.stepId, err.args);
         const stepInvokePayload: StepInvokePayload = {
@@ -134,14 +168,25 @@ function workflowMessageHandler(
           stepId: err.stepId,
           arguments: err.args,
         };
+        stepInvokePayload.state.push(...extraState);
+
         const callbackUrl = new URL(message.callbackUrl);
-        const stepCallbackUrl = new URL(
-          `/api/generated/steps${callbackUrl.search}`,
-          callbackUrl
-        );
-        await send(`step-${err.stepId}`, stepInvokePayload, {
+
+        if (typeof stepTopic === 'undefined') {
+          stepTopic = `step-${err.stepId}`;
+        }
+
+        if (typeof stepCallbackUrl === 'undefined') {
+          stepCallbackUrl = new URL(
+            `/api/generated/steps${callbackUrl.search}`,
+            callbackUrl
+          );
+        }
+
+        await send(stepTopic, stepInvokePayload, {
           callback: {
             url: stepCallbackUrl.href,
+            delay,
           },
         });
       } else if (isInstanceOf(err, FatalError)) {
@@ -267,6 +312,7 @@ function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
     await send(`workflow-${message.workflowId}`, message, {
       callback: {
         url: message.callbackUrl,
+        delay: 0,
       },
     });
   };
