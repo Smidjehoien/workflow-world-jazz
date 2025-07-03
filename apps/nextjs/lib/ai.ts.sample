@@ -1,0 +1,48 @@
+// @ts-nocheck illustrative example
+
+import { generateText } from 'workflow/ai';
+
+/**
+ * Step that gets the weather for a given city
+ * @param city - The city to get the weather for
+ * @returns The weather for the given city
+ * @tool
+ */
+async function getWeather(city: string): Promise<Weather> {
+  'use step';
+  // ...
+}
+
+/**
+ * A workflow to file a tax return
+ * @param input - The input to file a tax return for
+ * @returns The tax return for the given input
+ * @tool
+ */
+async function fileTaxReturn(input: any): Promise<any> {
+  'use workflow';
+  // ...
+}
+
+// `generateText` needs to be a "workflowified" version of the current "ai" sdk generateText
+await generateText({
+  // ...
+  tools: {
+    getWeather,
+    fileTaxReturn,
+  },
+  maxSteps: 10_000, // since this is durable now and can practically run forever
+});
+
+
+
+// ---
+// api/mcp/route.ts
+import { mcpAdapter } from 'workflow/mcp';
+
+export const { POST } = mcpAdapter({
+  tools: {
+    getWeather,
+    fileTaxReturn,
+  },
+});
