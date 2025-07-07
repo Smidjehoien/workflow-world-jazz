@@ -15,5 +15,14 @@ if ! command -v cargo >/dev/null 2>&1; then
   fi
 fi
 
+# Check if wasm32-unknown-unknown target exists when running locally
+if [ "${CI:-0}" != "1" ]; then
+  if ! rustup target list --installed | grep -q "wasm32-unknown-unknown"; then
+    echo "The wasm32-unknown-unknown target is not installed."
+    echo "Please run 'rustup target add wasm32-unknown-unknown' to install it."
+    exit 1
+  fi
+fi
+
 cargo build-wasm32 --release
 cp target/wasm32-unknown-unknown/release/swc_plugin_workflow.wasm .
