@@ -6,7 +6,7 @@ import {
 
 type CallbackHandlers = Parameters<typeof handleCallback>[0];
 
-export function createHandlersCatchAll(
+export function createHandlersWildcard(
   topicPrefix: string,
   handler: (
     message: unknown,
@@ -32,12 +32,12 @@ export function createHandlersCatchAll(
   return handlers;
 }
 
-export const handleCallbackCatchAll = (
+export const handleCallbackWildcard = (
   topicPrefix: string,
   handler: (
     message: unknown,
     metadata: MessageMetadata & { topicName: string; consumerGroupName: string }
   ) => ReturnType<MessageHandler>
 ) => {
-  return handleCallback(createHandlersCatchAll(topicPrefix, handler));
+  return handleCallback(createHandlersWildcard(topicPrefix, handler));
 };
