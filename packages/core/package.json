@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@types/ms": "^2.1.0",
-    "@vercel/queue": "0.0.0-alpha.5",
+    "@vercel/queue": "0.0.0-alpha.10",
     "@vercel/workflow-vm": "workspace:*",
     "ms": "2.1.3"
   },

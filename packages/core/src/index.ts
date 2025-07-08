@@ -1,15 +1,8 @@
-import {
-  InvalidCallbackError,
-  type MessageHandler,
-  parseCallbackRequest,
-  QueueClient,
-  send,
-  Topic,
-} from '@vercel/queue';
-import ms, { type StringValue } from 'ms';
+import { handleCallback, type MessageHandler, send } from '@vercel/queue';
+//import ms, { type StringValue } from 'ms';
 import { getBaseUrl } from './base-url.js';
 import { FatalError, StepNotRunError } from './global.js';
-import { getStepFunction, type StepFunction } from './private.js';
+import { getStepFunction } from './private.js';
 import type {
   Serializable,
   StepInvokePayload,
@@ -47,12 +40,7 @@ export async function start(workflowId: string, options: StartOptions = {}) {
     callbackUrl: callbackUrl.href,
     state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
   };
-  const queueResult = await send(`workflow-${workflowId}`, payload, {
-    callback: {
-      url: callbackUrl.href,
-      delay: 0,
-    },
-  });
+  const queueResult = await send(`workflow-${workflowId}`, payload);
   return { runId, ...queueResult };
 }
 
@@ -83,64 +71,28 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
  * functions at the top level.
  * @returns A function that can be used as a Vercel API route.
  */
-export function vercelAPIWorkflowsEntrypoint(
-  workflowCode: string
-): (request: Request) => Promise<Response> {
-  return async (request: Request) => {
-    try {
-      // Parse the queue callback information
-      const { queueName, consumerGroup, messageId } =
-        parseCallbackRequest(request);
+export const vercelAPIWorkflowsEntrypoint = handleCallback(
+  async (message_, metadata) => {
+    const topicParts = metadata.topicName.split('workflow-', 1);
 
-      // Ensure we're handling a `workflow` topic
-      if (!queueName.startsWith('workflow-')) {
-        throw new Error(`Expected 'workflow-*' topic, got '${queueName}'`);
-      }
-
-      // Ensure the consumer group is 'default'
-      if (consumerGroup !== 'default') {
-        throw new Error(
-          `Expected 'default' consumer group, got '${consumerGroup}'`
-        );
-      }
-
-      // extract the workflow name from the queue name
-      const workflowName = queueName.slice('workflow-'.length);
-      // TODO: validate `workflowName` exists before consuming message?
-
-      // Create client and process the message
-      const client = new QueueClient();
-      const topic = new Topic(client, queueName);
-      const cg = topic.consumerGroup(consumerGroup);
-
-      await cg.consume(workflowMessageHandler(workflowCode, workflowName), {
-        messageId,
-      });
-
-      return Response.json({ status: 'success' });
-    } catch (error) {
-      console.error('Callback error:', error);
-
-      if (error instanceof InvalidCallbackError) {
-        return Response.json(
-          { error: 'Invalid callback request' },
-          { status: 400 }
-        );
-      }
-
-      return Response.json(
-        { error: 'Failed to process callback' },
-        { status: 500 }
+    // Ensure we're handling a `workflow` topic
+    if (topicParts.length !== 2) {
+      throw new Error(
+        `Expected 'workflow-*' topic, got '${metadata.topicName}'`
       );
     }
-  };
-}
 
-function workflowMessageHandler(
-  workflowCode: string,
-  workflowName: string
-): MessageHandler<unknown> {
-  return async (message_, metadata) => {
+    // Ensure the consumer group is 'default'
+    if (metadata.consumerGroupName !== 'default') {
+      throw new Error(
+        `Expected 'default' consumer group, got '${metadata.consumerGroupName}'`
+      );
+    }
+
+    // extract the workflow name from the queue name
+    const workflowName = topicParts[1];
+    // TODO: validate `workflowName` exists before consuming message?
+
     // TODO: validate `message` schema
     const message = message_ as WorkflowInvokePayload;
     console.log('Received workflow message:', message, metadata);
@@ -152,7 +104,6 @@ function workflowMessageHandler(
       // TODO: update the event log (in database) with the workflow result
     } catch (err_) {
       let err = err_;
-      let delay = 0;
       let stepTopic: string | undefined;
       let stepCallbackUrl: URL | undefined;
       const extraState: WorkflowEvent[] = [];
@@ -163,20 +114,21 @@ function workflowMessageHandler(
         isInstanceOf(err, StepNotRunError) &&
         err.stepId === '__builtin_sleep'
       ) {
-        const msVal = err.args[0] as StringValue;
-        if (typeof msVal !== 'string') {
-          err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
-        }
-        delay = Math.floor(ms(msVal) / 1000);
-        if (typeof delay !== 'number' || Number.isNaN(delay) || delay < 0) {
-          err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
-        }
-        stepCallbackUrl = new URL(message.callbackUrl);
-        stepTopic = `workflow-${workflowName}`;
-        extraState.push({
-          t: Date.now() + delay * 1000,
-          result: null,
-        });
+        err = new FatalError(`Sleep currently not working`);
+        //const msVal = err.args[0] as StringValue;
+        //if (typeof msVal !== 'string') {
+        //  err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
+        //}
+        //delay = Math.floor(ms(msVal) / 1000);
+        //if (typeof delay !== 'number' || Number.isNaN(delay) || delay < 0) {
+        //  err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
+        //}
+        //stepCallbackUrl = new URL(message.callbackUrl);
+        //stepTopic = `workflow-${workflowName}`;
+        //extraState.push({
+        //  t: Date.now() + delay * 1000,
+        //  result: null,
+        //});
       }
 
       if (isInstanceOf(err, StepNotRunError)) {
@@ -201,12 +153,7 @@ function workflowMessageHandler(
           );
         }
 
-        await send(stepTopic, stepInvokePayload, {
-          callback: {
-            url: stepCallbackUrl.href,
-            delay,
-          },
-        });
+        await send(stepTopic, stepInvokePayload);
       } else if (isInstanceOf(err, FatalError)) {
         console.error(
           `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
@@ -217,68 +164,44 @@ function workflowMessageHandler(
         );
       }
     }
-  };
-}
+
+    return Response.json({ status: 'success' });
+  }
+);
 
 /**
  * A single route that handles any step execution request and routes to the
  * appropriate step function. We may eventually want to create different bundles
  * for each step, this is temporary.
  */
-export async function vercelAPIStepsEntrypoint(
-  request: Request
-): Promise<Response> {
-  try {
-    // Parse the queue callback information
-    const { queueName, consumerGroup, messageId } =
-      parseCallbackRequest(request);
+export const vercelAPIStepsEntrypoint = handleCallback(
+  async (message_, metadata) => {
+    const topicParts = metadata.topicName.split('step-', 1);
 
     // Ensure we're handling a `step` topic
-    if (!queueName.startsWith('step-')) {
-      throw new Error(`Expected 'step-*' topic, got '${queueName}'`);
+    if (topicParts.length !== 2) {
+      throw new Error(`Expected 'step-*' topic, got '${metadata.topicName}'`);
     }
 
     // Ensure the consumer group is 'default'
-    if (consumerGroup !== 'default') {
+    if (metadata.consumerGroupName !== 'default') {
       throw new Error(
-        `Expected 'default' consumer group, got '${consumerGroup}'`
+        `Expected 'default' consumer group, got '${metadata.consumerGroupName}'`
       );
     }
 
     // extract the step name from the queue name
-    const stepName = queueName.slice('step-'.length);
+    const stepName = topicParts[1];
     const stepFn = getStepFunction(stepName);
     if (!stepFn) {
       throw new Error(`Step ${stepName} not found`);
     }
-
-    // Create client and process the message
-    const client = new QueueClient();
-    const topic = new Topic(client, queueName);
-    const cg = topic.consumerGroup(consumerGroup);
-
-    await cg.consume(stepMessageHandler(stepFn), { messageId });
-
-    return Response.json({ status: 'success' });
-  } catch (error) {
-    console.error('Callback error:', error);
-
-    if (error instanceof InvalidCallbackError) {
-      return Response.json(
-        { error: 'Invalid callback request' },
-        { status: 400 }
+    if (typeof stepFn !== 'function') {
+      throw new Error(
+        `Step ${stepName} is not a function (got ${typeof stepFn})`
       );
     }
 
-    return Response.json(
-      { error: 'Failed to process callback' },
-      { status: 500 }
-    );
-  }
-}
-
-function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
-  return async (message_, metadata) => {
     // TODO: validate `message` schema
     const message = message_ as StepInvokePayload;
 
@@ -327,13 +250,10 @@ function stepMessageHandler(stepFn: StepFunction): MessageHandler<unknown> {
     }
 
     console.log('Sending updated state payload back to the workflow:', message);
-    await send(`workflow-${message.workflowId}`, message, {
-      callback: {
-        url: message.callbackUrl,
-        delay: 0,
-      },
-    });
-  };
-}
+    await send(`workflow-${message.workflowId}`, message);
+
+    return Response.json({ status: 'success' });
+  }
+);
 
 export * from './sleep.js';
