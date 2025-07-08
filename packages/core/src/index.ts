@@ -11,6 +11,7 @@ import { getBaseUrl } from './base-url.js';
 import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction, type StepFunction } from './private.js';
 import type {
+  Serializable,
   StepInvokePayload,
   WorkflowEvent,
   WorkflowInvokePayload,
@@ -21,7 +22,7 @@ import { runWorkflow } from './workflow.js';
 export { FatalError, StepNotRunError } from './global.js';
 
 export interface StartOptions {
-  arguments?: unknown[];
+  arguments?: Serializable[];
   baseUrl?: string;
 }
 
@@ -53,6 +54,23 @@ export async function start(workflowId: string, options: StartOptions = {}) {
     },
   });
   return { runId, ...queueResult };
+}
+
+/**
+ * Run a single step directly.
+ *
+ * @param stepId - The ID of the step to run.
+ * @param options - The options for the step run.
+ * @returns The unique run ID for the newly started step invocation.
+ */
+export async function runStep(stepId: string, options: StartOptions = {}) {
+  // const baseUrl = getBaseUrl(options.baseUrl);
+  // const callbackUrl = new URL(
+  //   `/api/generated/steps${baseUrl.search}`,
+  //   baseUrl
+  // );
+
+  throw new Error('Running steps directly is not yet implemented');
 }
 
 // ---------------------------------------------------------

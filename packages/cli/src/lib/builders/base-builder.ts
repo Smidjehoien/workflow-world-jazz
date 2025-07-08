@@ -50,7 +50,7 @@ export abstract class BaseBuilder {
           tsconfig: false,
           jsc: {
             experimental: {
-              plugins: [['swc-plugin-workflow', { mode: 'server' }]],
+              plugins: [['swc-plugin-workflow', { mode: 'step' }]],
             },
           },
         }),
@@ -93,6 +93,53 @@ export abstract class BaseBuilder {
         commonjs(),
       ],
       preserveSymlinks: true,
+    });
+  }
+
+  protected async buildClientLibrary(): Promise<void> {
+    if (!this.config.clientBundlePath) {
+      // Silently exit since no client bundle was requested
+      return;
+    }
+
+    console.log('Generating a client library at', this.config.clientBundlePath);
+    console.log(
+      'NOTE: The recommended way to use workflow with a framework like NextJS is using the loader/plugin with webpack/turbobpack/rollup'
+    );
+
+    const clientBundle = await rollup({
+      // @ts-expect-error - multi plugin changes the input type
+      input: this.inputEntrypoints,
+      treeshake: 'smallest',
+      plugins: [
+        swc({
+          tsconfig: false,
+          sourceMaps: true,
+          jsc: {
+            parser: {
+              syntax: 'typescript',
+            },
+            experimental: {
+              plugins: [['swc-plugin-workflow', { mode: 'client' }]],
+            },
+          },
+        }),
+        // @ts-expect-error - default export is a function
+        multi(),
+        nodeResolve({
+          exportConditions: ['node'],
+          modulePaths: [resolve(process.cwd(), 'node_modules', 'mixpart')],
+          dedupe: ['@vercel/workflow-core'],
+        }),
+        // @ts-expect-error - default export is a function
+        commonjs(),
+      ],
+      preserveSymlinks: true,
+    });
+
+    await clientBundle.write({
+      file: this.config.clientBundlePath,
+      format: 'esm',
     });
   }
 }

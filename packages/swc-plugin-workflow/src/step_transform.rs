@@ -11,8 +11,9 @@ use swc_core::{
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub enum TransformMode {
-    Server,
+    Step,
     Workflow,
+    Client,
 }
 
 #[derive(Debug)]
@@ -20,11 +21,15 @@ pub struct StepTransform {
     mode: TransformMode,
     // Track if the file has a top-level "use step" directive
     has_file_directive: bool,
+    // Track if the file has a top-level "use workflow" directive
+    has_file_workflow_directive: bool,
     // Set of function names that are step functions
     step_function_names: HashSet<String>,
+    // Set of function names that are workflow functions
+    workflow_function_names: HashSet<String>,
     // Set of function names that have been registered (to avoid duplicates)
     registered_functions: HashSet<String>,
-    // Collect registration calls for server mode
+    // Collect registration calls for step mode
     registration_calls: Vec<Stmt>,
 }
 
@@ -33,7 +38,9 @@ impl StepTransform {
         Self {
             mode,
             has_file_directive: false,
+            has_file_workflow_directive: false,
             step_function_names: HashSet::new(),
+            workflow_function_names: HashSet::new(),
             registered_functions: HashSet::new(),
             registration_calls: Vec::new(),
         }
@@ -53,11 +60,35 @@ impl StepTransform {
         false
     }
 
+    // Check if a function has the "use workflow" directive
+    fn has_use_workflow_directive(&self, body: &Option<BlockStmt>) -> bool {
+        if let Some(body) = body {
+            if let Some(first_stmt) = body.stmts.first() {
+                if let Stmt::Expr(ExprStmt { expr, .. }) = first_stmt {
+                    if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                        return value == "use workflow";
+                    }
+                }
+            }
+        }
+        false
+    }
+
     // Check if the module has a top-level "use step" directive
     fn check_module_directive(&mut self, items: &[ModuleItem]) -> bool {
         if let Some(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. }))) = items.first() {
             if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
                 return value == "use step";
+            }
+        }
+        false
+    }
+
+    // Check if the module has a top-level "use workflow" directive
+    fn check_module_workflow_directive(&mut self, items: &[ModuleItem]) -> bool {
+        if let Some(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. }))) = items.first() {
+            if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                return value == "use workflow";
             }
         }
         false
@@ -78,9 +109,24 @@ impl StepTransform {
         }
     }
 
+    // Remove "use workflow" directive from function body
+    fn remove_use_workflow_directive(&self, body: &mut Option<BlockStmt>) {
+        if let Some(body) = body {
+            if !body.stmts.is_empty() {
+                if let Stmt::Expr(ExprStmt { expr, .. }) = &body.stmts[0] {
+                    if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                        if value == "use workflow" {
+                            body.stmts.remove(0);
+                        }
+                    }
+                }
+            }
+        }
+    }
 
 
-    // Generate the import for registerStepFunction (server mode)
+
+    // Generate the import for registerStepFunction (step mode)
     fn create_register_import(&self) -> ModuleItem {
         ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
             span: DUMMY_SP,
@@ -97,6 +143,58 @@ impl StepTransform {
             src: Box::new(Str {
                 span: DUMMY_SP,
                 value: "@vercel/workflow-core/private".into(),
+                raw: None,
+            }),
+            type_only: false,
+            with: None,
+            phase: ImportPhase::Evaluation,
+        }))
+    }
+
+    // Generate the import for workflow start function (client mode)
+    fn create_workflow_start_import(&self) -> ModuleItem {
+        let mut specifiers = Vec::new();
+        
+        if !self.workflow_function_names.is_empty() {
+            specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
+                span: DUMMY_SP,
+                local: Ident::new(
+                    "__private_workflow_start".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                ),
+                imported: Some(ModuleExportName::Ident(Ident::new(
+                    "start".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                ))),
+                is_type_only: false,
+            }));
+        }
+        
+        if !self.step_function_names.is_empty() {
+            specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
+                span: DUMMY_SP,
+                local: Ident::new(
+                    "__private_run_step".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                ),
+                imported: Some(ModuleExportName::Ident(Ident::new(
+                    "runStep".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                ))),
+                is_type_only: false,
+            }));
+        }
+
+        ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+            span: DUMMY_SP,
+            specifiers,
+            src: Box::new(Str {
+                span: DUMMY_SP,
+                value: "@vercel/workflow-core".into(),
                 raw: None,
             }),
             type_only: false,
@@ -158,7 +256,117 @@ impl StepTransform {
         })
     }
 
-    // Create a registration call for server mode
+    // Create a workflow start call (client mode)
+    fn create_workflow_start_call(&self, fn_name: &str, params: &[Param]) -> Expr {
+        let args_array = Expr::Array(ArrayLit {
+            span: DUMMY_SP,
+            elems: params.iter().map(|param| {
+                if let Pat::Ident(ident) = &param.pat {
+                    Some(ExprOrSpread {
+                        spread: None,
+                        expr: Box::new(Expr::Ident(Ident::new(
+                            ident.id.sym.clone(),
+                            DUMMY_SP,
+                            SyntaxContext::empty(),
+                        ))),
+                    })
+                } else {
+                    None
+                }
+            }).collect(),
+        });
+
+        Expr::Call(CallExpr {
+            span: DUMMY_SP,
+            ctxt: SyntaxContext::empty(),
+            callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+                "__private_workflow_start".into(),
+                DUMMY_SP,
+                SyntaxContext::empty(),
+            )))),
+            args: vec![
+                ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Lit(Lit::Str(Str {
+                        span: DUMMY_SP,
+                        value: fn_name.into(),
+                        raw: None,
+                    }))),
+                },
+                ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Object(ObjectLit {
+                        span: DUMMY_SP,
+                        props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                            key: PropName::Ident(IdentName::new(
+                                "arguments".into(),
+                                DUMMY_SP,
+                            )),
+                            value: Box::new(args_array),
+                        })))],
+                    })),
+                },
+            ],
+            type_args: None,
+        })
+    }
+
+    // Create a step run call (client mode)
+    fn create_run_step_call(&self, fn_name: &str, params: &[Param]) -> Expr {
+        let args_array = Expr::Array(ArrayLit {
+            span: DUMMY_SP,
+            elems: params.iter().map(|param| {
+                if let Pat::Ident(ident) = &param.pat {
+                    Some(ExprOrSpread {
+                        spread: None,
+                        expr: Box::new(Expr::Ident(Ident::new(
+                            ident.id.sym.clone(),
+                            DUMMY_SP,
+                            SyntaxContext::empty(),
+                        ))),
+                    })
+                } else {
+                    None
+                }
+            }).collect(),
+        });
+
+        Expr::Call(CallExpr {
+            span: DUMMY_SP,
+            ctxt: SyntaxContext::empty(),
+            callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+                "__private_run_step".into(),
+                DUMMY_SP,
+                SyntaxContext::empty(),
+            )))),
+            args: vec![
+                ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Lit(Lit::Str(Str {
+                        span: DUMMY_SP,
+                        value: fn_name.into(),
+                        raw: None,
+                    }))),
+                },
+                ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Object(ObjectLit {
+                        span: DUMMY_SP,
+                        props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                            key: PropName::Ident(IdentName::new(
+                                "arguments".into(),
+                                DUMMY_SP,
+                            )),
+                            value: Box::new(args_array),
+                        })))],
+                    })),
+                },
+            ],
+            type_args: None,
+        })
+    }
+
+    // Create a registration call for step mode
     fn create_registration_call(&mut self, name: &str) {
         // Only register each function once
         if !self.registered_functions.contains(name) {
@@ -211,6 +419,14 @@ impl StepTransform {
         // Function has explicit directive OR file has directive and function is exported
         (has_directive || (self.has_file_directive && is_exported)) && function.is_async
     }
+
+    // Check if a function should be treated as a workflow function
+    fn should_transform_workflow_function(&self, function: &Function, is_exported: bool) -> bool {
+        let has_directive = self.has_use_workflow_directive(&function.body);
+
+        // Function has explicit directive OR file has workflow directive and function is exported
+        (has_directive || (self.has_file_workflow_directive && is_exported)) && function.is_async
+    }
 }
 
 impl VisitMut for StepTransform {
@@ -227,9 +443,14 @@ impl VisitMut for StepTransform {
                     TransformMode::Workflow => {
                         // No imports needed for workflow mode
                     }
-                    TransformMode::Server => {
+                    TransformMode::Step => {
                         if !self.registration_calls.is_empty() {
                             imports_to_add.push(self.create_register_import());
+                        }
+                    }
+                    TransformMode::Client => {
+                        if !self.workflow_function_names.is_empty() || !self.step_function_names.is_empty() {
+                            imports_to_add.push(self.create_workflow_start_import());
                         }
                     }
                 }
@@ -239,25 +460,30 @@ impl VisitMut for StepTransform {
                     module.body.insert(0, import);
                 }
 
-                // Add registration calls at the end for server mode
-                if matches!(self.mode, TransformMode::Server) {
+                // Add registration calls at the end for step mode
+                if matches!(self.mode, TransformMode::Step) {
                     for call in self.registration_calls.drain(..) {
                         module.body.push(ModuleItem::Stmt(call));
                     }
                 }
             }
             Program::Script(script) => {
-                // For scripts, we need to convert to module if we have step functions
-                if !self.step_function_names.is_empty() {
+                // For scripts, we need to convert to module if we have step or workflow functions
+                if !self.step_function_names.is_empty() || !self.workflow_function_names.is_empty() {
                     let mut module_items = Vec::new();
 
                     match self.mode {
                         TransformMode::Workflow => {
                             // No imports needed for workflow mode
                         }
-                        TransformMode::Server => {
+                        TransformMode::Step => {
                             if !self.registration_calls.is_empty() {
                                 module_items.push(self.create_register_import());
+                            }
+                        }
+                        TransformMode::Client => {
+                            if !self.workflow_function_names.is_empty() || !self.step_function_names.is_empty() {
+                                module_items.push(self.create_workflow_start_import());
                             }
                         }
                     }
@@ -267,8 +493,8 @@ impl VisitMut for StepTransform {
                         module_items.push(ModuleItem::Stmt(stmt.clone()));
                     }
 
-                    // Add registration calls for server mode
-                    if matches!(self.mode, TransformMode::Server) {
+                    // Add registration calls for step mode
+                    if matches!(self.mode, TransformMode::Step) {
                         for call in self.registration_calls.drain(..) {
                             module_items.push(ModuleItem::Stmt(call));
                         }
@@ -286,14 +512,15 @@ impl VisitMut for StepTransform {
     }
 
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
-        // Check for file-level directive
+        // Check for file-level directives
         self.has_file_directive = self.check_module_directive(items);
+        self.has_file_workflow_directive = self.check_module_workflow_directive(items);
 
         // Remove file-level directive if present
-        if self.has_file_directive && !items.is_empty() {
+        if (self.has_file_directive || self.has_file_workflow_directive) && !items.is_empty() {
             if let ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. })) = &items[0] {
                 if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                    if value == "use step" {
+                    if value == "use step" || value == "use workflow" {
                         items.remove(0);
                     }
                 }
@@ -304,6 +531,8 @@ impl VisitMut for StepTransform {
         for item in items.iter_mut() {
             item.visit_mut_with(self);
         }
+
+        // Client mode no longer needs to remove step functions since we transform them
     }
 
     fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
@@ -314,12 +543,34 @@ impl VisitMut for StepTransform {
                 self.step_function_names.insert(fn_name.clone());
 
                 match self.mode {
-                    TransformMode::Server => {
+                    TransformMode::Step => {
                         self.remove_use_step_directive(&mut fn_decl.function.body);
                         self.create_registration_call(&fn_name);
                     }
                     TransformMode::Workflow => {
                         // For workflow mode, we need to replace the entire declaration
+                        // This will be handled at a higher level
+                    }
+                    TransformMode::Client => {
+                        // Step functions are completely removed in client mode
+                        // This will be handled at a higher level
+                    }
+                }
+            }
+        } else if self.should_transform_workflow_function(&fn_decl.function, false) {
+            if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                self.workflow_function_names.insert(fn_name.clone());
+
+                match self.mode {
+                    TransformMode::Step => {
+                        // Workflow functions are not processed in step mode
+                    }
+                    TransformMode::Workflow => {
+                        // For workflow mode, we need to replace the entire declaration
+                        // This will be handled at a higher level
+                    }
+                    TransformMode::Client => {
+                        // Workflow functions are transformed in client mode
                         // This will be handled at a higher level
                     }
                 }
@@ -339,7 +590,7 @@ impl VisitMut for StepTransform {
                         self.step_function_names.insert(fn_name.clone());
 
                         match self.mode {
-                            TransformMode::Server => {
+                            TransformMode::Step => {
                                 self.remove_use_step_directive(&mut fn_decl.function.body);
                                 self.create_registration_call(&fn_name);
                                 stmt.visit_mut_children_with(self);
@@ -363,11 +614,67 @@ impl VisitMut for StepTransform {
                                     }],
                                 })));
                             }
+                            TransformMode::Client => {
+                                // Transform step function body to use step run call
+                                self.remove_use_step_directive(&mut fn_decl.function.body);
+                                if let Some(body) = &mut fn_decl.function.body {
+                                    body.stmts = vec![Stmt::Return(ReturnStmt {
+                                        span: DUMMY_SP,
+                                        arg: Some(Box::new(self.create_run_step_call(&fn_name, &fn_decl.function.params))),
+                                    })];
+                                }
+                                stmt.visit_mut_children_with(self);
+                            }
+                        }
+                    }
+                } else if self.should_transform_workflow_function(&fn_decl.function, false) {
+                    if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                        self.workflow_function_names.insert(fn_name.clone());
+
+                        match self.mode {
+                            TransformMode::Step => {
+                                // Workflow functions are not processed in step mode
+                                stmt.visit_mut_children_with(self);
+                            }
+                            TransformMode::Workflow => {
+                                // Replace function declaration with variable declaration
+                                *stmt = Stmt::Decl(Decl::Var(Box::new(VarDecl {
+                                    span: DUMMY_SP,
+                                    ctxt: SyntaxContext::empty(),
+                                    kind: VarDeclKind::Const,
+                                    declare: false,
+                                    decls: vec![VarDeclarator {
+                                        span: DUMMY_SP,
+                                        name: Pat::Ident(BindingIdent::from(Ident::new(
+                                            fn_name.clone().into(),
+                                            DUMMY_SP,
+                                            SyntaxContext::empty(),
+                                        ))),
+                                        init: Some(Box::new(self.create_step_proxy(&fn_name))),
+                                        definite: false,
+                                    }],
+                                })));
+                            }
+                            TransformMode::Client => {
+                                // Transform workflow function body to use start call
+                                self.remove_use_workflow_directive(&mut fn_decl.function.body);
+                                if let Some(body) = &mut fn_decl.function.body {
+                                    body.stmts = vec![Stmt::Return(ReturnStmt {
+                                        span: DUMMY_SP,
+                                        arg: Some(Box::new(self.create_workflow_start_call(&fn_name, &fn_decl.function.params))),
+                                    })];
+                                }
+                                stmt.visit_mut_children_with(self);
+                            }
                         }
                     }
                 } else {
                     stmt.visit_mut_children_with(self);
                 }
+            }
+            Stmt::Decl(Decl::Var(_)) => {
+                // Handle variable declarations with function expressions
+                stmt.visit_mut_children_with(self);
             }
             _ => {
                 stmt.visit_mut_children_with(self);
@@ -384,7 +691,7 @@ impl VisitMut for StepTransform {
                     self.step_function_names.insert(fn_name.clone());
 
                     match self.mode {
-                        TransformMode::Server => {
+                        TransformMode::Step => {
                             self.remove_use_step_directive(&mut fn_decl.function.body);
                             self.create_registration_call(&fn_name);
                             export_decl.visit_mut_children_with(self);
@@ -408,6 +715,58 @@ impl VisitMut for StepTransform {
                                 }],
                             }));
                         }
+                        TransformMode::Client => {
+                            // Transform step function body to use run step call
+                            self.remove_use_step_directive(&mut fn_decl.function.body);
+                                                          if let Some(body) = &mut fn_decl.function.body {
+                                  body.stmts = vec![Stmt::Return(ReturnStmt {
+                                      span: DUMMY_SP,
+                                      arg: Some(Box::new(self.create_run_step_call(&fn_name, &fn_decl.function.params))),
+                                  })];
+                              }
+                            export_decl.visit_mut_children_with(self);
+                        }
+                    }
+                }
+            } else if self.should_transform_workflow_function(&fn_decl.function, true) {
+                if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                    self.workflow_function_names.insert(fn_name.clone());
+
+                    match self.mode {
+                        TransformMode::Step => {
+                            // Workflow functions are not processed in step mode
+                            export_decl.visit_mut_children_with(self);
+                        }
+                        TransformMode::Workflow => {
+                            // Replace with export const
+                            export_decl.decl = Decl::Var(Box::new(VarDecl {
+                                span: DUMMY_SP,
+                                ctxt: SyntaxContext::empty(),
+                                kind: VarDeclKind::Const,
+                                declare: false,
+                                decls: vec![VarDeclarator {
+                                    span: DUMMY_SP,
+                                    name: Pat::Ident(BindingIdent::from(Ident::new(
+                                        fn_name.clone().into(),
+                                        DUMMY_SP,
+                                        SyntaxContext::empty(),
+                                    ))),
+                                    init: Some(Box::new(self.create_step_proxy(&fn_name))),
+                                    definite: false,
+                                }],
+                            }));
+                        }
+                        TransformMode::Client => {
+                            // Transform workflow function body to use workflow start call
+                            self.remove_use_workflow_directive(&mut fn_decl.function.body);
+                            if let Some(body) = &mut fn_decl.function.body {
+                                body.stmts = vec![Stmt::Return(ReturnStmt {
+                                    span: DUMMY_SP,
+                                    arg: Some(Box::new(self.create_workflow_start_call(&fn_name, &fn_decl.function.params))),
+                                })];
+                            }
+                            export_decl.visit_mut_children_with(self);
+                        }
                     }
                 }
             } else {
@@ -420,7 +779,7 @@ impl VisitMut for StepTransform {
 
     fn visit_mut_var_decl(&mut self, var_decl: &mut VarDecl) {
         // Handle variable declarations with function expressions
-        for decl in &mut var_decl.decls {
+        for decl in var_decl.decls.iter_mut() {
             if let Some(init) = &mut decl.init {
                 if let Pat::Ident(binding) = &decl.name {
                     let name = binding.id.sym.to_string();
@@ -435,7 +794,7 @@ impl VisitMut for StepTransform {
                                     self.step_function_names.insert(name.clone());
 
                                     match self.mode {
-                                        TransformMode::Server => {
+                                        TransformMode::Step => {
                                             self.remove_use_step_directive(
                                                 &mut fn_expr.function.body,
                                             );
@@ -444,6 +803,47 @@ impl VisitMut for StepTransform {
                                         TransformMode::Workflow => {
                                             // Replace with proxy
                                             **init = self.create_step_proxy(&name);
+                                        }
+                                        TransformMode::Client => {
+                                            // Transform step function body to use run step call
+                                            self.remove_use_step_directive(
+                                                &mut fn_expr.function.body,
+                                            );
+                                            if let Some(body) = &mut fn_expr.function.body {
+                                                body.stmts = vec![Stmt::Return(ReturnStmt {
+                                                    span: DUMMY_SP,
+                                                    arg: Some(Box::new(self.create_run_step_call(&name, &fn_expr.function.params))),
+                                                })];
+                                            }
+                                        }
+                                    }
+                                }
+                            } else if self.should_transform_workflow_function(&fn_expr.function, false) {
+                                if self.validate_async_function(
+                                    &fn_expr.function,
+                                    fn_expr.function.span,
+                                ) {
+                                    self.workflow_function_names.insert(name.clone());
+
+                                    match self.mode {
+                                        TransformMode::Step => {
+                                            // Workflow functions are not processed in step mode
+                                        }
+                                        TransformMode::Workflow => {
+                                            // Replace with proxy
+                                            **init = self.create_step_proxy(&name);
+                                        }
+                                        TransformMode::Client => {
+                                            // Transform workflow function body to use workflow start call
+                                            self.remove_use_workflow_directive(
+                                                &mut fn_expr.function.body,
+                                            );
+                                            if let Some(body) = &mut fn_expr.function.body {
+                                                body.stmts = vec![Stmt::Return(ReturnStmt {
+                                                    span: DUMMY_SP,
+                                                    arg: Some(Box::new(self.create_workflow_start_call(&name, &fn_expr.function.params))),
+                                                })];
+                                            }
                                         }
                                     }
                                 }
@@ -454,6 +854,8 @@ impl VisitMut for StepTransform {
                 }
             }
         }
+
+        // No longer need to remove step functions in client mode since we transform them
 
         var_decl.visit_mut_children_with(self);
     }

@@ -1,3 +1,5 @@
+import type { Serializable } from './schemas.js';
+
 /**
  * A fatal error is an error that cannot be retried.
  * It will cause the step to fail and the error will
@@ -20,9 +22,9 @@ export class FatalError extends Error {
  */
 export class StepNotRunError extends Error {
   stepId: string;
-  args: unknown[];
+  args: Serializable[];
 
-  constructor(stepId: string, args: unknown[]) {
+  constructor(stepId: string, args: Serializable[]) {
     super(
       `Step ${stepId} has not been run yet. Arguments: ${JSON.stringify(args)}`
     );

@@ -1,18 +1,18 @@
 import { FatalError, StepNotRunError } from './global.js';
-import type { WorkflowEvent, WorkflowState } from './schemas.js';
+import type { Serializable, WorkflowEvent, WorkflowState } from './schemas.js';
 
 export interface WorkflowContext {
   stepIndex: number;
   state: WorkflowState;
   invocationsQueue: {
     stepId: string;
-    args: unknown[];
+    args: Serializable[];
   }[];
   onWorkflowError: (error: Error) => void;
 }
 
 export function createUseStep(ctx: WorkflowContext) {
-  return function useStep<Args extends unknown[], Result>(stepId: string) {
+  return function useStep<Args extends Serializable[], Result>(stepId: string) {
     return (...args: Args): Promise<Result> => {
       const stepIndex = ctx.stepIndex++;
       const event = ctx.state[stepIndex] as WorkflowEvent | undefined;
