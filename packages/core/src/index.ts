@@ -64,15 +64,15 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
 // ---------------------------------------------------------
 
 /**
- * A single route that handles any workflow execution request and routes to the
- * appropriate workflow function.
+ * Function that creates a single route which handles any workflow execution
+ * request and routes to the appropriate workflow function.
  *
  * @param workflowCode - The workflow bundle code containing all the workflow
  * functions at the top level.
  * @returns A function that can be used as a Vercel API route.
  */
-export const vercelAPIWorkflowsEntrypoint = handleCallback(
-  async (message_, metadata) => {
+export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
+  handleCallback(async (message_, metadata) => {
     const topicParts = metadata.topicName.split('workflow-', 1);
 
     // Ensure we're handling a `workflow` topic
@@ -166,8 +166,7 @@ export const vercelAPIWorkflowsEntrypoint = handleCallback(
     }
 
     return Response.json({ status: 'success' });
-  }
-);
+  });
 
 /**
  * A single route that handles any step execution request and routes to the
