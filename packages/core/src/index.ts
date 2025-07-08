@@ -74,7 +74,7 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
  */
 export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
   handleCallbackCatchAll('workflow-', async (message_, metadata) => {
-    const topicParts = metadata.topicName.split('workflow-', 1);
+    const topicParts = metadata.topicName.split('workflow-', 2);
 
     // Ensure we're handling a `workflow` topic
     if (topicParts.length !== 2) {
@@ -175,7 +175,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
 export const vercelAPIStepsEntrypoint = handleCallbackCatchAll(
   'step-',
   async (message_, metadata) => {
-    const topicParts = metadata.topicName.split('step-', 1);
+    const topicParts = metadata.topicName.split('step-', 2);
 
     // Ensure we're handling a `step` topic
     if (topicParts.length !== 2) {
