@@ -1,6 +1,7 @@
-import { handleCallback, type MessageHandler, send } from '@vercel/queue';
+import { send } from '@vercel/queue';
 //import ms, { type StringValue } from 'ms';
 import { getBaseUrl } from './base-url.js';
+import { handleCallbackCatchAll } from './callback.js';
 import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import type {
@@ -72,7 +73,7 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
  * @returns A function that can be used as a Vercel API route.
  */
 export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
-  handleCallback(async (message_, metadata) => {
+  handleCallbackCatchAll('workflow-', async (message_, metadata) => {
     const topicParts = metadata.topicName.split('workflow-', 1);
 
     // Ensure we're handling a `workflow` topic
@@ -164,8 +165,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
         );
       }
     }
-
-    return Response.json({ status: 'success' });
   });
 
 /**
@@ -173,7 +172,8 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
  * appropriate step function. We may eventually want to create different bundles
  * for each step, this is temporary.
  */
-export const vercelAPIStepsEntrypoint = handleCallback(
+export const vercelAPIStepsEntrypoint = handleCallbackCatchAll(
+  'step-',
   async (message_, metadata) => {
     const topicParts = metadata.topicName.split('step-', 1);
 
@@ -250,8 +250,6 @@ export const vercelAPIStepsEntrypoint = handleCallback(
 
     console.log('Sending updated state payload back to the workflow:', message);
     await send(`workflow-${message.workflowId}`, message);
-
-    return Response.json({ status: 'success' });
   }
 );
 
