@@ -36,27 +36,5 @@ export interface WorkflowInvokePayload {
 
 export interface StepInvokePayload extends WorkflowInvokePayload {
   stepId: string;
-  arguments: Serializable[];
+  arguments: unknown[];
 }
-
-/**
- * A serializable value:
- * Any valid JSON object is serializable
- *
- * @example
- *
- * ```ts
- * // any valid JSON object is serializable
- * const anyJson: Serializable = { foo: "bar" };
- * ```
- */
-export type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Serializable[]
-  | { [key: string]: Serializable };
-// TODO: add support for binary data and streams using @vercel/queue
-// | ArrayBuffer;

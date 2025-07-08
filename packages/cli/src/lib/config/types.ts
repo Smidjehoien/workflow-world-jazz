@@ -9,12 +9,9 @@ export interface WorkflowConfig {
   workingDir: string;
   buildTarget: BuildTarget;
   stepsBundlePath: string;
-  workflowsBundlePath: string;
-
-  // Optionally generate a client library for workflow execution. The preferred
-  // method of using workflow is to use a loader within a framework (like
-  // NextJS) that resolves client bindings on the fly.
-  clientBundlePath?: string;
+  workflowBundle: string;
+  clientBundlePath: string;
+  buildOutputDir: string;
 }
 
 export interface InputEntrypoints {

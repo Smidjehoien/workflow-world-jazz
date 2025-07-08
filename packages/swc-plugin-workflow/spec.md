@@ -1,12 +1,14 @@
 # Workflow directives specification
 
-The 'use step' and 'use workflow' directives works similarly to the 'use server' in react. A function marked with 'use step' will be bundled and executed on the server. A function marked as 'use workflow' will also be bundled and executed on the server in an alternate v8 runtime.
+## The 'use step' directive
 
-The swc plugin has 3 modes - 'step' mode, 'workflow' mode, and 'client' mode
+The use step directive works similarly to the 'use server' in react. A function marked at 'use step' will be bundled and executed on the server.
 
-## Step Mode
+The swc plugin has 2 modes - 'server' mode and 'workflow' mode.
 
-When executed in 'step' mode, each step is kept as is and is simply registered using `registerStepFunction` from `@vercel/workflow-core`. For example:
+### Server Mode
+
+When executed in 'server' mode, each step is kept as is and is simply registered using `registerStepFunction` from `@vercel/workflow-core`. For example:
 
 Input code:
 ```
@@ -17,7 +19,7 @@ export async function add(a, b) {
 }
 ```
 
-Output code
+Server output code
 ```
 // api/generated/steps.js
 import { registerStepFunction } from "@vercel/workflow-core/private"
@@ -28,11 +30,11 @@ export async function add(a, b) {
 registerStepFunction(add)
 ```
 
-Upstream, this plugin will be used in step mode by a bundler to combine multiple entry points and create a server bundle that's served at `api/generated/steps.ts`
+Upstream, this plugin will be used in server mode by a bundler to combine multiple entry points and create a server bundle that's stored at `api/generated/steps.ts`
 
-## Workflow Mode
+### Workflow Mode
 
-When executed in 'workflow' mode, step definitions are replaced with a `useStep` call, which is a function accessible at the global scope via the `Symbol.for("WORKFLOW_USE_STEP")` symbol. `useStep` encapsulates logic to either make a network request to enqueue the step (which is served from the step bundle created in step mode), or resolves the value from the local event log.
+When executed in 'workflow' mode, step definitions are replaced with a `useStep` call, which is a function accessible at the global scope behind the `Symbol.for("WORKFLOW_USE_STEP")` symbol. `useStep` will handle the logic to resolve the step invoke result from cache, or making network request to enqueue the step on Vercel queue with a serialized copy of any arguments passed. 
 
 
 Input code
@@ -46,46 +48,14 @@ export async function add(a, b) {
 
 Output code
 ```
-// workflow/steps.js
+// workflow/generated/steps.js
 export const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
 ```
 
-## Client Mode
-
-When executed in 'client' mode, step and workflow definitions have their bodies replaced with a call to `runStep` and `start` respectively. Both these helper functions are exported from the `@vercel/workflow-core` package. They effectively proxy the requests to execute steps and workflows on the server (using the bundles created in the other two modes). 
+Instead of individually marking functions with 'use step', you can also add the directive to the top of a file to mark all exports within that file as step functions
 
 
-Input code
-```
-// workflow/main.js
-export async function add(a, b) {
-  "use step";
-  return a + b;
-}
-
-export async function workflow(a, b) {
-  "use workflow";
-  return add(a, b);
-}
-
-```
-
-Output code
-```
-// workflow/main.js
-import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core"
-
-export async function add(a, b) {
-  return __private_run_step('add', { arguments: [a, b] })
-}
-
-export async function workflow(a, b) {
-  return __private_workflow_start('workflow', { arguments: [a, b] })
-}
-```
-
-## Notes 
-* Instead of individually marking functions with 'use step' or 'use_workflow', you can also add the directive to the top of a file to mark all exports within that file as step functions or workflows
-* the directives must be at the very beginning of their function or module; above any other code including imports (comments above directives are OK). They must be written with single or double quotes, not backticks.
-* The arguments and return value of 'use step' and 'use workflow' must be serializable.
-* Because the underlying network calls are always asynchronous, 'use step' and 'use workflow' can only be used on async functions.
+### Caveats 
+* 'use step' must be at the very beginning of their function or module; above any other code including imports (comments above directives are OK). They must be written with single or double quotes, not backticks.
+* The arguments and return value of 'use step' must be serializable.
+* Because the underlying network calls are always asynchronous, 'use step' can only be used on async functions.
