@@ -12,7 +12,11 @@
       "!**/dist/**",
       "!**/.vercel/**",
       "!**/api/generated/**",
-      "!**/.prebuilt/**"
+      "!**/.prebuilt/**",
+      "!**/.turbo/**",
+      "!**/.next/**",
+      "!**/.env/**",
+      "!packages/swc-plugin-workflow/target/**"
     ],
     "ignoreUnknown": false
   },
