@@ -48,6 +48,13 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       handler: 'index.js',
       launcherType: 'Nodejs',
       shouldAddHelpers: true,
+      experimentalTriggers: [
+        {
+          type: 'queue/v1beta',
+          topic: 'step-*',
+          consumer: 'default',
+        },
+      ],
     };
 
     await writeFile(
@@ -116,6 +123,13 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       handler: 'index.js',
       launcherType: 'Nodejs',
       shouldAddHelpers: true,
+      experimentalTriggers: [
+        {
+          type: 'queue/v1beta',
+          topic: 'workflow-*',
+          consumer: 'default',
+        },
+      ],
     };
 
     await writeFile(
