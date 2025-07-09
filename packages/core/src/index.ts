@@ -1,4 +1,4 @@
-import { send } from '@vercel/queue';
+import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
 //import ms, { type StringValue } from 'ms';
 import { getBaseUrl } from './base-url.js';
 import { handleCallbackWildcard } from './callback.js';
@@ -54,8 +54,8 @@ export async function start(workflowId: string, options: StartOptions = {}) {
  * functions at the top level.
  * @returns A function that can be used as a Vercel API route.
  */
-export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
-  handleCallbackWildcard('workflow-', async (message_, metadata) => {
+export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
+  async function handler(message_: unknown, metadata: MessageMetadata) {
     const topicParts = metadata.topicName.split('workflow-', 2);
 
     // Ensure we're handling a `workflow` topic
@@ -66,9 +66,9 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
     }
 
     // Ensure the consumer group is 'default'
-    if (metadata.consumerGroupName !== 'default') {
+    if (metadata.consumerGroup !== 'default') {
       throw new Error(
-        `Expected 'default' consumer group, got '${metadata.consumerGroupName}'`
+        `Expected 'default' consumer group, got '${metadata.consumerGroup}'`
       );
     }
 
@@ -147,92 +147,105 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) =>
         );
       }
     }
+  }
+
+  return handleCallback({
+    'workflow-*': {
+      default: handler,
+    },
   });
+};
+
+async function stepMessageHandler(
+  message_: unknown,
+  metadata: MessageMetadata
+) {
+  const topicParts = metadata.topicName.split('step-', 2);
+
+  // Ensure we're handling a `step` topic
+  if (topicParts.length !== 2) {
+    throw new Error(`Expected 'step-*' topic, got '${metadata.topicName}'`);
+  }
+
+  // Ensure the consumer group is 'default'
+  if (metadata.consumerGroup !== 'default') {
+    throw new Error(
+      `Expected 'default' consumer group, got '${metadata.consumerGroup}'`
+    );
+  }
+
+  // extract the step name from the queue name
+  const stepName = topicParts[1];
+  const stepFn = getStepFunction(stepName);
+  if (!stepFn) {
+    throw new Error(`Step ${stepName} not found`);
+  }
+  if (typeof stepFn !== 'function') {
+    throw new Error(
+      `Step ${stepName} is not a function (got ${typeof stepFn})`
+    );
+  }
+
+  // TODO: validate `message` schema
+  const message = message_ as StepInvokePayload;
+
+  console.log('Received step invoke message:', message, metadata);
+
+  let result: unknown;
+  try {
+    result = await stepFn(...message.arguments);
+    console.log('Step result:', result);
+
+    // Update the event log with the step result, and send the
+    // updated state payload back to the workflow via the queue
+    message.state.push({ t: Date.now(), result });
+  } catch (err) {
+    console.error(
+      `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
+    );
+    if (isInstanceOf(err, FatalError)) {
+      // Fatal error - store the error in the event log and re-invoke the workflow
+      message.state.push({
+        t: Date.now(),
+        error: String(err),
+        stack: err.stack,
+        fatal: true,
+      });
+    } else {
+      const deliveryCount = metadata.deliveryCount;
+      const maxRetries = stepFn.maxRetries ?? 32;
+      if (deliveryCount >= maxRetries) {
+        // Max retries reached - store the error in the event log and re-invoke the workflow
+        const error = `Max retries reached for step "${message.stepId}" (Workflow run ID: ${message.runId})`;
+        message.state.push({
+          t: Date.now(),
+          error,
+          //stack: err.stack,
+          fatal: true,
+        });
+      } else {
+        const timeoutSeconds = 1;
+        // it's a retryable error - so have the queue keep the message visible so that it gets retried
+        return {
+          timeoutSeconds,
+        };
+      }
+    }
+  }
+
+  console.log('Sending updated state payload back to the workflow:', message);
+  await send(`workflow-${message.workflowId}`, message);
+}
 
 /**
  * A single route that handles any step execution request and routes to the
  * appropriate step function. We may eventually want to create different bundles
  * for each step, this is temporary.
  */
-export const vercelAPIStepsEntrypoint = handleCallbackWildcard(
-  'step-',
-  async (message_, metadata) => {
-    const topicParts = metadata.topicName.split('step-', 2);
-
-    // Ensure we're handling a `step` topic
-    if (topicParts.length !== 2) {
-      throw new Error(`Expected 'step-*' topic, got '${metadata.topicName}'`);
-    }
-
-    // Ensure the consumer group is 'default'
-    if (metadata.consumerGroupName !== 'default') {
-      throw new Error(
-        `Expected 'default' consumer group, got '${metadata.consumerGroupName}'`
-      );
-    }
-
-    // extract the step name from the queue name
-    const stepName = topicParts[1];
-    const stepFn = getStepFunction(stepName);
-    if (!stepFn) {
-      throw new Error(`Step ${stepName} not found`);
-    }
-    if (typeof stepFn !== 'function') {
-      throw new Error(
-        `Step ${stepName} is not a function (got ${typeof stepFn})`
-      );
-    }
-
-    // TODO: validate `message` schema
-    const message = message_ as StepInvokePayload;
-
-    console.log('Received step invoke message:', message, metadata);
-
-    let result: unknown;
-    try {
-      result = await stepFn(...message.arguments);
-      console.log('Step result:', result);
-
-      // Update the event log with the step result, and send the
-      // updated state payload back to the workflow via the queue
-      message.state.push({ t: Date.now(), result });
-    } catch (err) {
-      console.error(
-        `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
-      );
-      if (isInstanceOf(err, FatalError)) {
-        // Fatal error - store the error in the event log and re-invoke the workflow
-        message.state.push({
-          t: Date.now(),
-          error: String(err),
-          stack: err.stack,
-          fatal: true,
-        });
-      } else {
-        const deliveryCount = metadata.deliveryCount;
-        const maxRetries = stepFn.maxRetries ?? 32;
-        if (deliveryCount >= maxRetries) {
-          // Max retries reached - store the error in the event log and re-invoke the workflow
-          const error = `Max retries reached for step "${message.stepId}" (Workflow run ID: ${message.runId})`;
-          message.state.push({
-            t: Date.now(),
-            error,
-            //stack: err.stack,
-            fatal: true,
-          });
-        } else {
-          const timeoutSeconds = 1;
-          // it's a retryable error - so have the queue keep the message visible so that it gets retried
-          return {
-            timeoutSeconds,
-          };
-        }
-      }
-    }
-
-    console.log('Sending updated state payload back to the workflow:', message);
-    await send(`workflow-${message.workflowId}`, message);
-  }
-);
+export const vercelAPIStepsEntrypoint = handleCallback({
+  'step-*': {
+    default: stepMessageHandler,
+  },
+});
 
 export * from './sleep.js';
