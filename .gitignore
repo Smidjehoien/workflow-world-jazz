@@ -7,3 +7,6 @@ node_modules
 # does not run create the "bin" symlink if the file does not exist
 !packages/cli/dist/index.js
 .env*.local
+
+# Single letter one-off scratch scripts
+?.ts
