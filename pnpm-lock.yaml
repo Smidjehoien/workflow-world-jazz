@@ -144,8 +144,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@vercel/queue':
-        specifier: 0.0.0-alpha.10
-        version: 0.0.0-alpha.10
+        specifier: 0.0.0-alpha.12
+        version: 0.0.0-alpha.12
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../vm
@@ -950,8 +950,8 @@ packages:
       '@aws-sdk/credential-provider-web-identity':
         optional: true
 
-  '@vercel/queue@0.0.0-alpha.10':
-    resolution: {integrity: sha512-naZyULKnhowHIk70z3s6AG/PclPfDQGFCsHvJ9+DTIkj+PEjOyou19EgR2jxTGTPavJgRnLoIkSLw8/ao17SUA==}
+  '@vercel/queue@0.0.0-alpha.12':
+    resolution: {integrity: sha512-qU3O9VEkC+TQ5f2ZNnFY/888HffArI+83heCkCQZrSZTQ6+iwjM0eMjDke//Fn7jcsxbooMfuoHZiZshfYAUqQ==}
     engines: {node: '>=22.0.0'}
 
   '@vitest/expect@3.2.4':
@@ -2376,7 +2376,7 @@ snapshots:
 
   '@vercel/functions@2.2.2': {}
 
-  '@vercel/queue@0.0.0-alpha.10':
+  '@vercel/queue@0.0.0-alpha.12':
     dependencies:
       mixpart: 0.0.4
 
