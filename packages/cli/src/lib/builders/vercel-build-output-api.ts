@@ -8,10 +8,7 @@ import { BaseBuilder } from './base-builder.js';
 
 export class VercelBuildOutputAPIBuilder extends BaseBuilder {
   async build(): Promise<void> {
-    const outputDir = resolve(
-      this.config.workingDir,
-      this.config.buildOutputDir
-    );
+    const outputDir = resolve(this.config.workingDir, '.vercel/output');
     const functionsDir = join(outputDir, 'functions');
     const apiGeneratedDir = join(functionsDir, 'api/generated');
 
@@ -21,6 +18,8 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     await this.buildStepsFunction(apiGeneratedDir);
     await this.buildWorkflowsFunction(apiGeneratedDir);
     await this.createBuildOutputConfig(outputDir);
+
+    await this.buildClientLibrary();
   }
 
   private async buildStepsFunction(apiGeneratedDir: string): Promise<void> {

@@ -6,6 +6,8 @@ export class VercelStaticBuilder extends BaseBuilder {
   async build(): Promise<void> {
     await this.buildStepsBundle();
     await this.buildWorkflowsBundle();
+
+    await this.buildClientLibrary();
   }
 
   private async buildStepsBundle(): Promise<void> {
@@ -24,7 +26,7 @@ export class VercelStaticBuilder extends BaseBuilder {
   private async buildWorkflowsBundle(): Promise<void> {
     console.log(
       'Creating vercel API workflows bundle at',
-      this.config.workflowBundle
+      this.config.workflowsBundlePath
     );
 
     const workflowsBundle = await this.createWorkflowsBundle();
@@ -39,15 +41,15 @@ export class VercelStaticBuilder extends BaseBuilder {
 
     const workflowBundlePath = resolve(
       this.config.workingDir,
-      this.config.workflowBundle
+      this.config.workflowsBundlePath
     );
 
-    await writeFile(
-      workflowBundlePath,
-      `import { vercelAPIWorkflowsEntrypoint } from '@vercel/workflow-core';
-export const POST = vercelAPIWorkflowsEntrypoint(
-  ${JSON.stringify(workflowBundleCode)}
-);`
-    );
+    const workflowFunctionCode = `import { vercelAPIWorkflowsEntrypoint } from '@vercel/workflow-core';
+
+const workflowCode = \`${workflowBundleCode.replace(/[`$]/g, '\\$&')}\`;
+
+export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
+
+    await writeFile(workflowBundlePath, workflowFunctionCode);
   }
 }

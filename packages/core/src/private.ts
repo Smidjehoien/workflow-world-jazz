@@ -2,6 +2,8 @@
  * Utils used by the bundler when transforming code
  */
 
+import type { Serializable } from './schemas.js';
+
 export type StepFunction<
   Args extends Serializable[] = any[],
   Result extends Serializable | unknown = unknown,
@@ -24,25 +26,3 @@ export function registerStepFunction(stepFn: StepFunction) {
 export function getStepFunction(stepName: string): StepFunction | undefined {
   return registeredSteps.get(stepName);
 }
-
-/**
- * A serializable value:
- * Any valid JSON object is serializable
- *
- * @example
- *
- * ```ts
- * // any valid JSON object is serializable
- * const anyJson: Serializable = { foo: "bar" };
- * ```
- */
-export type Serializable =
-  | string
-  | number
-  | boolean
-  | null
-  | undefined
-  | Serializable[]
-  | { [key: string]: Serializable };
-// TODO: add support for binary data and streams using @vercel/queue
-// | ArrayBuffer;

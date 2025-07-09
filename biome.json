@@ -17,9 +17,10 @@
       "!**/.turbo/**",
       "!**/.next/**",
       "!**/.env/**",
-      "!packages/swc-plugin-workflow/target/**"
+      "!target/**",
+      "!**/tests/fixture/**"
     ],
-    "ignoreUnknown": false
+    "ignoreUnknown": true
   },
   "formatter": {
     "enabled": true,

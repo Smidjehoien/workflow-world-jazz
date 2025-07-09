@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build": "./build.sh",
-    "test": "cargo test",
+    "test": "cargo test -p swc_workflow",
     "prepublishOnly": "pnpm build"
   },
   "preferUnplugged": true

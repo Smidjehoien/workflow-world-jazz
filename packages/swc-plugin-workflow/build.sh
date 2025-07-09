@@ -24,5 +24,5 @@ if [ "${CI:-0}" != "1" ]; then
   fi
 fi
 
-cargo build-wasm32 --release
-cp target/wasm32-unknown-unknown/release/swc_plugin_workflow.wasm .
+cargo build-wasm32 --release -p swc_plugin_workflow
+cp ../../target/wasm32-unknown-unknown/release/swc_plugin_workflow.wasm .

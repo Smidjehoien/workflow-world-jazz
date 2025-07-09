@@ -3,10 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": [
-        "target/wasm32-unknown-unknown/release/**",
-        "swc_plugin_workflow.wasm"
-      ]
+      "outputs": ["swc_plugin_workflow.wasm"]
     }
   }
 }

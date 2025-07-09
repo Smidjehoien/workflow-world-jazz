@@ -66,9 +66,10 @@ export default class Build extends BaseCommand {
       workingDir: process.cwd(),
       buildTarget: buildTarget as BuildTarget,
       stepsBundlePath: './api/generated/steps.js',
-      workflowBundle: './api/generated/workflows.js',
-      clientBundlePath: './generated/workflows.js',
-      buildOutputDir: './.vercel/output',
+      workflowsBundlePath: './api/generated/workflows.js',
+
+      // WIP: generate a client library to easily execute workflows/steps
+      // clientBundlePath: './lib/generated/workflows.js',
     };
 
     try {
