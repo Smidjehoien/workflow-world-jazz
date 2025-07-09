@@ -54,6 +54,9 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
           type: 'queue/v1beta',
           topic: 'step-*',
           consumer: 'default',
+          maxAttempts: 32, // Optional: Maximum number of delivery attempts (default: 3)
+          retryAfterSeconds: 0, // Optional: Delay between retries (default: 60)
+          initialDelaySeconds: 0, // Optional: Initial delay before first delivery (default: 0)
         },
       ],
     };
@@ -129,6 +132,9 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
           type: 'queue/v1beta',
           topic: 'workflow-*',
           consumer: 'default',
+          maxAttempts: 32, // Optional: Maximum number of delivery attempts (default: 3)
+          retryAfterSeconds: 0, // Optional: Delay between retries (default: 60)
+          initialDelaySeconds: 0, // Optional: Initial delay before first delivery (default: 0)
         },
       ],
     };
