@@ -1,7 +1,6 @@
 import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
 //import ms, { type StringValue } from 'ms';
 import { getBaseUrl } from './base-url.js';
-import { handleCallbackWildcard } from './callback.js';
 import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import type {
