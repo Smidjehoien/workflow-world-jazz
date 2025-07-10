@@ -1,13 +1,22 @@
 import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
-//import ms, { type StringValue } from 'ms';
-import { getBaseUrl } from './base-url.js';
+import {
+  createStep,
+  createWorkflowRun,
+  createWorkflowRunEvent,
+  getStep,
+  getWorkflowRun,
+  getWorkflowRunEvents,
+  updateStep,
+  updateWorkflowRun,
+} from './backend.js';
 import { FatalError, StepNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
-import type {
-  Serializable,
-  StepInvokePayload,
-  WorkflowEvent,
-  WorkflowInvokePayload,
+import {
+  type Serializable,
+  type StepInvokePayload,
+  StepInvokePayloadSchema,
+  type WorkflowInvokePayload,
+  WorkflowInvokePayloadSchema,
 } from './schemas.js';
 import { getErrorName, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
@@ -16,32 +25,42 @@ export { FatalError, StepNotRunError } from './global.js';
 
 export interface StartOptions {
   arguments?: Serializable[];
-  baseUrl?: string;
+  deploymentId?: string;
 }
 
 /**
  * Starts a workflow run.
  *
- * @param workflowId - The ID of the workflow to start.
+ * @param workflowName - The name of the workflow to start.
  * @param options - The options for the workflow run.
  * @returns The unique run ID for the newly started workflow invocation.
  */
-export async function start(workflowId: string, options: StartOptions = {}) {
-  const baseUrl = getBaseUrl(options.baseUrl);
-  const callbackUrl = new URL(
-    `/api/generated/workflows${baseUrl.search}`,
-    baseUrl
-  );
+export async function start(workflowName: string, options: StartOptions = {}) {
+  const deploymentId = options.deploymentId ?? process.env.VERCEL_DEPLOYMENT_ID;
+  if (!deploymentId) {
+    throw new Error(
+      'A `deploymentId` must be provided to start a workflow run'
+    );
+  }
 
-  const runId = crypto.randomUUID();
-  const payload: WorkflowInvokePayload = {
-    workflowId,
-    runId,
-    callbackUrl: callbackUrl.href,
-    state: [{ t: Date.now(), arguments: options.arguments ?? [] }],
+  const run = await createWorkflowRun({
+    deployment_id: deploymentId,
+    workflow_name: workflowName,
+    arguments: options.arguments ?? [],
+  });
+
+  // XXX: The `send()` function requires the `VERCEL_DEPLOYMENT_ID` environment
+  // variable to be set. Ideally it would be accepted as an option to `send()`.
+  if (!process.env.VERCEL_DEPLOYMENT_ID) {
+    process.env.VERCEL_DEPLOYMENT_ID = deploymentId;
+  }
+
+  const message: WorkflowInvokePayload = {
+    runId: run.id,
   };
-  const queueResult = await send(`workflow-${workflowId}`, payload);
-  return { runId, ...queueResult };
+  await send(`workflow-${workflowName}`, message);
+
+  return run;
 }
 
 /**
@@ -73,95 +92,78 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
  */
 export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
   async function handler(message_: unknown, metadata: MessageMetadata) {
-    const topicParts = metadata.topicName.split('workflow-', 2);
+    // Extract the workflow name from the topic name
+    const workflowName = metadata.topicName.slice('workflow-'.length);
 
-    // Ensure we're handling a `workflow` topic
-    if (topicParts.length !== 2) {
-      throw new Error(
-        `Expected 'workflow-*' topic, got '${metadata.topicName}'`
-      );
-    }
-
-    // Ensure the consumer group is 'default'
-    if (metadata.consumerGroup !== 'default') {
-      throw new Error(
-        `Expected 'default' consumer group, got '${metadata.consumerGroup}'`
-      );
-    }
-
-    // extract the workflow name from the queue name
-    const workflowName = topicParts[1];
     // TODO: validate `workflowName` exists before consuming message?
 
-    // TODO: validate `message` schema
-    const message = message_ as WorkflowInvokePayload;
-    console.log('Received workflow message:', message, metadata);
+    const { runId } = WorkflowInvokePayloadSchema.parse(message_);
+    console.log('Received workflow message:', runId, metadata);
 
     // Invoke user workflow
     try {
-      const result = await runWorkflow(workflowCode, workflowName, message);
-      console.log('Workflow result:', result);
-      // TODO: update the event log (in database) with the workflow result
-    } catch (err_) {
-      let err = err_;
-      let stepTopic: string | undefined;
-      let stepCallbackUrl: URL | undefined;
-      const extraState: WorkflowEvent[] = [];
+      let workflowRun = await getWorkflowRun(runId);
 
-      // The builtin sleep function is special, we just re-invoke the workflow
-      // after the specified delay.
-      if (
-        isInstanceOf(err, StepNotRunError) &&
-        err.stepId === '__builtin_sleep'
-      ) {
-        err = new FatalError(`Sleep currently not working`);
-        //const msVal = err.args[0] as StringValue;
-        //if (typeof msVal !== 'string') {
-        //  err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
-        //}
-        //delay = Math.floor(ms(msVal) / 1000);
-        //if (typeof delay !== 'number' || Number.isNaN(delay) || delay < 0) {
-        //  err = new FatalError(`Invalid argument for sleep step: ${msVal}`);
-        //}
-        //stepCallbackUrl = new URL(message.callbackUrl);
-        //stepTopic = `workflow-${workflowName}`;
-        //extraState.push({
-        //  t: Date.now() + delay * 1000,
-        //  result: null,
-        //});
+      if (workflowRun.status === 'pending') {
+        workflowRun = await updateWorkflowRun(runId, {
+          // This sets the `started_at` timestamp at the database level
+          status: 'running',
+        });
       }
 
+      // TODO: ensure that *all* events are loaded into memory before
+      // running, not just a paginated subset
+      const events = await getWorkflowRunEvents(workflowRun.id);
+
+      const result = await runWorkflow(
+        workflowCode,
+        workflowName,
+        workflowRun,
+        events.data
+      );
+      console.log('Workflow result:', result);
+
+      // Update the workflow run with the result
+      await updateWorkflowRun(runId, {
+        status: 'completed',
+        output: result as Serializable,
+      });
+    } catch (err_) {
+      const err = err_;
+
       if (isInstanceOf(err, StepNotRunError)) {
-        console.log('Step not run:', err.stepId, err.args);
+        console.log('Step not run:', err.stepName, err.args);
+
+        const step = await createStep(runId, {
+          workflow_run_id: runId,
+          step_name: err.stepName,
+          step_type: 'function_call',
+          execution_order: -1, // XXX: do we need this?
+          arguments: err.args as Serializable[],
+        });
+
         const stepInvokePayload: StepInvokePayload = {
-          ...message,
-          stepId: err.stepId,
-          arguments: err.args,
+          workflowName,
+          workflowRunId: runId,
+          stepId: step.id,
         };
-        stepInvokePayload.state.push(...extraState);
-
-        const callbackUrl = new URL(message.callbackUrl);
-
-        if (typeof stepTopic === 'undefined') {
-          stepTopic = `step-${err.stepId}`;
-        }
-
-        if (typeof stepCallbackUrl === 'undefined') {
-          stepCallbackUrl = new URL(
-            `/api/generated/steps${callbackUrl.search}`,
-            callbackUrl
-          );
-        }
-
-        await send(stepTopic, stepInvokePayload);
+        await send(`step-${err.stepName}`, stepInvokePayload);
       } else if (isInstanceOf(err, FatalError)) {
         console.error(
-          `Workflow failed with a fatal error (Run ID: ${message.runId}): ${err}`
+          `Workflow failed with a fatal error (Run ID: ${runId}): ${err}`
         );
+        await updateWorkflowRun(runId, {
+          status: 'failed',
+          error_message: String(err),
+        });
       } else {
         console.error(
-          `Unexpected error while running workflow (Run ID: ${message.runId}): ${err}`
+          `Unexpected error while running workflow (Run ID: ${runId}): ${err}`
         );
+        await updateWorkflowRun(runId, {
+          status: 'failed',
+          error_message: String(err),
+        });
       }
     }
   }
@@ -177,68 +179,96 @@ async function stepMessageHandler(
   message_: unknown,
   metadata: MessageMetadata
 ) {
-  const topicParts = metadata.topicName.split('step-', 2);
+  // Extract the step name from the topic name
+  const stepName = metadata.topicName.slice('step-'.length);
 
-  // Ensure we're handling a `step` topic
-  if (topicParts.length !== 2) {
-    throw new Error(`Expected 'step-*' topic, got '${metadata.topicName}'`);
-  }
-
-  // Ensure the consumer group is 'default'
-  if (metadata.consumerGroup !== 'default') {
-    throw new Error(
-      `Expected 'default' consumer group, got '${metadata.consumerGroup}'`
-    );
-  }
-
-  // extract the step name from the queue name
-  const stepName = topicParts[1];
   const stepFn = getStepFunction(stepName);
   if (!stepFn) {
-    throw new Error(`Step ${stepName} not found`);
+    throw new Error(`Step "${stepName}" not found`);
   }
   if (typeof stepFn !== 'function') {
     throw new Error(
-      `Step ${stepName} is not a function (got ${typeof stepFn})`
+      `Step "${stepName}" is not a function (got ${typeof stepFn})`
     );
   }
 
-  // TODO: validate `message` schema
-  const message = message_ as StepInvokePayload;
-
-  console.log('Received step invoke message:', message, metadata);
+  const { workflowName, workflowRunId, stepId } =
+    StepInvokePayloadSchema.parse(message_);
+  console.log(
+    'Received step invoke message:',
+    { workflowName, workflowRunId, stepId },
+    metadata
+  );
 
   let result: unknown;
   try {
-    result = await stepFn(...message.arguments);
+    let step = await getStep(workflowRunId, stepId);
+
+    if (step.status === 'pending') {
+      step = await updateStep(workflowRunId, stepId, {
+        status: 'running',
+      });
+    } else if (step.status === 'completed') {
+      console.error(`Step "${stepId}" has already completed`);
+      return;
+    } else if (step.status === 'failed') {
+      console.error(
+        `Step "${stepId}" has already failed: ${step.error_message}`
+      );
+      return;
+    }
+
+    result = await stepFn(...step.input);
     console.log('Step result:', result);
 
-    // Update the event log with the step result, and send the
-    // updated state payload back to the workflow via the queue
-    message.state.push({ t: Date.now(), result });
+    // Update the event log with the step result
+    await createWorkflowRunEvent(workflowRunId, {
+      event_type: 'step_result',
+      event_data: {
+        step_id: stepId,
+        result: result as Serializable,
+      },
+    });
+
+    await updateStep(workflowRunId, stepId, {
+      status: 'completed',
+      output: result as Serializable,
+    });
   } catch (err) {
     console.error(
-      `${getErrorName(err)} while running "${message.stepId}" step (Workflow run ID: ${message.runId}): ${String(err)}`
+      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}): ${String(err)}`
     );
     if (isInstanceOf(err, FatalError)) {
       // Fatal error - store the error in the event log and re-invoke the workflow
-      message.state.push({
-        t: Date.now(),
-        error: String(err),
-        stack: err.stack,
-        fatal: true,
+      await createWorkflowRunEvent(workflowRunId, {
+        event_type: 'step_failed',
+        event_data: {
+          step_id: stepId,
+          error: String(err),
+          stack: err.stack,
+          fatal: true,
+        },
+      });
+      await updateStep(workflowRunId, stepId, {
+        status: 'failed',
+        error_message: String(err),
       });
     } else {
       const deliveryCount = metadata.deliveryCount;
       const maxRetries = stepFn.maxRetries ?? 32;
       if (deliveryCount >= maxRetries) {
         // Max retries reached - store the error in the event log and re-invoke the workflow
-        const error = `Max retries reached for step "${message.stepId}" (Workflow run ID: ${message.runId})`;
-        message.state.push({
-          t: Date.now(),
-          error,
-          //stack: err.stack,
-          fatal: true,
+        const error = `Max retries reached`;
+        await createWorkflowRunEvent(workflowRunId, {
+          event_type: 'step_failed',
+          event_data: {
+            step_id: stepId,
+            error,
+          },
+        });
+        await updateStep(workflowRunId, stepId, {
+          status: 'failed',
+          error_message: error,
         });
       } else {
         const timeoutSeconds = 1;
@@ -250,8 +280,17 @@ async function stepMessageHandler(
     }
   }
 
-  console.log('Sending updated state payload back to the workflow:', message);
-  await send(`workflow-${message.workflowId}`, message);
+  const workflowInvokeMessage: WorkflowInvokePayload = {
+    runId: workflowRunId,
+  };
+
+  // TODO: temporary logging
+  console.log(
+    `Sending message back to the "${workflowName}" workflow:`,
+    workflowInvokeMessage
+  );
+
+  await send(`workflow-${workflowName}`, workflowInvokeMessage);
 }
 
 /**

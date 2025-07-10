@@ -1,43 +1,17 @@
-// TODO: use `zod`?
+import { z } from 'zod';
 
-export interface WorkflowTriggerEvent {
-  arguments: unknown[];
-}
+export const WorkflowInvokePayloadSchema = z.object({
+  runId: z.string(),
+});
 
-export interface WorkflowStepResult {
-  result: unknown;
-}
+export const StepInvokePayloadSchema = z.object({
+  workflowName: z.string(),
+  workflowRunId: z.string(),
+  stepId: z.string(),
+});
 
-export interface WorkflowStepFatalError {
-  error: string;
-  stack?: string;
-  fatal: true;
-}
-
-export type WorkflowEventCommon<T> = T & {
-  t: number;
-};
-
-export type WorkflowEvent =
-  | WorkflowEventCommon<WorkflowStepResult>
-  | WorkflowEventCommon<WorkflowStepFatalError>;
-
-export type WorkflowState = [
-  WorkflowEventCommon<WorkflowTriggerEvent>,
-  ...WorkflowEvent[],
-];
-
-export interface WorkflowInvokePayload {
-  workflowId: string;
-  runId: string;
-  callbackUrl: string;
-  state: WorkflowState;
-}
-
-export interface StepInvokePayload extends WorkflowInvokePayload {
-  stepId: string;
-  arguments: Serializable[];
-}
+export type WorkflowInvokePayload = z.infer<typeof WorkflowInvokePayloadSchema>;
+export type StepInvokePayload = z.infer<typeof StepInvokePayloadSchema>;
 
 /**
  * A serializable value:

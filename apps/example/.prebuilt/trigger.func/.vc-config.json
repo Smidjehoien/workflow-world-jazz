@@ -1,6 +1,0 @@
-{
-  "handler": "main.js",
-  "runtime": "nodejs22.x",
-  "architecture": "arm64",
-  "launcherType": "Nodejs"
-}

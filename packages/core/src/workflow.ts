@@ -1,6 +1,6 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
-import type { WorkflowInvokePayload } from './schemas.js';
+import type { Event, WorkflowRun } from './backend.js';
 import { createUseStep, type WorkflowContext } from './step.js';
 
 class Deferred<T> {
@@ -20,21 +20,33 @@ class Deferred<T> {
 export async function runWorkflow(
   workflowCode: string,
   workflowName: string,
-  message: WorkflowInvokePayload
+  workflowRun: WorkflowRun,
+  events: Event[]
 ): Promise<unknown> {
-  const initialState = message.state[0];
+  // XXX: temporary logging
+  console.log('Workflow run:', workflowRun);
+
+  const startedAt = workflowRun.started_at;
+  if (!startedAt) {
+    throw new Error(
+      `Workflow run "${workflowRun.id}" has no "started_at" timestamp (should not happen)`
+    );
+  }
 
   const { context } = createContext({
-    seed: message.runId,
-    fixedTimestamp: initialState.t,
+    seed: workflowRun.id,
+    fixedTimestamp: +startedAt,
   });
 
   const workflowDiscontinuation = new Deferred<void>();
 
+  // XXX: temporary logging
+  console.log('Events:', events);
+
   const workflowContext: WorkflowContext = {
-    stepIndex: 1,
-    state: message.state,
-    invocationsQueue: [],
+    stepIndex: 0,
+    events,
+    //invocationsQueue: [],
     onWorkflowError: workflowDiscontinuation.reject,
   };
 
@@ -52,7 +64,7 @@ export async function runWorkflow(
 
   // Invoke user workflow
   return await Promise.race([
-    workflowFn(...initialState.arguments),
+    workflowFn(...workflowRun.input),
     workflowDiscontinuation.promise,
   ]);
 }

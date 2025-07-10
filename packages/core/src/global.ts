@@ -21,15 +21,15 @@ export class FatalError extends Error {
  * onto the queue.
  */
 export class StepNotRunError extends Error {
-  stepId: string;
+  stepName: string;
   args: Serializable[];
 
-  constructor(stepId: string, args: Serializable[]) {
+  constructor(stepName: string, args: Serializable[]) {
     super(
-      `Step ${stepId} has not been run yet. Arguments: ${JSON.stringify(args)}`
+      `Step ${stepName} has not been run yet. Arguments: ${JSON.stringify(args)}`
     );
     this.name = 'StepNotRunError';
-    this.stepId = stepId;
+    this.stepName = stepName;
     this.args = args;
   }
 }
