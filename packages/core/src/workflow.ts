@@ -19,7 +19,6 @@ class Deferred<T> {
 
 export async function runWorkflow(
   workflowCode: string,
-  workflowName: string,
   workflowRun: WorkflowRun,
   events: Event[]
 ): Promise<unknown> {
@@ -54,11 +53,14 @@ export async function runWorkflow(
   context[Symbol.for('WORKFLOW_USE_STEP')] = createUseStep(workflowContext);
 
   // Get a reference to the user-defined workflow function
-  const workflowFn = runInContext(`${workflowCode};${workflowName}`, context);
+  const workflowFn = runInContext(
+    `${workflowCode};${workflowRun.workflow_name}`,
+    context
+  );
 
   if (typeof workflowFn !== 'function') {
     throw new ReferenceError(
-      `Workflow ${JSON.stringify(workflowName)} must be a function, but got "${typeof workflowFn}" instead`
+      `Workflow ${JSON.stringify(workflowRun.workflow_name)} must be a function, but got "${typeof workflowFn}" instead`
     );
   }
 

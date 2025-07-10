@@ -1,42 +1,51 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
+import type { Event, WorkflowRun } from './backend.js';
 import { runWorkflow } from './workflow.js';
 
 describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
       const workflowCode = 'function workflow() { return "success"; }';
-      const workflowName = 'workflow';
 
-      const result = await runWorkflow(workflowCode, workflowName, {
-        workflowId: 'test-workflow',
-        runId: 'test-run-123',
-        callbackUrl: 'https://example.com/api/callback',
-        state: [
-          {
-            t: 1234567890,
-            arguments: [],
-          },
-        ],
-      });
+      const workflowRun: WorkflowRun = {
+        id: 'test-run-123',
+        workflow_name: 'workflow',
+        status: 'running',
+        input: [],
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        started_at: new Date('2024-01-01T00:00:00.000Z'),
+        owner_id: 'test-owner',
+        project_id: 'test-project',
+        environment: 'test',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(workflowCode, workflowRun, events);
       expect(result).toEqual('success');
     });
 
     it('should execute workflow with arguments', async () => {
       const workflowCode = 'function workflow(a, b) { return a + b; }';
-      const workflowName = 'workflow';
 
-      const result = await runWorkflow(workflowCode, workflowName, {
-        workflowId: 'test-workflow',
-        runId: 'test-run-123',
-        callbackUrl: 'https://example.com/api/callback',
-        state: [
-          {
-            t: 1234567890,
-            arguments: [1, 2],
-          },
-        ],
-      });
+      const workflowRun: WorkflowRun = {
+        id: 'test-run-123',
+        workflow_name: 'workflow',
+        status: 'running',
+        input: [1, 2],
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        started_at: new Date('2024-01-01T00:00:00.000Z'),
+        owner_id: 'test-owner',
+        project_id: 'test-project',
+        environment: 'test',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(workflowCode, workflowRun, events);
       expect(result).toEqual(3);
     });
 
@@ -48,19 +57,23 @@ describe('runWorkflow', () => {
           return err;
         }
       }`;
-      const workflowName = 'workflow';
 
-      const result = await runWorkflow(workflowCode, workflowName, {
-        workflowId: 'test-workflow',
-        runId: 'test-run-123',
-        callbackUrl: 'https://example.com/api/callback',
-        state: [
-          {
-            t: 1234567890,
-            arguments: [1, 2],
-          },
-        ],
-      });
+      const workflowRun: WorkflowRun = {
+        id: 'test-run-123',
+        workflow_name: 'workflow',
+        status: 'running',
+        input: [],
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        started_at: new Date('2024-01-01T00:00:00.000Z'),
+        owner_id: 'test-owner',
+        project_id: 'test-project',
+        environment: 'test',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(workflowCode, workflowRun, events);
       assert(types.isNativeError(result));
       expect(result.name).toEqual('TypeError');
       expect(result.message).toEqual('my workflow error');
@@ -71,17 +84,22 @@ describe('runWorkflow', () => {
     it('should throw ReferenceError when workflow code does not return a function', async () => {
       let error: Error | undefined;
       try {
-        await runWorkflow('const value = "test"', 'value', {
-          workflowId: 'test-workflow',
-          runId: 'test-run-123',
-          callbackUrl: 'https://example.com/api/callback',
-          state: [
-            {
-              t: 1234567890,
-              arguments: [],
-            },
-          ],
-        });
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'value',
+          status: 'running',
+          input: [],
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [];
+
+        await runWorkflow('const value = "test"', workflowRun, events);
       } catch (err) {
         error = err;
       }
@@ -95,20 +113,25 @@ describe('runWorkflow', () => {
     it('should throw user-defined error when workflow code throws an error', async () => {
       let error: Error | undefined;
       try {
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'workflow',
+          status: 'running',
+          input: [],
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [];
+
         await runWorkflow(
           'function workflow() { throw new Error("test"); }',
-          'workflow',
-          {
-            workflowId: 'test-workflow',
-            runId: 'test-run-123',
-            callbackUrl: 'https://example.com/api/callback',
-            state: [
-              {
-                t: 1234567890,
-                arguments: [],
-              },
-            ],
-          }
+          workflowRun,
+          events
         );
       } catch (err) {
         error = err;
@@ -121,6 +144,21 @@ describe('runWorkflow', () => {
     it('should throw `StepNotRunError` when a step does not have an event result entry', async () => {
       let error: Error | undefined;
       try {
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'workflow',
+          status: 'running',
+          input: [],
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [];
+
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
@@ -128,18 +166,8 @@ describe('runWorkflow', () => {
             const a = await add(1, 2);
             return a;
           }`,
-          'workflow',
-          {
-            workflowId: 'test-workflow',
-            runId: 'test-run-123',
-            callbackUrl: 'https://example.com/api/callback',
-            state: [
-              {
-                t: 1234567890,
-                arguments: [],
-              },
-            ],
-          }
+          workflowRun,
+          events
         );
       } catch (err) {
         error = err;
@@ -154,6 +182,21 @@ describe('runWorkflow', () => {
     it('`StepNotRunError` should not be catchable by user code', async () => {
       let error: Error | undefined;
       try {
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'workflow',
+          status: 'running',
+          input: [],
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [];
+
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
@@ -165,18 +208,8 @@ describe('runWorkflow', () => {
               return err;
             }
           }`,
-          'workflow',
-          {
-            workflowId: 'test-workflow',
-            runId: 'test-run-123',
-            callbackUrl: 'https://example.com/api/callback',
-            state: [
-              {
-                t: 1234567890,
-                arguments: [],
-              },
-            ],
-          }
+          workflowRun,
+          events
         );
       } catch (err) {
         error = err;

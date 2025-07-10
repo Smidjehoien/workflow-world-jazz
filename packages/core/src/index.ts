@@ -115,12 +115,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
       // running, not just a paginated subset
       const events = await getWorkflowRunEvents(workflowRun.id);
 
-      const result = await runWorkflow(
-        workflowCode,
-        workflowName,
-        workflowRun,
-        events.data
-      );
+      const result = await runWorkflow(workflowCode, workflowRun, events.data);
       console.log('Workflow result:', result);
 
       // Update the workflow run with the result
