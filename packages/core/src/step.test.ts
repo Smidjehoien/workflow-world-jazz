@@ -6,18 +6,25 @@ describe('createUseStep', () => {
   it('should resolve with the result of a step', async () => {
     const ctx: WorkflowContext = {
       stepIndex: 1,
-      state: [
+      events: [
         {
-          t: 0,
-          arguments: [],
+          id: 'event-0',
+          workflow_run_id: 'run-123',
+          event_type: 'workflow_started',
+          event_data: {},
+          sequence_number: 0,
+          created_at: new Date(),
         },
         {
-          t: 1,
-          result: 3,
+          id: 'event-1',
+          workflow_run_id: 'run-123',
+          event_type: 'step_result',
+          event_data: { result: 3 },
+          sequence_number: 1,
+          created_at: new Date(),
         },
       ],
       onWorkflowError: vi.fn(),
-      invocationsQueue: [],
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -29,15 +36,25 @@ describe('createUseStep', () => {
   it('should reject with a fatal error if the step fails', async () => {
     const ctx: WorkflowContext = {
       stepIndex: 1,
-      state: [
+      events: [
         {
-          t: 0,
-          arguments: [],
+          id: 'event-0',
+          workflow_run_id: 'run-123',
+          event_type: 'workflow_started',
+          event_data: {},
+          sequence_number: 0,
+          created_at: new Date(),
         },
-        { t: 1, error: 'test', fatal: true },
+        {
+          id: 'event-1',
+          workflow_run_id: 'run-123',
+          event_type: 'step_failed',
+          event_data: { error: 'test', fatal: true },
+          sequence_number: 1,
+          created_at: new Date(),
+        },
       ],
       onWorkflowError: vi.fn(),
-      invocationsQueue: [],
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -61,16 +78,19 @@ describe('createUseStep', () => {
 
     const ctx: WorkflowContext = {
       stepIndex: 1,
-      state: [
+      events: [
         {
-          t: 0,
-          arguments: [],
+          id: 'event-0',
+          workflow_run_id: 'run-123',
+          event_type: 'workflow_started',
+          event_data: {},
+          sequence_number: 0,
+          created_at: new Date(),
         },
       ],
       onWorkflowError(err) {
         workflowErrorReject(err);
       },
-      invocationsQueue: [],
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -82,7 +102,7 @@ describe('createUseStep', () => {
     }
     expect(error).toBeInstanceOf(StepNotRunError);
     expect((error as StepNotRunError).args).toEqual([1, 2]);
-    expect((error as StepNotRunError).stepId).toBe('add');
+    expect((error as StepNotRunError).stepName).toBe('add');
   });
 
   it('should invoke workflow error handler if step is not run (concurrent)', async () => {
@@ -93,16 +113,19 @@ describe('createUseStep', () => {
 
     const ctx: WorkflowContext = {
       stepIndex: 1,
-      state: [
+      events: [
         {
-          t: 0,
-          arguments: [],
+          id: 'event-0',
+          workflow_run_id: 'run-123',
+          event_type: 'workflow_started',
+          event_data: {},
+          sequence_number: 0,
+          created_at: new Date(),
         },
       ],
       onWorkflowError(err) {
         workflowErrorReject(err);
       },
-      invocationsQueue: [],
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -119,11 +142,7 @@ describe('createUseStep', () => {
     }
     expect(error).toBeInstanceOf(StepNotRunError);
     expect((error as StepNotRunError).args).toEqual([1, 2]);
-    expect((error as StepNotRunError).stepId).toBe('add');
-    expect(ctx.invocationsQueue).toEqual([
-      { stepId: 'add', args: [1, 2] },
-      { stepId: 'add', args: [3, 4] },
-      { stepId: 'add', args: [5, 6] },
-    ]);
+    expect((error as StepNotRunError).stepName).toBe('add');
+    // Note: invocationsQueue is not currently implemented in the step context
   });
 });

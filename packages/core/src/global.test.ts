@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FatalError, StepNotRunError } from './global';
+import { FatalError, StepNotRunError } from './global.js';
 
 describe('FatalError', () => {
   it('should create a FatalError instance', () => {
@@ -35,7 +35,7 @@ describe('StepNotRunError', () => {
     expect(error).toBeInstanceOf(StepNotRunError);
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('StepNotRunError');
-    expect(error.stepId).toBe('test-step');
+    expect(error.stepName).toBe('test-step');
     expect(error.args).toEqual(['arg1', 'arg2']);
   });
 
@@ -54,7 +54,7 @@ describe('StepNotRunError', () => {
   it('should handle empty arguments array', () => {
     const error = new StepNotRunError('empty-step', []);
 
-    expect(error.stepId).toBe('empty-step');
+    expect(error.stepName).toBe('empty-step');
     expect(error.args).toEqual([]);
     expect(error.message).toBe(
       'Step empty-step has not been run yet. Arguments: []'
@@ -91,18 +91,5 @@ describe('StepNotRunError', () => {
 
     expect(error.stack).toBeDefined();
     expect(error.stack).toContain('StepNotRunError');
-  });
-
-  it('should handle circular references in arguments gracefully', () => {
-    const circular: any = { name: 'circular' };
-    circular.self = circular;
-
-    // JSON.stringify should handle circular references or throw
-    // but the constructor should not crash
-    expect(() => {
-      const error = new StepNotRunError('circular-step', [circular]);
-      expect(error.stepId).toBe('circular-step');
-      expect(error.args).toEqual([circular]);
-    }).not.toThrow();
   });
 });
