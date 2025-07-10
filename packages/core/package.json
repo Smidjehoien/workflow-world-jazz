@@ -8,6 +8,7 @@
   ],
   "exports": {
     ".": "./dist/index.js",
+    "./runtime": "./dist/runtime.js",
     "./private": "./dist/private.js"
   },
   "scripts": {

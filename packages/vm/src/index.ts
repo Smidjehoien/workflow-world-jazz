@@ -100,6 +100,7 @@ export function createContext(options: CreateContextOptions) {
 
   // Shim exports for bundle
   g.exports = {};
+  g.module = { exports: g.exports };
 
   return {
     context,

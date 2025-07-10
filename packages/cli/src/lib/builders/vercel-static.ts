@@ -1,5 +1,5 @@
-import { writeFile } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname, resolve } from 'node:path';
 import { BaseBuilder } from './base-builder.js';
 
 export class VercelStaticBuilder extends BaseBuilder {
@@ -16,11 +16,15 @@ export class VercelStaticBuilder extends BaseBuilder {
       this.config.stepsBundlePath
     );
 
-    const stepBundle = await this.createStepsBundle();
-    await stepBundle.write({
-      file: this.config.stepsBundlePath,
-      format: 'esm',
-    });
+    const stepsBundlePath = resolve(
+      this.config.workingDir,
+      this.config.stepsBundlePath
+    );
+
+    // Ensure directory exists
+    await mkdir(dirname(stepsBundlePath), { recursive: true });
+
+    await this.createStepsBundle(stepsBundlePath);
   }
 
   private async buildWorkflowsBundle(): Promise<void> {
@@ -29,27 +33,14 @@ export class VercelStaticBuilder extends BaseBuilder {
       this.config.workflowsBundlePath
     );
 
-    const workflowsBundle = await this.createWorkflowsBundle();
-    const workflowsBundleOutput = await workflowsBundle.generate({
-      format: 'cjs',
-    });
-
-    const workflowBundleCode = workflowsBundleOutput.output[0].code;
-    if (!workflowBundleCode) {
-      throw new Error('Failed to generate workflows bundle');
-    }
-
     const workflowBundlePath = resolve(
       this.config.workingDir,
       this.config.workflowsBundlePath
     );
 
-    const workflowFunctionCode = `import { vercelAPIWorkflowsEntrypoint } from '@vercel/workflow-core';
+    // Ensure directory exists
+    await mkdir(dirname(workflowBundlePath), { recursive: true });
 
-const workflowCode = \`${workflowBundleCode.replace(/[`$]/g, '\\$&')}\`;
-
-export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
-
-    await writeFile(workflowBundlePath, workflowFunctionCode);
+    await this.createWorkflowsBundle(workflowBundlePath);
   }
 }

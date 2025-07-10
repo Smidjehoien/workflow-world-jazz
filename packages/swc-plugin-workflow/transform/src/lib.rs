@@ -393,7 +393,7 @@ impl StepTransform {
             specifiers,
             src: Box::new(Str {
                 span: DUMMY_SP,
-                value: "@vercel/workflow-core".into(),
+                value: "@vercel/workflow-core/runtime".into(),
                 raw: None,
             }),
             type_only: false,

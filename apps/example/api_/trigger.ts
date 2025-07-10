@@ -1,4 +1,4 @@
-import { start } from '@vercel/workflow-core';
+import { start } from '@vercel/workflow-core/runtime';
 
 export async function POST(req: Request) {
   const workflowId = 'example';

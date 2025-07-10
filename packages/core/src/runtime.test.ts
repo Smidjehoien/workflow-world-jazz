@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { handleStep, handleWorkflow, start } from './index';
+import { handleStep, handleWorkflow, start } from './runtime';
 
 // Mock external dependencies
 vi.mock('@vercel/queue', () => ({

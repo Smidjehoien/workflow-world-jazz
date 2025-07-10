@@ -17,11 +17,6 @@ export interface WorkflowConfig {
   clientBundlePath?: string;
 }
 
-export interface InputEntrypoints {
-  include: string[];
-  exclude: string[];
-}
-
 export function isValidBuildTarget(
   target: string | undefined
 ): target is BuildTarget {

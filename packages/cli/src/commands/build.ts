@@ -75,10 +75,12 @@ export default class Build extends BaseCommand {
     try {
       // Build using appropriate builder
       if (config.buildTarget === 'vercel-static') {
-        const builder = new VercelStaticBuilder(config, __dirname);
+        this.logInfo('Building with VercelStaticBuilder');
+        const builder = new VercelStaticBuilder(config);
         await builder.build();
       } else if (config.buildTarget === 'vercel-build-output-api') {
-        const builder = new VercelBuildOutputAPIBuilder(config, __dirname);
+        this.logInfo('Building with VercelBuildOutputAPIBuilder');
+        const builder = new VercelBuildOutputAPIBuilder(config);
         await builder.build();
       } else {
         this.error(`Unknown build target: ${config.buildTarget}`);
