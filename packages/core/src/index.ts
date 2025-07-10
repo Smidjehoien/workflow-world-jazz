@@ -138,7 +138,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
           workflow_run_id: runId,
           step_name: err.stepName,
           step_type: 'function_call',
-          execution_order: -1, // XXX: do we need this?
           arguments: err.args as Serializable[],
         });
 

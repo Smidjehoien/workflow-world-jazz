@@ -79,8 +79,6 @@ export interface Step {
   max_retries: number;
   next_retry_at?: Date;
   timeout_seconds?: number;
-  execution_order: number;
-  depends_on?: string[];
   step_config?: Record<string, any>;
 }
 
@@ -495,8 +493,6 @@ export interface CreateStepRequest {
   max_retries?: number;
   next_retry_at?: Date;
   timeout_seconds?: number;
-  execution_order: number;
-  depends_on?: string[];
   step_config?: Record<string, any>;
 }
 

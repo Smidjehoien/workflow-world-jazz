@@ -63,7 +63,6 @@ describe('Workflow API Backend', () => {
     updated_at: new Date('2024-01-01T00:00:00.000Z'),
     retry_count: 0,
     max_retries: 3,
-    execution_order: 1,
   };
 
   describe('Date coercion', () => {
