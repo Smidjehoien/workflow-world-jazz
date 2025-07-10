@@ -495,38 +495,3 @@ export interface CreateStepRequest {
   timeout_seconds?: number;
   step_config?: Record<string, any>;
 }
-
-/**
- * Utility function to create a configured API client
- */
-export function createAPIClient(config: APIConfig) {
-  return {
-    getAuthInfo: () => getAuthInfo(config),
-    checkHealth: () => checkHealth(config),
-    listWorkflowRuns: (params?: ListWorkflowRunsParams) =>
-      listWorkflowRuns(params, config),
-    createWorkflowRun: (data: CreateWorkflowRunRequest) =>
-      createWorkflowRun(data, config),
-    getWorkflowRun: (id: string) => getWorkflowRun(id, config),
-    updateWorkflowRun: (id: string, data: UpdateWorkflowRunRequest) =>
-      updateWorkflowRun(id, data, config),
-    cancelWorkflowRun: (id: string) => cancelWorkflowRun(id, config),
-    pauseWorkflowRun: (id: string) => pauseWorkflowRun(id, config),
-    resumeWorkflowRun: (id: string) => resumeWorkflowRun(id, config),
-    getWorkflowRunEvents: (id: string, params?: ListEventsParams) =>
-      getWorkflowRunEvents(id, params, config),
-    createWorkflowRunEvent: (id: string, data: CreateEventRequest) =>
-      createWorkflowRunEvent(id, data, config),
-    getWorkflowRunSteps: (id: string) => getWorkflowRunSteps(id, config),
-    getStep: (runId: string, stepId: string) => getStep(runId, stepId, config),
-    updateStep: (runId: string, stepId: string, data: UpdateStepRequest) =>
-      updateStep(runId, stepId, data, config),
-    createStep: (runId: string, data: CreateStepRequest) =>
-      createStep(runId, data, config),
-  };
-}
-
-/**
- * Default API client instance
- */
-export const api = createAPIClient(DEFAULT_CONFIG);

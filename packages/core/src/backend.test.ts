@@ -5,7 +5,6 @@ import {
   type CreateWorkflowRunRequest,
   cancelWorkflowRun,
   checkHealth,
-  createAPIClient,
   createWorkflowRun,
   createWorkflowRunEvent,
   type Event,
@@ -464,28 +463,6 @@ describe('Workflow API Backend', () => {
         updateData
       );
       expect(result).toEqual({ ...mockStep, ...updateData });
-    });
-  });
-
-  describe('createAPIClient', () => {
-    it('should create API client with custom config', () => {
-      const customConfig = {
-        baseUrl: 'https://custom-api.vercel.com',
-        token: 'custom-token',
-      };
-
-      const client = createAPIClient(customConfig);
-      expect(client).toBeDefined();
-      expect(typeof client.getAuthInfo).toBe('function');
-      expect(typeof client.createWorkflowRun).toBe('function');
-    });
-  });
-
-  describe('api (default client)', () => {
-    it('should provide default API client', () => {
-      expect(api).toBeDefined();
-      expect(typeof api.getAuthInfo).toBe('function');
-      expect(typeof api.createWorkflowRun).toBe('function');
     });
   });
 
