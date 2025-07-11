@@ -25,6 +25,8 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.3",
-    "@vercel/workflow-tsconfig": "workspace:*"
+    "@types/seedrandom": "^3.0.8",
+    "@vercel/workflow-tsconfig": "workspace:*",
+    "seedrandom": "^3.0.5"
   }
 }

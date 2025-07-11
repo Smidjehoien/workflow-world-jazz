@@ -45,8 +45,9 @@ export async function runWorkflow(
   const workflowContext: WorkflowContext = {
     stepIndex: 0,
     events,
-    //invocationsQueue: [],
+    invocationsQueue: [],
     onWorkflowError: workflowDiscontinuation.reject,
+    randomUUID: context.crypto.randomUUID,
   };
 
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work

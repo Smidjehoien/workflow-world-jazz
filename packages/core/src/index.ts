@@ -91,13 +91,16 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
  * @returns A function that can be used as a Vercel API route.
  */
 export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
-  async function handler(message_: unknown, metadata: MessageMetadata) {
+  async function workflowMessageHandler(
+    message: unknown,
+    metadata: MessageMetadata
+  ) {
     // Extract the workflow name from the topic name
     const workflowName = metadata.topicName.slice('workflow-'.length);
 
     // TODO: validate `workflowName` exists before consuming message?
 
-    const { runId } = WorkflowInvokePayloadSchema.parse(message_);
+    const { runId } = WorkflowInvokePayloadSchema.parse(message);
     console.log('Received workflow message:', runId, metadata);
 
     // Invoke user workflow
@@ -164,15 +167,12 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
 
   return handleCallback({
     'workflow-*': {
-      default: handler,
+      default: workflowMessageHandler,
     },
   });
 };
 
-async function stepMessageHandler(
-  message_: unknown,
-  metadata: MessageMetadata
-) {
+async function stepMessageHandler(message: unknown, metadata: MessageMetadata) {
   // Extract the step name from the topic name
   const stepName = metadata.topicName.slice('step-'.length);
 
@@ -187,7 +187,7 @@ async function stepMessageHandler(
   }
 
   const { workflowName, workflowRunId, stepId } =
-    StepInvokePayloadSchema.parse(message_);
+    StepInvokePayloadSchema.parse(message);
   console.log(
     'Received step invoke message:',
     { workflowName, workflowRunId, stepId },

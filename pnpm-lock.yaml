@@ -162,9 +162,15 @@ importers:
       '@types/node':
         specifier: ^24.0.3
         version: 24.0.3
+      '@types/seedrandom':
+        specifier: ^3.0.8
+        version: 3.0.8
       '@vercel/workflow-tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
+      seedrandom:
+        specifier: ^3.0.5
+        version: 3.0.5
 
   packages/swc-plugin-workflow:
     dependencies:

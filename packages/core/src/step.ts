@@ -5,19 +5,25 @@ import type { Serializable } from './schemas.js';
 export interface WorkflowContext {
   stepIndex: number;
   events: Event[];
-  //invocationsQueue: {
-  //  stepId: string;
-  //  args: Serializable[];
-  //}[];
+  invocationsQueue: {
+    stepName: string;
+    args: Serializable[];
+    invocationId: string;
+  }[];
   onWorkflowError: (error: Error) => void;
+  randomUUID: () => string;
 }
 
 export function createUseStep(ctx: WorkflowContext) {
-  return function useStep<Args extends Serializable[], Result>(stepId: string) {
+  return function useStep<Args extends Serializable[], Result>(
+    stepName: string
+  ) {
     return (...args: Args): Promise<Result> => {
       const stepIndex = ctx.stepIndex++;
       const event = ctx.events[stepIndex] as Event | undefined;
-      //ctx.invocationsQueue.push({ stepId, args });
+      const invocationId = ctx.randomUUID();
+      ctx.invocationsQueue.push({ stepName, args, invocationId });
+
       // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Necessary
       return new Promise((resolve, reject) => {
         if (event) {
@@ -39,9 +45,21 @@ export function createUseStep(ctx: WorkflowContext) {
           // Notify workflow handler that this step has not been run.
           // Crucially, this step Promise does not resolve so that the user
           // workflow code does not proceed any further.
-          ctx.onWorkflowError(new StepNotRunError(stepId, args));
+          ctx.onWorkflowError(new StepNotRunError(stepName, args));
         }
       });
     };
   };
+}
+
+export class EventSubscriber {
+  constructor(private readonly events: Event[]) {}
+
+  subscribe(stepId: string) {
+    return this.events.filter(
+      (event) =>
+        event.event_type === 'step_result' &&
+        event.event_data.step_id === stepId
+    );
+  }
 }
