@@ -1,5 +1,6 @@
 import { runInContext, createContext as vmCreateContext } from 'node:vm';
 import seedrandom from 'seedrandom';
+import { createRandomUUID } from './uuid';
 
 export interface CreateContextOptions {
   seed: string;
@@ -49,22 +50,7 @@ export function createContext(options: CreateContextOptions) {
     return array;
   }
 
-  function randomUUID() {
-    const chars = '0123456789abcdef';
-    let uuid = '';
-    for (let i = 0; i < 36; i++) {
-      if (i === 8 || i === 13 || i === 18 || i === 23) {
-        uuid += '-';
-      } else if (i === 14) {
-        uuid += '4'; // Version 4 UUID
-      } else if (i === 19) {
-        uuid += chars[Math.floor(rng() * 4) + 8]; // 8, 9, a, or b
-      } else {
-        uuid += chars[Math.floor(rng() * 16)];
-      }
-    }
-    return uuid;
-  }
+  const randomUUID = createRandomUUID(rng);
 
   const boundDigest = originalSubtle.digest.bind(originalSubtle);
 
