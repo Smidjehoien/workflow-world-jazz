@@ -393,7 +393,7 @@ impl StepTransform {
             specifiers,
             src: Box::new(Str {
                 span: DUMMY_SP,
-                value: "@vercel/workflow-core".into(),
+                value: "@vercel/workflow-core/runtime".into(),
                 raw: None,
             }),
             type_only: false,
@@ -1204,8 +1204,6 @@ impl VisitMut for StepTransform {
                 }
             }
         }
-
-        // No longer need to remove step functions in client mode since we transform them
 
         var_decl.visit_mut_children_with(self);
     }

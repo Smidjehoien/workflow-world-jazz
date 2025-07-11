@@ -32,16 +32,11 @@
   "dependencies": {
     "@oclif/core": "^4.0.0",
     "@oclif/plugin-help": "^6.0.0",
-    "@rollup/plugin-commonjs": "^28.0.6",
-    "@rollup/plugin-multi-entry": "^6.0.1",
-    "@rollup/plugin-node-resolve": "^16.0.1",
-    "@rollup/plugin-virtual": "^3.0.2",
     "@swc/core": "1.11.24",
     "@vercel/workflow-core": "workspace:*",
     "chokidar": "^4.0.3",
+    "esbuild": "^0.25.6",
     "mixpart": "^0.0.4",
-    "rollup": "^4.44.0",
-    "rollup-plugin-swc3": "0.12.1",
     "swc-plugin-workflow": "workspace:*",
     "tinyglobby": "^0.2.14"
   }

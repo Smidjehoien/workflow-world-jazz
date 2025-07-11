@@ -1,4 +1,4 @@
-import { start as __private_workflow_start } from "@vercel/workflow-core";
+import { start as __private_workflow_start } from "@vercel/workflow-core/runtime";
 async function local(input) {
     return input.foo;
 }

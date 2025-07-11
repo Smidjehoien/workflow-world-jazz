@@ -1,9 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import commonjs from '@rollup/plugin-commonjs';
-import { nodeResolve } from '@rollup/plugin-node-resolve';
-import virtual from '@rollup/plugin-virtual';
-import { type RollupBuild, rollup } from 'rollup';
+import * as esbuild from 'esbuild';
 import { BaseBuilder } from './base-builder.js';
 
 export class VercelBuildOutputAPIBuilder extends BaseBuilder {
@@ -27,15 +24,12 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     const stepsFuncDir = join(apiGeneratedDir, 'steps.func');
     await mkdir(stepsFuncDir, { recursive: true });
 
-    const stepBundle = await this.createStepsBundle();
-    await stepBundle.write({
-      file: join(stepsFuncDir, 'index.js'),
-      format: 'esm',
-    });
+    // Create steps bundle
+    await this.createStepsBundle(join(stepsFuncDir, 'index.js'));
 
     // Create package.json for ESM support
     const packageJson = {
-      type: 'module',
+      type: 'commonjs',
     };
     await writeFile(
       join(stepsFuncDir, 'package.json'),
@@ -47,6 +41,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       runtime: 'nodejs22.x',
       handler: 'index.js',
       launcherType: 'Nodejs',
+      architecture: 'arm64',
       shouldAddHelpers: true,
       experimentalTriggers: [
         {
@@ -71,49 +66,11 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     const workflowsFuncDir = join(apiGeneratedDir, 'workflows.func');
     await mkdir(workflowsFuncDir, { recursive: true });
 
-    const embeddedCodeBundle = await this.createWorkflowsBundle();
-    const embeddedBundleOutput = await embeddedCodeBundle.generate({
-      format: 'cjs',
-    });
-    const workflowBundleCode = embeddedBundleOutput.output[0].code;
-    if (!workflowBundleCode) {
-      throw new Error('Failed to generate workflows bundle');
-    }
-
-    // Create the workflow function handler
-    const workflowFunctionCode = `import { vercelAPIWorkflowsEntrypoint } from '@vercel/workflow-core';
-
-const workflowCode = \`${workflowBundleCode.replace(/[`$]/g, '\\$&')}\`;
-
-export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
-
-    // Now we bundle this code into the final workflow bundle
-    const workflowBundle: RollupBuild = await rollup({
-      input: 'entry',
-      treeshake: 'smallest',
-      plugins: [
-        // @ts-expect-error - default export is a function
-        virtual({
-          entry: workflowFunctionCode,
-        }),
-        nodeResolve({
-          exportConditions: ['node'],
-          dedupe: ['@vercel/workflow-core'],
-        }),
-        // @ts-expect-error - default export is a function
-        commonjs(),
-      ],
-      preserveSymlinks: true,
-    });
-
-    await workflowBundle.write({
-      file: join(workflowsFuncDir, 'index.js'),
-      format: 'esm',
-    });
+    await this.createWorkflowsBundle(join(workflowsFuncDir, 'index.js'));
 
     // Create package.json for ESM support
     const packageJson = {
-      type: 'module',
+      type: 'commonjs',
     };
     await writeFile(
       join(workflowsFuncDir, 'package.json'),
@@ -125,6 +82,7 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       runtime: 'nodejs22.x',
       handler: 'index.js',
       launcherType: 'Nodejs',
+      architecture: 'arm64',
       shouldAddHelpers: true,
       experimentalTriggers: [
         {

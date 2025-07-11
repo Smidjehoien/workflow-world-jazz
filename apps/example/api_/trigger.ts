@@ -1,12 +1,15 @@
-import { start } from '@vercel/workflow-core';
+import { start } from '@vercel/workflow-core/runtime';
 
 export async function POST(req: Request) {
-  const workflowId = 'example';
   const url = new URL(req.url);
-  const argVal = url.searchParams.get('v');
-  const arg = argVal ? parseFloat(argVal) : 42;
+  const workflowId = url.searchParams.get('workflow') || 'example';
+  const argVal = url.searchParams.get('args') || '42';
+  const args = argVal.split(',').map((arg) => {
+    const num = parseFloat(arg);
+    return Number.isNaN(num) ? arg.trim() : num;
+  });
   const run = await start(workflowId, {
-    arguments: [arg],
+    arguments: args,
   });
   console.log('Run:', run);
   return new Response(

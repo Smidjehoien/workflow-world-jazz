@@ -6,7 +6,7 @@ The swc plugin has 3 modes - 'step' mode, 'workflow' mode, and 'client' mode
 
 ## Step Mode
 
-When executed in 'step' mode, step definitions is kept as is and are simply registered using `registerStepFunction` from `@vercel/workflow-core`. The directives are removed. For example:
+When executed in 'step' mode, step definitions is kept as is and are simply registered using `registerStepFunction` from `@vercel/workflow-core/private`. The directives are removed. For example:
 
 Input code:
 ```
@@ -89,7 +89,7 @@ export async function workflow(a, b) {
 Output code
 ```
 // workflow/main.js
-import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core"
+import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core/runtime"
 
 export async function add(a, b) {
   return __private_run_step('add', { arguments: [a, b] })

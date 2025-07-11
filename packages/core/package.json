@@ -8,7 +8,9 @@
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./private": "./dist/private.js"
+    "./runtime": "./dist/runtime.js",
+    "./private": "./dist/private.js",
+    "./builtins": "./dist/builtins.js"
   },
   "scripts": {
     "build": "tsc",

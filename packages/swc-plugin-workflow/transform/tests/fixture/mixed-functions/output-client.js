@@ -1,4 +1,4 @@
-import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core";
+import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core/runtime";
 export async function stepFunction(a, b) {
     return __private_run_step("stepFunction", {
         arguments: [
