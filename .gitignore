@@ -10,8 +10,9 @@ node_modules
 
 # Single letter one-off scratch scripts
 ?.ts
+?.mjs
 
-# Rust 
+# Rust
 
 /target
 ^target/

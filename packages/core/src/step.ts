@@ -1,10 +1,9 @@
-import type { Event } from './backend.js';
-import { FatalError, StepNotRunError } from './global.js';
+import { EventConsumerResult, type EventsConsumer } from './events-consumer.js';
+import { FatalError, StepsNotRunError } from './global.js';
 import type { Serializable } from './schemas.js';
 
 export interface WorkflowContext {
-  stepIndex: number;
-  events: Event[];
+  eventsConsumer: EventsConsumer;
   invocationsQueue: {
     stepName: string;
     args: Serializable[];
@@ -19,47 +18,68 @@ export function createUseStep(ctx: WorkflowContext) {
     stepName: string
   ) {
     return (...args: Args): Promise<Result> => {
-      const stepIndex = ctx.stepIndex++;
-      const event = ctx.events[stepIndex] as Event | undefined;
       const invocationId = ctx.randomUUID();
+      //console.log('invocationId', invocationId);
+      let gotStepStarted = false;
       ctx.invocationsQueue.push({ stepName, args, invocationId });
 
-      // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: Necessary
       return new Promise((resolve, reject) => {
-        if (event) {
+        ctx.eventsConsumer.subscribe((event) => {
+          //console.log('event', event);
+          if (!event) {
+            // We've reached the end of the events, so this step has either not been run or currently running.
+            // Crucially, if we got here, then this step Promise does
+            // not resolve so that the user workflow code does not proceed any further.
+            if (!gotStepStarted) {
+              // Notify workflow handler that this step has not been run.
+              ctx.onWorkflowError(new StepsNotRunError(ctx.invocationsQueue));
+            }
+            return EventConsumerResult.NotConsumed;
+          }
+
+          if (event.event_data.invocation_id !== invocationId) {
+            // We're not interested in this event - the invocationId belongs to a different step
+            return EventConsumerResult.NotConsumed;
+          }
+          //console.log('event.event_type', event.event_type);
+
+          if (event.event_type === 'step_started') {
+            // Step has started - so remove from the invocations queue
+            const invocationsQueueIndex = ctx.invocationsQueue.findIndex(
+              (invocation) => invocation.invocationId === invocationId
+            );
+            if (invocationsQueueIndex !== -1) {
+              ctx.invocationsQueue.splice(invocationsQueueIndex, 1);
+            } else {
+              console.warn(
+                `Step ${stepName} started but not found in invocations queue (should not happen)`
+              );
+            }
+            gotStepStarted = true;
+            return EventConsumerResult.Consumed;
+          }
+
           if (event.event_type === 'step_failed') {
             // Step failed - bubble up to workflow
             if (event.event_data.fatal) {
-              return reject(new FatalError(event.event_data.error));
+              reject(new FatalError(event.event_data.error));
+            } else {
+              reject(new Error(event.event_data.error));
             }
-            return reject(new Error(event.event_data.error));
           } else if (event.event_type === 'step_result') {
             // Step has already completed
-            return resolve(event.event_data.result);
+            resolve(event.event_data.result);
+            return EventConsumerResult.Finished;
           } else {
-            return reject(
+            // An unexpected event type has been received, but it does belong to this step (matching `invocationId`)
+            reject(
               new FatalError(`Unexpected event type: "${event.event_type}"`)
             );
           }
-        } else {
-          // Notify workflow handler that this step has not been run.
-          // Crucially, this step Promise does not resolve so that the user
-          // workflow code does not proceed any further.
-          ctx.onWorkflowError(new StepNotRunError(stepName, args));
-        }
+
+          return EventConsumerResult.Finished;
+        });
       });
     };
   };
-}
-
-export class EventSubscriber {
-  constructor(private readonly events: Event[]) {}
-
-  subscribe(stepId: string) {
-    return this.events.filter(
-      (event) =>
-        event.event_type === 'step_result' &&
-        event.event_data.step_id === stepId
-    );
-  }
 }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { FatalError, StepNotRunError } from './global.js';
+import {
+  FatalError,
+  type InvocationQueueItem,
+  StepsNotRunError,
+} from './global.js';
 
 describe('FatalError', () => {
   it('should create a FatalError instance', () => {
@@ -28,68 +32,142 @@ describe('FatalError', () => {
   });
 });
 
-describe('StepNotRunError', () => {
-  it('should create a StepNotRunError instance with basic properties', () => {
-    const error = new StepNotRunError('test-step', ['arg1', 'arg2']);
-
-    expect(error).toBeInstanceOf(StepNotRunError);
-    expect(error).toBeInstanceOf(Error);
-    expect(error.name).toBe('StepNotRunError');
-    expect(error.stepName).toBe('test-step');
-    expect(error.args).toEqual(['arg1', 'arg2']);
-  });
-
-  it('should generate correct error message', () => {
-    const error = new StepNotRunError('test-step', [
-      'arg1',
-      42,
-      { key: 'value' },
-    ]);
-
-    expect(error.message).toBe(
-      'Step test-step has not been run yet. Arguments: ["arg1",42,{"key":"value"}]'
-    );
-  });
-
-  it('should handle empty arguments array', () => {
-    const error = new StepNotRunError('empty-step', []);
-
-    expect(error.stepName).toBe('empty-step');
-    expect(error.args).toEqual([]);
-    expect(error.message).toBe(
-      'Step empty-step has not been run yet. Arguments: []'
-    );
-  });
-
-  it('should handle complex argument types', () => {
-    const complexArgs = [
-      'string',
-      123,
-      true,
-      { nested: { object: 'value' } },
-      [1, 2, 3],
-      null,
-      undefined,
+describe('StepsNotRunError', () => {
+  it('should create a StepsNotRunError instance with basic properties', () => {
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'test-step',
+        args: ['arg1', 'arg2'],
+        invocationId: 'inv-1',
+      },
     ];
-    const error = new StepNotRunError('complex-step', complexArgs);
+    const error = new StepsNotRunError(steps);
 
-    expect(error.args).toEqual(complexArgs);
-    expect(error.message).toContain('complex-step');
-    expect(error.message).toContain('Arguments:');
+    expect(error).toBeInstanceOf(StepsNotRunError);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.name).toBe('StepsNotRunError');
+    expect(error.steps).toEqual(steps);
+  });
+
+  it('should generate correct error message for single step', () => {
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'test-step',
+        args: ['arg1', 42, { key: 'value' }],
+        invocationId: 'inv-1',
+      },
+    ];
+    const error = new StepsNotRunError(steps);
+
+    expect(error.message).toBe('1 steps have not been run yet');
+  });
+
+  it('should generate correct error message for multiple steps', () => {
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'step-1',
+        args: ['arg1'],
+        invocationId: 'inv-1',
+      },
+      {
+        stepName: 'step-2',
+        args: ['arg2'],
+        invocationId: 'inv-2',
+      },
+    ];
+    const error = new StepsNotRunError(steps);
+
+    expect(error.message).toBe('2 steps have not been run yet');
+  });
+
+  it('should handle empty steps array', () => {
+    const steps: InvocationQueueItem[] = [];
+    const error = new StepsNotRunError(steps);
+
+    expect(error.steps).toEqual([]);
+    expect(error.message).toBe('0 steps have not been run yet');
+  });
+
+  it('should handle complex step configurations', () => {
+    const complexSteps: InvocationQueueItem[] = [
+      {
+        stepName: 'complex-step',
+        args: [
+          'string',
+          123,
+          true,
+          { nested: { object: 'value' } },
+          [1, 2, 3],
+          null,
+        ],
+        invocationId: 'complex-inv',
+      },
+      {
+        stepName: 'another-step',
+        args: [],
+        invocationId: 'another-inv',
+      },
+    ];
+    const error = new StepsNotRunError(complexSteps);
+
+    expect(error.steps).toEqual(complexSteps);
+    expect(error.message).toBe('2 steps have not been run yet');
+    expect(error.steps[0].stepName).toBe('complex-step');
+    expect(error.steps[0].invocationId).toBe('complex-inv');
+    expect(error.steps[1].stepName).toBe('another-step');
+    expect(error.steps[1].invocationId).toBe('another-inv');
   });
 
   it('should have correct prototype chain', () => {
-    const error = new StepNotRunError('test-step', []);
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'test-step',
+        args: [],
+        invocationId: 'inv-1',
+      },
+    ];
+    const error = new StepsNotRunError(steps);
 
     expect(error instanceof Error).toBe(true);
-    expect(error instanceof StepNotRunError).toBe(true);
-    expect(error.constructor).toBe(StepNotRunError);
+    expect(error instanceof StepsNotRunError).toBe(true);
+    expect(error.constructor).toBe(StepsNotRunError);
   });
 
   it('should have stack trace', () => {
-    const error = new StepNotRunError('test-step', ['arg']);
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'test-step',
+        args: ['arg'],
+        invocationId: 'inv-1',
+      },
+    ];
+    const error = new StepsNotRunError(steps);
 
     expect(error.stack).toBeDefined();
-    expect(error.stack).toContain('StepNotRunError');
+    expect(error.stack).toContain('StepsNotRunError');
+  });
+
+  it('should preserve all step information', () => {
+    const steps: InvocationQueueItem[] = [
+      {
+        stepName: 'database-query',
+        args: ['SELECT * FROM users', { limit: 10 }],
+        invocationId: 'db-query-123',
+      },
+      {
+        stepName: 'send-email',
+        args: ['user@example.com', 'Welcome!'],
+        invocationId: 'email-456',
+      },
+    ];
+    const error = new StepsNotRunError(steps);
+
+    expect(error.steps).toHaveLength(2);
+    expect(error.steps[0].stepName).toBe('database-query');
+    expect(error.steps[0].args).toEqual(['SELECT * FROM users', { limit: 10 }]);
+    expect(error.steps[0].invocationId).toBe('db-query-123');
+    expect(error.steps[1].stepName).toBe('send-email');
+    expect(error.steps[1].args).toEqual(['user@example.com', 'Welcome!']);
+    expect(error.steps[1].invocationId).toBe('email-456');
   });
 });

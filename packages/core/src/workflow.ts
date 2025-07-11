@@ -1,6 +1,7 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
+import { EventsConsumer } from './events-consumer.js';
 import { createUseStep, type WorkflowContext } from './step.js';
 
 class Deferred<T> {
@@ -23,7 +24,7 @@ export async function runWorkflow(
   events: Event[]
 ): Promise<unknown> {
   // XXX: temporary logging
-  console.log('Workflow run:', workflowRun);
+  //console.log('Workflow run:', workflowRun);
 
   const startedAt = workflowRun.started_at;
   if (!startedAt) {
@@ -40,14 +41,13 @@ export async function runWorkflow(
   const workflowDiscontinuation = new Deferred<void>();
 
   // XXX: temporary logging
-  console.log('Events:', events);
+  //console.log('Events:', events);
 
   const workflowContext: WorkflowContext = {
-    stepIndex: 0,
-    events,
-    invocationsQueue: [],
     onWorkflowError: workflowDiscontinuation.reject,
     randomUUID: context.crypto.randomUUID,
+    eventsConsumer: new EventsConsumer(events),
+    invocationsQueue: [],
   };
 
   const useStep = createUseStep(workflowContext);

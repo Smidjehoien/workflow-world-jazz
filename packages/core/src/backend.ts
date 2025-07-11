@@ -65,6 +65,7 @@ export interface Event {
 export interface Step {
   id: string;
   workflow_run_id: string;
+  invocation_id: string;
   step_name: string;
   step_type: string;
   status: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
@@ -481,6 +482,7 @@ export async function getStep(
 
 export interface CreateStepRequest {
   workflow_run_id: string;
+  invocation_id: string;
   step_name: string;
   step_type: string;
   status?: 'pending' | 'running' | 'completed' | 'failed' | 'skipped';

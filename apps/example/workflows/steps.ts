@@ -15,3 +15,10 @@ export async function add(a: number, b: number): Promise<number> {
 
   return a + b;
 }
+
+export async function sleep(ms: number, message: string): Promise<string> {
+  'use step';
+  console.log(`Sleeping for ${ms}ms`);
+  await new Promise((resolve) => setTimeout(resolve, ms));
+  return message;
+}

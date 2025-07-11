@@ -9,7 +9,7 @@ import {
   updateStep,
   updateWorkflowRun,
 } from './backend.js';
-import { FatalError, StepNotRunError } from './global.js';
+import { FatalError, StepsNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import {
   type Serializable,
@@ -21,7 +21,7 @@ import {
 import { getErrorName, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
 
-export { StepNotRunError } from './global.js';
+export { StepsNotRunError } from './global.js';
 
 export interface StartOptions {
   arguments?: Serializable[];
@@ -123,25 +123,27 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
         status: 'completed',
         output: result as Serializable,
       });
-    } catch (err_) {
-      const err = err_;
+    } catch (err) {
+      if (isInstanceOf(err, StepsNotRunError)) {
+        console.log('Steps not run:', err.steps);
 
-      if (isInstanceOf(err, StepNotRunError)) {
-        console.log('Step not run:', err.stepName, err.args);
+        // Create a step for each step that was not run and enqueue the step invocations
+        for (const stepEntry of err.steps) {
+          const step = await createStep(runId, {
+            workflow_run_id: runId,
+            invocation_id: stepEntry.invocationId,
+            step_name: stepEntry.stepName,
+            step_type: 'function_call',
+            arguments: stepEntry.args as Serializable[],
+          });
 
-        const step = await createStep(runId, {
-          workflow_run_id: runId,
-          step_name: err.stepName,
-          step_type: 'function_call',
-          arguments: err.args as Serializable[],
-        });
-
-        const stepInvokePayload: StepInvokePayload = {
-          workflowName,
-          workflowRunId: runId,
-          stepId: step.id,
-        };
-        await send(`step-${err.stepName}`, stepInvokePayload);
+          const stepInvokePayload: StepInvokePayload = {
+            workflowName,
+            workflowRunId: runId,
+            stepId: step.id,
+          };
+          await send(`step-${stepEntry.stepName}`, stepInvokePayload);
+        }
       } else if (isInstanceOf(err, FatalError)) {
         console.error(
           `Workflow failed with a fatal error (Run ID: ${runId}): ${err}`
@@ -194,13 +196,20 @@ async function stepMessageHandler(
     metadata
   );
 
+  let step = await getStep(workflowRunId, stepId);
+
   let result: unknown;
   try {
-    let step = await getStep(workflowRunId, stepId);
-
     if (step.status === 'pending') {
       step = await updateStep(workflowRunId, stepId, {
         status: 'running',
+      });
+      await createWorkflowRunEvent(workflowRunId, {
+        event_type: 'step_started',
+        event_data: {
+          step_id: stepId,
+          invocation_id: step.invocation_id,
+        },
       });
     } else if (step.status === 'completed') {
       console.error(`Step "${stepId}" has already completed`);
@@ -220,6 +229,7 @@ async function stepMessageHandler(
       event_type: 'step_result',
       event_data: {
         step_id: stepId,
+        invocation_id: step.invocation_id,
         result: result as Serializable,
       },
     });
@@ -238,6 +248,7 @@ async function stepMessageHandler(
         event_type: 'step_failed',
         event_data: {
           step_id: stepId,
+          invocation_id: step.invocation_id,
           error: String(err),
           stack: err.stack,
           fatal: true,
@@ -257,6 +268,7 @@ async function stepMessageHandler(
           event_type: 'step_failed',
           event_data: {
             step_id: stepId,
+            invocation_id: step.invocation_id,
             error,
           },
         });

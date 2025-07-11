@@ -14,22 +14,24 @@ export class FatalError extends Error {
   }
 }
 
-/**
- * An error that is thrown when a step is called but does
- * not yet have a result entry in the event log. The workflow
- * dispatcher will catch this error and push the step invocation
- * onto the queue.
- */
-export class StepNotRunError extends Error {
+export interface InvocationQueueItem {
   stepName: string;
   args: Serializable[];
+  invocationId: string;
+}
 
-  constructor(stepName: string, args: Serializable[]) {
-    super(
-      `Step ${stepName} has not been run yet. Arguments: ${JSON.stringify(args)}`
-    );
-    this.name = 'StepNotRunError';
-    this.stepName = stepName;
-    this.args = args;
+/**
+ * An error that is thrown when one or more steps are called but do
+ * not yet have a `step_started` entry in the event log. The workflow
+ * dispatcher will catch this error and push the step invocations
+ * onto the queue.
+ */
+export class StepsNotRunError extends Error {
+  steps: InvocationQueueItem[];
+
+  constructor(steps: InvocationQueueItem[]) {
+    super(`${steps.length} steps have not been run yet`);
+    this.name = 'StepsNotRunError';
+    this.steps = steps;
   }
 }

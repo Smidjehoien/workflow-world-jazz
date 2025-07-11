@@ -1,23 +1,26 @@
 import { createRandomUUID } from '@vercel/workflow-vm/dist/uuid.js';
 import seedrandom from 'seedrandom';
 import { describe, expect, it, vi } from 'vitest';
-import { FatalError, StepNotRunError } from './global.js';
+import { EventsConsumer } from './events-consumer.js';
+import { FatalError, StepsNotRunError } from './global.js';
 import { createUseStep, type WorkflowContext } from './step.js';
 
 describe('createUseStep', () => {
   it('should resolve with the result of a step', async () => {
     const ctx: WorkflowContext = {
-      stepIndex: 0,
-      events: [
+      eventsConsumer: new EventsConsumer([
         {
           id: 'event-0',
           workflow_run_id: 'run-123',
           event_type: 'step_result',
-          event_data: { result: 3 },
+          event_data: {
+            result: 3,
+            invocation_id: 'd6f45471-b67f-4f0c-b60b-9ac709c285e1',
+          },
           sequence_number: 0,
           created_at: new Date(),
         },
-      ],
+      ]),
       invocationsQueue: [],
       onWorkflowError: vi.fn(),
       randomUUID: createRandomUUID(seedrandom('test')),
@@ -31,17 +34,20 @@ describe('createUseStep', () => {
 
   it('should reject with a fatal error if the step fails', async () => {
     const ctx: WorkflowContext = {
-      stepIndex: 0,
-      events: [
+      eventsConsumer: new EventsConsumer([
         {
           id: 'event-0',
           workflow_run_id: 'run-123',
           event_type: 'step_failed',
-          event_data: { error: 'test', fatal: true },
+          event_data: {
+            error: 'test',
+            fatal: true,
+            invocation_id: 'a6318e4e-853a-4b24-bc43-dd5b5863aabe',
+          },
           sequence_number: 0,
           created_at: new Date(),
         },
-      ],
+      ]),
       invocationsQueue: [],
       onWorkflowError: vi.fn(),
       randomUUID: createRandomUUID(seedrandom('test2')),
@@ -67,8 +73,7 @@ describe('createUseStep', () => {
     });
 
     const ctx: WorkflowContext = {
-      stepIndex: 0,
-      events: [],
+      eventsConsumer: new EventsConsumer([]),
       invocationsQueue: [],
       onWorkflowError(err) {
         workflowErrorReject(err);
@@ -83,9 +88,18 @@ describe('createUseStep', () => {
     } catch (err_) {
       error = err_ as Error;
     }
-    expect(error).toBeInstanceOf(StepNotRunError);
-    expect((error as StepNotRunError).args).toEqual([1, 2]);
-    expect((error as StepNotRunError).stepName).toBe('add');
+    expect(error).toBeInstanceOf(StepsNotRunError);
+    expect((error as StepsNotRunError).message).toBe(
+      '1 steps have not been run yet'
+    );
+    expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
+    expect((error as StepsNotRunError).steps).toEqual([
+      {
+        stepName: 'add',
+        args: [1, 2],
+        invocationId: '013d5317-4831-44a0-b48d-68fd283cbe80',
+      },
+    ]);
   });
 
   it('should invoke workflow error handler if step is not run (concurrent)', async () => {
@@ -95,8 +109,7 @@ describe('createUseStep', () => {
     });
 
     const ctx: WorkflowContext = {
-      stepIndex: 0,
-      events: [],
+      eventsConsumer: new EventsConsumer([]),
       invocationsQueue: [],
       onWorkflowError(err) {
         workflowErrorReject(err);
@@ -116,10 +129,12 @@ describe('createUseStep', () => {
     } catch (err_) {
       error = err_ as Error;
     }
-    expect(error).toBeInstanceOf(StepNotRunError);
-    expect((error as StepNotRunError).args).toEqual([1, 2]);
-    expect((error as StepNotRunError).stepName).toBe('add');
-    expect(ctx.invocationsQueue).toEqual([
+    expect(error).toBeInstanceOf(StepsNotRunError);
+    expect((error as StepsNotRunError).message).toBe(
+      '3 steps have not been run yet'
+    );
+    expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
+    expect((error as StepsNotRunError).steps).toEqual([
       {
         stepName: 'add',
         args: [1, 2],

@@ -80,6 +80,274 @@ describe('runWorkflow', () => {
     });
   });
 
+  it('should resolve a step that has a `step_result` event', async () => {
+    const workflowRunId = 'test-run-123';
+    const workflowRun: WorkflowRun = {
+      id: workflowRunId,
+      workflow_name: 'workflow',
+      status: 'running',
+      input: [],
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            const a = await add(1, 2);
+            return a;
+          }`,
+      workflowRun,
+      events
+    );
+    expect(result).toEqual(3);
+  });
+
+  it('should resolve `Promise.all()` steps that have `step_result` events', async () => {
+    const workflowRunId = 'test-run-123';
+    const workflowRun: WorkflowRun = {
+      id: workflowRunId,
+      workflow_name: 'workflow',
+      status: 'running',
+      input: [],
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 2,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-3',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 7,
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 3,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            const a = await Promise.all([add(1, 2), add(3, 4)]);
+            return a;
+          }`,
+      workflowRun,
+      events
+    );
+    expect(result).toEqual([3, 7]);
+  });
+
+  it('should resolve `Promise.race()` steps that have `step_result` events (first promise resolves first)', async () => {
+    const workflowRunId = 'test-run-123';
+    const workflowRun: WorkflowRun = {
+      id: workflowRunId,
+      workflow_name: 'workflow',
+      status: 'running',
+      input: [],
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 2,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-3',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 7,
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 3,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            const a = await Promise.race([add(1, 2), add(3, 4)]);
+            return a;
+          }`,
+      workflowRun,
+      events
+    );
+    expect(result).toEqual(3);
+  });
+
+  it('should resolve `Promise.race()` steps that have `step_result` events (second promise resolves first)', async () => {
+    const workflowRunId = 'test-run-123';
+    const workflowRun: WorkflowRun = {
+      id: workflowRunId,
+      workflow_name: 'workflow',
+      status: 'running',
+      input: [],
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 7,
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 2,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-3',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 3,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            const a = await Promise.race([add(1, 2), add(3, 4)]);
+            return a;
+          }`,
+      workflowRun,
+      events
+    );
+    expect(result).toEqual(7);
+  });
+
   describe('error handling', () => {
     it('should throw ReferenceError when workflow code does not return a function', async () => {
       let error: Error | undefined;
@@ -141,7 +409,7 @@ describe('runWorkflow', () => {
       expect(error.message).toEqual('test');
     });
 
-    it('should throw `StepNotRunError` when a step does not have an event result entry', async () => {
+    it('should throw `StepsNotRunError` when a step does not have an event result entry', async () => {
       let error: Error | undefined;
       try {
         const workflowRun: WorkflowRun = {
@@ -162,7 +430,7 @@ describe('runWorkflow', () => {
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepNotRunError' because it has not been run yet
+            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
             const a = await add(1, 2);
             return a;
           }`,
@@ -173,13 +441,11 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepNotRunError');
-      expect(error.message).toEqual(
-        'Step add has not been run yet. Arguments: [1,2]'
-      );
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('1 steps have not been run yet');
     });
 
-    it('`StepNotRunError` should not be catchable by user code', async () => {
+    it('`StepsNotRunError` should not be catchable by user code', async () => {
       let error: Error | undefined;
       try {
         const workflowRun: WorkflowRun = {
@@ -201,7 +467,7 @@ describe('runWorkflow', () => {
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             try {
-              // 'add()' will throw a 'StepNotRunError' because it has not been run yet
+              // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
               const a = await add(1, 2);
               return a;
             } catch (err) {
@@ -215,10 +481,8 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepNotRunError');
-      expect(error.message).toEqual(
-        'Step add has not been run yet. Arguments: [1,2]'
-      );
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('1 steps have not been run yet');
     });
   });
 });
