@@ -39,7 +39,13 @@ export abstract class BaseBuilder {
     // Create a virtual entry that imports all files. All step definitions
     // will get registered thanks to the swc transform.
     const imports = inputFiles.map((file) => `import '${file}';`).join('\n');
-    const entryContent = `${imports}\nexport { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
+    const entryContent = `
+    // Built in steps
+    import '@vercel/workflow-core/builtins';
+    // User steps
+    ${imports}
+    // API entrypoint 
+    export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
     await esbuild.build({

@@ -9,7 +9,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./runtime": "./dist/runtime.js",
-    "./private": "./dist/private.js"
+    "./private": "./dist/private.js",
+    "./builtins": "./dist/builtins.js"
   },
   "scripts": {
     "build": "tsc",

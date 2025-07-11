@@ -49,8 +49,14 @@ export async function runWorkflow(
     onWorkflowError: workflowDiscontinuation.reject,
   };
 
+  const useStep = createUseStep(workflowContext);
+
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-  context[Symbol.for('WORKFLOW_USE_STEP')] = createUseStep(workflowContext);
+  context[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
+
+  // Provide a hoisted fetch function
+  // TODO: handle unserializable inputs to fetch
+  context.fetch = useStep('__builtin_fetch');
 
   // Get a reference to the user-defined workflow function
   const workflowFn = runInContext(
