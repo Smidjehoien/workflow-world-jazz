@@ -1,0 +1,43 @@
+// @ts-nocheck
+import { anthropic } from '@ai-sdk/anthropic';
+import { Sandbox } from '@vercel/sandbox';
+import { generateText, stepCountIs } from 'ai';
+
+async function leaveReviewComment(pr: number) {
+  'use step';
+  // Code to leave comments on a github PR
+}
+
+async function finishReview(pr: number, status: 'approved' | 'changes_requested') {
+  'use step';
+  // Code to finish a review
+}
+
+export async function reviewCommit(input: GithubWebhookPayload) {
+  'use workflow';
+
+  const sandbox = await Sandbox.create({
+    source: {
+      url: input.repository.clone_url,
+      type: 'git',
+    },
+  });
+
+  const { text } = await generateText({
+    model: anthropic('claude-4-opus-20250514'),
+    system: 'You are a code review agent',
+    prompt: `You have access to a sandbox with the source code of a repo already cloned. Review the code.`,
+    tools: {
+      leaveReviewComment,
+      finishReview,
+      runCommand: sandbox.runCommand,
+      readFile: sandbox.readFile,
+    },
+    stopWhen: stepCountIs(10_000), // Go big!
+  });
+
+  await sandbox.stop();
+
+  return text;
+}
+
