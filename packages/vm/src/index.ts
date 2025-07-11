@@ -97,6 +97,11 @@ export function createContext(options: CreateContextOptions) {
   // Web APIs that are made available in the context
   g.TextEncoder = globalThis.TextEncoder;
   g.TextDecoder = globalThis.TextDecoder;
+  g.ReadableStream = globalThis.ReadableStream;
+  g.WritableStream = globalThis.WritableStream;
+  g.TransformStream = globalThis.TransformStream;
+
+  g.URL = globalThis.URL;
 
   // Shim exports for bundle
   g.exports = {};

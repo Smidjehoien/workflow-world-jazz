@@ -1205,8 +1205,6 @@ impl VisitMut for StepTransform {
             }
         }
 
-        // No longer need to remove step functions in client mode since we transform them
-
         var_decl.visit_mut_children_with(self);
     }
 

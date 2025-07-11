@@ -16,9 +16,12 @@
     "esbuild": "^0.25.5"
   },
   "dependencies": {
+    "@ai-sdk/openai": "beta",
     "@vercel/functions": "^2.2.2",
     "@vercel/workflow-core": "workspace:*",
+    "ai": "beta",
     "mixpart": "^0.0.4",
-    "swc-plugin-workflow": "workspace:*"
+    "swc-plugin-workflow": "workspace:*",
+    "zod": "3"
   }
 }
