@@ -132,6 +132,111 @@ describe('runWorkflow', () => {
     expect(result).toEqual(3);
   });
 
+  it('should update the timestamp in the vm context as events are replayed', async () => {
+    const workflowRunId = 'test-run-123';
+    const workflowRun: WorkflowRun = {
+      id: workflowRunId,
+      workflow_name: 'workflow',
+      status: 'running',
+      input: [],
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 0,
+        created_at: new Date('2024-01-01T00:00:01.000Z'),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        },
+        sequence_number: 1,
+        created_at: new Date('2024-01-01T00:00:02.000Z'),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 2,
+        created_at: new Date('2024-01-01T00:00:03.000Z'),
+      },
+      {
+        id: 'event-3',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 3,
+        created_at: new Date('2024-01-01T00:00:04.000Z'),
+      },
+      {
+        id: 'event-4',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: 'ab4359f5-1521-4d72-b5e9-13e841129b90',
+        },
+        sequence_number: 4,
+        created_at: new Date('2024-01-01T00:00:05.000Z'),
+      },
+      {
+        id: 'event-5',
+        workflow_run_id: workflowRunId,
+        event_type: 'step_result',
+        event_data: {
+          result: 3,
+          invocation_id: 'ab4359f5-1521-4d72-b5e9-13e841129b90',
+        },
+        sequence_number: 5,
+        created_at: new Date('2024-01-01T00:00:06.000Z'),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            const timestamps = [];
+            timestamps.push(new Date());
+            await add(1, 2);
+            timestamps.push(Date.now());
+            await add(3, 4);
+            timestamps.push(Date.now());
+            await add(5, 6);
+            timestamps.push(new Date());
+            return timestamps;
+          }`,
+      workflowRun,
+      events
+    );
+    expect(result).toEqual([
+      new Date('2024-01-01T00:00:00.000Z'),
+      1704067203000,
+      1704067205000,
+      new Date('2024-01-01T00:00:06.000Z'),
+    ]);
+  });
+
   it('should resolve `Promise.all()` steps that have `step_result` events', async () => {
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {

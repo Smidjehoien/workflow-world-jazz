@@ -1,7 +1,7 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
-import { EventsConsumer } from './events-consumer.js';
+import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import { createUseStep, type WorkflowContext } from './step.js';
 
 class Deferred<T> {
@@ -33,7 +33,7 @@ export async function runWorkflow(
     );
   }
 
-  const { context } = createContext({
+  const { context, updateTimestamp } = createContext({
     seed: workflowRun.id,
     fixedTimestamp: +startedAt,
   });
@@ -49,6 +49,16 @@ export async function runWorkflow(
     eventsConsumer: new EventsConsumer(events),
     invocationsQueue: [],
   };
+
+  // Subscribe to the events log to update the timestamp in the vm context
+  workflowContext.eventsConsumer.subscribe((event) => {
+    const createdAt = event?.created_at;
+    if (createdAt) {
+      updateTimestamp(+createdAt);
+    }
+    // Never consume events - this is only a passive subscriber
+    return EventConsumerResult.NotConsumed;
+  });
 
   const useStep = createUseStep(workflowContext);
 
