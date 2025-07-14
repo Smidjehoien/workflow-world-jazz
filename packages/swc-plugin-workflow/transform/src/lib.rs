@@ -1,12 +1,116 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use swc_core::{
-    common::{DUMMY_SP, SyntaxContext, errors::HANDLER},
+    common::{DUMMY_SP, SyntaxContext, errors::HANDLER, Mark},
     ecma::{
         ast::*,
         visit::{VisitMut, VisitMutWith, noop_visit_mut_type},
     },
 };
+
+#[derive(Debug, Clone)]
+enum WorkflowErrorKind {
+    NonAsyncFunction {
+        span: swc_core::common::Span,
+        directive: &'static str,
+    },
+    MisplacedDirective {
+        span: swc_core::common::Span,
+        directive: String,
+        location: DirectiveLocation,
+    },
+    MisspelledDirective {
+        span: swc_core::common::Span,
+        directive: String,
+        expected: &'static str,
+    },
+    ForbiddenExpression {
+        span: swc_core::common::Span,
+        expr: &'static str,
+        directive: &'static str,
+    },
+    InvalidExport {
+        span: swc_core::common::Span,
+        directive: &'static str,
+    },
+}
+
+#[derive(Debug, Clone)]
+enum DirectiveLocation {
+    Module,
+    FunctionBody,
+}
+
+fn emit_error(error: WorkflowErrorKind) {
+    let (span, msg) = match error {
+        WorkflowErrorKind::NonAsyncFunction { span, directive } => (
+            span,
+            format!("Functions marked with \"{}\" must be async functions", directive),
+        ),
+        WorkflowErrorKind::MisplacedDirective { span, directive, location } => (
+            span,
+            format!(
+                "The \"{}\" directive must be at the top of the {}",
+                directive,
+                match location {
+                    DirectiveLocation::Module => "file",
+                    DirectiveLocation::FunctionBody => "function body",
+                }
+            ),
+        ),
+        WorkflowErrorKind::MisspelledDirective { span, directive, expected } => (
+            span,
+            format!("Did you mean \"{}\"? \"{}\" is not a supported directive", expected, directive),
+        ),
+        WorkflowErrorKind::ForbiddenExpression { span, expr, directive } => (
+            span,
+            format!("Functions marked with \"{}\" cannot use `{}`", directive, expr),
+        ),
+        WorkflowErrorKind::InvalidExport { span, directive } => (
+            span,
+            format!("Only async functions can be exported from a \"{}\" file", directive),
+        ),
+    };
+    
+    HANDLER.with(|handler| handler.struct_span_err(span, &msg).emit());
+}
+
+// Helper function to detect similar strings (typos)
+fn detect_similar_strings(a: &str, b: &str) -> bool {
+    let a_chars: Vec<char> = a.chars().collect();
+    let b_chars: Vec<char> = b.chars().collect();
+    
+    if (a_chars.len() as i32 - b_chars.len() as i32).abs() > 1 {
+        return false;
+    }
+    
+    let mut differences = 0;
+    let mut i = 0;
+    let mut j = 0;
+    
+    while i < a_chars.len() && j < b_chars.len() {
+        if a_chars[i] != b_chars[j] {
+            differences += 1;
+            if differences > 1 {
+                return false;
+            }
+            
+            if a_chars.len() > b_chars.len() {
+                i += 1;
+            } else if b_chars.len() > a_chars.len() {
+                j += 1;
+            } else {
+                i += 1;
+                j += 1;
+            }
+        } else {
+            i += 1;
+            j += 1;
+        }
+    }
+    
+    differences + (a_chars.len() - i) + (b_chars.len() - j) == 1
+}
 
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
@@ -31,6 +135,75 @@ pub struct StepTransform {
     registered_functions: HashSet<String>,
     // Collect registration calls for step mode
     registration_calls: Vec<Stmt>,
+    // Track closure variables
+    names: Vec<Name>,
+    should_track_names: bool,
+    in_module_level: bool,
+    in_callee: bool,
+    // Track context for validation
+    in_step_function: bool,
+    in_workflow_function: bool,
+}
+
+// Structure to track variable names and their access patterns
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct Name {
+    id: Id,
+    props: Vec<NameProp>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct NameProp {
+    sym: swc_core::atoms::Atom,
+    optional: bool,
+}
+
+impl From<&Ident> for Name {
+    fn from(ident: &Ident) -> Self {
+        Name {
+            id: ident.to_id(),
+            props: vec![],
+        }
+    }
+}
+
+impl TryFrom<&Expr> for Name {
+    type Error = ();
+    
+    fn try_from(expr: &Expr) -> Result<Self, Self::Error> {
+        match expr {
+            Expr::Ident(ident) => Ok(Name::from(ident)),
+            Expr::Member(member) => {
+                if let MemberProp::Ident(prop) = &member.prop {
+                    let mut name = Name::try_from(&*member.obj)?;
+                    name.props.push(NameProp {
+                        sym: prop.sym.clone(),
+                        optional: false,
+                    });
+                    Ok(name)
+                } else {
+                    Err(())
+                }
+            }
+            Expr::OptChain(opt_chain) => {
+                if let OptChainBase::Member(member) = &*opt_chain.base {
+                    if let MemberProp::Ident(prop) = &member.prop {
+                        let mut name = Name::try_from(&*member.obj)?;
+                        name.props.push(NameProp {
+                            sym: prop.sym.clone(),
+                            optional: opt_chain.optional,
+                        });
+                        Ok(name)
+                    } else {
+                        Err(())
+                    }
+                } else {
+                    Err(())
+                }
+            }
+            _ => Err(()),
+        }
+    }
 }
 
 impl StepTransform {
@@ -43,55 +216,207 @@ impl StepTransform {
             workflow_function_names: HashSet::new(),
             registered_functions: HashSet::new(),
             registration_calls: Vec::new(),
+            names: Vec::new(),
+            should_track_names: false,
+            in_module_level: true,
+            in_callee: false,
+            in_step_function: false,
+            in_workflow_function: false,
         }
     }
 
     // Check if a function has the "use step" directive
     fn has_use_step_directive(&self, body: &Option<BlockStmt>) -> bool {
         if let Some(body) = body {
-            if let Some(first_stmt) = body.stmts.first() {
-                if let Stmt::Expr(ExprStmt { expr, .. }) = first_stmt {
+            let mut is_first_meaningful = true;
+            
+            for stmt in body.stmts.iter() {
+                if let Stmt::Expr(ExprStmt { expr, span: stmt_span, .. }) = stmt {
                     if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                        return value == "use step";
+                        if value == "use step" {
+                            if !is_first_meaningful {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *stmt_span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::FunctionBody,
+                                });
+                            }
+                            return true;
+                        } else if detect_similar_strings(value, "use step") {
+                            emit_error(WorkflowErrorKind::MisspelledDirective {
+                                span: *stmt_span,
+                                directive: value.to_string(),
+                                expected: "use step",
+                            });
+                        }
                     }
                 }
+                // Any non-directive statement means directives can't come after
+                is_first_meaningful = false;
             }
+            
+            false
+        } else {
+            false
         }
-        false
     }
 
     // Check if a function has the "use workflow" directive
     fn has_use_workflow_directive(&self, body: &Option<BlockStmt>) -> bool {
         if let Some(body) = body {
-            if let Some(first_stmt) = body.stmts.first() {
-                if let Stmt::Expr(ExprStmt { expr, .. }) = first_stmt {
+            let mut is_first_meaningful = true;
+            
+            for stmt in body.stmts.iter() {
+                if let Stmt::Expr(ExprStmt { expr, span: stmt_span, .. }) = stmt {
                     if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                        return value == "use workflow";
+                        if value == "use workflow" {
+                            if !is_first_meaningful {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *stmt_span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::FunctionBody,
+                                });
+                            }
+                            return true;
+                        } else if detect_similar_strings(value, "use workflow") {
+                            emit_error(WorkflowErrorKind::MisspelledDirective {
+                                span: *stmt_span,
+                                directive: value.to_string(),
+                                expected: "use workflow",
+                            });
+                        }
                     }
                 }
+                // Any non-directive statement means directives can't come after
+                is_first_meaningful = false;
             }
+            
+            false
+        } else {
+            false
         }
-        false
     }
 
     // Check if the module has a top-level "use step" directive
     fn check_module_directive(&mut self, items: &[ModuleItem]) -> bool {
-        if let Some(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. }))) = items.first() {
-            if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                return value == "use step";
+        let mut found_directive = false;
+        let mut is_first_meaningful = true;
+        
+        for item in items {
+            match item {
+                ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, span, .. })) => {
+                    if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                        if value == "use step" {
+                            if !is_first_meaningful {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::Module,
+                                });
+                            } else {
+                                found_directive = true;
+                                // Don't break - continue checking for other directives
+                            }
+                        } else if value == "use workflow" {
+                            // Can't have both directives
+                            if found_directive {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::Module,
+                                });
+                            }
+                        } else if detect_similar_strings(value, "use step") {
+                            emit_error(WorkflowErrorKind::MisspelledDirective {
+                                span: *span,
+                                directive: value.to_string(),
+                                expected: "use step",
+                            });
+                        }
+                    }
+                    // Any non-directive expression statement means directives can't come after
+                    if !found_directive {
+                        is_first_meaningful = false;
+                    }
+                }
+                ModuleItem::ModuleDecl(ModuleDecl::Import(_)) => {
+                    // Imports after directive are not allowed
+                    if found_directive {
+                        // This is okay - imports can come after directives
+                    } else {
+                        // But directives can't come after imports
+                        is_first_meaningful = false;
+                    }
+                }
+                _ => {
+                    // Any other module item means directives can't come after
+                    is_first_meaningful = false;
+                }
             }
         }
-        false
+        
+        found_directive
     }
 
     // Check if the module has a top-level "use workflow" directive
     fn check_module_workflow_directive(&mut self, items: &[ModuleItem]) -> bool {
-        if let Some(ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, .. }))) = items.first() {
-            if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
-                return value == "use workflow";
+        let mut found_directive = false;
+        let mut is_first_meaningful = true;
+        
+        for item in items {
+            match item {
+                ModuleItem::Stmt(Stmt::Expr(ExprStmt { expr, span, .. })) => {
+                    if let Expr::Lit(Lit::Str(Str { value, .. })) = &**expr {
+                        if value == "use workflow" {
+                            if !is_first_meaningful {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::Module,
+                                });
+                            } else {
+                                found_directive = true;
+                                // Don't break - continue checking for other directives
+                            }
+                        } else if value == "use step" {
+                            // Can't have both directives
+                            if found_directive {
+                                emit_error(WorkflowErrorKind::MisplacedDirective {
+                                    span: *span,
+                                    directive: value.to_string(),
+                                    location: DirectiveLocation::Module,
+                                });
+                            }
+                        } else if detect_similar_strings(value, "use workflow") {
+                            emit_error(WorkflowErrorKind::MisspelledDirective {
+                                span: *span,
+                                directive: value.to_string(),
+                                expected: "use workflow",
+                            });
+                        }
+                    }
+                    // Any non-directive expression statement means directives can't come after
+                    if !found_directive {
+                        is_first_meaningful = false;
+                    }
+                }
+                ModuleItem::ModuleDecl(ModuleDecl::Import(_)) => {
+                    // Imports after directive are not allowed
+                    if found_directive {
+                        // This is okay - imports can come after directives
+                    } else {
+                        // But directives can't come after imports
+                        is_first_meaningful = false;
+                    }
+                }
+                _ => {
+                    // Any other module item means directives can't come after
+                    is_first_meaningful = false;
+                }
             }
         }
-        false
+        
+        found_directive
     }
 
     // Remove "use step" directive from function body
@@ -407,50 +732,56 @@ impl StepTransform {
         Expr::Call(CallExpr {
             span: DUMMY_SP,
             ctxt: SyntaxContext::empty(),
-            callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+            callee: Callee::Expr(Box::new(Expr::Call(CallExpr {
                 span: DUMMY_SP,
-                obj: Box::new(Expr::Ident(Ident::new(
-                    "globalThis".into(),
-                    DUMMY_SP,
-                    SyntaxContext::empty(),
-                ))),
-                prop: MemberProp::Computed(ComputedPropName {
+                ctxt: SyntaxContext::empty(),
+                callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
                     span: DUMMY_SP,
-                    expr: Box::new(Expr::Call(CallExpr {
+                    obj: Box::new(Expr::Ident(Ident::new(
+                        "globalThis".into(),
+                        DUMMY_SP,
+                        SyntaxContext::empty(),
+                    ))),
+                    prop: MemberProp::Computed(ComputedPropName {
                         span: DUMMY_SP,
-                        ctxt: SyntaxContext::empty(),
-                        callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
+                        expr: Box::new(Expr::Call(CallExpr {
                             span: DUMMY_SP,
-                            obj: Box::new(Expr::Ident(Ident::new(
-                                "Symbol".into(),
-                                DUMMY_SP,
-                                SyntaxContext::empty(),
-                            ))),
-                            prop: MemberProp::Ident(IdentName::new(
-                                "for".into(),
-                                DUMMY_SP,
-                            )),
-                        }))),
-                        args: vec![ExprOrSpread {
-                            spread: None,
-                            expr: Box::new(Expr::Lit(Lit::Str(Str {
+                            ctxt: SyntaxContext::empty(),
+                            callee: Callee::Expr(Box::new(Expr::Member(MemberExpr {
                                 span: DUMMY_SP,
-                                value: "WORKFLOW_USE_STEP".into(),
-                                raw: None,
+                                obj: Box::new(Expr::Ident(Ident::new(
+                                    "Symbol".into(),
+                                    DUMMY_SP,
+                                    SyntaxContext::empty(),
+                                ))),
+                                prop: MemberProp::Ident(IdentName::new(
+                                    "for".into(),
+                                    DUMMY_SP,
+                                )),
                             }))),
-                        }],
-                        type_args: None,
-                    })),
-                }),
-            }))),
-            args: vec![ExprOrSpread {
-                spread: None,
-                expr: Box::new(Expr::Lit(Lit::Str(Str {
-                    span: DUMMY_SP,
-                    value: name.into(),
-                    raw: None,
+                            args: vec![ExprOrSpread {
+                                spread: None,
+                                expr: Box::new(Expr::Lit(Lit::Str(Str {
+                                    span: DUMMY_SP,
+                                    value: "WORKFLOW_USE_STEP".into(),
+                                    raw: None,
+                                }))),
+                            }],
+                            type_args: None,
+                        })),
+                    }),
                 }))),
-            }],
+                args: vec![ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Lit(Lit::Str(Str {
+                        span: DUMMY_SP,
+                        value: name.into(),
+                        raw: None,
+                    }))),
+                }],
+                type_args: None,
+            }))),
+            args: vec![],
             type_args: None,
         })
     }
@@ -710,6 +1041,117 @@ impl VisitMut for StepTransform {
         }
     }
 
+    fn visit_mut_function(&mut self, function: &mut Function) {
+        let has_step_directive = self.has_use_step_directive(&function.body);
+        let has_workflow_directive = self.has_use_workflow_directive(&function.body);
+        
+        // Set context for forbidden expression checking
+        let old_in_step = self.in_step_function;
+        let old_in_workflow = self.in_workflow_function;
+        let old_in_module = self.in_module_level;
+        
+        if has_step_directive {
+            self.in_step_function = true;
+        }
+        if has_workflow_directive {
+            self.in_workflow_function = true;
+        }
+        self.in_module_level = false;
+        
+        // Visit children
+        function.visit_mut_children_with(self);
+        
+        // Restore context
+        self.in_step_function = old_in_step;
+        self.in_workflow_function = old_in_workflow;
+        self.in_module_level = old_in_module;
+    }
+
+    fn visit_mut_arrow_expr(&mut self, arrow: &mut ArrowExpr) {
+        let has_step_directive = self.has_use_step_directive_arrow(&arrow.body);
+        let has_workflow_directive = self.has_use_workflow_directive_arrow(&arrow.body);
+        
+        // Set context for forbidden expression checking
+        let old_in_step = self.in_step_function;
+        let old_in_workflow = self.in_workflow_function;
+        let old_in_module = self.in_module_level;
+        
+        if has_step_directive {
+            self.in_step_function = true;
+        }
+        if has_workflow_directive {
+            self.in_workflow_function = true;
+        }
+        self.in_module_level = false;
+        
+        // Visit children
+        arrow.visit_mut_children_with(self);
+        
+        // Restore context
+        self.in_step_function = old_in_step;
+        self.in_workflow_function = old_in_workflow;
+        self.in_module_level = old_in_module;
+    }
+
+    // Add forbidden expression checks
+    fn visit_mut_this_expr(&mut self, expr: &mut ThisExpr) {
+        if self.in_step_function {
+            emit_error(WorkflowErrorKind::ForbiddenExpression {
+                span: expr.span,
+                expr: "this",
+                directive: "use step",
+            });
+        } else if self.in_workflow_function {
+            emit_error(WorkflowErrorKind::ForbiddenExpression {
+                span: expr.span,
+                expr: "this",
+                directive: "use workflow",
+            });
+        }
+    }
+
+    fn visit_mut_super(&mut self, sup: &mut Super) {
+        if self.in_step_function {
+            emit_error(WorkflowErrorKind::ForbiddenExpression {
+                span: sup.span,
+                expr: "super",
+                directive: "use step",
+            });
+        } else if self.in_workflow_function {
+            emit_error(WorkflowErrorKind::ForbiddenExpression {
+                span: sup.span,
+                expr: "super",
+                directive: "use workflow",
+            });
+        }
+    }
+
+    fn visit_mut_ident(&mut self, ident: &mut Ident) {
+        if ident.sym == *"arguments" {
+            if self.in_step_function {
+                emit_error(WorkflowErrorKind::ForbiddenExpression {
+                    span: ident.span,
+                    expr: "arguments",
+                    directive: "use step",
+                });
+            } else if self.in_workflow_function {
+                emit_error(WorkflowErrorKind::ForbiddenExpression {
+                    span: ident.span,
+                    expr: "arguments",
+                    directive: "use workflow",
+                });
+            }
+        }
+    }
+
+    // Track when we're in a callee position
+    fn visit_mut_callee(&mut self, callee: &mut Callee) {
+        let old_in_callee = self.in_callee;
+        self.in_callee = true;
+        callee.visit_mut_children_with(self);
+        self.in_callee = old_in_callee;
+    }
+
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
         // Check for file-level directives
         self.has_file_directive = self.check_module_directive(items);
@@ -733,6 +1175,141 @@ impl VisitMut for StepTransform {
 
         // Visit children normally
         for item in items.iter_mut() {
+            // Validate exports if we have a file-level directive
+            if self.has_file_directive || self.has_file_workflow_directive {
+                match item {
+                    ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export)) => {
+                        match &export.decl {
+                            Decl::Fn(fn_decl) => {
+                                if !fn_decl.function.is_async {
+                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                        span: export.span,
+                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                    });
+                                }
+                            }
+                            Decl::Var(var_decl) => {
+                                // Check if any of the variable declarations contain non-async functions
+                                for decl in &var_decl.decls {
+                                    if let Some(init) = &decl.init {
+                                        match &**init {
+                                            Expr::Fn(fn_expr) => {
+                                                if !fn_expr.function.is_async {
+                                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                                        span: export.span,
+                                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                                    });
+                                                }
+                                            }
+                                            Expr::Arrow(arrow_expr) => {
+                                                if !arrow_expr.is_async {
+                                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                                        span: export.span,
+                                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                                    });
+                                                }
+                                            }
+                                            Expr::Lit(_) => {
+                                                // Literals are not allowed
+                                                emit_error(WorkflowErrorKind::InvalidExport {
+                                                    span: export.span,
+                                                    directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                                });
+                                            }
+                                            _ => {
+                                                // Other expressions might be okay if they resolve to async functions
+                                                // but we can't easily check that statically
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            Decl::Class(_) => {
+                                // Classes are not allowed
+                                emit_error(WorkflowErrorKind::InvalidExport {
+                                    span: export.span,
+                                    directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                });
+                            }
+                            Decl::TsInterface(_) | Decl::TsTypeAlias(_) | Decl::TsEnum(_) | Decl::TsModule(_) => {
+                                // TypeScript declarations are okay
+                            }
+                            Decl::Using(_) => {
+                                emit_error(WorkflowErrorKind::InvalidExport {
+                                    span: export.span,
+                                    directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                });
+                            }
+                        }
+                    }
+                    ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(named)) => {
+                        if named.src.is_some() {
+                            // Re-exports are not allowed
+                            emit_error(WorkflowErrorKind::InvalidExport {
+                                span: named.span,
+                                directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                            });
+                        }
+                    }
+                    ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultDecl(default)) => {
+                        match &default.decl {
+                            DefaultDecl::Fn(fn_expr) => {
+                                if !fn_expr.function.is_async {
+                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                        span: default.span,
+                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                    });
+                                }
+                            }
+                            DefaultDecl::Class(_) => {
+                                emit_error(WorkflowErrorKind::InvalidExport {
+                                    span: default.span,
+                                    directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                });
+                            }
+                            DefaultDecl::TsInterfaceDecl(_) => {
+                                // TypeScript interface is okay
+                            }
+                        }
+                    }
+                    ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(expr)) => {
+                        match &*expr.expr {
+                            Expr::Fn(fn_expr) => {
+                                if !fn_expr.function.is_async {
+                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                        span: expr.span,
+                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                    });
+                                }
+                            }
+                            Expr::Arrow(arrow_expr) => {
+                                if !arrow_expr.is_async {
+                                    emit_error(WorkflowErrorKind::InvalidExport {
+                                        span: expr.span,
+                                        directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                    });
+                                }
+                            }
+                            _ => {
+                                // Other default exports are not allowed
+                                emit_error(WorkflowErrorKind::InvalidExport {
+                                    span: expr.span,
+                                    directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                                });
+                            }
+                        }
+                    }
+                    ModuleItem::ModuleDecl(ModuleDecl::ExportAll(export_all)) => {
+                        // export * from '...' is not allowed
+                        emit_error(WorkflowErrorKind::InvalidExport {
+                            span: export_all.span,
+                            directive: if self.has_file_directive { "use step" } else { "use workflow" },
+                        });
+                    }
+                    _ => {}
+                }
+            }
+            
             item.visit_mut_with(self);
         }
 
@@ -800,23 +1377,36 @@ impl VisitMut for StepTransform {
                                 stmt.visit_mut_children_with(self);
                             }
                             TransformMode::Workflow => {
-                                // Replace function declaration with variable declaration
-                                *stmt = Stmt::Decl(Decl::Var(Box::new(VarDecl {
-                                    span: DUMMY_SP,
-                                    ctxt: SyntaxContext::empty(),
-                                    kind: VarDeclKind::Const,
-                                    declare: false,
-                                    decls: vec![VarDeclarator {
+                                // Keep the function declaration but replace its body with a proxy call
+                                self.remove_use_step_directive(&mut fn_decl.function.body);
+                                if let Some(body) = &mut fn_decl.function.body {
+                                    let mut proxy_call = self.create_step_proxy(&fn_name);
+                                    // Add function arguments to the proxy call
+                                    if let Expr::Call(call) = &mut proxy_call {
+                                        call.args = fn_decl.function.params.iter().map(|param| {
+                                            if let Pat::Ident(ident) = &param.pat {
+                                                ExprOrSpread {
+                                                    spread: None,
+                                                    expr: Box::new(Expr::Ident(Ident::new(
+                                                        ident.id.sym.clone(),
+                                                        DUMMY_SP,
+                                                        SyntaxContext::empty(),
+                                                    ))),
+                                                }
+                                            } else {
+                                                // Handle other parameter patterns if needed
+                                                ExprOrSpread {
+                                                    spread: None,
+                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                }
+                                            }
+                                        }).collect();
+                                    }
+                                    body.stmts = vec![Stmt::Return(ReturnStmt {
                                         span: DUMMY_SP,
-                                        name: Pat::Ident(BindingIdent::from(Ident::new(
-                                            fn_name.clone().into(),
-                                            DUMMY_SP,
-                                            SyntaxContext::empty(),
-                                        ))),
-                                        init: Some(Box::new(self.create_step_proxy(&fn_name))),
-                                        definite: false,
-                                    }],
-                                })));
+                                        arg: Some(Box::new(proxy_call)),
+                                    })];
+                                }
                             }
                             TransformMode::Client => {
                                 // Transform step function body to use step run call
@@ -888,23 +1478,36 @@ impl VisitMut for StepTransform {
                                 export_decl.visit_mut_children_with(self);
                             }
                             TransformMode::Workflow => {
-                                // Replace with export const
-                                export_decl.decl = Decl::Var(Box::new(VarDecl {
-                                    span: DUMMY_SP,
-                                    ctxt: SyntaxContext::empty(),
-                                    kind: VarDeclKind::Const,
-                                    declare: false,
-                                    decls: vec![VarDeclarator {
+                                // Keep the function declaration but replace its body with a proxy call
+                                self.remove_use_step_directive(&mut fn_decl.function.body);
+                                if let Some(body) = &mut fn_decl.function.body {
+                                    let mut proxy_call = self.create_step_proxy(&fn_name);
+                                    // Add function arguments to the proxy call
+                                    if let Expr::Call(call) = &mut proxy_call {
+                                        call.args = fn_decl.function.params.iter().map(|param| {
+                                            if let Pat::Ident(ident) = &param.pat {
+                                                ExprOrSpread {
+                                                    spread: None,
+                                                    expr: Box::new(Expr::Ident(Ident::new(
+                                                        ident.id.sym.clone(),
+                                                        DUMMY_SP,
+                                                        SyntaxContext::empty(),
+                                                    ))),
+                                                }
+                                            } else {
+                                                // Handle other parameter patterns if needed
+                                                ExprOrSpread {
+                                                    spread: None,
+                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                }
+                                            }
+                                        }).collect();
+                                    }
+                                    body.stmts = vec![Stmt::Return(ReturnStmt {
                                         span: DUMMY_SP,
-                                        name: Pat::Ident(BindingIdent::from(Ident::new(
-                                            fn_name.clone().into(),
-                                            DUMMY_SP,
-                                            SyntaxContext::empty(),
-                                        ))),
-                                        init: Some(Box::new(self.create_step_proxy(&fn_name))),
-                                        definite: false,
-                                    }],
-                                }));
+                                        arg: Some(Box::new(proxy_call)),
+                                    })];
+                                }
                             }
                             TransformMode::Client => {
                                 // Transform step function body to use run step call
@@ -974,8 +1577,36 @@ impl VisitMut for StepTransform {
                                                     self.create_registration_call(&name);
                                                 }
                                                 TransformMode::Workflow => {
-                                                    // Replace with proxy
-                                                    **init = self.create_step_proxy(&name);
+                                                    // Keep the function expression but replace its body with a proxy call
+                                                    self.remove_use_step_directive(&mut fn_expr.function.body);
+                                                    if let Some(body) = &mut fn_expr.function.body {
+                                                        let mut proxy_call = self.create_step_proxy(&name);
+                                                        // Add function arguments to the proxy call
+                                                        if let Expr::Call(call) = &mut proxy_call {
+                                                            call.args = fn_expr.function.params.iter().map(|param| {
+                                                                if let Pat::Ident(ident) = &param.pat {
+                                                                    ExprOrSpread {
+                                                                        spread: None,
+                                                                        expr: Box::new(Expr::Ident(Ident::new(
+                                                                            ident.id.sym.clone(),
+                                                                            DUMMY_SP,
+                                                                            SyntaxContext::empty(),
+                                                                        ))),
+                                                                    }
+                                                                } else {
+                                                                    // Handle other parameter patterns if needed
+                                                                    ExprOrSpread {
+                                                                        spread: None,
+                                                                        expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                                    }
+                                                                }
+                                                            }).collect();
+                                                        }
+                                                        body.stmts = vec![Stmt::Return(ReturnStmt {
+                                                            span: DUMMY_SP,
+                                                            arg: Some(Box::new(proxy_call)),
+                                                        })];
+                                                    }
                                                 }
                                                 TransformMode::Client => {
                                                     // Transform step function body to use run step call
@@ -1033,8 +1664,31 @@ impl VisitMut for StepTransform {
                                                     self.create_registration_call(&name);
                                                 }
                                                 TransformMode::Workflow => {
-                                                    // Replace with proxy
-                                                    **init = self.create_step_proxy(&name);
+                                                    // Keep the arrow function but replace its body with a proxy call
+                                                    self.remove_use_step_directive_arrow(&mut arrow_expr.body);
+                                                    let mut proxy_call = self.create_step_proxy(&name);
+                                                    // Add function arguments to the proxy call
+                                                    if let Expr::Call(call) = &mut proxy_call {
+                                                        call.args = arrow_expr.params.iter().map(|param| {
+                                                            if let Pat::Ident(ident) = param {
+                                                                ExprOrSpread {
+                                                                    spread: None,
+                                                                    expr: Box::new(Expr::Ident(Ident::new(
+                                                                        ident.id.sym.clone(),
+                                                                        DUMMY_SP,
+                                                                        SyntaxContext::empty(),
+                                                                    ))),
+                                                                }
+                                                            } else {
+                                                                // Handle other parameter patterns if needed
+                                                                ExprOrSpread {
+                                                                    spread: None,
+                                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                                }
+                                                            }
+                                                        }).collect();
+                                                    }
+                                                    arrow_expr.body = Box::new(BlockStmtOrExpr::Expr(Box::new(proxy_call)));
                                                 }
                                                 TransformMode::Client => {
                                                     // Transform arrow function to use run step call
@@ -1105,8 +1759,36 @@ impl VisitMut for StepTransform {
                                             self.create_registration_call(&name);
                                         }
                                         TransformMode::Workflow => {
-                                            // Replace with proxy
-                                            **init = self.create_step_proxy(&name);
+                                            // Keep the function expression but replace its body with a proxy call
+                                            self.remove_use_step_directive(&mut fn_expr.function.body);
+                                            if let Some(body) = &mut fn_expr.function.body {
+                                                let mut proxy_call = self.create_step_proxy(&name);
+                                                // Add function arguments to the proxy call
+                                                if let Expr::Call(call) = &mut proxy_call {
+                                                    call.args = fn_expr.function.params.iter().map(|param| {
+                                                        if let Pat::Ident(ident) = &param.pat {
+                                                            ExprOrSpread {
+                                                                spread: None,
+                                                                expr: Box::new(Expr::Ident(Ident::new(
+                                                                    ident.id.sym.clone(),
+                                                                    DUMMY_SP,
+                                                                    SyntaxContext::empty(),
+                                                                ))),
+                                                            }
+                                                        } else {
+                                                            // Handle other parameter patterns if needed
+                                                            ExprOrSpread {
+                                                                spread: None,
+                                                                expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                            }
+                                                        }
+                                                    }).collect();
+                                                }
+                                                body.stmts = vec![Stmt::Return(ReturnStmt {
+                                                    span: DUMMY_SP,
+                                                    arg: Some(Box::new(proxy_call)),
+                                                })];
+                                            }
                                         }
                                         TransformMode::Client => {
                                             // Transform step function body to use run step call
@@ -1164,8 +1846,31 @@ impl VisitMut for StepTransform {
                                             self.create_registration_call(&name);
                                         }
                                         TransformMode::Workflow => {
-                                            // Replace with proxy
-                                            **init = self.create_step_proxy(&name);
+                                            // Keep the arrow function but replace its body with a proxy call
+                                            self.remove_use_step_directive_arrow(&mut arrow_expr.body);
+                                            let mut proxy_call = self.create_step_proxy(&name);
+                                            // Add function arguments to the proxy call
+                                            if let Expr::Call(call) = &mut proxy_call {
+                                                call.args = arrow_expr.params.iter().map(|param| {
+                                                    if let Pat::Ident(ident) = param {
+                                                        ExprOrSpread {
+                                                            spread: None,
+                                                            expr: Box::new(Expr::Ident(Ident::new(
+                                                                ident.id.sym.clone(),
+                                                                DUMMY_SP,
+                                                                SyntaxContext::empty(),
+                                                            ))),
+                                                        }
+                                                    } else {
+                                                        // Handle other parameter patterns if needed
+                                                        ExprOrSpread {
+                                                            spread: None,
+                                                            expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
+                                                        }
+                                                    }
+                                                }).collect();
+                                            }
+                                            arrow_expr.body = Box::new(BlockStmtOrExpr::Expr(Box::new(proxy_call)));
                                         }
                                         TransformMode::Client => {
                                             // Transform arrow function to use run step call
@@ -1206,6 +1911,103 @@ impl VisitMut for StepTransform {
         }
 
         var_decl.visit_mut_children_with(self);
+    }
+
+    // Handle JSX attributes with function values
+    fn visit_mut_jsx_attr(&mut self, attr: &mut JSXAttr) {
+        // Track function names from JSX attributes
+        if let (Some(JSXAttrValue::JSXExprContainer(_container)), JSXAttrName::Ident(_ident_name)) = 
+            (&attr.value, &attr.name) 
+        {
+            // Store the attribute name for function naming
+            // This would need to be added to the struct as a field
+        }
+        
+        attr.visit_mut_children_with(self);
+    }
+
+    // Handle object properties with function values
+    fn visit_mut_prop_or_spread(&mut self, prop: &mut PropOrSpread) {
+        match prop {
+            PropOrSpread::Prop(boxed_prop) => {
+                match &mut **boxed_prop {
+                    Prop::Method(method_prop) => {
+                        // Handle object methods
+                        let has_step = self.has_use_step_directive(&method_prop.function.body);
+                        let has_workflow = self.has_use_workflow_directive(&method_prop.function.body);
+                        
+                        if has_step && !method_prop.function.is_async {
+                            emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                span: method_prop.function.span,
+                                directive: "use step",
+                            });
+                        } else if has_workflow && !method_prop.function.is_async {
+                            emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                span: method_prop.function.span,
+                                directive: "use workflow",
+                            });
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            _ => {}
+        }
+        
+        prop.visit_mut_children_with(self);
+    }
+
+    // Handle class methods
+    fn visit_mut_class_method(&mut self, method: &mut ClassMethod) {
+        if !method.is_static {
+            // Instance methods can't be step/workflow functions
+            let has_step = self.has_use_step_directive(&method.function.body);
+            let has_workflow = self.has_use_workflow_directive(&method.function.body);
+            
+            if has_step {
+                HANDLER.with(|handler| {
+                    handler
+                        .struct_span_err(
+                            method.span,
+                            "Instance methods cannot be marked with \"use step\". Only static methods, functions, and object methods are supported.",
+                        )
+                        .emit()
+                });
+            } else if has_workflow {
+                HANDLER.with(|handler| {
+                    handler
+                        .struct_span_err(
+                            method.span,
+                            "Instance methods cannot be marked with \"use workflow\". Only static methods, functions, and object methods are supported.",
+                        )
+                        .emit()
+                });
+            }
+        } else {
+            // Static methods can be step/workflow functions
+            method.visit_mut_children_with(self);
+        }
+    }
+
+    // Handle assignment expressions
+    fn visit_mut_assign_expr(&mut self, assign: &mut AssignExpr) {
+        // Track function names from assignments like `foo = async () => {}`
+        assign.visit_mut_children_with(self);
+    }
+
+    // Override visit_mut_expr to track closure variables
+    fn visit_mut_expr(&mut self, expr: &mut Expr) {
+        if !self.in_module_level && self.should_track_names {
+            if let Ok(name) = Name::try_from(&*expr) {
+                if self.in_callee {
+                    // This is a callee, we need to track the actual value
+                    // For now, just track the name
+                }
+                self.names.push(name);
+            }
+        }
+        
+        expr.visit_mut_children_with(self);
     }
 
     noop_visit_mut_type!();

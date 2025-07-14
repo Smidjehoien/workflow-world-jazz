@@ -1,0 +1,9 @@
+  x Functions marked with "use step" must be async functions
+    ,-[input.js:15:1]
+ 14 |     const obj = {
+ 15 | ,->   syncMethod() {
+ 16 | |       'use step';
+ 17 | |       return true;
+ 18 | `->   },
+ 19 |     };
+    `----

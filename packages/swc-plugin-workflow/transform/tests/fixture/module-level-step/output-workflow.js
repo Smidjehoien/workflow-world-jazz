@@ -5,5 +5,7 @@ async function local(input) {
 const localArrow = async (input)=>{
     return input.bar;
 };
-export const step = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("step");
-export const stepArrow = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("stepArrow");
+export async function step(input) {
+    return globalThis[Symbol.for("WORKFLOW_USE_STEP")]("step")(input);
+}
+export const stepArrow = async (input)=>globalThis[Symbol.for("WORKFLOW_USE_STEP")]("stepArrow")(input);

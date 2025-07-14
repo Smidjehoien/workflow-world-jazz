@@ -32,7 +32,7 @@ Upstream, a bundler will use this plugin in step mode to create a server bundle 
 
 ## Workflow Mode
 
-When executed in workflow mode, step definitions are replaced with a `useStep` call, which is a function accessible at the global scope via the `Symbol.for("WORKFLOW_USE_STEP")` symbol. `useStep` encapsulates logic to either make a network request to enqueue the step (which is served from the step bundle created in step mode), or resolves the value from the local event log.
+When executed in workflow mode, step definition bodies are replaced with a `useStep` call, which is a function accessible at the global scope via the `Symbol.for("WORKFLOW_USE_STEP")` symbol. `useStep` encapsulates logic to either make a network request to enqueue the step (which is served from the step bundle created in step mode), or resolves the value from the local event log.
 
 
 Input code
@@ -45,7 +45,9 @@ export async function add(a, b) {
 
 Output code
 ```
-export const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+export async function add(a, b) {
+  return globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add")(a, b);
+}
 ```
 
 Workflow definitions are left untouched in workflow mode, aside from the directive itself being removed.

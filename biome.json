@@ -18,7 +18,8 @@
       "!**/.next/**",
       "!**/.env/**",
       "!target/**",
-      "!**/tests/fixture/**"
+      "!**/tests/fixture/**",
+      "!**/tests/errors/**"
     ],
     "ignoreUnknown": true
   },
