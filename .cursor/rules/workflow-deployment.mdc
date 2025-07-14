@@ -29,7 +29,12 @@ When testing and deploying changes in workflow, follow these steps to see them w
    curl -X POST https://w-abcdefg1234-uncurated-tests.vercel.app/api/trigger\?args\=42
    ```
    *(Replace the URL with the actual preview URL from your deployment)*
-   *(If a different workflow/argument needs to be tested, adjust the URL accordingly. The source code for the trigger endpoint can be found in apps/example/api_/)*
+   *(If a different workflow/argument needs to be tested, adjust the URL accordingly. The source code for the trigger endpoint can be found in apps/example/api_/ but only read it if you need to)*
+
+   Here's an example of testing the AI workflow
+   ```bash
+   curl -X POST https://w-abcdefg1234-uncurated-tests.vercel.app/api/trigger\?workflow=ai&args\=what+is+love?
+   ```
 
 5. **Inspect the results**
    Open the "Inspect" URL in a browser (logged from the previous CLI command)

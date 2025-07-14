@@ -69,6 +69,11 @@ export async function runWorkflow(
   // TODO: handle unserializable inputs to fetch
   context.fetch = useStep('__builtin_fetch');
 
+  // HACK: propagate symbol needed for AI gateway usage
+  const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
+  // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+  context[SYMBOL_FOR_REQ_CONTEXT] = (globalThis as any)[SYMBOL_FOR_REQ_CONTEXT];
+
   // Get a reference to the user-defined workflow function
   const workflowFn = runInContext(
     `${workflowCode};${workflowRun.workflow_name}`,
