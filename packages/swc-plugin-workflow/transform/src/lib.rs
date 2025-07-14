@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use swc_core::{
-    common::{DUMMY_SP, SyntaxContext, errors::HANDLER, Mark},
+    common::{DUMMY_SP, SyntaxContext, errors::HANDLER},
     ecma::{
         ast::*,
         visit::{VisitMut, VisitMutWith, noop_visit_mut_type},
@@ -222,6 +222,104 @@ impl StepTransform {
             in_callee: false,
             in_step_function: false,
             in_workflow_function: false,
+        }
+    }
+
+    // Helper function to convert parameter patterns to expressions
+    fn pat_to_expr(&self, pat: &Pat) -> Expr {
+        match pat {
+            Pat::Ident(ident) => Expr::Ident(Ident::new(
+                ident.id.sym.clone(),
+                DUMMY_SP,
+                SyntaxContext::empty(),
+            )),
+            Pat::Object(obj_pat) => {
+                // Reconstruct object from destructured bindings
+                let props = obj_pat.props.iter().filter_map(|prop| {
+                    match prop {
+                        ObjectPatProp::KeyValue(kv) => {
+                            let key = match &kv.key {
+                                PropName::Ident(ident) => PropName::Ident(IdentName::new(
+                                    ident.sym.clone(),
+                                    DUMMY_SP,
+                                )),
+                                PropName::Str(s) => PropName::Str(Str {
+                                    span: DUMMY_SP,
+                                    value: s.value.clone(),
+                                    raw: None,
+                                }),
+                                PropName::Num(n) => PropName::Num(Number {
+                                    span: DUMMY_SP,
+                                    value: n.value,
+                                    raw: None,
+                                }),
+                                PropName::BigInt(bi) => PropName::BigInt(BigInt {
+                                    span: DUMMY_SP,
+                                    value: bi.value.clone(),
+                                    raw: None,
+                                }),
+                                PropName::Computed(_computed) => {
+                                    // For computed properties, we need to handle differently
+                                    // For now, skip them
+                                    return None;
+                                }
+                            };
+                            
+                            Some(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                                key,
+                                value: Box::new(self.pat_to_expr(&kv.value)),
+                            }))))
+                        }
+                        ObjectPatProp::Assign(assign) => {
+                            // Shorthand property like {a} in {a, b}
+                            Some(PropOrSpread::Prop(Box::new(Prop::Shorthand(Ident::new(
+                                assign.key.sym.clone(),
+                                DUMMY_SP,
+                                SyntaxContext::empty(),
+                            )))))
+                        }
+                        ObjectPatProp::Rest(rest) => {
+                            // Handle rest pattern like {...rest}
+                            Some(PropOrSpread::Spread(SpreadElement {
+                                dot3_token: DUMMY_SP,
+                                expr: Box::new(self.pat_to_expr(&rest.arg)),
+                            }))
+                        }
+                    }
+                }).collect();
+                
+                Expr::Object(ObjectLit {
+                    span: DUMMY_SP,
+                    props,
+                })
+            }
+            Pat::Array(array_pat) => {
+                // Reconstruct array from destructured bindings
+                let elems = array_pat.elems.iter().map(|elem| {
+                    elem.as_ref().map(|pat| ExprOrSpread {
+                        spread: None,
+                        expr: Box::new(self.pat_to_expr(pat)),
+                    })
+                }).collect();
+                
+                Expr::Array(ArrayLit {
+                    span: DUMMY_SP,
+                    elems,
+                })
+            }
+            Pat::Rest(rest_pat) => {
+                // For rest patterns in function parameters, just use the identifier
+                self.pat_to_expr(&rest_pat.arg)
+            }
+            Pat::Assign(assign_pat) => {
+                // For default parameters, use the left side identifier
+                self.pat_to_expr(&assign_pat.left)
+            }
+            _ => {
+                // For other patterns, fall back to null
+                // This includes: Pat::Invalid, Pat::Expr
+                Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))
+            }
         }
     }
 
@@ -545,18 +643,10 @@ impl StepTransform {
         let args_array = Expr::Array(ArrayLit {
             span: DUMMY_SP,
             elems: params.iter().map(|param| {
-                if let Pat::Ident(ident) = param {
-                    Some(ExprOrSpread {
-                        spread: None,
-                        expr: Box::new(Expr::Ident(Ident::new(
-                            ident.id.sym.clone(),
-                            DUMMY_SP,
-                            SyntaxContext::empty(),
-                        ))),
-                    })
-                } else {
-                    None
-                }
+                Some(ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(self.pat_to_expr(param)),
+                })
             }).collect(),
         });
 
@@ -600,18 +690,10 @@ impl StepTransform {
         let args_array = Expr::Array(ArrayLit {
             span: DUMMY_SP,
             elems: params.iter().map(|param| {
-                if let Pat::Ident(ident) = param {
-                    Some(ExprOrSpread {
-                        spread: None,
-                        expr: Box::new(Expr::Ident(Ident::new(
-                            ident.id.sym.clone(),
-                            DUMMY_SP,
-                            SyntaxContext::empty(),
-                        ))),
-                    })
-                } else {
-                    None
-                }
+                Some(ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(self.pat_to_expr(param)),
+                })
             }).collect(),
         });
 
@@ -791,18 +873,10 @@ impl StepTransform {
         let args_array = Expr::Array(ArrayLit {
             span: DUMMY_SP,
             elems: params.iter().map(|param| {
-                if let Pat::Ident(ident) = &param.pat {
-                    Some(ExprOrSpread {
-                        spread: None,
-                        expr: Box::new(Expr::Ident(Ident::new(
-                            ident.id.sym.clone(),
-                            DUMMY_SP,
-                            SyntaxContext::empty(),
-                        ))),
-                    })
-                } else {
-                    None
-                }
+                Some(ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(self.pat_to_expr(&param.pat)),
+                })
             }).collect(),
         });
 
@@ -846,18 +920,10 @@ impl StepTransform {
         let args_array = Expr::Array(ArrayLit {
             span: DUMMY_SP,
             elems: params.iter().map(|param| {
-                if let Pat::Ident(ident) = &param.pat {
-                    Some(ExprOrSpread {
-                        spread: None,
-                        expr: Box::new(Expr::Ident(Ident::new(
-                            ident.id.sym.clone(),
-                            DUMMY_SP,
-                            SyntaxContext::empty(),
-                        ))),
-                    })
-                } else {
-                    None
-                }
+                Some(ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(self.pat_to_expr(&param.pat)),
+                })
             }).collect(),
         });
 
@@ -1384,21 +1450,9 @@ impl VisitMut for StepTransform {
                                     // Add function arguments to the proxy call
                                     if let Expr::Call(call) = &mut proxy_call {
                                         call.args = fn_decl.function.params.iter().map(|param| {
-                                            if let Pat::Ident(ident) = &param.pat {
-                                                ExprOrSpread {
-                                                    spread: None,
-                                                    expr: Box::new(Expr::Ident(Ident::new(
-                                                        ident.id.sym.clone(),
-                                                        DUMMY_SP,
-                                                        SyntaxContext::empty(),
-                                                    ))),
-                                                }
-                                            } else {
-                                                // Handle other parameter patterns if needed
-                                                ExprOrSpread {
-                                                    spread: None,
-                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                }
+                                            ExprOrSpread {
+                                                spread: None,
+                                                expr: Box::new(self.pat_to_expr(&param.pat)),
                                             }
                                         }).collect();
                                     }
@@ -1485,21 +1539,9 @@ impl VisitMut for StepTransform {
                                     // Add function arguments to the proxy call
                                     if let Expr::Call(call) = &mut proxy_call {
                                         call.args = fn_decl.function.params.iter().map(|param| {
-                                            if let Pat::Ident(ident) = &param.pat {
-                                                ExprOrSpread {
-                                                    spread: None,
-                                                    expr: Box::new(Expr::Ident(Ident::new(
-                                                        ident.id.sym.clone(),
-                                                        DUMMY_SP,
-                                                        SyntaxContext::empty(),
-                                                    ))),
-                                                }
-                                            } else {
-                                                // Handle other parameter patterns if needed
-                                                ExprOrSpread {
-                                                    spread: None,
-                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                }
+                                            ExprOrSpread {
+                                                spread: None,
+                                                expr: Box::new(self.pat_to_expr(&param.pat)),
                                             }
                                         }).collect();
                                     }
@@ -1584,21 +1626,9 @@ impl VisitMut for StepTransform {
                                                         // Add function arguments to the proxy call
                                                         if let Expr::Call(call) = &mut proxy_call {
                                                             call.args = fn_expr.function.params.iter().map(|param| {
-                                                                if let Pat::Ident(ident) = &param.pat {
-                                                                    ExprOrSpread {
-                                                                        spread: None,
-                                                                        expr: Box::new(Expr::Ident(Ident::new(
-                                                                            ident.id.sym.clone(),
-                                                                            DUMMY_SP,
-                                                                            SyntaxContext::empty(),
-                                                                        ))),
-                                                                    }
-                                                                } else {
-                                                                    // Handle other parameter patterns if needed
-                                                                    ExprOrSpread {
-                                                                        spread: None,
-                                                                        expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                                    }
+                                                                ExprOrSpread {
+                                                                    spread: None,
+                                                                    expr: Box::new(self.pat_to_expr(&param.pat)),
                                                                 }
                                                             }).collect();
                                                         }
@@ -1670,21 +1700,9 @@ impl VisitMut for StepTransform {
                                                     // Add function arguments to the proxy call
                                                     if let Expr::Call(call) = &mut proxy_call {
                                                         call.args = arrow_expr.params.iter().map(|param| {
-                                                            if let Pat::Ident(ident) = param {
-                                                                ExprOrSpread {
-                                                                    spread: None,
-                                                                    expr: Box::new(Expr::Ident(Ident::new(
-                                                                        ident.id.sym.clone(),
-                                                                        DUMMY_SP,
-                                                                        SyntaxContext::empty(),
-                                                                    ))),
-                                                                }
-                                                            } else {
-                                                                // Handle other parameter patterns if needed
-                                                                ExprOrSpread {
-                                                                    spread: None,
-                                                                    expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                                }
+                                                            ExprOrSpread {
+                                                                spread: None,
+                                                                expr: Box::new(self.pat_to_expr(param)),
                                                             }
                                                         }).collect();
                                                     }
@@ -1766,21 +1784,9 @@ impl VisitMut for StepTransform {
                                                 // Add function arguments to the proxy call
                                                 if let Expr::Call(call) = &mut proxy_call {
                                                     call.args = fn_expr.function.params.iter().map(|param| {
-                                                        if let Pat::Ident(ident) = &param.pat {
-                                                            ExprOrSpread {
-                                                                spread: None,
-                                                                expr: Box::new(Expr::Ident(Ident::new(
-                                                                    ident.id.sym.clone(),
-                                                                    DUMMY_SP,
-                                                                    SyntaxContext::empty(),
-                                                                ))),
-                                                            }
-                                                        } else {
-                                                            // Handle other parameter patterns if needed
-                                                            ExprOrSpread {
-                                                                spread: None,
-                                                                expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                            }
+                                                        ExprOrSpread {
+                                                            spread: None,
+                                                            expr: Box::new(self.pat_to_expr(&param.pat)),
                                                         }
                                                     }).collect();
                                                 }
@@ -1852,21 +1858,9 @@ impl VisitMut for StepTransform {
                                             // Add function arguments to the proxy call
                                             if let Expr::Call(call) = &mut proxy_call {
                                                 call.args = arrow_expr.params.iter().map(|param| {
-                                                    if let Pat::Ident(ident) = param {
-                                                        ExprOrSpread {
-                                                            spread: None,
-                                                            expr: Box::new(Expr::Ident(Ident::new(
-                                                                ident.id.sym.clone(),
-                                                                DUMMY_SP,
-                                                                SyntaxContext::empty(),
-                                                            ))),
-                                                        }
-                                                    } else {
-                                                        // Handle other parameter patterns if needed
-                                                        ExprOrSpread {
-                                                            spread: None,
-                                                            expr: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
-                                                        }
+                                                    ExprOrSpread {
+                                                        spread: None,
+                                                        expr: Box::new(self.pat_to_expr(param)),
                                                     }
                                                 }).collect();
                                             }

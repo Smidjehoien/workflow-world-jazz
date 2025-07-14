@@ -16,10 +16,9 @@
     "esbuild": "^0.25.5"
   },
   "dependencies": {
-    "@ai-sdk/openai": "beta",
     "@vercel/functions": "^2.2.2",
     "@vercel/workflow-core": "workspace:*",
-    "ai": "beta",
+    "ai": "file:../../third-party/ai-5.0.0-beta.18.tgz",
     "mixpart": "^0.0.4",
     "zod": "3"
   }
