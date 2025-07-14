@@ -1,0 +1,28 @@
+{
+  "functions": {
+    "app/api/generated/steps/route.js": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v1beta",
+          "topic": "step-*",
+          "consumer": "default",
+          "maxDeliveries": 64,
+          "retryAfterSeconds": 5,
+          "initialDelaySeconds": 0
+        }
+      ]
+    },
+    "app/api/generated/workflows/route.js": {
+      "experimentalTriggers": [
+        {
+          "type": "queue/v1beta",
+          "topic": "workflow-*",
+          "consumer": "default",
+          "maxDeliveries": 64,
+          "retryAfterSeconds": 5,
+          "initialDelaySeconds": 0
+        }
+      ]
+    }
+  }
+}
