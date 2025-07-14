@@ -1,4 +1,4 @@
-import { example } from '@/lib/workflows';
+import { example } from '@/workflows/workflows';
 
 export async function POST(req: Request) {
   const result = await example(1); // start()

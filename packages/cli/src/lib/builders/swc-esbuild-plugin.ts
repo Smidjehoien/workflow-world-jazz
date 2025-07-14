@@ -1,6 +1,9 @@
 import { readFile } from 'node:fs/promises';
 import { transformSync } from '@swc/core';
 import type { Plugin } from 'esbuild';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 export interface SwcPluginOptions {
   mode: 'step' | 'workflow' | 'client';
@@ -31,7 +34,12 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
               },
               target: 'es2022',
               experimental: {
-                plugins: [['swc-plugin-workflow', { mode: options.mode }]],
+                plugins: [
+                  [
+                    require.resolve('swc-plugin-workflow'),
+                    { mode: options.mode },
+                  ],
+                ],
               },
             },
             minify: false,

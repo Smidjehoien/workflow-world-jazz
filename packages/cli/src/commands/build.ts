@@ -1,5 +1,3 @@
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
 import { VercelBuildOutputAPIBuilder } from '../lib/builders/vercel-build-output-api.js';
@@ -9,8 +7,6 @@ import {
   isValidBuildTarget,
   type WorkflowConfig,
 } from '../lib/config/types.js';
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default class Build extends BaseCommand {
   static description = 'Build workflow bundles for deployment';

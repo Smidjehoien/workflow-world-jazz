@@ -1,6 +1,7 @@
 export const validBuildTargets = [
   'vercel-static',
   'vercel-build-output-api',
+  'next',
 ] as const;
 export type BuildTarget = (typeof validBuildTargets)[number];
 

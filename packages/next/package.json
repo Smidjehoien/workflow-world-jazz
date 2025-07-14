@@ -1,0 +1,33 @@
+{
+  "name": "@vercel/workflow-next",
+  "version": "0.0.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./dist/index.js",
+    "./loader": "./dist/loader.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@swc/core": "1.11.24",
+    "@vercel/workflow-cli": "workspace:*",
+    "@vercel/workflow-core": "workspace:*",
+    "swc-plugin-workflow": "workspace:*"
+  },
+  "devDependencies": {
+    "next": "15.3.4",
+    "@vercel/workflow-tsconfig": "workspace:*"
+  },
+  "peerDependencies": {
+    "next": "*"
+  }
+}

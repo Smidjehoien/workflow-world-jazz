@@ -21,7 +21,6 @@
     "@vercel/workflow-core": "workspace:*",
     "ai": "beta",
     "mixpart": "^0.0.4",
-    "swc-plugin-workflow": "workspace:*",
     "zod": "3"
   }
 }

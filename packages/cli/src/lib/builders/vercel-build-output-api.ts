@@ -1,6 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import * as esbuild from 'esbuild';
 import { BaseBuilder } from './base-builder.js';
 
 export class VercelBuildOutputAPIBuilder extends BaseBuilder {
