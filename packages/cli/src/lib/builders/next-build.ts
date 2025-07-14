@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { BaseBuilder } from './base-builder.js';
 
@@ -12,6 +12,8 @@ export class NextBuilder extends BaseBuilder {
 
     // Ensure output directories exist
     await mkdir(apiGeneratedDir, { recursive: true });
+    // ignore the generated assets
+    await writeFile(join(apiGeneratedDir, '.gitignore'), '*');
 
     // TODO: discover 'use workflow' and 'use step' files as inputs
     // instead of relying on workflows folder (will need to support watching)
