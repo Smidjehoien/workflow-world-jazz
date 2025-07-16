@@ -101,6 +101,7 @@ export async function runWorkflow(
   // Additional Web APIs that can be used in the workflow function which don't need any special handling
   context.Headers = globalThis.Headers;
   context.structuredClone = globalThis.structuredClone;
+  context.console = globalThis.console;
 
   // HACK: propagate symbol needed for AI gateway usage
   const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
