@@ -38,3 +38,10 @@ export function getErrorName(v: unknown): string {
   }
   return 'Error';
 }
+
+export function getErrorStack(v: unknown): string {
+  if (types.isNativeError(v)) {
+    return v.stack ?? '';
+  }
+  return '';
+}

@@ -42,6 +42,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       launcherType: 'Nodejs',
       architecture: 'arm64',
       shouldAddHelpers: true,
+      shouldAddSourcemapSupport: true,
       experimentalTriggers: [
         {
           type: 'queue/v1beta',

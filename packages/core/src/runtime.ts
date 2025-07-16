@@ -18,7 +18,7 @@ import {
   type WorkflowInvokePayload,
   WorkflowInvokePayloadSchema,
 } from './schemas.js';
-import { getErrorName, isInstanceOf } from './types.js';
+import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';
@@ -238,9 +238,9 @@ async function stepMessageHandler(
       status: 'completed',
       output: result as Serializable,
     });
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(
-      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}): ${String(err)}`
+      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}): ${String(err)}\n${getErrorStack(err)}`
     );
     if (isInstanceOf(err, FatalError)) {
       // Fatal error - store the error in the event log and re-invoke the workflow
