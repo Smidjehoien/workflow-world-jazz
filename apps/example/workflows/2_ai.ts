@@ -1,7 +1,7 @@
 import { generateText } from 'ai';
 
 // TODO: fix the deadcode/treeshaking elimination issue then remove this
-export async function dummy_step(prompt: string) {
+export async function dummy_step() {
   'use step';
   // to prevent dead code elimination (otherwise generateText doesn't get
   // registered) in the steps bundle
