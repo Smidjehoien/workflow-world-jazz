@@ -27,3 +27,8 @@ export async function multiple({a, b},{c, d}) {
   'use step';
   return {a, b, c, d};
 }
+
+export async function rest_top_level(a, b, ...rest) {
+  'use step';
+  return {a, b, rest};
+}

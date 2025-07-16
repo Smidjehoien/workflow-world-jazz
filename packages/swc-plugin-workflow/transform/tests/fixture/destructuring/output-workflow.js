@@ -40,3 +40,10 @@ export async function multiple({ a, b }, { c, d }) {
         d
     });
 }
+export async function rest_top_level(a, b, ...rest) {
+    return globalThis[Symbol.for("WORKFLOW_USE_STEP")]("rest_top_level")(
+        a,
+        b,
+        ...rest
+    );
+}

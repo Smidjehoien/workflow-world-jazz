@@ -26,9 +26,17 @@ export async function multiple({ a, b }, { c, d }) {
         d
     };
 }
+export async function rest_top_level(a, b, ...rest) {
+    return {
+        a,
+        b,
+        rest
+    };
+}
 registerStepFunction(destructure);
 registerStepFunction(process_array);
 registerStepFunction(nested_destructure);
 registerStepFunction(with_defaults);
 registerStepFunction(with_rest);
 registerStepFunction(multiple);
+registerStepFunction(rest_top_level);

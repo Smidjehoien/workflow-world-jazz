@@ -66,3 +66,12 @@ export async function multiple({ a, b }, { c, d }) {
         ]
     });
 }
+export async function rest_top_level(a, b, ...rest) {
+    return __private_run_step("rest_top_level", {
+        arguments: [
+            a,
+            b,
+            ...rest
+        ]
+    });
+}
