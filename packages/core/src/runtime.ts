@@ -4,7 +4,7 @@ import {
   createStep,
   createWorkflowRun,
   createWorkflowRunEvent,
-  //DEFAULT_CONFIG,
+  DEFAULT_CONFIG,
   getStep,
   getWorkflowRun,
   getWorkflowRunEvents,
@@ -321,8 +321,7 @@ export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
   },
 });
 
-const writableStreamBaseUrl =
-  'https://workflow-server-git-stream-cont.labs.vercel.dev';
+const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
 class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
@@ -332,7 +331,7 @@ class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
           'Writing chunk to stream:',
           JSON.stringify(new TextDecoder().decode(chunk))
         );
-        await fetch(`${writableStreamBaseUrl}/api/stream/${name}`, {
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
           method: 'PUT',
           body: chunk,
           duplex: 'half',
@@ -340,7 +339,7 @@ class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
       },
       close: async () => {
         console.log('Closing stream:', name);
-        await fetch(`${writableStreamBaseUrl}/api/stream/${name}`, {
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
           method: 'PUT',
           headers: {
             'X-Stream-Done': 'true',
@@ -389,7 +388,7 @@ async function deserialize(result: unknown): Promise<unknown> {
   if (result && typeof result === 'object' && '__type' in result) {
     if (result.__type === 'ReadableStream') {
       const name = (result as any).name;
-      const res = await fetch(`${writableStreamBaseUrl}/api/stream/${name}`);
+      const res = await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`);
       if (!res.ok) {
         throw new Error(`Failed to fetch stream: ${res.statusText}`);
       }
