@@ -67,6 +67,7 @@ export abstract class BaseBuilder {
       minify: false,
       external: ['@aws-sdk/credential-provider-web-identity'],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
+      sourcemap: 'linked',
       plugins: [createSwcPlugin({ mode: 'step' })],
     });
   }
