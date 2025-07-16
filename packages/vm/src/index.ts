@@ -91,6 +91,7 @@ export function createContext(options: CreateContextOptions) {
   g.ReadableStream = globalThis.ReadableStream;
   g.WritableStream = globalThis.WritableStream;
   g.TransformStream = globalThis.TransformStream;
+  g.console = globalThis.console;
   g.URL = globalThis.URL;
 
   // HACK: Shim `exports` for the bundle
