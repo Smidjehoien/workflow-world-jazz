@@ -4,7 +4,7 @@ import {
   createStep,
   createWorkflowRun,
   createWorkflowRunEvent,
-  DEFAULT_CONFIG,
+  //DEFAULT_CONFIG,
   getStep,
   getWorkflowRun,
   getWorkflowRunEvents,
@@ -321,20 +321,41 @@ export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
   },
 });
 
+const writableStreamBaseUrl =
+  'https://workflow-server-git-stream-cont.labs.vercel.dev';
+
+class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
+  constructor(name: string) {
+    super({
+      write: async (chunk) => {
+        console.log(
+          'Writing chunk to stream:',
+          JSON.stringify(new TextDecoder().decode(chunk))
+        );
+        await fetch(`${writableStreamBaseUrl}/api/stream/${name}`, {
+          method: 'PUT',
+          body: chunk,
+          duplex: 'half',
+        });
+      },
+      close: async () => {
+        console.log('Closing stream:', name);
+        await fetch(`${writableStreamBaseUrl}/api/stream/${name}`, {
+          method: 'PUT',
+          headers: {
+            'X-Stream-Done': 'true',
+          },
+        });
+      },
+    });
+  }
+}
+
 function serialize(result: unknown, ops: Promise<void>[]): unknown {
   if (result instanceof ReadableStream) {
     const name = crypto.randomUUID();
-    ops.push(
-      fetch(`${DEFAULT_CONFIG.baseUrl}/api/stream/${name}`, {
-        method: 'PUT',
-        body: result,
-        duplex: 'half',
-      }).then((res) => {
-        if (!res.ok) {
-          throw new Error(`Failed to serialize stream: ${res.statusText}`);
-        }
-      })
-    );
+    const stream = new WorkflowServerWritableStream(name);
+    ops.push(result.pipeTo(stream));
     return { __type: 'ReadableStream', name };
   }
 
@@ -368,7 +389,7 @@ async function deserialize(result: unknown): Promise<unknown> {
   if (result && typeof result === 'object' && '__type' in result) {
     if (result.__type === 'ReadableStream') {
       const name = (result as any).name;
-      const res = await fetch(`${DEFAULT_CONFIG.baseUrl}/api/stream/${name}`);
+      const res = await fetch(`${writableStreamBaseUrl}/api/stream/${name}`);
       if (!res.ok) {
         throw new Error(`Failed to fetch stream: ${res.statusText}`);
       }

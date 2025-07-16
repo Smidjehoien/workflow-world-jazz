@@ -1,4 +1,4 @@
-import { add, sleep } from './steps';
+import { add, consumeStreams, genStream, sleep } from './steps';
 
 export async function example(i: number) {
   'use workflow';
@@ -10,7 +10,10 @@ export async function example(i: number) {
 
 export async function stream() {
   'use workflow';
-  const res = await fetch('https://jsonip.com');
-  const json = await res.json();
-  return json;
+  //const res = await fetch('https://jsonip.com');
+  //const json = await res.json();
+  //return json;
+  const s = await genStream();
+  const b = await consumeStreams(s);
+  return b;
 }
