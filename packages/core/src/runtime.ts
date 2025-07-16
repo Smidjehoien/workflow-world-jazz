@@ -1,8 +1,10 @@
+import { waitUntil } from '@vercel/functions';
 import { handleCallback, type MessageMetadata, send } from '@vercel/queue';
 import {
   createStep,
   createWorkflowRun,
   createWorkflowRunEvent,
+  DEFAULT_CONFIG,
   getStep,
   getWorkflowRun,
   getWorkflowRunEvents,
@@ -221,8 +223,17 @@ async function stepMessageHandler(
       return;
     }
 
-    result = await stepFn(...step.input);
+    // Hydrate the step input arguments
+    const args = (await deserialize(step.input)) as Serializable[];
+
+    result = await stepFn(...args);
     console.log('Step result:', result);
+
+    // Pass over the result value to prepare for asyncronous serialization
+    // of TypedArray / ReadableStream values.
+    const ops: Promise<void>[] = [];
+    result = serialize(result, ops);
+    waitUntil(Promise.all(ops));
 
     // Update the event log with the step result
     await createWorkflowRunEvent(workflowRunId, {
@@ -309,3 +320,84 @@ export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
     default: stepMessageHandler,
   },
 });
+
+function serialize(result: unknown, ops: Promise<void>[]): unknown {
+  if (result instanceof ReadableStream) {
+    const name = crypto.randomUUID();
+    ops.push(
+      fetch(`${DEFAULT_CONFIG.baseUrl}/api/stream/${name}`, {
+        method: 'PUT',
+        body: result,
+        duplex: 'half',
+      }).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to serialize stream: ${res.statusText}`);
+        }
+      })
+    );
+    return { __type: 'ReadableStream', name };
+  }
+
+  if (result instanceof Response) {
+    return {
+      __type: 'Response',
+      status: result.status,
+      statusText: result.statusText,
+      headers: Object.fromEntries(result.headers.entries()),
+      body: serialize(result.body, ops),
+    };
+  }
+
+  if (result && typeof result === 'object') {
+    const entries = Object.entries(result);
+    const hydrated: Record<string, unknown> = {};
+    for (const [key, value] of entries) {
+      hydrated[key] = serialize(value, ops);
+    }
+    return hydrated;
+  }
+
+  if (Array.isArray(result)) {
+    return result.map((value) => serialize(value, ops));
+  }
+
+  return result;
+}
+
+async function deserialize(result: unknown): Promise<unknown> {
+  if (result && typeof result === 'object' && '__type' in result) {
+    if (result.__type === 'ReadableStream') {
+      const name = (result as any).name;
+      const res = await fetch(`${DEFAULT_CONFIG.baseUrl}/api/stream/${name}`);
+      if (!res.ok) {
+        throw new Error(`Failed to fetch stream: ${res.statusText}`);
+      }
+      return res.body;
+    }
+
+    if (result.__type === 'Response') {
+      const body = (await deserialize((result as any).body)) as ReadableStream;
+      return new Response(body, {
+        status: (result as any).status,
+        statusText: (result as any).statusText,
+        headers: new Headers((result as any).headers),
+      });
+    }
+  }
+
+  if (Array.isArray(result)) {
+    return Promise.all(result.map(deserialize));
+  }
+
+  if (result && typeof result === 'object') {
+    // Recursively deserialize each property of the object
+    const entries = Object.entries(result as Record<string, unknown>);
+    const deserialized: Record<string, unknown> = {};
+    for (const [key, value] of entries) {
+      deserialized[key] = await deserialize(value);
+    }
+    return deserialized;
+  }
+
+  return result;
+}

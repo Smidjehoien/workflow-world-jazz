@@ -22,3 +22,42 @@ export async function sleep(ms: number, message: string): Promise<string> {
   await new Promise((resolve) => setTimeout(resolve, ms));
   return message;
 }
+
+export async function genStream(): Promise<ReadableStream<Uint8Array>> {
+  'use step';
+  const stream = new ReadableStream<Uint8Array>({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      for (let i = 0; i < 30; i++) {
+        const chunk = encoder.encode(`${i}\n`);
+        controller.enqueue(chunk);
+        console.log(`Enqueued number: ${i}`);
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
+      controller.close();
+    },
+  });
+  return stream;
+}
+
+export async function consumeStream(
+  s1: ReadableStream<Uint8Array>,
+  s2: ReadableStream<Uint8Array>
+): Promise<string> {
+  'use step';
+  const parts: Uint8Array[] = [];
+  await Promise.all(
+    [s1, s2].map(async (s) => {
+      const reader = s.getReader();
+      while (true) {
+        const result = await reader.read();
+        if (result.done) break;
+        console.log(
+          `Received ${result.value.length} bytes: ${JSON.stringify(new TextDecoder().decode(result.value))}`
+        );
+        parts.push(result.value);
+      }
+    })
+  );
+  return Buffer.concat(parts).toString('utf8');
+}

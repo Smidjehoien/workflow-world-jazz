@@ -188,7 +188,7 @@ export interface APIConfig {
 /**
  * Default API configuration
  */
-const DEFAULT_CONFIG: APIConfig = {
+export const DEFAULT_CONFIG: APIConfig = {
   baseUrl:
     process.env.WORKFLOW_API_URL || 'https://workflow-server.labs.vercel.dev',
   headers: {
@@ -232,7 +232,6 @@ async function makeRequest<T>(
   }
 
   const text = await response.text();
-  // Use stringToDateReviver for parsing
   return JSON.parse(text, stringToDateReviver) as T;
 }
 

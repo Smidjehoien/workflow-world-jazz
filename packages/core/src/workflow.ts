@@ -66,8 +66,41 @@ export async function runWorkflow(
   context[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
 
   // Provide a hoisted fetch function
-  // TODO: handle unserializable inputs to fetch
-  context.fetch = useStep('__builtin_fetch');
+  const fetchStep = useStep<any[], Response>('__builtin_fetch');
+  context.fetch = async (...args: Parameters<typeof fetch>) => {
+    const res = await fetchStep(...args);
+    Object.setPrototypeOf(res, Response.prototype);
+    res.headers = new Headers(res.headers);
+    return res;
+  };
+
+  // `Response` is a special built-in class that invokes steps
+  // for the `json()` and `text()` instance methods
+  const resJson = useStep<[any], any>('__builtin_response_json');
+  const resText = useStep<[any], string>('__builtin_response_text');
+  class Response {
+    status!: number;
+    statusText!: string;
+    body!: ReadableStream<Uint8Array>;
+    headers!: Headers;
+
+    get ok() {
+      return this.status >= 200 && this.status < 300;
+    }
+
+    async json() {
+      return resJson(this);
+    }
+
+    async text() {
+      return resText(this);
+    }
+  }
+  context.Response = Response;
+
+  // Additional Web APIs that can be used in the workflow function which don't need any special handling
+  context.Headers = globalThis.Headers;
+  context.structuredClone = globalThis.structuredClone;
 
   // HACK: propagate symbol needed for AI gateway usage
   const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
