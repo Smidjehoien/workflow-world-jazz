@@ -8,12 +8,10 @@ export async function stepFunction(a, b) {
     });
 }
 export async function workflowFunction(a, b) {
-    return __private_workflow_start("workflowFunction", {
-        arguments: [
-            a,
-            b
-        ]
-    });
+    return __private_workflow_start("workflowFunction", [
+        a,
+        b
+    ]);
 }
 export async function normalFunction(a, b) {
     return a * b;

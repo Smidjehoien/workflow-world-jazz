@@ -22,6 +22,4 @@ export async function validStep() {
         arguments: []
     });
 }
-export const validWorkflow = async ()=>__private_workflow_start("validWorkflow", {
-        arguments: []
-    });
+export const validWorkflow = async ()=>__private_workflow_start("validWorkflow", []);

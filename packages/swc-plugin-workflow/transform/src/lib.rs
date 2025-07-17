@@ -772,13 +772,7 @@ impl StepTransform {
                 },
                 ExprOrSpread {
                     spread: None,
-                    expr: Box::new(Expr::Object(ObjectLit {
-                        span: DUMMY_SP,
-                        props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                            key: PropName::Ident(IdentName::new("arguments".into(), DUMMY_SP)),
-                            value: Box::new(args_array),
-                        })))],
-                    })),
+                    expr: Box::new(args_array),
                 },
             ],
             type_args: None,
@@ -954,13 +948,7 @@ impl StepTransform {
                 },
                 ExprOrSpread {
                     spread: None,
-                    expr: Box::new(Expr::Object(ObjectLit {
-                        span: DUMMY_SP,
-                        props: vec![PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                            key: PropName::Ident(IdentName::new("arguments".into(), DUMMY_SP)),
-                            value: Box::new(args_array),
-                        })))],
-                    })),
+                    expr: Box::new(args_array),
                 },
             ],
             type_args: None,
