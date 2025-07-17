@@ -270,7 +270,7 @@ async function stepMessageHandler(
     result = await stepFn(...args);
     console.log('Step result:', result);
 
-    result = dehydrateStepReturnValue(result, ops);
+    result = dehydrateStepReturnValue(result);
     console.log('Dehydrated step result:', result);
 
     waitUntil(Promise.all(ops));
