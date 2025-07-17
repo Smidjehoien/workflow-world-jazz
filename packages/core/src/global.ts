@@ -28,10 +28,12 @@ export interface InvocationQueueItem {
  */
 export class StepsNotRunError extends Error {
   steps: InvocationQueueItem[];
+  globalThis: typeof globalThis;
 
-  constructor(steps: InvocationQueueItem[]) {
+  constructor(steps: InvocationQueueItem[], global: typeof globalThis) {
     super(`${steps.length} steps have not been run yet`);
     this.name = 'StepsNotRunError';
     this.steps = steps;
+    this.globalThis = global;
   }
 }

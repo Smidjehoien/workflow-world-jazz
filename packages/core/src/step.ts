@@ -1,8 +1,10 @@
 import { EventConsumerResult, type EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
 import type { Serializable } from './schemas.js';
+import { hydrateStepReturnValue } from './serialization.js';
 
 export interface WorkflowContext {
+  globalThis: typeof globalThis;
   eventsConsumer: EventsConsumer;
   invocationsQueue: {
     stepName: string;
@@ -32,7 +34,9 @@ export function createUseStep(ctx: WorkflowContext) {
             // not resolve so that the user workflow code does not proceed any further.
             if (!gotStepStarted) {
               // Notify workflow handler that this step has not been run.
-              ctx.onWorkflowError(new StepsNotRunError(ctx.invocationsQueue));
+              ctx.onWorkflowError(
+                new StepsNotRunError(ctx.invocationsQueue, ctx.globalThis)
+              );
             }
             return EventConsumerResult.NotConsumed;
           }
@@ -68,7 +72,13 @@ export function createUseStep(ctx: WorkflowContext) {
             }
           } else if (event.event_type === 'step_result') {
             // Step has already completed
-            resolve(event.event_data.result);
+            console.log('Step result:', event.event_data.result);
+            const hydratedResult = hydrateStepReturnValue(
+              event.event_data.result,
+              ctx.globalThis
+            );
+            console.log('Hydrated step result:', hydratedResult);
+            resolve(hydratedResult);
             return EventConsumerResult.Finished;
           } else {
             // An unexpected event type has been received, but it does belong to this step (matching `invocationId`)

@@ -8,9 +8,7 @@ export async function POST(req: Request) {
     const num = parseFloat(arg);
     return Number.isNaN(num) ? arg.trim() : num;
   });
-  const run = await start(workflowId, {
-    arguments: args,
-  });
+  const run = await start(workflowId, args);
   console.log('Run:', run);
   return new Response(
     `Starting "${workflowId}" workflow with run ID "${run.id}"`

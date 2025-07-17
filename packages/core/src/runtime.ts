@@ -4,12 +4,13 @@ import {
   createStep,
   createWorkflowRun,
   createWorkflowRunEvent,
-  DEFAULT_CONFIG,
+  //DEFAULT_CONFIG,
   getStep,
   getWorkflowRun,
   getWorkflowRunEvents,
   updateStep,
   updateWorkflowRun,
+  type WorkflowRun,
 } from './backend.js';
 import { FatalError, StepsNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
@@ -20,13 +21,18 @@ import {
   type WorkflowInvokePayload,
   WorkflowInvokePayloadSchema,
 } from './schemas.js';
+import {
+  dehydrateStepArguments,
+  dehydrateStepReturnValue,
+  dehydrateWorkflowArguments,
+  hydrateStepArguments,
+} from './serialization.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';
 
 export interface StartOptions {
-  arguments?: Serializable[];
   deploymentId?: string;
 }
 
@@ -34,11 +40,33 @@ export interface StartOptions {
  * Starts a workflow run.
  *
  * @param workflowName - The name of the workflow to start.
- * @param options - The options for the workflow run.
+ * @param args - The arguments to pass to the workflow (optional).
+ * @param options - The options for the workflow run (optional).
  * @returns The unique run ID for the newly started workflow invocation.
  */
-export async function start(workflowName: string, options: StartOptions = {}) {
-  const deploymentId = options.deploymentId ?? process.env.VERCEL_DEPLOYMENT_ID;
+export function start(
+  workflowName: string,
+  args: Serializable[],
+  options?: StartOptions
+): Promise<WorkflowRun>;
+export function start(
+  workflowName: string,
+  options?: StartOptions
+): Promise<WorkflowRun>;
+export async function start(
+  workflowName: string,
+  argsOrOptions?: Serializable[] | StartOptions,
+  options?: StartOptions
+) {
+  let args: Serializable[] = [];
+  let opts: StartOptions = options ?? {};
+  if (Array.isArray(argsOrOptions)) {
+    args = argsOrOptions;
+  } else if (typeof argsOrOptions === 'object') {
+    opts = argsOrOptions;
+  }
+
+  const deploymentId = opts.deploymentId ?? process.env.VERCEL_DEPLOYMENT_ID;
   if (!deploymentId) {
     throw new Error(
       'A `deploymentId` must be provided to start a workflow run'
@@ -48,7 +76,7 @@ export async function start(workflowName: string, options: StartOptions = {}) {
   const run = await createWorkflowRun({
     deployment_id: deploymentId,
     workflow_name: workflowName,
-    arguments: options.arguments ?? [],
+    arguments: dehydrateWorkflowArguments(args),
   });
 
   // XXX: The `send()` function requires the `VERCEL_DEPLOYMENT_ID` environment
@@ -118,7 +146,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
       const events = await getWorkflowRunEvents(workflowRun.id);
 
       const result = await runWorkflow(workflowCode, workflowRun, events.data);
-      console.log('Workflow result:', result);
 
       // Update the workflow run with the result
       await updateWorkflowRun(runId, {
@@ -131,12 +158,19 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
 
         // Create a step for each step that was not run and enqueue the step invocations
         for (const stepEntry of err.steps) {
+          console.log('Invoking step with arguments:', stepEntry.args);
+          const dehydratedArgs = dehydrateStepArguments(
+            stepEntry.args,
+            err.globalThis
+          );
+          console.log('Dehydrated step arguments:', dehydratedArgs);
+
           const step = await createStep(runId, {
             workflow_run_id: runId,
             invocation_id: stepEntry.invocationId,
             step_name: stepEntry.stepName,
             step_type: 'function_call',
-            arguments: stepEntry.args as Serializable[],
+            arguments: dehydratedArgs as Serializable[],
           });
 
           const stepInvokePayload: StepInvokePayload = {
@@ -146,17 +180,21 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
           };
           await send(`step-${stepEntry.stepName}`, stepInvokePayload);
         }
-      } else if (isInstanceOf(err, FatalError)) {
+      } else if (isInstanceOf(err, Error)) {
+        const errorName = getErrorName(err);
+        const errorStack = getErrorStack(err);
         console.error(
-          `Workflow failed with a fatal error (Run ID: ${runId}): ${err}`
+          `${errorName} while running "${runId}" workflow:\n\n${errorStack}`
         );
         await updateWorkflowRun(runId, {
           status: 'failed',
+          error_name: errorName,
+          error_stack: errorStack,
           error_message: String(err),
         });
       } else {
         console.error(
-          `Unexpected error while running workflow (Run ID: ${runId}): ${err}`
+          `${getErrorName(err)} while running "${runId}" workflow:\n\n${getErrorStack(err)}`
         );
         await updateWorkflowRun(runId, {
           status: 'failed',
@@ -224,15 +262,17 @@ async function stepMessageHandler(
     }
 
     // Hydrate the step input arguments
-    const args = (await deserialize(step.input)) as Serializable[];
+    const ops: Promise<void>[] = [];
+    console.log('Hydrated Step arguments:', step.input);
+    const args = hydrateStepArguments(step.input, ops);
+    console.log('Step arguments:', args);
 
     result = await stepFn(...args);
     console.log('Step result:', result);
 
-    // Pass over the result value to prepare for asyncronous serialization
-    // of TypedArray / ReadableStream values.
-    const ops: Promise<void>[] = [];
-    result = serialize(result, ops);
+    result = dehydrateStepReturnValue(result, ops);
+    console.log('Dehydrated step result:', result);
+
     waitUntil(Promise.all(ops));
 
     // Update the event log with the step result
@@ -251,7 +291,7 @@ async function stepMessageHandler(
     });
   } catch (err: unknown) {
     console.error(
-      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}): ${String(err)}\n${getErrorStack(err)}`
+      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}):\n\n${getErrorStack(err)}`
     );
     if (isInstanceOf(err, FatalError)) {
       // Fatal error - store the error in the event log and re-invoke the workflow
@@ -321,6 +361,7 @@ export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
   },
 });
 
+/*
 const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
 class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
@@ -363,7 +404,7 @@ function serialize(result: unknown, ops: Promise<void>[]): unknown {
       __type: 'Response',
       status: result.status,
       statusText: result.statusText,
-      headers: Object.fromEntries(result.headers.entries()),
+      headers: Array.from(result.headers),
       body: serialize(result.body, ops),
     };
   }
@@ -421,3 +462,4 @@ async function deserialize(result: unknown): Promise<unknown> {
 
   return result;
 }
+*/

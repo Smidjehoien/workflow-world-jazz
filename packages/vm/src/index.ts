@@ -21,7 +21,7 @@ export function createContext(options: CreateContextOptions) {
   const rng = seedrandom(seed);
   const context = vmCreateContext();
 
-  const g = runInContext('globalThis', context);
+  const g: typeof globalThis = runInContext('globalThis', context);
 
   // Deterministic `Math.random()`
   g.Math.random = rng;
@@ -29,12 +29,16 @@ export function createContext(options: CreateContextOptions) {
   // Override `Date` constructor to return fixed time when called without arguments
   const Date_ = g.Date;
   // biome-ignore lint/suspicious/noShadowRestrictedNames: We're shadowing the global `Date` property to make it deterministic.
-  g.Date = function Date(...args: Parameters<(typeof globalThis)['Date']>[]) {
+  (g as any).Date = function Date(
+    ...args: Parameters<(typeof globalThis)['Date']>[]
+  ) {
     if (args.length === 0) {
       return new Date_(fixedTimestamp);
     }
+    // @ts-expect-error - Args is `Date` constructor arguments
     return new Date_(...args);
   };
+  (g as any).Date.prototype = Date_.prototype;
   // Preserve static methods
   Object.setPrototypeOf(g.Date, Date_);
   g.Date.now = () => fixedTimestamp;
@@ -81,11 +85,12 @@ export function createContext(options: CreateContextOptions) {
   });
 
   // Propagate environment variables
-  g.process = {
+  (g as any).process = {
     env: process.env,
   };
 
-  // Web APIs that are made available in the context
+  // Stateless Web APIs that are made available inside the sandbox
+  g.Headers = globalThis.Headers;
   g.TextEncoder = globalThis.TextEncoder;
   g.TextDecoder = globalThis.TextDecoder;
   g.ReadableStream = globalThis.ReadableStream;
@@ -93,13 +98,16 @@ export function createContext(options: CreateContextOptions) {
   g.TransformStream = globalThis.TransformStream;
   g.console = globalThis.console;
   g.URL = globalThis.URL;
+  g.URLSearchParams = globalThis.URLSearchParams;
+  g.structuredClone = globalThis.structuredClone;
 
   // HACK: Shim `exports` for the bundle
   g.exports = {};
-  g.module = { exports: g.exports };
+  (g as any).module = { exports: g.exports };
 
   return {
     context,
+    globalThis: g,
     updateTimestamp: (timestamp: number) => {
       fixedTimestamp = timestamp;
     },

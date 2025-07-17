@@ -40,7 +40,7 @@ importers:
         version: link:../../packages/core
       ai:
         specifier: beta
-        version: 5.0.0-beta.19(zod@3.25.76)
+        version: 5.0.0-beta.21(zod@3.25.76)
       mixpart:
         specifier: ^0.0.4
         version: 0.0.4
@@ -149,6 +149,9 @@ importers:
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../vm
+      devalue:
+        specifier: ^5.1.1
+        version: 5.1.1
       ms:
         specifier: 2.1.3
         version: 2.1.3
@@ -1434,8 +1437,8 @@ packages:
   '@vitest/utils@3.2.4':
     resolution: {integrity: sha512-fB2V0JFrQSMsCo9HiSq3Ezpdv4iYaXRG1Sx8edX3MwxfyNn83mKiGzOcH+Fkxt4MHxr3y42fQi1oeAInqgX2QA==}
 
-  ai@5.0.0-beta.19:
-    resolution: {integrity: sha512-oBBQMUUZde/p4FlYdxteh5LCq6v8XQnD4oujHZ3OvwCbLDP/t9VYBq/fx8HKQ48AcKU2uTkvSy3q697SfajAbw==}
+  ai@5.0.0-beta.21:
+    resolution: {integrity: sha512-ZmgUoEIXb2G2HLtK1U3UB+hSDa3qrVIeAfgXf3SIE9r5Vqj6xHG1pN/7fHIZDSgb1TCaypG0ANVB0O9WmnMfiw==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -1589,6 +1592,9 @@ packages:
   detect-libc@2.0.4:
     resolution: {integrity: sha512-3UDv+G9CsCKO1WKMGw9fwq/SWJYbI0c5Y7LU1AXYoDdbhE2AHQ6N6Nb34sG8Fj7T5APy8qXDCKuuIHd1BR0tVA==}
     engines: {node: '>=8'}
+
+  devalue@5.1.1:
+    resolution: {integrity: sha512-maua5KUiapvEwiEAe+XnlZ3Rh0GD+qI1J/nb9vrJc3muPXvcF/8gXYTWF76+5DAqHyDUtOIImEuo0YKE9mshVw==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -3533,7 +3539,7 @@ snapshots:
       loupe: 3.1.4
       tinyrainbow: 2.0.0
 
-  ai@5.0.0-beta.19(zod@3.25.76):
+  ai@5.0.0-beta.21(zod@3.25.76):
     dependencies:
       '@ai-sdk/gateway': 1.0.0-beta.8(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0-beta.1
@@ -3665,6 +3671,8 @@ snapshots:
   deep-eql@5.0.2: {}
 
   detect-libc@2.0.4: {}
+
+  devalue@5.1.1: {}
 
   ejs@3.1.10:
     dependencies:

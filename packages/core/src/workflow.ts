@@ -2,6 +2,10 @@ import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
+import {
+  dehydrateWorkflowReturnValue,
+  hydrateWorkflowArguments,
+} from './serialization.js';
 import { createUseStep, type WorkflowContext } from './step.js';
 
 class Deferred<T> {
@@ -33,7 +37,11 @@ export async function runWorkflow(
     );
   }
 
-  const { context, updateTimestamp } = createContext({
+  const {
+    context,
+    globalThis: vmGlobalThis,
+    updateTimestamp,
+  } = createContext({
     seed: workflowRun.id,
     fixedTimestamp: +startedAt,
   });
@@ -44,6 +52,7 @@ export async function runWorkflow(
   //console.log('Events:', events);
 
   const workflowContext: WorkflowContext = {
+    globalThis: vmGlobalThis,
     onWorkflowError: workflowDiscontinuation.reject,
     randomUUID: context.crypto.randomUUID,
     eventsConsumer: new EventsConsumer(events),
@@ -66,13 +75,7 @@ export async function runWorkflow(
   context[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
 
   // Provide a hoisted fetch function
-  const fetchStep = useStep<any[], Response>('__builtin_fetch');
-  context.fetch = async (...args: Parameters<typeof fetch>) => {
-    const res = await fetchStep(...args);
-    Object.setPrototypeOf(res, Response.prototype);
-    res.headers = new Headers(res.headers);
-    return res;
-  };
+  context.fetch = useStep<any[], Response>('__builtin_fetch');
 
   // `Response` is a special built-in class that invokes steps
   // for the `json()` and `text()` instance methods
@@ -98,9 +101,9 @@ export async function runWorkflow(
   }
   context.Response = Response;
 
-  // Additional Web APIs that can be used in the workflow function which don't need any special handling
-  context.Headers = globalThis.Headers;
-  context.structuredClone = globalThis.structuredClone;
+  // Eventually we'll probably want to provide our own `console` object,
+  // but for now we'll just expose the global one.
+  context.console = globalThis.console;
 
   // HACK: propagate symbol needed for AI gateway usage
   const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
@@ -119,9 +122,29 @@ export async function runWorkflow(
     );
   }
 
+  // XXX: temporary logging
+  console.log('Dehydrated Args:', workflowRun.input);
+
+  const ops: Promise<any>[] = [];
+
+  const args = hydrateWorkflowArguments(workflowRun.input, ops, vmGlobalThis);
+
+  // XXX: temporary logging
+  console.log('Hydrated Args:', args);
+
   // Invoke user workflow
-  return await Promise.race([
-    workflowFn(...workflowRun.input),
+  const result = await Promise.race([
+    workflowFn(...args),
     workflowDiscontinuation.promise,
   ]);
+
+  // XXX: temporary logging
+  console.log('Result:', result);
+
+  const dehydrated = dehydrateWorkflowReturnValue(result, vmGlobalThis);
+
+  // XXX: temporary logging
+  console.log('Dehydrated Result:', dehydrated);
+
+  return dehydrated;
 }

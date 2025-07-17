@@ -25,12 +25,22 @@ export type StepInvokePayload = z.infer<typeof StepInvokePayloadSchema>;
  * ```
  */
 export type Serializable =
+  // Standard JSON types
   | string
   | number
   | boolean
   | null
   | undefined
   | Serializable[]
-  | { [key: string]: Serializable };
-// TODO: add support for binary data and streams using @vercel/queue
-// | ArrayBuffer;
+  | { [key: string]: Serializable }
+  // Special types that need special handling when
+  // serialized/deserialized (see `serialization.ts`)
+  | Date
+  | Headers
+  | Map<Serializable, Serializable>
+  | Set<Serializable>
+  | Response
+  | ReadableStream<Uint8Array>
+  | WritableStream<Uint8Array>
+  | URL
+  | URLSearchParams;

@@ -112,6 +112,8 @@ export interface UpdateWorkflowRunRequest {
     | 'cancelled';
   output?: Serializable;
   error_message?: string;
+  error_name?: string;
+  error_stack?: string;
   execution_context?: Record<string, any>;
   started_at?: Date;
   completed_at?: Date;
