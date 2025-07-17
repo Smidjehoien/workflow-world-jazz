@@ -15,7 +15,7 @@ describe('workflow arguments', () => {
 
   it('should work with Date', () => {
     const date = new Date('2025-07-17T04:30:34.824Z');
-    const serialized = dehydrateWorkflowArguments(date);
+    const serialized = dehydrateWorkflowArguments(date, []);
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -35,7 +35,7 @@ describe('workflow arguments', () => {
 
   it('should work with invalid Date', () => {
     const date = new Date('asdf');
-    const serialized = dehydrateWorkflowArguments(date);
+    const serialized = dehydrateWorkflowArguments(date, []);
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -57,7 +57,7 @@ describe('workflow arguments', () => {
       [2, 'foo'],
       [6, 'bar'],
     ]);
-    const serialized = dehydrateWorkflowArguments(map);
+    const serialized = dehydrateWorkflowArguments(map, []);
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -91,7 +91,7 @@ describe('workflow arguments', () => {
 
   it('should work with Set', () => {
     const set = new Set([1, '2', true]);
-    const serialized = dehydrateWorkflowArguments(set);
+    const serialized = dehydrateWorkflowArguments(set, []);
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -117,7 +117,7 @@ describe('workflow arguments', () => {
 
   it('should work with WritableStream', () => {
     const stream = new WritableStream();
-    const serialized = dehydrateWorkflowArguments(stream);
+    const serialized = dehydrateWorkflowArguments(stream, []);
     const uuid = serialized[2];
     expect(serialized).toMatchInlineSnapshot(`
       [
@@ -144,7 +144,7 @@ describe('workflow arguments', () => {
 
   it('should work with ReadableStream', () => {
     const stream = new ReadableStream();
-    const serialized = dehydrateWorkflowArguments(stream);
+    const serialized = dehydrateWorkflowArguments(stream, []);
     const uuid = serialized[2];
     expect(serialized).toMatchInlineSnapshot(`
       [
@@ -174,7 +174,7 @@ describe('workflow arguments', () => {
     headers.set('foo', 'bar');
     headers.append('set-cookie', 'a');
     headers.append('set-cookie', 'b');
-    const serialized = dehydrateWorkflowArguments(headers);
+    const serialized = dehydrateWorkflowArguments(headers, []);
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -222,7 +222,7 @@ describe('workflow arguments', () => {
         ['set-cookie', 'b'],
       ]),
     });
-    const serialized = dehydrateWorkflowArguments(response);
+    const serialized = dehydrateWorkflowArguments(response, []);
     const bodyUuid = serialized[serialized.length - 1];
     expect(serialized).toMatchInlineSnapshot(`
       [
@@ -302,7 +302,7 @@ describe('workflow arguments', () => {
     class Foo {}
     let err: Error | undefined;
     try {
-      dehydrateWorkflowArguments(new Foo());
+      dehydrateWorkflowArguments(new Foo(), []);
     } catch (err_) {
       err = err_ as Error;
     }

@@ -6,8 +6,14 @@ const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
     super({
-      write: async (chunk) => {
+      write: async (chunk: string | Uint8Array | Buffer) => {
         console.log('Writing chunk to stream:', name, chunk.toString());
+
+        // handle serializing Objects automatically
+        if (chunk.toString() === '[object Object]') {
+          chunk = devalue.stringify(chunk, getReducers(globalThis, []));
+        }
+
         await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
           method: 'PUT',
           body: chunk,
@@ -24,6 +30,36 @@ class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
       },
     });
   }
+}
+
+async function pullStreamToWritable(
+  name: string,
+  writable: WritableStream,
+  global: Record<string, any> = globalThis
+) {
+  const res = await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`);
+
+  if (!res.ok) {
+    const writer = writable.getWriter();
+    writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
+    return;
+  }
+
+  const transformStream = new TransformStream({
+    transform(chunk, controller) {
+      try {
+        // attempt devaluing chunks
+        chunk = new TextDecoder().decode(chunk);
+        chunk = devalue.unflatten(chunk, getRevivers(global, []));
+        chunk = new TextEncoder().encode(chunk);
+      } catch (err: any) {
+        console.log('failed to decode', err, chunk.toString());
+      }
+      controller.enqueue(chunk);
+    },
+  });
+
+  await res.body?.pipeThrough(transformStream).pipeTo(writable);
 }
 
 export const STREAM_NAME_SYMBOL = Symbol.for('WORKFLOW_STREAM_NAME');
@@ -81,7 +117,7 @@ function getReducers(
       const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
       const stream = new WorkflowServerWritableStream(name);
       ops.push(value.pipeTo(stream));
-      return { __type: 'ReadableStream', name };
+      return { name };
     },
     WritableStream: (value) => {
       if (!(value instanceof global.WritableStream)) return false;
@@ -89,40 +125,21 @@ function getReducers(
       const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
 
       if (isInitial) {
-        ops.push(
-          (async () => {
-            const res = await fetch(
-              `${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`
-            );
-
-            if (!res.ok) {
-              const writer = value.getWriter();
-              writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
-              return;
-            }
-
-            await res.body?.pipeTo(value);
-          })()
-        );
+        ops.push(pullStreamToWritable(name, value));
       }
 
-      return { __type: 'WritableStream', name };
+      return { name };
     },
     Headers: (value) => value instanceof global.Headers && Array.from(value),
     Response: (value) => {
       if (!(value instanceof global.Response)) return false;
-      let body = value.body;
-
-      if (body instanceof global.Readable) {
-        body = reducers.ReadableStream(body);
-      }
 
       return {
         url: value.url,
         status: value.status,
         statusText: value.statusText,
         headers: value.headers,
-        body,
+        body: value.body,
       };
     },
     URL: (value) => value instanceof global.URL && value.href,
@@ -145,17 +162,7 @@ function getRevivers(
         new global.TransformStream() as TransformStream<Uint8Array, Uint8Array>;
 
       // Read the stream based on the UUID name from the server
-      (async () => {
-        const res = await fetch(
-          `${WRITABLE_STREAM_BASE_URL}/api/stream/${value.name}`
-        );
-        if (!res.ok) {
-          const writer = writable.getWriter();
-          writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
-          return;
-        }
-        await res.body?.pipeTo(writable);
-      })();
+      ops.push(pullStreamToWritable(value.name, writable));
       (readable as any)[STREAM_NAME_SYMBOL] = value.name;
       return readable;
     },
