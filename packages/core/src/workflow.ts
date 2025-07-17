@@ -100,6 +100,9 @@ export async function runWorkflow(
     }
   }
   context.Response = Response;
+  // we need the Response on globalThis to match for
+  // instanceof checks context doesn't do this automatically
+  vmGlobalThis.Response = Response as any;
 
   // Eventually we'll probably want to provide our own `console` object,
   // but for now we'll just expose the global one.
