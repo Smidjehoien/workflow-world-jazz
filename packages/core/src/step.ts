@@ -1,3 +1,4 @@
+import { waitUntil } from '@vercel/functions';
 import { EventConsumerResult, type EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
 import type { Serializable } from './schemas.js';
@@ -21,13 +22,11 @@ export function createUseStep(ctx: WorkflowContext) {
   ) {
     return (...args: Args): Promise<Result> => {
       const invocationId = ctx.randomUUID();
-      //console.log('invocationId', invocationId);
       let gotStepStarted = false;
       ctx.invocationsQueue.push({ stepName, args, invocationId });
 
       return new Promise((resolve, reject) => {
         ctx.eventsConsumer.subscribe((event) => {
-          //console.log('event', event);
           if (!event) {
             // We've reached the end of the events, so this step has either not been run or currently running.
             // Crucially, if we got here, then this step Promise does
@@ -45,7 +44,6 @@ export function createUseStep(ctx: WorkflowContext) {
             // We're not interested in this event - the invocationId belongs to a different step
             return EventConsumerResult.NotConsumed;
           }
-          //console.log('event.event_type', event.event_type);
 
           if (event.event_type === 'step_started') {
             // Step has started - so remove from the invocations queue
@@ -73,11 +71,13 @@ export function createUseStep(ctx: WorkflowContext) {
           } else if (event.event_type === 'step_result') {
             // Step has already completed
             console.log('Step result:', event.event_data.result);
+            const ops: Promise<void>[] = [];
             const hydratedResult = hydrateStepReturnValue(
               event.event_data.result,
+              ops,
               ctx.globalThis
             );
-            console.log('Hydrated step result:', hydratedResult);
+            waitUntil(Promise.all(ops));
             resolve(hydratedResult);
             return EventConsumerResult.Finished;
           } else {

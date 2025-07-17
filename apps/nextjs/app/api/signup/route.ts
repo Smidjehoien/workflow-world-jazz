@@ -1,8 +1,9 @@
 import { example } from '@/workflows/workflows';
 
 export async function POST(req: Request) {
-  const result = await example(1); // start()
+  const { readable, writable } = new TransformStream();
+  const result = await example(writable); // start()
   // => { runId: '123', status: 'queued' }
-
-  return Response.json(result);
+  console.log('got result', { result });
+  return new Response(readable);
 }

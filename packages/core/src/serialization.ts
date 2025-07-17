@@ -1,4 +1,30 @@
 import * as devalue from 'devalue';
+import { DEFAULT_CONFIG } from './backend.js';
+
+const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
+
+class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
+  constructor(name: string) {
+    super({
+      write: async (chunk) => {
+        console.log('Writing chunk to stream:', name, chunk.toString());
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+          method: 'PUT',
+          body: chunk,
+          duplex: 'half',
+        });
+      },
+      close: async () => {
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+          method: 'PUT',
+          headers: {
+            'X-Stream-Done': 'true',
+          },
+        });
+      },
+    });
+  }
+}
 
 export const STREAM_NAME_SYMBOL = Symbol.for('WORKFLOW_STREAM_NAME');
 
@@ -38,18 +64,9 @@ function revive(str: string) {
   return (0, eval)(str);
 }
 
-/**
- * Called from the `start()` function to serialize the workflow arguments
- * into a format that can be saved to the database and then hydrated from
- * within the workflow execution environment.
- *
- * @param value
- * @param global
- * @returns The dehydrated value, ready to be inserted into the database
- */
-export function dehydrateWorkflowArguments(
-  value: unknown,
-  global: Record<string, any> = globalThis
+function getReducers(
+  global: Record<string, any> = globalThis,
+  ops: Promise<any>[]
 ) {
   const reducers: Reducers = {
     Date: (value) => {
@@ -61,28 +78,128 @@ export function dehydrateWorkflowArguments(
     Set: (value) => value instanceof global.Set && Array.from(value),
     ReadableStream: (value) => {
       if (!(value instanceof global.ReadableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
+      const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
+      const stream = new WorkflowServerWritableStream(name);
+      ops.push(value.pipeTo(stream));
+      return { __type: 'ReadableStream', name };
     },
     WritableStream: (value) => {
       if (!(value instanceof global.WritableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
+      const isInitial = !(value as any)[STREAM_NAME_SYMBOL];
+      const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
+
+      if (isInitial) {
+        ops.push(
+          (async () => {
+            const res = await fetch(
+              `${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`
+            );
+
+            if (!res.ok) {
+              const writer = value.getWriter();
+              writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
+              return;
+            }
+
+            await res.body?.pipeTo(value);
+          })()
+        );
+      }
+
+      return { __type: 'WritableStream', name };
     },
     Headers: (value) => value instanceof global.Headers && Array.from(value),
-    Response: (value) =>
-      value instanceof global.Response && {
+    Response: (value) => {
+      if (!(value instanceof global.Response)) return false;
+      let body = value.body;
+
+      if (body instanceof global.Readable) {
+        body = reducers.ReadableStream(body);
+      }
+
+      return {
         url: value.url,
         status: value.status,
         statusText: value.statusText,
         headers: value.headers,
-        body: value.body,
-      },
+        body,
+      };
+    },
     URL: (value) => value instanceof global.URL && value.href,
     URLSearchParams: (value) =>
       value instanceof global.URLSearchParams && Array.from(value),
   };
-  const str = devalue.stringify(value, reducers);
+  return reducers;
+}
+
+function getRevivers(
+  global: Record<string, any> = globalThis,
+  ops: Promise<any>[]
+) {
+  const revivers: Revivers = {
+    Date: (value) => new global.Date(value),
+    Map: (value) => new global.Map(value),
+    Set: (value) => new global.Set(value),
+    ReadableStream: (value) => {
+      const { readable, writable } =
+        new global.TransformStream() as TransformStream<Uint8Array, Uint8Array>;
+
+      // Read the stream based on the UUID name from the server
+      (async () => {
+        const res = await fetch(
+          `${WRITABLE_STREAM_BASE_URL}/api/stream/${value.name}`
+        );
+        if (!res.ok) {
+          const writer = writable.getWriter();
+          writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
+          return;
+        }
+        await res.body?.pipeTo(writable);
+      })();
+      (readable as any)[STREAM_NAME_SYMBOL] = value.name;
+      return readable;
+    },
+    WritableStream: (value) => {
+      const stream = new WorkflowServerWritableStream(value.name);
+      (stream as any)[STREAM_NAME_SYMBOL] = value.name;
+      return stream;
+    },
+    Headers: (value) => new global.Headers(value),
+    Response: (value) => {
+      let body: any = value.body;
+
+      // TODO: add serialized type
+      if (body && (body as any).__type === 'ReadableStream') {
+        body = revivers.ReadableStream(body);
+      }
+
+      return new Response(body, {
+        status: value.status,
+        statusText: value.statusText,
+        headers: value.headers,
+      });
+    },
+    URL: (value) => new global.URL(value),
+    URLSearchParams: (value) => new global.URLSearchParams(value),
+  };
+  return revivers;
+}
+
+/**
+ * Called from the `start()` function to serialize the workflow arguments
+ * into a format that can be saved to the database and then hydrated from
+ * within the workflow execution environment.
+ *
+ * @param value
+ * @param global
+ * @returns The dehydrated value, ready to be inserted into the database
+ */
+export function dehydrateWorkflowArguments(
+  value: unknown,
+  ops: Promise<any>[],
+  global: Record<string, any> = globalThis
+) {
+  const str = devalue.stringify(value, getReducers(global, ops));
   return revive(str);
 }
 
@@ -100,29 +217,7 @@ export function hydrateWorkflowArguments(
   ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const revivers: Revivers = {
-    Date: (value) => new global.Date(value),
-    Map: (value) => new global.Map(value),
-    Set: (value) => new global.Set(value),
-    ReadableStream: (value) => {
-      const stream = Object.create(global.ReadableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    WritableStream: (value) => {
-      const stream = Object.create(global.WritableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    Headers: (value) => new global.Headers(value),
-    Response: (value) => {
-      Object.setPrototypeOf(value, global.Response.prototype);
-      return value;
-    },
-    URL: (value) => new global.URL(value),
-    URLSearchParams: (value) => new global.URLSearchParams(value),
-  };
-  const obj = devalue.unflatten(value, revivers);
+  const obj = devalue.unflatten(value, getRevivers(global, ops));
   return obj;
 }
 
@@ -136,49 +231,10 @@ export function hydrateWorkflowArguments(
  */
 export function dehydrateWorkflowReturnValue(
   value: unknown,
+  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const reducers: Reducers = {
-    Date: (value) => {
-      if (!(value instanceof global.Date)) return false;
-      const valid = !Number.isNaN(value.getDate());
-      return valid ? value.toISOString() : '';
-    },
-    Map: (value) => value instanceof global.Map && Array.from(value),
-    Set: (value) => value instanceof global.Set && Array.from(value),
-    ReadableStream: (value) => {
-      if (!(value instanceof global.ReadableStream)) return false;
-      const name = value[STREAM_NAME_SYMBOL];
-      if (typeof name !== 'string') {
-        throw new TypeError(
-          'ReadableStream instance does not contain an identifier'
-        );
-      }
-      return { name };
-    },
-    WritableStream: (value) => {
-      if (!(value instanceof global.WritableStream)) return false;
-      // Does this make sense to do?
-      throw new Error(
-        'WritableStream is not allowed as a workflow return value'
-      );
-    },
-    Headers: (value) => value instanceof global.Headers && Array.from(value),
-    Response: (value) => {
-      if (!(value instanceof global.Response)) return false;
-      return {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: value.headers,
-        body: value.body,
-      };
-    },
-    URL: (value) => value instanceof global.URL && value.href,
-    URLSearchParams: (value) =>
-      value instanceof global.URLSearchParams && Array.from(value),
-  };
-  const str = devalue.stringify(value, reducers);
+  const str = devalue.stringify(value, getReducers(global, ops));
   return revive(str);
 }
 
@@ -193,49 +249,10 @@ export function dehydrateWorkflowReturnValue(
  */
 export function hydrateWorkflowReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
+  ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const revivers: Revivers = {
-    Date: (value: string) => new global.Date(value),
-    Map: (value: unknown[]) => new global.Map(value),
-    Set: (value: unknown[]) => new global.Set(value),
-    ReadableStream: (value: { name: string }) => {
-      const { readable, writable } =
-        new global.TransformStream() as TransformStream<Uint8Array, Uint8Array>;
-
-      // Read the stream based on the UUID name from the server
-      (async () => {
-        const res = await fetch(`/api/stream/${value.name}`);
-        if (!res.ok) {
-          const writer = writable.getWriter();
-          writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
-          return;
-        }
-        await res.body?.pipeTo(writable);
-      })();
-
-      return readable;
-    },
-    WritableStream: () => {
-      // Does this make sense to do?
-      throw new Error(
-        'WritableStream is not allowed as a workflow return value'
-      );
-    },
-    Headers: (value) => new global.Headers(value),
-    Response: (value) => {
-      const response = new global.Response(value.body, {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: new global.Headers(value.headers),
-      });
-      return response;
-    },
-    URL: (value) => new global.URL(value),
-    URLSearchParams: (value) => new global.URLSearchParams(value),
-  };
-  const obj = devalue.unflatten(value, revivers);
+  const obj = devalue.unflatten(value, getRevivers(global, ops));
   return obj;
 }
 
@@ -250,42 +267,10 @@ export function hydrateWorkflowReturnValue(
  */
 export function dehydrateStepArguments(
   value: unknown,
+  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const reducers: Reducers = {
-    Date: (value) => {
-      if (!(value instanceof global.Date)) return false;
-      const valid = !Number.isNaN(value.getDate());
-      return valid ? value.toISOString() : '';
-    },
-    Map: (value) => value instanceof global.Map && Array.from(value),
-    Set: (value) => value instanceof global.Set && Array.from(value),
-    ReadableStream: (value) => {
-      if (!(value instanceof global.ReadableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
-    },
-    WritableStream: (value) => {
-      if (!(value instanceof global.WritableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
-    },
-    Headers: (value) => value instanceof global.Headers && Array.from(value),
-    Response: (value) => {
-      if (!(value instanceof global.Response)) return false;
-      return {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: value.headers,
-        body: value.body,
-      };
-    },
-    URL: (value) => value instanceof global.URL && value.href,
-    URLSearchParams: (value) =>
-      value instanceof global.URLSearchParams && Array.from(value),
-  };
-  const str = devalue.stringify(value, reducers);
+  const str = devalue.stringify(value, getReducers(global, ops));
   return revive(str);
 }
 
@@ -302,33 +287,7 @@ export function hydrateStepArguments(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const revivers: Revivers = {
-    Date: (value: string) => new global.Date(value),
-    Map: (value: unknown[]) => new global.Map(value),
-    Set: (value: unknown[]) => new global.Set(value),
-    ReadableStream: (value: { name: string }) => {
-      const stream = Object.create(global.ReadableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    WritableStream: (value: { name: string }) => {
-      const stream = Object.create(global.WritableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    Headers: (value) => new global.Headers(value),
-    Response: (value) => {
-      return new global.Response(value.body, {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: new global.Headers(value.headers),
-      });
-    },
-    URL: (value) => new global.URL(value),
-    URLSearchParams: (value) => new global.URLSearchParams(value),
-  };
-  const obj = devalue.unflatten(value, revivers);
+  const obj = devalue.unflatten(value, getRevivers(global, ops));
   return obj;
 }
 
@@ -343,42 +302,10 @@ export function hydrateStepArguments(
  */
 export function dehydrateStepReturnValue(
   value: unknown,
+  ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const reducers: Reducers = {
-    Date: (value) => {
-      if (!(value instanceof global.Date)) return false;
-      const valid = !Number.isNaN(value.getDate());
-      return valid ? value.toISOString() : '';
-    },
-    Map: (value) => value instanceof global.Map && Array.from(value),
-    Set: (value) => value instanceof global.Set && Array.from(value),
-    ReadableStream: (value) => {
-      if (!(value instanceof global.ReadableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
-    },
-    WritableStream: (value) => {
-      if (!(value instanceof global.WritableStream)) return false;
-      const name = crypto.randomUUID();
-      return { name };
-    },
-    Headers: (value) => value instanceof global.Headers && Array.from(value),
-    Response: (value) => {
-      if (!(value instanceof global.Response)) return false;
-      return {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: value.headers,
-        body: value.body,
-      };
-    },
-    URL: (value) => value instanceof global.URL && value.href,
-    URLSearchParams: (value) =>
-      value instanceof global.URLSearchParams && Array.from(value),
-  };
-  const str = devalue.stringify(value, reducers);
+  const str = devalue.stringify(value, getReducers(global, ops));
   return revive(str);
 }
 
@@ -392,34 +319,9 @@ export function dehydrateStepReturnValue(
  */
 export function hydrateStepReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
+  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const revivers: Revivers = {
-    Date: (value: string) => new global.Date(value),
-    Map: (value: unknown[]) => new global.Map(value),
-    Set: (value: unknown[]) => new global.Set(value),
-    ReadableStream: (value: { name: string }) => {
-      const stream = Object.create(global.ReadableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    WritableStream: (value: { name: string }) => {
-      const stream = Object.create(global.WritableStream.prototype);
-      stream[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
-    },
-    Headers: (value) => new global.Headers(value),
-    Response: (value) => {
-      return new global.Response(value.body, {
-        url: value.url,
-        status: value.status,
-        statusText: value.statusText,
-        headers: new global.Headers(value.headers),
-      });
-    },
-    URL: (value) => new global.URL(value),
-    URLSearchParams: (value) => new global.URLSearchParams(value),
-  };
-  const obj = devalue.unflatten(value, revivers);
+  const obj = devalue.unflatten(value, getRevivers(global, ops));
   return obj;
 }

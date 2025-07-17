@@ -1,4 +1,5 @@
 import { runInContext } from 'node:vm';
+import { waitUntil } from '@vercel/functions';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
@@ -27,9 +28,6 @@ export async function runWorkflow(
   workflowRun: WorkflowRun,
   events: Event[]
 ): Promise<unknown> {
-  // XXX: temporary logging
-  //console.log('Workflow run:', workflowRun);
-
   const startedAt = workflowRun.started_at;
   if (!startedAt) {
     throw new Error(
@@ -47,9 +45,6 @@ export async function runWorkflow(
   });
 
   const workflowDiscontinuation = new Deferred<void>();
-
-  // XXX: temporary logging
-  //console.log('Events:', events);
 
   const workflowContext: WorkflowContext = {
     globalThis: vmGlobalThis,
@@ -121,19 +116,15 @@ export async function runWorkflow(
 
   if (typeof workflowFn !== 'function') {
     throw new ReferenceError(
-      `Workflow ${JSON.stringify(workflowRun.workflow_name)} must be a function, but got "${typeof workflowFn}" instead`
+      `Workflow ${JSON.stringify(
+        workflowRun.workflow_name
+      )} must be a function, but got "${typeof workflowFn}" instead`
     );
   }
-
-  // XXX: temporary logging
-  console.log('Dehydrated Args:', workflowRun.input);
 
   const ops: Promise<any>[] = [];
 
   const args = hydrateWorkflowArguments(workflowRun.input, ops, vmGlobalThis);
-
-  // XXX: temporary logging
-  console.log('Hydrated Args:', args);
 
   // Invoke user workflow
   const result = await Promise.race([
@@ -141,13 +132,8 @@ export async function runWorkflow(
     workflowDiscontinuation.promise,
   ]);
 
-  // XXX: temporary logging
-  console.log('Result:', result);
-
-  const dehydrated = dehydrateWorkflowReturnValue(result, vmGlobalThis);
-
-  // XXX: temporary logging
-  console.log('Dehydrated Result:', dehydrated);
+  const dehydrated = dehydrateWorkflowReturnValue(result, ops, vmGlobalThis);
+  waitUntil(Promise.all(ops));
 
   return dehydrated;
 }

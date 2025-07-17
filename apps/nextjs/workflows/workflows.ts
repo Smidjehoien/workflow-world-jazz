@@ -1,8 +1,8 @@
-import { localAdd, stepAdd } from './math';
+import { pumpData } from './streams';
 
-export async function example(i: number) {
+export async function example(writable: WritableStream) {
   'use workflow';
-  const a = await localAdd(i, 7);
-  const b = await stepAdd(a, 8);
-  return b;
+  console.log('example workflow', { writable });
+  await pumpData(writable);
+  writable.getWriter().close();
 }

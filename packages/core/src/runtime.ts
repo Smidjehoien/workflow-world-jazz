@@ -4,7 +4,6 @@ import {
   createStep,
   createWorkflowRun,
   createWorkflowRunEvent,
-  //DEFAULT_CONFIG,
   getStep,
   getWorkflowRun,
   getWorkflowRunEvents,
@@ -72,12 +71,14 @@ export async function start(
       'A `deploymentId` must be provided to start a workflow run'
     );
   }
-
+  const ops: Promise<void>[] = [];
+  const workflowArguments = dehydrateWorkflowArguments(args, ops);
   const run = await createWorkflowRun({
     deployment_id: deploymentId,
     workflow_name: workflowName,
-    arguments: dehydrateWorkflowArguments(args),
+    arguments: workflowArguments,
   });
+  waitUntil(Promise.all(ops));
 
   // XXX: The `send()` function requires the `VERCEL_DEPLOYMENT_ID` environment
   // variable to be set. Ideally it would be accepted as an option to `send()`.
@@ -158,12 +159,13 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
 
         // Create a step for each step that was not run and enqueue the step invocations
         for (const stepEntry of err.steps) {
-          console.log('Invoking step with arguments:', stepEntry.args);
+          const ops: Promise<void>[] = [];
           const dehydratedArgs = dehydrateStepArguments(
             stepEntry.args,
+            ops,
             err.globalThis
           );
-          console.log('Dehydrated step arguments:', dehydratedArgs);
+          waitUntil(Promise.all(ops));
 
           const step = await createStep(runId, {
             workflow_run_id: runId,
@@ -194,7 +196,9 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
         });
       } else {
         console.error(
-          `${getErrorName(err)} while running "${runId}" workflow:\n\n${getErrorStack(err)}`
+          `${getErrorName(
+            err
+          )} while running "${runId}" workflow:\n\n${getErrorStack(err)}`
         );
         await updateWorkflowRun(runId, {
           status: 'failed',
@@ -263,15 +267,12 @@ async function stepMessageHandler(
 
     // Hydrate the step input arguments
     const ops: Promise<void>[] = [];
-    console.log('Hydrated Step arguments:', step.input);
     const args = hydrateStepArguments(step.input, ops);
-    console.log('Step arguments:', args);
 
     result = await stepFn(...args);
     console.log('Step result:', result);
 
-    result = dehydrateStepReturnValue(result);
-    console.log('Dehydrated step result:', result);
+    result = dehydrateStepReturnValue(result, ops);
 
     waitUntil(Promise.all(ops));
 
@@ -291,7 +292,11 @@ async function stepMessageHandler(
     });
   } catch (err: unknown) {
     console.error(
-      `${getErrorName(err)} while running "${stepId}" step (Workflow run ID: ${workflowRunId}):\n\n${getErrorStack(err)}`
+      `${getErrorName(
+        err
+      )} while running "${stepId}" step (Workflow run ID: ${workflowRunId}):\n\n${getErrorStack(
+        err
+      )}`
     );
     if (isInstanceOf(err, FatalError)) {
       // Fatal error - store the error in the event log and re-invoke the workflow
@@ -360,106 +365,3 @@ export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
     default: stepMessageHandler,
   },
 });
-
-/*
-const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
-
-class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
-  constructor(name: string) {
-    super({
-      write: async (chunk) => {
-        console.log(
-          'Writing chunk to stream:',
-          JSON.stringify(new TextDecoder().decode(chunk))
-        );
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-          method: 'PUT',
-          body: chunk,
-          duplex: 'half',
-        });
-      },
-      close: async () => {
-        console.log('Closing stream:', name);
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-          method: 'PUT',
-          headers: {
-            'X-Stream-Done': 'true',
-          },
-        });
-      },
-    });
-  }
-}
-
-function serialize(result: unknown, ops: Promise<void>[]): unknown {
-  if (result instanceof ReadableStream) {
-    const name = crypto.randomUUID();
-    const stream = new WorkflowServerWritableStream(name);
-    ops.push(result.pipeTo(stream));
-    return { __type: 'ReadableStream', name };
-  }
-
-  if (result instanceof Response) {
-    return {
-      __type: 'Response',
-      status: result.status,
-      statusText: result.statusText,
-      headers: Array.from(result.headers),
-      body: serialize(result.body, ops),
-    };
-  }
-
-  if (result && typeof result === 'object') {
-    const entries = Object.entries(result);
-    const hydrated: Record<string, unknown> = {};
-    for (const [key, value] of entries) {
-      hydrated[key] = serialize(value, ops);
-    }
-    return hydrated;
-  }
-
-  if (Array.isArray(result)) {
-    return result.map((value) => serialize(value, ops));
-  }
-
-  return result;
-}
-
-async function deserialize(result: unknown): Promise<unknown> {
-  if (result && typeof result === 'object' && '__type' in result) {
-    if (result.__type === 'ReadableStream') {
-      const name = (result as any).name;
-      const res = await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`);
-      if (!res.ok) {
-        throw new Error(`Failed to fetch stream: ${res.statusText}`);
-      }
-      return res.body;
-    }
-
-    if (result.__type === 'Response') {
-      const body = (await deserialize((result as any).body)) as ReadableStream;
-      return new Response(body, {
-        status: (result as any).status,
-        statusText: (result as any).statusText,
-        headers: new Headers((result as any).headers),
-      });
-    }
-  }
-
-  if (Array.isArray(result)) {
-    return Promise.all(result.map(deserialize));
-  }
-
-  if (result && typeof result === 'object') {
-    // Recursively deserialize each property of the object
-    const entries = Object.entries(result as Record<string, unknown>);
-    const deserialized: Record<string, unknown> = {};
-    for (const [key, value] of entries) {
-      deserialized[key] = await deserialize(value);
-    }
-    return deserialized;
-  }
-
-  return result;
-}
-*/
