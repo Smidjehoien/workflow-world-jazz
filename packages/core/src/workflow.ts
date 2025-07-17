@@ -67,10 +67,10 @@ export async function runWorkflow(
   const useStep = createUseStep(workflowContext);
 
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-  context[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
+  vmGlobalThis[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
 
-  // Provide a hoisted fetch function
-  context.fetch = useStep<any[], Response>('__builtin_fetch');
+  // @ts-ignore Provide a hoisted fetch function
+  vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
 
   // `Response` is a special built-in class that invokes steps
   // for the `json()` and `text()` instance methods
@@ -94,19 +94,20 @@ export async function runWorkflow(
       return resText(this);
     }
   }
-  context.Response = Response;
   // we need the Response on globalThis to match for
   // instanceof checks context doesn't do this automatically
   vmGlobalThis.Response = Response as any;
 
   // Eventually we'll probably want to provide our own `console` object,
   // but for now we'll just expose the global one.
-  context.console = globalThis.console;
+  vmGlobalThis.console = globalThis.console;
 
   // HACK: propagate symbol needed for AI gateway usage
   const SYMBOL_FOR_REQ_CONTEXT = Symbol.for('@vercel/request-context');
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-  context[SYMBOL_FOR_REQ_CONTEXT] = (globalThis as any)[SYMBOL_FOR_REQ_CONTEXT];
+  vmGlobalThis[SYMBOL_FOR_REQ_CONTEXT] = (globalThis as any)[
+    SYMBOL_FOR_REQ_CONTEXT
+  ];
 
   // Get a reference to the user-defined workflow function
   const workflowFn = runInContext(
