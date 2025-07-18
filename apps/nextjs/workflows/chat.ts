@@ -109,6 +109,13 @@ export async function endStream(writeable: WritableStream<UIMessageChunk>) {
   const writer = writeable.getWriter();
 
   writer.write({
+    type: 'data-workflow',
+    data: {
+      message: 'Closing workflow stream',
+    },
+  });
+
+  writer.write({
     type: 'finish',
   });
 
