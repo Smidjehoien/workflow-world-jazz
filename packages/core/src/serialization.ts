@@ -10,12 +10,11 @@ const getWorkflowServerWritableStream = (
     constructor(name: string) {
       super({
         write: async (chunk: string | Uint8Array | Buffer) => {
-          console.log('Writing chunk to stream:', name, chunk.toString());
-
           // handle serializing Objects automatically
           if (chunk.toString() === '[object Object]') {
             chunk = devalue.stringify(chunk, getReducers(globalThis, []));
           }
+          console.log('Writing chunk to stream:', name, chunk.toString());
 
           await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
             method: 'PUT',
@@ -53,8 +52,7 @@ async function pullStreamToWritable(
       try {
         // attempt devaluing chunks
         chunk = new TextDecoder().decode(chunk);
-        chunk = devalue.unflatten(chunk, getRevivers(global, []));
-        chunk = new TextEncoder().encode(chunk);
+        chunk = devalue.unflatten(revive(chunk), getRevivers(global, []));
       } catch (err: any) {
         console.log('failed to decode', err, chunk.toString());
       }
