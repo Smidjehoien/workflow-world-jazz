@@ -13,9 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Flight Booking Assistant',
-  description:
-    'AI-powered flight booking assistant to help you search, book, and manage your flights',
+  title: 'Durable Agents',
+  description: 'A durable agent using the new workflow SDK',
 };
 
 export default function RootLayout({

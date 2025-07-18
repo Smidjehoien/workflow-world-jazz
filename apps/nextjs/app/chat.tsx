@@ -72,8 +72,8 @@ export default function ChatComponent() {
   return (
     <div className="flex flex-col w-full max-w-2xl pt-12 pb-24 mx-auto stretch">
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">✈️ Flight Booking Assistant</h1>
-        <p className="text-gray-600">Your AI-powered travel companion</p>
+        <h1 className="text-3xl font-bold mb-2">✈️ Flight Booking Agent</h1>
+        <p className="text-gray-600">Book a flight using workflows</p>
       </div>
 
       {messages.length === 0 && (
