@@ -30,7 +30,6 @@ export async function streamTextStep(
 
   // Mimic a random network error
   if (Math.random() < 0.3) {
-    // sleep 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 2000));
     writer.write({
       type: 'data-workflow',
@@ -107,6 +106,8 @@ export async function streamTextStep(
 export async function endStream(writeable: WritableStream<UIMessageChunk>) {
   'use step';
   const writer = writeable.getWriter();
+
+  console.log('Closing workflow stream');
 
   writer.write({
     type: 'data-workflow',

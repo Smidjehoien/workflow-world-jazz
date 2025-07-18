@@ -13,55 +13,11 @@ export default function ChatComponent() {
 
   const { status, sendMessage, messages, regenerate, addToolResult } =
     useChat<MyUIMessage>({
-      // id: chatData.id,
-      // messages: chatData.messages,
-      // resume,
-      // transport: new DefaultChatTransport({
-      //   prepareSendMessagesRequest: ({ id, messages, trigger, messageId }) => {
-      //     switch (trigger) {
-      //       case 'regenerate-assistant-message':
-      //         // omit messages data transfer, only send the messageId:
-      //         return {
-      //           body: {
-      //             trigger: 'regenerate-assistant-message',
-      //             id,
-      //             messageId,
-      //           },
-      //         };
-      //       case 'submit-user-message':
-      //         // only send the last message to the server to limit the request size:
-      //         return {
-      //           body: {
-      //             trigger: 'submit-user-message',
-      //             id,
-      //             message: messages[messages.length - 1],
-      //             messageId,
-      //           },
-      //         };
-      //       case 'submit-tool-result':
-      //         throw new Error(`submit-tool-result is not supported`);
-      //     }
-      //   },
-      // }),
       onFinish() {
-        // for new chats, the router cache needs to be invalidated so
-        // navigation to the previous page triggers SSR correctly
-        // if (isNewChat) {
-        //   invalidateRouterCache();
-        // }
-        // focus the input field again after the response is finished
         requestAnimationFrame(() => {
           inputRef.current?.focus();
         });
       },
-      // maxSteps: 5,
-      // run client-side tools that are automatically executed:
-      // async onToolCall({ toolCall }) {
-      //   if (toolCall.toolName === 'getLocation') {
-      //     const cities = ['New York', 'Los Angeles', 'Chicago', 'San Francisco'];
-      //     return cities[Math.floor(Math.random() * cities.length)];
-      //   }
-      // },
     });
 
   // activate the input field
