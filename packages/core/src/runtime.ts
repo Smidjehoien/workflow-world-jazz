@@ -129,7 +129,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
     // TODO: validate `workflowName` exists before consuming message?
 
     const { runId } = WorkflowInvokePayloadSchema.parse(message_);
-    console.log('Received workflow message:', runId, metadata);
 
     // Invoke user workflow
     try {
@@ -155,8 +154,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
       });
     } catch (err) {
       if (isInstanceOf(err, StepsNotRunError)) {
-        console.log('Steps not run:', err.steps);
-
         // Create a step for each step that was not run and enqueue the step invocations
         for (const stepEntry of err.steps) {
           const ops: Promise<void>[] = [];
@@ -234,11 +231,6 @@ async function stepMessageHandler(
 
   const { workflowName, workflowRunId, stepId } =
     StepInvokePayloadSchema.parse(message_);
-  console.log(
-    'Received step invoke message:',
-    { workflowName, workflowRunId, stepId },
-    metadata
-  );
 
   let step = await getStep(workflowRunId, stepId);
 
@@ -270,8 +262,6 @@ async function stepMessageHandler(
     const args = hydrateStepArguments(step.input, ops);
 
     result = await stepFn(...args);
-    console.log('Step result:', result);
-
     result = dehydrateStepReturnValue(result, ops);
 
     waitUntil(Promise.all(ops));
@@ -345,12 +335,6 @@ async function stepMessageHandler(
   const workflowInvokeMessage: WorkflowInvokePayload = {
     runId: workflowRunId,
   };
-
-  // TODO: temporary logging
-  console.log(
-    `Sending message back to the "${workflowName}" workflow:`,
-    workflowInvokeMessage
-  );
 
   await send(`workflow-${workflowName}`, workflowInvokeMessage);
 }

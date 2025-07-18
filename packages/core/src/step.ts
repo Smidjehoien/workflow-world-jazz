@@ -70,7 +70,6 @@ export function createUseStep(ctx: WorkflowContext) {
             }
           } else if (event.event_type === 'step_result') {
             // Step has already completed
-            console.log('Step result:', event.event_data.result);
             const ops: Promise<void>[] = [];
             const hydratedResult = hydrateStepReturnValue(
               event.event_data.result,
