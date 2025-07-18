@@ -134,7 +134,15 @@ describe('workflow arguments', () => {
 
     const ops = [];
     class OurWritableStream {}
+    class TransformStream {
+      public writable;
+
+      constructor() {
+        this.writable = new OurWritableStream();
+      }
+    }
     const hydrated = hydrateWorkflowArguments(serialized, ops, {
+      TransformStream,
       WritableStream: OurWritableStream,
     });
     expect(hydrated).toBeInstanceOf(OurWritableStream);
@@ -161,12 +169,20 @@ describe('workflow arguments', () => {
 
     const ops = [];
     class OurReadableStream {}
+    class TransformStream {
+      public readable;
+
+      constructor() {
+        this.readable = new OurReadableStream();
+      }
+    }
     const hydrated = hydrateWorkflowArguments(serialized, ops, {
+      TransformStream,
       ReadableStream: OurReadableStream,
     });
     expect(hydrated).toBeInstanceOf(OurReadableStream);
     expect(hydrated[STREAM_NAME_SYMBOL]).toEqual(uuid);
-    expect(ops).toHaveLength(0);
+    expect(ops).toHaveLength(1);
   });
 
   it('should work with Headers', () => {
@@ -284,14 +300,27 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    class OurResponse {}
+    class OurResponse {
+      public headers;
+      public body;
+      constructor(body, init) {
+        this.body = body || init.body;
+        this.headers = init.headers;
+      }
+    }
     class OurReadableStream {}
     class OurHeaders {}
-
+    class TransformStream {
+      public readable;
+      constructor() {
+        this.readable = new OurReadableStream();
+      }
+    }
     const hydrated = hydrateWorkflowArguments(serialized, [], {
       Headers: OurHeaders,
       Response: OurResponse,
       ReadableStream: OurReadableStream,
+      TransformStream,
     });
     expect(hydrated).toBeInstanceOf(OurResponse);
     expect(hydrated.headers).toBeInstanceOf(OurHeaders);

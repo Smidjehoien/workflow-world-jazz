@@ -3,34 +3,37 @@ import { DEFAULT_CONFIG } from './backend.js';
 
 const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
-class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
-  constructor(name: string) {
-    super({
-      write: async (chunk: string | Uint8Array | Buffer) => {
-        console.log('Writing chunk to stream:', name, chunk.toString());
+const getWorkflowServerWritableStream = (
+  global: Record<string, any> = globalThis
+) =>
+  class WorkflowServerWritableStream extends global.WritableStream<Uint8Array> {
+    constructor(name: string) {
+      super({
+        write: async (chunk: string | Uint8Array | Buffer) => {
+          console.log('Writing chunk to stream:', name, chunk.toString());
 
-        // handle serializing Objects automatically
-        if (chunk.toString() === '[object Object]') {
-          chunk = devalue.stringify(chunk, getReducers(globalThis, []));
-        }
+          // handle serializing Objects automatically
+          if (chunk.toString() === '[object Object]') {
+            chunk = devalue.stringify(chunk, getReducers(globalThis, []));
+          }
 
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-          method: 'PUT',
-          body: chunk,
-          duplex: 'half',
-        });
-      },
-      close: async () => {
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-          method: 'PUT',
-          headers: {
-            'X-Stream-Done': 'true',
-          },
-        });
-      },
-    });
-  }
-}
+          await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+            method: 'PUT',
+            body: chunk,
+            duplex: 'half',
+          });
+        },
+        close: async () => {
+          await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+            method: 'PUT',
+            headers: {
+              'X-Stream-Done': 'true',
+            },
+          });
+        },
+      });
+    }
+  };
 
 async function pullStreamToWritable(
   name: string,
@@ -115,7 +118,7 @@ function getReducers(
     ReadableStream: (value) => {
       if (!(value instanceof global.ReadableStream)) return false;
       const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
-      const stream = new WorkflowServerWritableStream(name);
+      const stream = new (getWorkflowServerWritableStream(global))(name);
       ops.push(value.pipeTo(stream));
       return { name };
     },
@@ -167,23 +170,16 @@ function getRevivers(
       return readable;
     },
     WritableStream: (value) => {
-      const stream = new WorkflowServerWritableStream(value.name);
+      const stream = new (getWorkflowServerWritableStream(global))(value.name);
       (stream as any)[STREAM_NAME_SYMBOL] = value.name;
       return stream;
     },
     Headers: (value) => new global.Headers(value),
     Response: (value) => {
-      let body: any = value.body;
-
-      // TODO: add serialized type
-      if (body && (body as any).__type === 'ReadableStream') {
-        body = revivers.ReadableStream(body);
-      }
-
-      return new Response(body, {
+      return new global.Response(value.body, {
         status: value.status,
         statusText: value.statusText,
-        headers: value.headers,
+        headers: new global.Headers(value.headers),
       });
     },
     URL: (value) => new global.URL(value),
