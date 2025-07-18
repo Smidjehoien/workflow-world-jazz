@@ -453,10 +453,10 @@ export default function Message({
             case 'data-workflow': {
               const data = part.data as any;
               return (
-                <div className="text-xs text-blue-400">
-                  <i>
-                    [workflow: Step "{data.step}" {data.status} (#{data.id}) ]
-                  </i>
+                <div
+                  className={`text-xs ${data.type === 'error' ? 'text-red-400' : 'text-blue-400'}`}
+                >
+                  <i>[{data.message}]</i>
                 </div>
               );
             }
