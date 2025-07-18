@@ -68,6 +68,7 @@ export default function Message({
                     </div>
                   );
                 case 'input-available':
+                  if (!part.input) return null;
                   return (
                     <div
                       key={callId}
@@ -149,6 +150,7 @@ export default function Message({
               switch (part.state) {
                 case 'input-streaming':
                 case 'input-available':
+                  if (!part.input) return null;
                   return (
                     <div
                       key={callId}
@@ -156,7 +158,7 @@ export default function Message({
                     >
                       <div className="text-sm">
                         📊 Checking status for flight{' '}
-                        {(part.input as any)?.flightNumber}...
+                        {(part.input as any).flightNumber}...
                       </div>
                     </div>
                   );
@@ -220,6 +222,9 @@ export default function Message({
               switch (part.state) {
                 case 'input-streaming':
                 case 'input-available':
+                  if (!part.input) {
+                    return null;
+                  }
                   return (
                     <div
                       key={callId}
@@ -341,6 +346,7 @@ export default function Message({
               switch (part.state) {
                 case 'input-streaming':
                 case 'input-available':
+                  if (!part.input) return null;
                   return (
                     <div
                       key={callId}
@@ -418,6 +424,7 @@ export default function Message({
                     <pre key={callId}>{JSON.stringify(part, null, 2)}</pre>
                   );
                 case 'input-available':
+                  if (!part.input) return null;
                   return (
                     <div key={callId}>
                       Getting weather information for {(part.input as any).city}
@@ -425,12 +432,14 @@ export default function Message({
                     </div>
                   );
                 case 'output-available':
+                  if (!part.input) return null;
                   return (
                     <div key={callId}>
                       Weather in {(part.input as any).city}: {part.output}
                     </div>
                   );
                 case 'output-error':
+                  if (!part.input) return null;
                   return (
                     <div key={callId}>
                       Error getting weather for {(part.input as any).city}:{' '}
