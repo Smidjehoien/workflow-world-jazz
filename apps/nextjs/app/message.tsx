@@ -1,4 +1,5 @@
 import type { ChatStatus } from 'ai';
+import Markdown from 'react-markdown';
 import type { MyUIMessage } from '@/util/chat-schema';
 
 export default function Message({
@@ -42,11 +43,12 @@ export default function Message({
         {/* {message.parts
           .map((part) => (part.type === 'text' ? part.text : ''))
           .join('')} */}
-        {message.parts.map((part) => {
+        {message.parts.map((part, i) => {
           switch (part.type) {
             // render text parts as simple text:
             case 'text':
-              return part.text;
+              // biome-ignore lint/correctness/useJsxKeyInIterable: No good key available
+              return <Markdown>{part.text}</Markdown>;
 
             // Search Flights Tool
             case 'tool-searchFlights': {
