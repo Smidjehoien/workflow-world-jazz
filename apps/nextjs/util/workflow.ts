@@ -15,6 +15,9 @@ export async function createAIWorkflowResponse(messages: UIMessage[]) {
     execute: async ({ writer }) => {
       writer.write({
         type: 'start',
+        messageMetadata: {
+          createdAt: Date.now(),
+        },
       });
       writer.write({
         type: 'data-workflow',

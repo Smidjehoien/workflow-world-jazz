@@ -60,7 +60,7 @@ export default function Message({
                       className="my-2 p-3 bg-blue-50 rounded-md"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="animate-spin">🔍</span>
+                        <span className="animate-spin">🔄</span>
                         <span className="text-sm">
                           Searching for flights...
                         </span>
