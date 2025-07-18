@@ -92,7 +92,9 @@ export function createContext(options: CreateContextOptions) {
   // Stateless Web APIs that are made available inside the sandbox
   g.Headers = globalThis.Headers;
   g.TextEncoder = globalThis.TextEncoder;
+  g.TextEncoderStream = globalThis.TextEncoderStream;
   g.TextDecoder = globalThis.TextDecoder;
+  g.TextDecoderStream = globalThis.TextDecoderStream;
   g.ReadableStream = globalThis.ReadableStream;
   g.WritableStream = globalThis.WritableStream;
   g.TransformStream = globalThis.TransformStream;
