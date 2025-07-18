@@ -47,8 +47,34 @@ export default function Message({
           switch (part.type) {
             // render text parts as simple text:
             case 'text':
-              // biome-ignore lint/correctness/useJsxKeyInIterable: No good key available
-              return <Markdown>{part.text}</Markdown>;
+              return (
+                // biome-ignore lint/correctness/useJsxKeyInIterable: No good key available
+                <Markdown
+                  components={{
+                    ul({ children }) {
+                      return (
+                        <ul className="flex flex-col list-disc pl-5">
+                          {children}
+                        </ul>
+                      );
+                    },
+                    li({ children }) {
+                      return <li className="my-1 list-item">{children}</li>;
+                    },
+                    strong({ children }) {
+                      return <strong className="font-bold">{children}</strong>;
+                    },
+                    em({ children }) {
+                      return <em className="italic">{children}</em>;
+                    },
+                    p({ children }) {
+                      return <p className="mb-2">{children}</p>;
+                    },
+                  }}
+                >
+                  {part.text}
+                </Markdown>
+              );
 
             // Search Flights Tool
             case 'tool-searchFlights': {
