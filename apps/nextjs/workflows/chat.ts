@@ -245,11 +245,18 @@ async function checkBaggageAllowance({
 
 /** A Stream Text Step */
 export async function streamTextStep(
+  step: number,
   messages: ModelMessage[],
   executeSteps: boolean,
   writeable: WritableStream<UIMessageChunk>
 ) {
   'use step';
+
+  const writer = writeable.getWriter();
+  writer.write({
+    type: 'data-workflow',
+    data: { step: `streamTextStep`, id: step, status: 'running' },
+  });
 
   const result = streamText({
     model: 'bedrock/claude-4-sonnet-20250514-v1',
@@ -326,7 +333,6 @@ When booking flights, confirm all details before proceeding.`,
   });
 
   // Pipe the stream to the client
-  const writer = writeable.getWriter();
   const reader = result
     // We send these chunks outside the loop
     .toUIMessageStream({ sendStart: false, sendFinish: false })
@@ -343,6 +349,11 @@ When booking flights, confirm all details before proceeding.`,
       // }
     }
   } finally {
+    writer.write({
+      type: 'data-workflow',
+      data: { step: `streamTextStep`, id: step, status: 'completed' },
+    });
+
     reader.releaseLock();
     writer.releaseLock();
   }
@@ -396,6 +407,7 @@ export async function chat(
     // console.log('currMessages', JSON.stringify(currMessages, null, 2));
 
     const result = await streamTextStep(
+      i,
       currMessages,
       true,
       // finishReason === 'tool-calls', // only

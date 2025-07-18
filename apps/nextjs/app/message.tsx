@@ -450,17 +450,24 @@ export default function Message({
               break;
             }
 
-            // case 'step-start': {
-            //   return <div key={part.type}>{part.}</div>;
-            // }
-
-            default: {
+            case 'data-workflow': {
+              const data = part.data as any;
               return (
-                <div className="text-xs text-gray-400">
-                  <i>[debug: {part.type}]</i>
+                <div className="text-xs text-blue-400">
+                  <i>
+                    [workflow: Step "{data.step}" {data.status} (#{data.id}) ]
+                  </i>
                 </div>
               );
             }
+
+            // default: {
+            //   return (
+            //     <div className="text-xs text-gray-400">
+            //       <i>[debug: {part.type}]</i>
+            //     </div>
+            //   );
+            // }
           }
         })}
       </div>
