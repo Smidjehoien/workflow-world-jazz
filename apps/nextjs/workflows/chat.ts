@@ -29,7 +29,7 @@ export async function streamTextStep(
   });
 
   // Mimic a random network error
-  if (Math.random() < 0.5) {
+  if (Math.random() < 0.3) {
     // sleep 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 2000));
     writer.write({
