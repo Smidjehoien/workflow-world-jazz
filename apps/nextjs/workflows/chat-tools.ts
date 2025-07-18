@@ -1,40 +1,6 @@
 import { FatalError } from '@vercel/workflow-core';
 import { z } from 'zod';
 
-// Mock flight data
-export const mockFlights = [
-  {
-    flightNumber: 'UA123',
-    from: 'SFO',
-    to: 'LAX',
-    departure: '2024-03-15T10:00:00',
-    arrival: '2024-03-15T11:30:00',
-    price: 250,
-    airline: 'United Airlines',
-    status: 'On Time',
-  },
-  {
-    flightNumber: 'AA456',
-    from: 'JFK',
-    to: 'MIA',
-    departure: '2024-03-15T14:00:00',
-    arrival: '2024-03-15T17:30:00',
-    price: 350,
-    airline: 'American Airlines',
-    status: 'On Time',
-  },
-  {
-    flightNumber: 'DL789',
-    from: 'ATL',
-    to: 'ORD',
-    departure: '2024-03-15T08:00:00',
-    arrival: '2024-03-15T09:30:00',
-    price: 180,
-    airline: 'Delta Airlines',
-    status: 'Delayed',
-  },
-];
-
 export const mockAirports: Record<
   string,
   { name: string; city: string; timezone: string }
@@ -84,23 +50,51 @@ export async function searchFlights({
   // Simulate API delay
   await new Promise((resolve) => setTimeout(resolve, 500));
 
-  // Filter mock flights based on criteria
-  const results = mockFlights.filter(
-    (flight) =>
-      flight.from.toLowerCase().includes(from.toLowerCase()) ||
-      flight.to.toLowerCase().includes(to.toLowerCase())
-  );
+  // Generate 3 flights with different price points and statuses
+  const airlines = [
+    'United Airlines',
+    'American Airlines',
+    'Delta Airlines',
+    'Southwest Airlines',
+    'JetBlue',
+  ];
+  const statuses = ['On Time', 'Delayed', 'On Time'];
+  const priceMultipliers = [1, 1.5, 2.2]; // Budget, mid-range, premium
 
-  if (results.length === 0) {
+  // Base price calculation (could be based on distance, popularity, etc.)
+  const basePrice = 150 + Math.floor(Math.random() * 200);
+
+  // Generate departure times throughout the day
+  const departureHours = [6, 12, 18]; // Morning, afternoon, evening
+
+  const generatedFlights = departureHours.map((hour, index) => {
+    const departureTime = new Date(date);
+    departureTime.setHours(hour + Math.floor(Math.random() * 4));
+    departureTime.setMinutes(Math.floor(Math.random() * 60));
+
+    // Calculate flight duration (1-5 hours)
+    const duration = 60 + Math.floor(Math.random() * 240);
+    const arrivalTime = new Date(departureTime.getTime() + duration * 60000);
+
+    // Generate flight number
+    const airlineCode = ['UA', 'AA', 'DL', 'WN', 'B6'][index % 5];
+    const flightNumber = `${airlineCode}${Math.floor(Math.random() * 900) + 100}`;
+
     return {
-      message: `No flights found from ${from} to ${to} on ${date}`,
-      flights: [],
+      flightNumber,
+      from: from.toUpperCase().slice(0, 3), // Convert to 3-letter code format
+      to: to.toUpperCase().slice(0, 3),
+      departure: departureTime.toISOString(),
+      arrival: arrivalTime.toISOString(),
+      price: Math.round(basePrice * priceMultipliers[index]),
+      airline: airlines[index % airlines.length],
+      status: statuses[index],
     };
-  }
+  });
 
   return {
-    message: `Found ${results.length} flights`,
-    flights: results,
+    message: `Found ${generatedFlights.length} flights from ${from} to ${to} on ${date}`,
+    flights: generatedFlights.sort((a, b) => a.price - b.price), // Sort by price
   };
 }
 
@@ -119,24 +113,82 @@ export async function checkFlightStatus({
     throw new Error('Flight status service temporarily unavailable');
   }
 
-  const flight = mockFlights.find(
-    (f) => f.flightNumber.toLowerCase() === flightNumber.toLowerCase()
-  );
+  // Generate random flight details
+  const airlines = [
+    'United Airlines',
+    'American Airlines',
+    'Delta Airlines',
+    'Southwest Airlines',
+    'JetBlue',
+  ];
+  const airports = [
+    'LAX',
+    'JFK',
+    'ORD',
+    'ATL',
+    'DFW',
+    'SFO',
+    'MIA',
+    'DEN',
+    'BOS',
+    'SEA',
+  ];
+  const statuses = [
+    'On Time',
+    'Delayed',
+    'Boarding',
+    'Departed',
+    'In Flight',
+    'Landed',
+  ];
 
-  if (!flight) {
-    throw new FatalError(`Flight ${flightNumber} not found in our system`);
+  // Random selections
+  const fromAirport = airports[Math.floor(Math.random() * airports.length)];
+  let toAirport = airports[Math.floor(Math.random() * airports.length)];
+  // Ensure different airports
+  while (toAirport === fromAirport) {
+    toAirport = airports[Math.floor(Math.random() * airports.length)];
   }
 
+  // Generate times
+  const now = new Date();
+  const departureOffset = (Math.random() - 0.5) * 4 * 60 * 60 * 1000; // +/- 2 hours from now
+  const departureTime = new Date(now.getTime() + departureOffset);
+  const flightDuration = (60 + Math.floor(Math.random() * 240)) * 60 * 1000; // 1-5 hours
+  const arrivalTime = new Date(departureTime.getTime() + flightDuration);
+
+  // Determine gate based on status
+  const status = statuses[Math.floor(Math.random() * statuses.length)];
+  const gate = ['Boarding', 'Departed', 'In Flight', 'Landed'].includes(status)
+    ? `${['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)]}${Math.floor(Math.random() * 30) + 1}`
+    : Math.random() < 0.7
+      ? `${['A', 'B', 'C', 'D'][Math.floor(Math.random() * 4)]}${Math.floor(Math.random() * 30) + 1}`
+      : 'TBD';
+
+  // Add delay information if status is "Delayed"
+  const delayMinutes =
+    status === 'Delayed' ? Math.floor(Math.random() * 120) + 15 : 0;
+  const actualDepartureTime =
+    status === 'Delayed'
+      ? new Date(departureTime.getTime() + delayMinutes * 60 * 1000)
+      : departureTime;
+  const actualArrivalTime =
+    status === 'Delayed'
+      ? new Date(arrivalTime.getTime() + delayMinutes * 60 * 1000)
+      : arrivalTime;
+
   return {
-    flightNumber: flight.flightNumber,
-    status: flight.status,
-    departure: flight.departure,
-    arrival: flight.arrival,
-    from: flight.from,
-    to: flight.to,
-    airline: flight.airline,
-    gate:
-      Math.random() < 0.5 ? `B${Math.floor(Math.random() * 20) + 1}` : 'TBD',
+    flightNumber: flightNumber.toUpperCase(),
+    status: status + (status === 'Delayed' ? ` (${delayMinutes} minutes)` : ''),
+    departure: departureTime.toISOString(),
+    arrival: arrivalTime.toISOString(),
+    actualDeparture: actualDepartureTime.toISOString(),
+    actualArrival: actualArrivalTime.toISOString(),
+    from: fromAirport,
+    to: toAirport,
+    airline: airlines[Math.floor(Math.random() * airlines.length)],
+    gate,
+    terminal: Math.floor(Math.random() * 4) + 1,
   };
 }
 
