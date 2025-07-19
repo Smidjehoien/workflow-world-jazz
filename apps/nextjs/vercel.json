@@ -4,7 +4,7 @@
       "experimentalTriggers": [
         {
           "type": "queue/v1beta",
-          "topic": "step-*",
+          "topic": "step/*",
           "consumer": "default",
           "maxDeliveries": 64,
           "retryAfterSeconds": 5,
@@ -16,7 +16,7 @@
       "experimentalTriggers": [
         {
           "type": "queue/v1beta",
-          "topic": "workflow-*",
+          "topic": "workflow/*",
           "consumer": "default",
           "maxDeliveries": 64,
           "retryAfterSeconds": 5,

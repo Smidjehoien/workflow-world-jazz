@@ -89,7 +89,7 @@ export async function start(
   const message: WorkflowInvokePayload = {
     runId: run.id,
   };
-  await send(`workflow-${workflowName}`, message);
+  await send(`workflow/${workflowName}`, message);
 
   return run;
 }
@@ -124,7 +124,7 @@ export async function runStep(stepId: string, options: StartOptions = {}) {
 export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
   async function handler(message_: unknown, metadata: MessageMetadata) {
     // Extract the workflow name from the topic name
-    const workflowName = metadata.topicName.slice('workflow-'.length);
+    const workflowName = metadata.topicName.slice('workflow/'.length);
 
     // TODO: validate `workflowName` exists before consuming message?
 
@@ -177,7 +177,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
             workflowRunId: runId,
             stepId: step.id,
           };
-          await send(`step-${stepEntry.stepName}`, stepInvokePayload);
+          await send(`step/${stepEntry.stepName}`, stepInvokePayload);
         }
       } else if (isInstanceOf(err, Error)) {
         const errorName = getErrorName(err);
@@ -206,7 +206,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
   }
 
   return handleCallback({
-    'workflow-*': {
+    'workflow/*': {
       default: handler,
     },
   });
@@ -217,7 +217,7 @@ async function stepMessageHandler(
   metadata: MessageMetadata
 ) {
   // Extract the step name from the topic name
-  const stepName = metadata.topicName.slice('step-'.length);
+  const stepName = metadata.topicName.slice('step/'.length);
 
   const stepFn = getStepFunction(stepName);
   if (!stepFn) {
@@ -336,7 +336,7 @@ async function stepMessageHandler(
     runId: workflowRunId,
   };
 
-  await send(`workflow-${workflowName}`, workflowInvokeMessage);
+  await send(`workflow/${workflowName}`, workflowInvokeMessage);
 }
 
 /**
@@ -345,7 +345,7 @@ async function stepMessageHandler(
  * for each step, this is temporary.
  */
 export const vercelAPIStepsEntrypoint = /* @__PURE__ */ handleCallback({
-  'step-*': {
+  'step/*': {
     default: stepMessageHandler,
   },
 });
