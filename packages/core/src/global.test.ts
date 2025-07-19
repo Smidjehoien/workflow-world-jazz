@@ -65,12 +65,12 @@ describe('StepsNotRunError', () => {
   it('should generate correct error message for multiple steps', () => {
     const steps: InvocationQueueItem[] = [
       {
-        stepName: 'step/1',
+        stepName: 'step-1',
         args: ['arg1'],
         invocationId: 'inv-1',
       },
       {
-        stepName: 'step/2',
+        stepName: 'step-2',
         args: ['arg2'],
         invocationId: 'inv-2',
       },

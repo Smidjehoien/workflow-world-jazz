@@ -46,7 +46,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       experimentalTriggers: [
         {
           type: 'queue/v1beta',
-          topic: 'step/*',
+          topic: 'step-*',
           consumer: 'default',
           maxDeliveries: 64, // Optional: Maximum number of delivery attempts (default: 3)
           retryAfterSeconds: 5, // Optional: Delay between retries (default: 60)
@@ -87,7 +87,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       experimentalTriggers: [
         {
           type: 'queue/v1beta',
-          topic: 'workflow/*',
+          topic: 'workflow-*',
           consumer: 'default',
           maxDeliveries: 64, // Optional: Maximum number of delivery attempts (default: 3)
           retryAfterSeconds: 5, // Optional: Delay between retries (default: 60)
