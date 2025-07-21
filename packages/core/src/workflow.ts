@@ -12,7 +12,6 @@ import { createUseStep, type WorkflowContext } from './step.js';
 class Deferred<T> {
   promise: Promise<T>;
   resolve!: (value: T) => void;
-  // biome-ignore lint/suspicious/noExplicitAny: Appropriate for a rejection handler
   reject!: (reason?: any) => void;
 
   constructor() {

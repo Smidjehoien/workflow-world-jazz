@@ -9,7 +9,6 @@ export function withWorkflow(nextConfig: NextConfig) {
   if (!nextConfig.turbopack.rules) {
     nextConfig.turbopack.rules = {};
   }
-  // biome-ignore lint/suspicious/noExplicitAny: we need to ignore deprecated type or handle it
   const existingRules = nextConfig.turbopack.rules as any;
 
   nextConfig.turbopack.rules = {

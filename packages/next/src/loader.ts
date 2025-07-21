@@ -7,7 +7,6 @@ export default function workflowLoader(
     resourcePath: string;
   },
   source: string | Buffer,
-  // biome-ignore lint/suspicious/noExplicitAny: sourcemap type
   sourceMap: any
 ): string {
   const filename = this.resourcePath;
