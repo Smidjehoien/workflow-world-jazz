@@ -1,6 +1,6 @@
 {
-  "name": "swc-plugin-workflow",
-  "version": "0.1.0",
+  "name": "@vercel/swc-plugin-workflow",
+  "version": "0.0.1-alpha.0",
   "description": "",
   "author": "",
   "license": "ISC",

@@ -2,7 +2,7 @@
   "name": "@workflow/example-app",
   "private": true,
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.0",
   "scripts": {
     "workflow": "workflow",
     "wf": "wf",

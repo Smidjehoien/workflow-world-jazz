@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-cli",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "type": "module",
   "bin": {
     "workflow": "./bin/run.js",
@@ -33,11 +33,11 @@
     "@oclif/core": "^4.0.0",
     "@oclif/plugin-help": "^6.0.0",
     "@swc/core": "1.11.24",
+    "@vercel/swc-plugin-workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "chokidar": "^4.0.3",
     "esbuild": "^0.25.6",
     "mixpart": "^0.0.4",
-    "swc-plugin-workflow": "workspace:*",
     "tinyglobby": "^0.2.14"
   }
 }

@@ -1,7 +1,6 @@
 {
   "name": "@vercel/workflow-next",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.0.1-alpha.0",
   "type": "commonjs",
   "main": "dist/index.js",
   "files": [
@@ -21,7 +20,7 @@
     "@swc/core": "1.11.24",
     "@vercel/workflow-cli": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
-    "swc-plugin-workflow": "workspace:*"
+    "@vercel/swc-plugin-workflow": "workspace:*"
   },
   "devDependencies": {
     "next": "15.3.4",

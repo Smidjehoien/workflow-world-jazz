@@ -1785,7 +1785,7 @@ dependencies = [
 
 [[package]]
 name = "swc_plugin_workflow"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "serde",
  "serde_json",

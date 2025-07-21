@@ -1,0 +1,15 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@workflow/example-app": "0.0.1",
+    "nextjs": "0.0.1",
+    "@vercel/swc-plugin-workflow": "0.0.0",
+    "@vercel/workflow-cli": "0.0.0",
+    "@vercel/workflow-core": "0.0.0",
+    "@vercel/workflow-next": "0.0.0",
+    "@vercel/workflow-tsconfig": "0.0.0",
+    "@vercel/workflow-vm": "0.0.0"
+  },
+  "changesets": ["grumpy-clowns-unite"]
+}

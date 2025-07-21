@@ -3,6 +3,7 @@
   "private": true,
   "devDependencies": {
     "@biomejs/biome": "^2.0.5",
+    "@changesets/cli": "^2.29.5",
     "esbuild": "^0.25.5",
     "husky": "^9.1.7",
     "lint-staged": "^16.1.0",
@@ -20,7 +21,10 @@
     "prepare": "husky",
     "test": "vitest",
     "typecheck": "biome check",
-    "clean": "turbo clean"
+    "clean": "turbo clean",
+    "changeset": "changeset",
+    "version:prepare": "changeset version",
+    "release": "changeset publish"
   },
   "lint-staged": {
     "**/*": "biome format --write"

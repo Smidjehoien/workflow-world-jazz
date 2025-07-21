@@ -36,7 +36,7 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
               experimental: {
                 plugins: [
                   [
-                    require.resolve('swc-plugin-workflow'),
+                    require.resolve('@vercel/swc-plugin-workflow'),
                     { mode: options.mode },
                   ],
                 ],

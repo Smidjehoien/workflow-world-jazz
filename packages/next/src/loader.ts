@@ -31,7 +31,9 @@ export default function workflowLoader(
       },
       target: 'es2022',
       experimental: {
-        plugins: [[require.resolve('swc-plugin-workflow'), { mode: 'client' }]],
+        plugins: [
+          [require.resolve('@vercel/swc-plugin-workflow'), { mode: 'client' }],
+        ],
       },
     },
     minify: false,
