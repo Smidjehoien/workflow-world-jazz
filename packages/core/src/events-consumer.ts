@@ -1,11 +1,17 @@
 import type { Event } from './backend.js';
 
 export enum EventConsumerResult {
-  // Callback consumed the event, but should not be removed from the callbacks list
+  /**
+   * Callback consumed the event, but should not be removed from the callbacks list
+   */
   Consumed,
-  // Callback did not consume the event, so it should be passed to the next callback
+  /**
+   * Callback did not consume the event, so it should be passed to the next callback
+   */
   NotConsumed,
-  // Callback consumed the event, and should be removed from the callbacks list
+  /**
+   * Callback consumed the event, and should be removed from the callbacks list
+   */
   Finished,
 }
 
