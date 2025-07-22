@@ -1,5 +1,13 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- b8159cf: Change workflow queue names
+- Updated dependencies [b8159cf]
+  - @vercel/workflow-core@0.0.1-alpha.3
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes

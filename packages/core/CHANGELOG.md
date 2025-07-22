@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- b8159cf: Change workflow queue names
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # nextjs
 
+## 0.0.2-alpha.2
+
+### Patch Changes
+
+- b8159cf: Change workflow queue names
+
 ## 0.0.2-alpha.1
 
 ### Patch Changes
