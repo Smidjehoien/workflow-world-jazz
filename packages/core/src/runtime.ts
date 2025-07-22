@@ -9,6 +9,7 @@ import {
   getWorkflowRunEvents,
   updateStep,
   updateWorkflowRun,
+  WorkflowAPIError,
   type WorkflowRun,
 } from './backend.js';
 import { FatalError, StepsNotRunError } from './global.js';
@@ -162,22 +163,36 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
             ops,
             err.globalThis
           );
-          waitUntil(Promise.all(ops));
 
-          const step = await createStep(runId, {
-            workflow_run_id: runId,
-            invocation_id: stepEntry.invocationId,
-            step_name: stepEntry.stepName,
-            step_type: 'function_call',
-            arguments: dehydratedArgs as Serializable[],
-          });
+          try {
+            const step = await createStep(runId, {
+              workflow_run_id: runId,
+              invocation_id: stepEntry.invocationId,
+              step_name: stepEntry.stepName,
+              step_type: 'function_call',
+              arguments: dehydratedArgs as Serializable[],
+            });
 
-          const stepInvokePayload: StepInvokePayload = {
-            workflowName,
-            workflowRunId: runId,
-            stepId: step.id,
-          };
-          await send(`step-${stepEntry.stepName}`, stepInvokePayload);
+            waitUntil(Promise.all(ops));
+
+            const stepInvokePayload: StepInvokePayload = {
+              workflowName,
+              workflowRunId: runId,
+              stepId: step.id,
+            };
+            await send(`step-${stepEntry.stepName}`, stepInvokePayload, {
+              idempotencyKey: stepEntry.invocationId,
+            });
+          } catch (err) {
+            if (isInstanceOf(err, WorkflowAPIError) && err.status === 409) {
+              // Step already exists, so we can skip it
+              console.warn(
+                `Step "${stepEntry.stepName}" with invocation ID "${stepEntry.invocationId}" already exists, skipping: ${err.message}`
+              );
+              continue;
+            }
+            throw err;
+          }
         }
       } else if (isInstanceOf(err, Error)) {
         const errorName = getErrorName(err);

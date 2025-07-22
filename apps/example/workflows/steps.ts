@@ -41,25 +41,26 @@ export async function genStream(): Promise<ReadableStream<Uint8Array>> {
 }
 
 export async function consumeStreams(
-  //...streams: ReadableStream<Uint8Array>[]
-  s: ReadableStream<Uint8Array>
+  ...streams: ReadableStream<Uint8Array>[]
 ): Promise<string> {
   'use step';
   const parts: Uint8Array[] = [];
 
-  // await Promise.all(
-  //   streams.map(async (s, i) => {
-  console.log(s);
-  const reader = s.getReader();
-  while (true) {
-    const result = await reader.read();
-    if (result.done) break;
-    console.log(
-      `Received ${result.value.length} bytes from stream ${/*i*/ 0}: ${JSON.stringify(new TextDecoder().decode(result.value))}`
-    );
-    parts.push(result.value);
-  }
-  //  })
-  //);
+  console.log('Consuming streams', streams);
+
+  await Promise.all(
+    streams.map(async (s, i) => {
+      const reader = s.getReader();
+      while (true) {
+        const result = await reader.read();
+        if (result.done) break;
+        console.log(
+          `Received ${result.value.length} bytes from stream ${i}: ${JSON.stringify(new TextDecoder().decode(result.value))}`
+        );
+        parts.push(result.value);
+      }
+    })
+  );
+
   return Buffer.concat(parts).toString('utf8');
 }

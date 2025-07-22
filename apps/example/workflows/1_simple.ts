@@ -2,18 +2,14 @@ import { add, consumeStreams, genStream, sleep } from './steps';
 
 export async function example(i: number) {
   'use workflow';
-  const a = await add(i, 7);
-  const b = await add(a, 8);
-  const c = await Promise.race([sleep(5000, 'Hello, world!'), add(b, 9)]);
-  return c;
+  const [a, b] = await Promise.all([add(i, 7), add(i, 8)]);
+  const d = await add(a, b);
+  return d;
 }
 
 export async function stream() {
   'use workflow';
-  //const res = await fetch('https://jsonip.com');
-  //const json = await res.json();
-  //return json;
-  const s = await genStream();
-  const b = await consumeStreams(s);
+  const [s1, s2] = await Promise.all([genStream(), genStream()]);
+  const b = await consumeStreams(s1, s2);
   return b;
 }
