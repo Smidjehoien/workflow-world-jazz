@@ -1,5 +1,13 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.2
+
+### Patch Changes
+
+- Rebuild packages
+- Updated dependencies
+  - @vercel/workflow-vm@0.0.1-alpha.1
+
 ## 0.0.1-alpha.1
 
 ### Patch Changes
