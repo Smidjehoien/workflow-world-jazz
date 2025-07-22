@@ -316,6 +316,7 @@ async function stepMessageHandler(
             step_id: stepId,
             invocation_id: step.invocation_id,
             error,
+            fatal: true,
           },
         });
         await updateStep(workflowRunId, stepId, {
@@ -323,6 +324,15 @@ async function stepMessageHandler(
           error_message: error,
         });
       } else {
+        await createWorkflowRunEvent(workflowRunId, {
+          event_type: 'step_failed',
+          event_data: {
+            step_id: stepId,
+            invocation_id: step.invocation_id,
+            error: String(err),
+            stack: getErrorStack(err),
+          },
+        });
         const timeoutSeconds = 1;
         // it's a retryable error - so have the queue keep the message visible so that it gets retried
         return {

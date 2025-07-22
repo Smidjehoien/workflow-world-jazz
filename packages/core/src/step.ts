@@ -66,10 +66,12 @@ export function createUseStep(ctx: WorkflowContext) {
             if (event.event_data.fatal) {
               reject(new FatalError(event.event_data.error));
             } else {
-              reject(new Error(event.event_data.error));
+              // This is a retryable error, so nothing to do here,
+              // but we will consume the event
+              return EventConsumerResult.Consumed;
             }
           } else if (event.event_type === 'step_result') {
-            // Step has already completed
+            // Step has already completed, so resolve the Promise with the cached result
             const ops: Promise<void>[] = [];
             const hydratedResult = hydrateStepReturnValue(
               event.event_data.result,
@@ -78,7 +80,6 @@ export function createUseStep(ctx: WorkflowContext) {
             );
             waitUntil(Promise.all(ops));
             resolve(hydratedResult);
-            return EventConsumerResult.Finished;
           } else {
             // An unexpected event type has been received, but it does belong to this step (matching `invocationId`)
             reject(
