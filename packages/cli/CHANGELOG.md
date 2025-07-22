@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- fe08f3e: NextJS ESM Builds
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes

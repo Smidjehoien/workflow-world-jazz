@@ -1,5 +1,11 @@
 # nextjs
 
+## 0.0.2-alpha.1
+
+### Patch Changes
+
+- fe08f3e: NextJS ESM Builds
+
 ## 0.0.2-alpha.0
 
 ### Patch Changes
