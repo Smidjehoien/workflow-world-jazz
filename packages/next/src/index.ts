@@ -63,7 +63,8 @@ export function withWorkflow(nextConfig: NextConfig) {
 
   return async function buildConfig(phase: string) {
     const workflowBuilder = new NextBuilder({
-      dirs: ['workflows'],
+      // Support both workflows and src/workflows folders
+      dirs: ['workflows', 'src/workflows'],
       workingDir: process.cwd(),
       buildTarget: 'next',
       workflowsBundlePath: '',

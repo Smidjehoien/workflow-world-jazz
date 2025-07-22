@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.1
+
+### Patch Changes
+
+- cb64dcc: Support src/app directory in next loader
+
 ## 0.0.1-alpha.0
 
 ### Patch Changes

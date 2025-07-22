@@ -12,6 +12,8 @@
       "!**/node_modules/**",
       "!**/dist/**",
       "!**/.vercel/**",
+      "!**/.changeset/**",
+      "!**/.cursor/**",
       "!**/api/generated/**",
       "!**/.prebuilt/**",
       "!**/.turbo/**",
