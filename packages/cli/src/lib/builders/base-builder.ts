@@ -33,7 +33,10 @@ export abstract class BaseBuilder {
     );
   }
 
-  protected async createStepsBundle(outputPath: string): Promise<void> {
+  protected async createStepsBundle({
+    format = 'cjs',
+    outfile,
+  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'>): Promise<void> {
     const inputFiles = await this.getInputFiles();
 
     // Create a virtual entry that imports all files. All step definitions
@@ -55,10 +58,10 @@ export abstract class BaseBuilder {
         sourcefile: 'virtual-entry.js',
         loader: 'js',
       },
-      outfile: outputPath,
+      outfile,
       absWorkingDir: this.config.workingDir,
       bundle: true,
-      format: 'cjs',
+      format,
       platform: 'node',
       target: 'es2022',
       write: true,
@@ -72,7 +75,10 @@ export abstract class BaseBuilder {
     });
   }
 
-  protected async createWorkflowsBundle(outputPath: string): Promise<void> {
+  protected async createWorkflowsBundle({
+    format = 'cjs',
+    outfile,
+  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'>): Promise<void> {
     const inputFiles = await this.getInputFiles();
 
     // Create a virtual entry that imports all files
@@ -93,7 +99,7 @@ export abstract class BaseBuilder {
       },
       bundle: true,
       absWorkingDir: this.config.workingDir,
-      format: 'cjs',
+      format: 'cjs', // Runs inside the VM which expects cjs
       platform: 'node',
       target: 'es2022',
       write: false,
@@ -128,10 +134,10 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
         sourcefile: 'virtual-entry.js',
         loader: 'js',
       },
-      outfile: outputPath,
+      outfile,
       absWorkingDir: this.config.workingDir,
       bundle: true,
-      format: 'cjs',
+      format,
       platform: 'node',
       target: 'es2022',
       write: true,
@@ -152,6 +158,10 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       'NOTE: The recommended way to use workflow with a framework like NextJS is using the loader/plugin with webpack/turbobpack/rollup'
     );
 
+    // Ensure we have the directory for the client bundle
+    const outputDir = dirname(this.config.clientBundlePath);
+    await mkdir(outputDir, { recursive: true });
+
     const inputFiles = await this.getInputFiles();
 
     // Create a virtual entry that imports all files
@@ -160,31 +170,23 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       .join('\n');
 
     // Bundle with esbuild and our custom SWC plugin
-    const result = await esbuild.build({
+    await esbuild.build({
       stdin: {
         contents: imports,
         resolveDir: this.config.workingDir,
         sourcefile: 'virtual-entry.js',
         loader: 'js',
       },
+      outfile: this.config.clientBundlePath,
       bundle: true,
       format: 'esm',
       platform: 'node',
       target: 'es2022',
-      write: false,
+      write: true,
       treeShaking: true,
       external: ['@vercel/workflow-core'],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'client' })],
     });
-
-    if (!result.outputFiles || result.outputFiles.length === 0) {
-      throw new Error('No output files generated from esbuild');
-    }
-
-    // Write the output
-    const outputDir = dirname(this.config.clientBundlePath);
-    await mkdir(outputDir, { recursive: true });
-    await writeFile(this.config.clientBundlePath, result.outputFiles[0].text);
   }
 }

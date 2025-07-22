@@ -26,14 +26,20 @@ export class NextBuilder extends BaseBuilder {
     // Create steps bundle
     const stepsRouteDir = join(apiGeneratedDir, 'steps');
     await mkdir(stepsRouteDir, { recursive: true });
-    await this.createStepsBundle(join(stepsRouteDir, 'route.cjs'));
+    await this.createStepsBundle({
+      format: 'esm',
+      outfile: join(stepsRouteDir, 'route.js'),
+    });
   }
 
   private async buildWorkflowsFunction(apiGeneratedDir: string): Promise<void> {
     console.log('Creating Next JS workflows route');
     const workflowsRouteDir = join(apiGeneratedDir, 'workflows');
     await mkdir(workflowsRouteDir, { recursive: true });
-    await this.createWorkflowsBundle(join(workflowsRouteDir, 'route.cjs'));
+    await this.createWorkflowsBundle({
+      format: 'esm',
+      outfile: join(workflowsRouteDir, 'route.js'),
+    });
   }
 
   private async findAppDirectory(): Promise<string> {

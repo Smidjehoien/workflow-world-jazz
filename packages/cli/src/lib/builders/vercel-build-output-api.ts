@@ -24,7 +24,9 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     await mkdir(stepsFuncDir, { recursive: true });
 
     // Create steps bundle
-    await this.createStepsBundle(join(stepsFuncDir, 'index.js'));
+    await this.createStepsBundle({
+      outfile: join(stepsFuncDir, 'index.js'),
+    });
 
     // Create package.json for ESM support
     const packageJson = {
@@ -66,7 +68,9 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     const workflowsFuncDir = join(apiGeneratedDir, 'workflows.func');
     await mkdir(workflowsFuncDir, { recursive: true });
 
-    await this.createWorkflowsBundle(join(workflowsFuncDir, 'index.js'));
+    await this.createWorkflowsBundle({
+      outfile: join(workflowsFuncDir, 'index.js'),
+    });
 
     // Create package.json for ESM support
     const packageJson = {

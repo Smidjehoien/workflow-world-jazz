@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { BaseBuilder } from './base-builder.js';
 
@@ -24,7 +24,9 @@ export class VercelStaticBuilder extends BaseBuilder {
     // Ensure directory exists
     await mkdir(dirname(stepsBundlePath), { recursive: true });
 
-    await this.createStepsBundle(stepsBundlePath);
+    await this.createStepsBundle({
+      outfile: stepsBundlePath,
+    });
   }
 
   private async buildWorkflowsBundle(): Promise<void> {
@@ -41,6 +43,8 @@ export class VercelStaticBuilder extends BaseBuilder {
     // Ensure directory exists
     await mkdir(dirname(workflowBundlePath), { recursive: true });
 
-    await this.createWorkflowsBundle(workflowBundlePath);
+    await this.createWorkflowsBundle({
+      outfile: workflowBundlePath,
+    });
   }
 }
