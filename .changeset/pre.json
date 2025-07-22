@@ -11,5 +11,11 @@
     "@vercel/workflow-tsconfig": "0.0.0",
     "@vercel/workflow-vm": "0.0.0"
   },
-  "changesets": ["clever-heads-throw", "grumpy-clowns-unite"]
+  "changesets": [
+    "clever-heads-throw",
+    "gold-hats-travel",
+    "grumpy-clowns-unite",
+    "odd-geese-drop",
+    "real-tools-invent"
+  ]
 }

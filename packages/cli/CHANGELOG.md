@@ -1,5 +1,14 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.2
+
+### Patch Changes
+
+- ce2dae6: rename route.js to route.cjs as it's a commonjs file
+- Updated dependencies [b45e33b]
+- Updated dependencies [e49500b]
+  - @vercel/workflow-core@0.0.1-alpha.1
+
 ## 0.0.1-alpha.1
 
 ### Patch Changes
