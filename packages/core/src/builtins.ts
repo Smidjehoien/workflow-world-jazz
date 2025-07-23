@@ -6,6 +6,11 @@ export async function __builtin_fetch(...args: Parameters<typeof fetch>) {
   return fetch(...args);
 }
 
+export async function __builtin_response_array_buffer(res: Response) {
+  'use step';
+  return res.arrayBuffer();
+}
+
 export async function __builtin_response_json(res: Response) {
   'use step';
   return res.json();

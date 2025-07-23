@@ -1,8 +1,8 @@
 import { runInContext } from 'node:vm';
-import { waitUntil } from '@vercel/functions';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
+import { ENOTSUP } from './global.js';
 import {
   dehydrateWorkflowReturnValue,
   hydrateWorkflowArguments,
@@ -72,30 +72,135 @@ export async function runWorkflow(
   vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
 
   // `Response` is a special built-in class that invokes steps
-  // for the `json()` and `text()` instance methods
+  // for the `json()`, `text()` and `arrayBuffer()` instance methods
   const resJson = useStep<[any], any>('__builtin_response_json');
   const resText = useStep<[any], string>('__builtin_response_text');
-  class Response {
+  const resArrayBuffer = useStep<[any], ArrayBuffer>(
+    '__builtin_response_array_buffer'
+  );
+  class Response implements globalThis.Response {
+    type!: globalThis.Response['type'];
+    url!: string;
     status!: number;
     statusText!: string;
     body!: ReadableStream<Uint8Array>;
     headers!: Headers;
+    redirected!: boolean;
+
+    // TODO: implement these
+    clone!: () => Response;
+    blob!: () => Promise<globalThis.Blob>;
+    formData!: () => Promise<globalThis.FormData>;
 
     get ok() {
       return this.status >= 200 && this.status < 300;
+    }
+
+    get bodyUsed() {
+      return false;
+    }
+
+    async arrayBuffer() {
+      return resArrayBuffer(this);
     }
 
     async json() {
       return resJson(this);
     }
 
+    static json(): Response {
+      ENOTSUP();
+    }
+
     async text() {
       return resText(this);
     }
+
+    static error(): Response {
+      ENOTSUP();
+    }
+
+    static redirect(_url: string, _status: number = 302): Response {
+      ENOTSUP();
+    }
   }
-  // we need the Response on globalThis to match for
-  // instanceof checks context doesn't do this automatically
-  vmGlobalThis.Response = Response as any;
+  vmGlobalThis.Response = Response;
+
+  class ReadableStream<T> implements globalThis.ReadableStream<T> {
+    constructor() {
+      ENOTSUP();
+    }
+
+    get locked() {
+      return false;
+    }
+
+    cancel(): any {
+      ENOTSUP();
+    }
+
+    getReader(): any {
+      ENOTSUP();
+    }
+
+    pipeThrough(): any {
+      ENOTSUP();
+    }
+
+    pipeTo(): any {
+      ENOTSUP();
+    }
+
+    tee(): any {
+      ENOTSUP();
+    }
+
+    values(): any {
+      ENOTSUP();
+    }
+
+    static from(): any {
+      ENOTSUP();
+    }
+
+    [Symbol.asyncIterator](): any {
+      ENOTSUP();
+    }
+  }
+  vmGlobalThis.ReadableStream = ReadableStream;
+
+  class WritableStream<T> implements globalThis.WritableStream<T> {
+    constructor() {
+      ENOTSUP();
+    }
+
+    get locked() {
+      return false;
+    }
+
+    abort(): any {
+      ENOTSUP();
+    }
+
+    close(): any {
+      ENOTSUP();
+    }
+
+    getWriter(): any {
+      ENOTSUP();
+    }
+  }
+  vmGlobalThis.WritableStream = WritableStream;
+
+  class TransformStream<I, O> implements globalThis.TransformStream<I, O> {
+    readable: globalThis.ReadableStream<O>;
+    writable: globalThis.WritableStream<I>;
+
+    constructor() {
+      ENOTSUP();
+    }
+  }
+  vmGlobalThis.TransformStream = TransformStream;
 
   // Eventually we'll probably want to provide our own `console` object,
   // but for now we'll just expose the global one.
@@ -122,9 +227,7 @@ export async function runWorkflow(
     );
   }
 
-  const ops: Promise<any>[] = [];
-
-  const args = hydrateWorkflowArguments(workflowRun.input, ops, vmGlobalThis);
+  const args = hydrateWorkflowArguments(workflowRun.input, vmGlobalThis);
 
   // Invoke user workflow
   const result = await Promise.race([
@@ -132,8 +235,6 @@ export async function runWorkflow(
     workflowDiscontinuation.promise,
   ]);
 
-  const dehydrated = dehydrateWorkflowReturnValue(result, ops, vmGlobalThis);
-  waitUntil(Promise.all(ops));
-
+  const dehydrated = dehydrateWorkflowReturnValue(result, vmGlobalThis);
   return dehydrated;
 }

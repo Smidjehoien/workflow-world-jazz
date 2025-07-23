@@ -72,13 +72,10 @@ export function createUseStep(ctx: WorkflowContext) {
             }
           } else if (event.event_type === 'step_result') {
             // Step has already completed, so resolve the Promise with the cached result
-            const ops: Promise<void>[] = [];
             const hydratedResult = hydrateStepReturnValue(
               event.event_data.result,
-              ops,
               ctx.globalThis
             );
-            waitUntil(Promise.all(ops));
             resolve(hydratedResult);
           } else {
             // An unexpected event type has been received, but it does belong to this step (matching `invocationId`)

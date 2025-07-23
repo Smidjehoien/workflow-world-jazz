@@ -89,15 +89,10 @@ export function createContext(options: CreateContextOptions) {
     env: process.env,
   };
 
-  // Stateless Web APIs that are made available inside the sandbox
+  // Stateless + synchronous Web APIs that are made available inside the sandbox
   g.Headers = globalThis.Headers;
   g.TextEncoder = globalThis.TextEncoder;
-  g.TextEncoderStream = globalThis.TextEncoderStream;
   g.TextDecoder = globalThis.TextDecoder;
-  g.TextDecoderStream = globalThis.TextDecoderStream;
-  g.ReadableStream = globalThis.ReadableStream;
-  g.WritableStream = globalThis.WritableStream;
-  g.TransformStream = globalThis.TransformStream;
   g.console = globalThis.console;
   g.URL = globalThis.URL;
   g.URLSearchParams = globalThis.URLSearchParams;

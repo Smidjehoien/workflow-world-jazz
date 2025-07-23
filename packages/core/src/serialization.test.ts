@@ -3,9 +3,28 @@ import { createContext } from '@vercel/workflow-vm';
 import { describe, expect, it } from 'vitest';
 import {
   dehydrateWorkflowArguments,
+  getStreamType,
   hydrateWorkflowArguments,
   STREAM_NAME_SYMBOL,
 } from './serialization.js';
+
+describe('getStreamType', () => {
+  it('should return `undefined` for a regular stream', () => {
+    const stream = new ReadableStream();
+    expect(stream.locked).toBe(false);
+    expect(getStreamType(stream)).toBeUndefined();
+    expect(stream.locked).toBe(false);
+  });
+
+  it('should return "bytes" for a byte stream', () => {
+    const stream = new ReadableStream({
+      type: 'bytes',
+    });
+    expect(stream.locked).toBe(false);
+    expect(getStreamType(stream)).toBe('bytes');
+    expect(stream.locked).toBe(false);
+  });
+});
 
 describe('workflow arguments', () => {
   const { context, globalThis: vmGlobalThis } = createContext({
@@ -26,7 +45,7 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const hydrated = hydrateWorkflowArguments(serialized, [], vmGlobalThis);
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
     vmGlobalThis.val = hydrated;
 
     expect(runInContext('val instanceof Date', context)).toBe(true);
@@ -45,7 +64,7 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const hydrated = hydrateWorkflowArguments(serialized, [], vmGlobalThis);
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
     vmGlobalThis.val = hydrated;
 
     expect(runInContext('val instanceof Date', context)).toBe(true);
@@ -83,7 +102,7 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const hydrated = hydrateWorkflowArguments(serialized, [], vmGlobalThis);
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
     vmGlobalThis.val = hydrated;
 
     expect(runInContext('val instanceof Map', context)).toBe(true);
@@ -109,7 +128,7 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const hydrated = hydrateWorkflowArguments(serialized, [], vmGlobalThis);
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
     vmGlobalThis.val = hydrated;
 
     expect(runInContext('val instanceof Set', context)).toBe(true);
@@ -132,22 +151,12 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const ops = [];
     class OurWritableStream {}
-    class TransformStream {
-      public writable;
-
-      constructor() {
-        this.writable = new OurWritableStream();
-      }
-    }
-    const hydrated = hydrateWorkflowArguments(serialized, ops, {
-      TransformStream,
+    const hydrated = hydrateWorkflowArguments(serialized, {
       WritableStream: OurWritableStream,
     });
     expect(hydrated).toBeInstanceOf(OurWritableStream);
     expect(hydrated[STREAM_NAME_SYMBOL]).toEqual(uuid);
-    expect(ops).toHaveLength(0);
   });
 
   it('should work with ReadableStream', () => {
@@ -167,22 +176,12 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const ops = [];
     class OurReadableStream {}
-    class TransformStream {
-      public readable;
-
-      constructor() {
-        this.readable = new OurReadableStream();
-      }
-    }
-    const hydrated = hydrateWorkflowArguments(serialized, ops, {
-      TransformStream,
+    const hydrated = hydrateWorkflowArguments(serialized, {
       ReadableStream: OurReadableStream,
     });
     expect(hydrated).toBeInstanceOf(OurReadableStream);
     expect(hydrated[STREAM_NAME_SYMBOL]).toEqual(uuid);
-    expect(ops).toHaveLength(1);
   });
 
   it('should work with Headers', () => {
@@ -222,7 +221,7 @@ describe('workflow arguments', () => {
       ]
     `);
 
-    const hydrated = hydrateWorkflowArguments(serialized, [], vmGlobalThis);
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
     expect(hydrated).toBeInstanceOf(Headers);
     expect(hydrated.get('foo')).toEqual('bar');
     expect(hydrated.get('set-cookie')).toEqual('a, b');
@@ -239,7 +238,7 @@ describe('workflow arguments', () => {
       ]),
     });
     const serialized = dehydrateWorkflowArguments(response, []);
-    const bodyUuid = serialized[serialized.length - 1];
+    const bodyUuid = serialized[serialized.length - 3];
     expect(serialized).toMatchInlineSnapshot(`
       [
         [
@@ -247,56 +246,62 @@ describe('workflow arguments', () => {
           1,
         ],
         {
-          "body": 18,
-          "headers": 5,
-          "status": 3,
-          "statusText": 4,
-          "url": 2,
+          "body": 19,
+          "headers": 6,
+          "redirected": 23,
+          "status": 4,
+          "statusText": 5,
+          "type": 2,
+          "url": 3,
         },
+        "default",
         "",
         202,
         "Custom",
         [
           "Headers",
-          6,
-        ],
-        [
           7,
-          10,
-          13,
-          16,
         ],
         [
           8,
+          11,
+          14,
+          17,
+        ],
+        [
           9,
+          10,
         ],
         "content-type",
         "text/plain;charset=UTF-8",
         [
-          11,
           12,
+          13,
         ],
         "foo",
         "bar",
         [
-          14,
           15,
+          16,
         ],
         "set-cookie",
         "a",
         [
-          14,
-          17,
+          15,
+          18,
         ],
         "b",
         [
           "ReadableStream",
-          19,
+          20,
         ],
         {
-          "name": 20,
+          "name": 21,
+          "type": 22,
         },
         "${bodyUuid}",
+        "bytes",
+        false,
       ]
     `);
 
@@ -310,17 +315,10 @@ describe('workflow arguments', () => {
     }
     class OurReadableStream {}
     class OurHeaders {}
-    class TransformStream {
-      public readable;
-      constructor() {
-        this.readable = new OurReadableStream();
-      }
-    }
-    const hydrated = hydrateWorkflowArguments(serialized, [], {
+    const hydrated = hydrateWorkflowArguments(serialized, {
       Headers: OurHeaders,
       Response: OurResponse,
       ReadableStream: OurReadableStream,
-      TransformStream,
     });
     expect(hydrated).toBeInstanceOf(OurResponse);
     expect(hydrated.headers).toBeInstanceOf(OurHeaders);

@@ -102,13 +102,7 @@ export async function start(
  * @param options - The options for the step run.
  * @returns The unique run ID for the newly started step invocation.
  */
-export async function runStep(stepId: string, options: StartOptions = {}) {
-  // const baseUrl = getBaseUrl(options.baseUrl);
-  // const callbackUrl = new URL(
-  //   `/api/generated/steps${baseUrl.search}`,
-  //   baseUrl
-  // );
-
+export async function runStep(_stepId: string, _options: StartOptions = {}) {
   throw new Error('Running steps directly is not yet implemented');
 }
 
@@ -160,7 +154,6 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
           const ops: Promise<void>[] = [];
           const dehydratedArgs = dehydrateStepArguments(
             stepEntry.args,
-            ops,
             err.globalThis
           );
 

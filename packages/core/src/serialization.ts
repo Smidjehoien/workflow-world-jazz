@@ -3,85 +3,166 @@ import { DEFAULT_CONFIG } from './backend.js';
 
 const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
-const getWorkflowServerWritableStream = (
-  global: Record<string, any> = globalThis
-) =>
-  class WorkflowServerWritableStream extends global.WritableStream<Uint8Array> {
-    constructor(name: string) {
-      super({
-        write: async (chunk: string | Uint8Array | Buffer) => {
-          // handle serializing Objects automatically
-          if (chunk.toString() === '[object Object]') {
-            chunk = devalue.stringify(chunk, getReducers(globalThis, []));
-          }
-
-          await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-            method: 'PUT',
-            body: chunk,
-            duplex: 'half',
-          });
-        },
-        close: async () => {
-          await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
-            method: 'PUT',
-            headers: {
-              'X-Stream-Done': 'true',
-            },
-          });
-        },
-      });
-    }
-  };
-
-async function pullStreamToWritable(
-  name: string,
-  writable: WritableStream,
-  global: Record<string, any> = globalThis
-) {
-  const res = await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`);
-
-  if (!res.ok) {
-    const writer = writable.getWriter();
-    writer.abort(new Error(`Failed to fetch stream: ${res.status}`));
-    return;
+/**
+ * Detect if a readable stream is a byte stream.
+ *
+ * @param stream
+ * @returns `"bytes"` if the stream is a byte stream, `undefined` otherwise
+ */
+export function getStreamType(stream: ReadableStream) {
+  try {
+    const reader = stream.getReader({ mode: 'byob' });
+    reader.releaseLock();
+    return 'bytes';
+  } catch {
+    return undefined;
   }
+}
 
-  const transformStream = new TransformStream({
+function getSerializeStream(
+  reducers: Reducers
+): TransformStream<any, Uint8Array> {
+  const encoder = new TextEncoder();
+  const stream = new TransformStream<any, Uint8Array>({
     transform(chunk, controller) {
-      try {
-        // attempt devaluing chunks
-        chunk = new TextDecoder().decode(chunk);
-        chunk = devalue.unflatten(revive(chunk), getRevivers(global, []));
-      } catch (err: any) {
-        console.error('failed to decode', err, chunk.toString());
-      }
-      controller.enqueue(chunk);
+      const serialized = devalue.stringify(chunk, reducers);
+      controller.enqueue(encoder.encode(`${serialized}\n`));
     },
   });
+  return stream;
+}
 
-  await res.body?.pipeThrough(transformStream).pipeTo(writable);
+function getDeserializeStream(
+  revivers: Revivers
+): TransformStream<Uint8Array, any> {
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const stream = new TransformStream<Uint8Array, any>({
+    transform(chunk, controller) {
+      // Append new chunk to buffer
+      buffer += decoder.decode(chunk, { stream: true });
+
+      // Process all complete lines
+      while (true) {
+        const newlineIndex = buffer.indexOf('\n');
+        if (newlineIndex === -1) break;
+        const line = buffer.slice(0, newlineIndex);
+        buffer = buffer.slice(newlineIndex + 1);
+        if (line.length > 0) {
+          const obj = devalue.parse(line, revivers);
+          controller.enqueue(obj);
+        }
+      }
+    },
+    flush(controller) {
+      // Process any remaining data in the buffer at the end of the stream
+      if (buffer && buffer.length > 0) {
+        const obj = devalue.parse(buffer, revivers);
+        controller.enqueue(obj);
+      }
+    },
+  });
+  return stream;
+}
+
+class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
+  #reader?: ReadableStreamDefaultReader<Uint8Array>;
+
+  constructor(name: string) {
+    super({
+      // @ts-expect-error Not sure why TypeScript is complaining about this
+      type: 'bytes',
+
+      pull: async (controller) => {
+        let reader = this.#reader;
+        if (!reader) {
+          const res = await fetch(
+            `${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`
+          );
+          if (!res.ok) {
+            controller.error(
+              new Error(`Failed to fetch stream: ${res.status}`)
+            );
+            return;
+          }
+          reader = this.#reader = res.body?.getReader();
+        }
+        if (!reader) {
+          // This shouldn't really happen, but just in case
+          controller.error(new Error('Failed to get reader'));
+          return;
+        }
+
+        const result = await reader.read();
+        if (result.done) {
+          this.#reader = undefined;
+          controller.close();
+        } else {
+          controller.enqueue(result.value);
+        }
+      },
+    });
+  }
+}
+
+class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
+  constructor(name: string) {
+    super({
+      write: async (chunk: string | Uint8Array | Buffer) => {
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+          method: 'PUT',
+          body: chunk,
+          duplex: 'half',
+        });
+      },
+      close: async () => {
+        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+          method: 'PUT',
+          headers: {
+            'X-Stream-Done': 'true',
+          },
+        });
+      },
+    });
+  }
 }
 
 export const STREAM_NAME_SYMBOL = Symbol.for('WORKFLOW_STREAM_NAME');
+export const STREAM_TYPE_SYMBOL = Symbol.for('WORKFLOW_STREAM_TYPE');
 
 // Types that need specialized handling when serialized/deserialized
 // ⚠️ If a type is added here, it MUST also be added to the `Serializable` type in `schemas.ts`
 export interface SerializableSpecial {
+  ArrayBuffer: string; // base64 string
+  BigInt64Array: string; // base64 string
+  BigUint64Array: string; // base64 string
   Date: string; // ISO string
+  Float32Array: string; // base64 string
+  Float64Array: string; // base64 string
   Headers: [string, string][];
+  Int8Array: string; // base64 string
+  Int16Array: string; // base64 string
+  Int32Array: string; // base64 string
   Map: [any, any][];
-  ReadableStream: { name: string };
+  ReadableStream: { name: string; type?: 'bytes' };
+  RegExp: { source: string; flags: string };
   Response: {
+    type: globalThis.Response['type'];
     url: string;
     status: number;
     statusText: string;
     headers: SerializableSpecial['Headers'];
     body: SerializableSpecial['ReadableStream'];
+    redirected: boolean;
   };
   Set: any[];
-  WritableStream: { name: string };
   URL: string;
   URLSearchParams: [string, string][];
+  Uint8Array: string; // base64 string
+  Uint8ClampedArray: string; // base64 string
+  Uint16Array: string; // base64 string
+  Uint32Array: string; // base64 string
+  WritableStream: { name: string };
 }
 
 type Reducers = {
@@ -97,92 +178,423 @@ type Revivers = {
 function revive(str: string) {
   // biome-ignore lint/security/noGlobalEval: Eval is safe here - we are only passing value from `devalue.stringify()`
   // biome-ignore lint/complexity/noCommaOperator: This is how you do global scope eval
-  return (0, eval)(str);
+  return (0, eval)(`(${str})`);
 }
 
-function getReducers(
-  global: Record<string, any> = globalThis,
-  ops: Promise<any>[]
-) {
-  const reducers: Reducers = {
+function getCommonReducers(global: Record<string, any> = globalThis) {
+  const abToBase64 = (value: ArrayBuffer, offset: number, length: number) =>
+    Buffer.from(value, offset, length).toString('base64');
+  const viewToBase64 = (value: ArrayBufferView) =>
+    abToBase64(value.buffer, value.byteOffset, value.byteLength);
+
+  return {
+    ArrayBuffer: (value) =>
+      value instanceof global.ArrayBuffer &&
+      abToBase64(value, 0, value.byteLength),
+    BigInt64Array: (value) =>
+      value instanceof global.BigInt64Array && viewToBase64(value),
+    BigUint64Array: (value) =>
+      value instanceof global.BigUint64Array && viewToBase64(value),
     Date: (value) => {
       if (!(value instanceof global.Date)) return false;
       const valid = !Number.isNaN(value.getDate());
       return valid ? value.toISOString() : '';
     },
-    Map: (value) => value instanceof global.Map && Array.from(value),
-    Set: (value) => value instanceof global.Set && Array.from(value),
-    ReadableStream: (value) => {
-      if (!(value instanceof global.ReadableStream)) return false;
-      const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
-      const stream = new (getWorkflowServerWritableStream(global))(name);
-      ops.push(value.pipeTo(stream));
-      return { name };
-    },
-    WritableStream: (value) => {
-      if (!(value instanceof global.WritableStream)) return false;
-      const isInitial = !(value as any)[STREAM_NAME_SYMBOL];
-      const name = (value as any)[STREAM_NAME_SYMBOL] || crypto.randomUUID();
-
-      if (isInitial) {
-        ops.push(pullStreamToWritable(name, value));
-      }
-
-      return { name };
-    },
+    Float32Array: (value) =>
+      value instanceof global.Float32Array && viewToBase64(value),
+    Float64Array: (value) =>
+      value instanceof global.Float64Array && viewToBase64(value),
     Headers: (value) => value instanceof global.Headers && Array.from(value),
+    Int8Array: (value) =>
+      value instanceof global.Int8Array && viewToBase64(value),
+    Int16Array: (value) =>
+      value instanceof global.Int16Array && viewToBase64(value),
+    Int32Array: (value) =>
+      value instanceof global.Int32Array && viewToBase64(value),
+    Map: (value) => value instanceof global.Map && Array.from(value),
+    RegExp: (value) =>
+      value instanceof global.RegExp && {
+        source: value.source,
+        flags: value.flags,
+      },
     Response: (value) => {
       if (!(value instanceof global.Response)) return false;
-
       return {
+        type: value.type,
         url: value.url,
         status: value.status,
         statusText: value.statusText,
         headers: value.headers,
         body: value.body,
+        redirected: value.redirected,
       };
     },
+    Set: (value) => value instanceof global.Set && Array.from(value),
     URL: (value) => value instanceof global.URL && value.href,
     URLSearchParams: (value) =>
       value instanceof global.URLSearchParams && Array.from(value),
-  };
-  return reducers;
+    Uint8Array: (value) =>
+      value instanceof global.Uint8Array && viewToBase64(value),
+    Uint8ClampedArray: (value) =>
+      value instanceof global.Uint8ClampedArray && viewToBase64(value),
+    Uint16Array: (value) =>
+      value instanceof global.Uint16Array && viewToBase64(value),
+    Uint32Array: (value) =>
+      value instanceof global.Uint32Array && viewToBase64(value),
+  } as const satisfies Partial<Reducers>;
 }
 
-function getRevivers(
+/**
+ * Reducers for serialization boundary from the client side, passing arguments
+ * to the workflow handler.
+ *
+ * @param global
+ * @param ops
+ * @returns
+ */
+function getExternalReducers(
   global: Record<string, any> = globalThis,
   ops: Promise<any>[]
-) {
-  const revivers: Revivers = {
-    Date: (value) => new global.Date(value),
-    Map: (value) => new global.Map(value),
-    Set: (value) => new global.Set(value),
-    ReadableStream: (value) => {
-      const { readable, writable } =
-        new global.TransformStream() as TransformStream<Uint8Array, Uint8Array>;
+): Reducers {
+  return {
+    ...getCommonReducers(global),
 
-      // Read the stream based on the UUID name from the server
-      ops.push(pullStreamToWritable(value.name, writable));
-      (readable as any)[STREAM_NAME_SYMBOL] = value.name;
-      return readable;
+    ReadableStream: (value) => {
+      if (!(value instanceof global.ReadableStream)) return false;
+
+      // Stream must not be locked when passing across execution boundary
+      if (value.locked) {
+        throw new Error('ReadableStream is locked');
+      }
+
+      const name = global.crypto.randomUUID();
+      const type = getStreamType(value);
+
+      const writable = new WorkflowServerWritableStream(name);
+      if (type === 'bytes') {
+        ops.push(value.pipeTo(writable));
+      } else {
+        ops.push(
+          value
+            .pipeThrough(getSerializeStream(getExternalReducers(global, ops)))
+            .pipeTo(writable)
+        );
+      }
+
+      const s: SerializableSpecial['ReadableStream'] = { name };
+      if (type) s.type = type;
+      return s;
+    },
+
+    WritableStream: (value) => {
+      if (!(value instanceof global.WritableStream)) return false;
+      const name = global.crypto.randomUUID();
+      ops.push(
+        new WorkflowServerReadableStream(name)
+          .pipeThrough(getDeserializeStream(getExternalRevivers(global, ops)))
+          .pipeTo(value)
+      );
+      return { name };
+    },
+  };
+}
+
+/**
+ * Reducers for serialization boundary from within the workflow execution
+ * environment, passing return value to the client side and into step arguments.
+ *
+ * @param global
+ * @returns
+ */
+function getWorkflowReducers(
+  global: Record<string, any> = globalThis
+): Reducers {
+  return {
+    ...getCommonReducers(global),
+
+    // Readable/Writable streams from within the workflow execution environment
+    // are simply "handles" that can be passed around to other steps.
+    ReadableStream: (value) => {
+      if (!(value instanceof global.ReadableStream)) return false;
+      const name = value[STREAM_NAME_SYMBOL];
+      if (!name) {
+        throw new Error('ReadableStream `name` is not set');
+      }
+      const s: SerializableSpecial['ReadableStream'] = { name };
+      const type = value[STREAM_TYPE_SYMBOL];
+      if (type) s.type = type;
+      return s;
     },
     WritableStream: (value) => {
-      const stream = new (getWorkflowServerWritableStream(global))(value.name);
-      (stream as any)[STREAM_NAME_SYMBOL] = value.name;
-      return stream;
+      if (!(value instanceof global.WritableStream)) return false;
+      const name = value[STREAM_NAME_SYMBOL];
+      if (!name) {
+        throw new Error('WritableStream `name` is not set');
+      }
+      return { name };
+    },
+  };
+}
+
+/**
+ * Reducers for serialization boundary from within the step execution
+ * environment, passing return value to the workflow handler.
+ *
+ * @param global
+ * @param ops
+ * @returns
+ */
+function getStepReducers(
+  global: Record<string, any> = globalThis,
+  ops: Promise<any>[]
+): Reducers {
+  return {
+    ...getCommonReducers(global),
+
+    ReadableStream: (value) => {
+      if (!(value instanceof global.ReadableStream)) return false;
+
+      // Stream must not be locked when passing across execution boundary
+      if (value.locked) {
+        throw new Error('ReadableStream is locked');
+      }
+
+      // Check if the stream already has the name symbol set, in which case
+      // it's already being sunk to the server and we can just return the
+      // name and type.
+      let name = value[STREAM_NAME_SYMBOL];
+      let type = value[STREAM_TYPE_SYMBOL];
+
+      if (!name) {
+        name = global.crypto.randomUUID();
+        type = getStreamType(value);
+
+        const writable = new WorkflowServerWritableStream(name);
+        if (type === 'bytes') {
+          ops.push(value.pipeTo(writable));
+        } else {
+          ops.push(
+            value
+              .pipeThrough(getSerializeStream(getStepReducers(global, ops)))
+              .pipeTo(writable)
+          );
+        }
+      }
+
+      const s: SerializableSpecial['ReadableStream'] = { name };
+      if (type) s.type = type;
+      return s;
+    },
+
+    WritableStream: (value) => {
+      if (!(value instanceof global.WritableStream)) return false;
+
+      let name = value[STREAM_NAME_SYMBOL];
+      if (!name) {
+        name = global.crypto.randomUUID();
+        ops.push(
+          new WorkflowServerReadableStream(name)
+            .pipeThrough(getDeserializeStream(getStepRevivers(global, ops)))
+            .pipeTo(value)
+        );
+      }
+
+      return { name };
+    },
+  };
+}
+
+function getCommonRevivers(global: Record<string, any> = globalThis) {
+  function reviveArrayBuffer(value: string) {
+    const buffer = Buffer.from(value, 'base64');
+    const arrayBuffer = new global.ArrayBuffer(buffer.length);
+    const uint8Array = new global.Uint8Array(arrayBuffer);
+    uint8Array.set(buffer);
+    return arrayBuffer;
+  }
+  return {
+    ArrayBuffer: reviveArrayBuffer,
+    BigInt64Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.BigInt64Array(ab);
+    },
+    BigUint64Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.BigUint64Array(ab);
+    },
+    Date: (value) => new global.Date(value),
+    Float32Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Float32Array(ab);
+    },
+    Float64Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Float64Array(ab);
     },
     Headers: (value) => new global.Headers(value),
+    Int8Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Int8Array(ab);
+    },
+    Int16Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Int16Array(ab);
+    },
+    Int32Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Int32Array(ab);
+    },
+    Map: (value) => new global.Map(value),
+    RegExp: (value) => new global.RegExp(value.source, value.flags),
+    Set: (value) => new global.Set(value),
+    URL: (value) => new global.URL(value),
+    URLSearchParams: (value) => new global.URLSearchParams(value),
+    Uint8Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Uint8Array(ab);
+    },
+    Uint8ClampedArray: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Uint8ClampedArray(ab);
+    },
+    Uint16Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Uint16Array(ab);
+    },
+    Uint32Array: (value: string) => {
+      const ab = reviveArrayBuffer(value);
+      return new global.Uint32Array(ab);
+    },
+  } as const satisfies Partial<Revivers>;
+}
+
+/**
+ * Revivers for deserialization boundary from the client side,
+ * receiving the return value from the workflow handler.
+ *
+ * @param global
+ * @param ops
+ */
+function getExternalRevivers(
+  global: Record<string, any> = globalThis,
+  ops: Promise<any>[]
+): Revivers {
+  return {
+    ...getCommonRevivers(global),
     Response: (value) => {
       return new global.Response(value.body, {
+        type: value.type,
+        url: value.url,
+        redirected: value.redirected,
         status: value.status,
         statusText: value.statusText,
         headers: new global.Headers(value.headers),
       });
     },
-    URL: (value) => new global.URL(value),
-    URLSearchParams: (value) => new global.URLSearchParams(value),
+    ReadableStream: (value) => {
+      const readable = new WorkflowServerReadableStream(value.name);
+      if (value.type === 'bytes') {
+        return readable;
+      } else {
+        const transform = getDeserializeStream(
+          getExternalRevivers(global, ops)
+        );
+        ops.push(readable.pipeTo(transform.writable));
+        return transform.readable;
+      }
+    },
+    WritableStream: (value) => {
+      const serialize = getSerializeStream(getExternalReducers(global, ops));
+      ops.push(
+        serialize.readable.pipeTo(new WorkflowServerWritableStream(value.name))
+      );
+      return serialize.writable;
+    },
   };
-  return revivers;
+}
+
+/**
+ * Revivers for deserialization boundary from within the workflow execution
+ * environment, receiving arguments from the client side, and return values
+ * from the steps.
+ *
+ * @param global
+ * @returns
+ */
+function getWorkflowRevivers(
+  global: Record<string, any> = globalThis
+): Revivers {
+  return {
+    ...getCommonRevivers(global),
+    Response: (value) => {
+      Object.setPrototypeOf(value, global.Response.prototype);
+      return value;
+    },
+    ReadableStream: (value) => {
+      return Object.create(global.ReadableStream.prototype, {
+        [STREAM_NAME_SYMBOL]: {
+          value: value.name,
+          writable: false,
+        },
+        [STREAM_TYPE_SYMBOL]: {
+          value: value.type,
+          writable: false,
+        },
+      });
+    },
+    WritableStream: (value) => {
+      return Object.create(global.WritableStream.prototype, {
+        [STREAM_NAME_SYMBOL]: {
+          value: value.name,
+          writable: false,
+        },
+      });
+    },
+  };
+}
+
+/**
+ * Revivers for deserialization boundary from within the step execution
+ * environment, receiving arguments from the workflow handler.
+ *
+ * @param global
+ * @param ops
+ * @returns
+ */
+function getStepRevivers(
+  global: Record<string, any> = globalThis,
+  ops: Promise<any>[]
+): Revivers {
+  return {
+    ...getCommonRevivers(global),
+    Response: (value) => {
+      return new global.Response(value.body, {
+        type: value.type,
+        url: value.url,
+        redirected: value.redirected,
+        status: value.status,
+        statusText: value.statusText,
+        headers: new global.Headers(value.headers),
+      });
+    },
+    ReadableStream: (value) => {
+      const readable = new WorkflowServerReadableStream(value.name);
+      if (value.type === 'bytes') {
+        return readable;
+      } else {
+        const transform = getDeserializeStream(getStepRevivers(global, ops));
+        ops.push(readable.pipeTo(transform.writable));
+        return transform.readable;
+      }
+    },
+    WritableStream: (value) => {
+      const serialize = getSerializeStream(getStepReducers(global, ops));
+      ops.push(
+        serialize.readable.pipeTo(new WorkflowServerWritableStream(value.name))
+      );
+      return serialize.writable;
+    },
+  };
 }
 
 /**
@@ -199,7 +611,7 @@ export function dehydrateWorkflowArguments(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const str = devalue.stringify(value, getReducers(global, ops));
+  const str = devalue.stringify(value, getExternalReducers(global, ops));
   return revive(str);
 }
 
@@ -214,10 +626,9 @@ export function dehydrateWorkflowArguments(
  */
 export function hydrateWorkflowArguments(
   value: Parameters<typeof devalue.unflatten>[0],
-  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const obj = devalue.unflatten(value, getRevivers(global, ops));
+  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
   return obj;
 }
 
@@ -231,10 +642,9 @@ export function hydrateWorkflowArguments(
  */
 export function dehydrateWorkflowReturnValue(
   value: unknown,
-  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const str = devalue.stringify(value, getReducers(global, ops));
+  const str = devalue.stringify(value, getWorkflowReducers(global));
   return revive(str);
 }
 
@@ -252,7 +662,7 @@ export function hydrateWorkflowReturnValue(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const obj = devalue.unflatten(value, getRevivers(global, ops));
+  const obj = devalue.unflatten(value, getExternalRevivers(global, ops));
   return obj;
 }
 
@@ -267,10 +677,9 @@ export function hydrateWorkflowReturnValue(
  */
 export function dehydrateStepArguments(
   value: unknown,
-  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const str = devalue.stringify(value, getReducers(global, ops));
+  const str = devalue.stringify(value, getWorkflowReducers(global));
   return revive(str);
 }
 
@@ -287,7 +696,7 @@ export function hydrateStepArguments(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const obj = devalue.unflatten(value, getRevivers(global, ops));
+  const obj = devalue.unflatten(value, getStepRevivers(global, ops));
   return obj;
 }
 
@@ -305,7 +714,7 @@ export function dehydrateStepReturnValue(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const str = devalue.stringify(value, getReducers(global, ops));
+  const str = devalue.stringify(value, getStepReducers(global, ops));
   return revive(str);
 }
 
@@ -319,9 +728,8 @@ export function dehydrateStepReturnValue(
  */
 export function hydrateStepReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
-  ops: Promise<any>[],
   global: Record<string, any>
 ) {
-  const obj = devalue.unflatten(value, getRevivers(global, ops));
+  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
   return obj;
 }

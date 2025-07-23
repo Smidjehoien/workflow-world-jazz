@@ -35,12 +35,25 @@ export type Serializable =
   | { [key: string]: Serializable }
   // Special types that need special handling when
   // serialized/deserialized (see `serialization.ts`)
+  | ArrayBuffer
+  | BigInt64Array
+  | BigUint64Array
   | Date
+  | Float32Array
+  | Float64Array
   | Headers
+  | Int8Array
+  | Int16Array
+  | Int32Array
   | Map<Serializable, Serializable>
-  | Set<Serializable>
-  | Response
   | ReadableStream<Uint8Array>
-  | WritableStream<Uint8Array>
+  | RegExp
+  | Response
+  | Set<Serializable>
   | URL
-  | URLSearchParams;
+  | URLSearchParams
+  | Uint8Array
+  | Uint8ClampedArray
+  | Uint16Array
+  | Uint32Array
+  | WritableStream<Uint8Array>;

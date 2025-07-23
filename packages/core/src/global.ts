@@ -37,3 +37,7 @@ export class StepsNotRunError extends Error {
     this.globalThis = global;
   }
 }
+
+export function ENOTSUP(): never {
+  throw new Error('Not supported in workflow functions');
+}
