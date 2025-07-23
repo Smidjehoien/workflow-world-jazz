@@ -18,7 +18,7 @@ async function failingStep(): Promise<string> {
   throw new FatalError(`A failed step (sent: ${new Date().toISOString()})`);
 }
 
-export async function control_flow_demo() {
+export async function control_flow() {
   'use workflow';
 
   console.log('Control flow workflow started');

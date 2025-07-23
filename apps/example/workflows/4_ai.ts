@@ -27,8 +27,8 @@ async function getWeatherInformation({ city }: { city: string }) {
 export async function ai(prompt: string) {
   'use workflow';
 
-  // AI SDK's `generateText` just works natively in a workflow
-  // Thanks to workflow's automatic fetch hoisting functionality
+  // AI SDK's `generateText` just works natively in a workflow thanks to
+  // workflow's automatic fetch hoisting functionality
   const { text } = await generateText({
     model: 'openai/o3',
     prompt,
@@ -40,7 +40,7 @@ export async function ai(prompt: string) {
 export async function agent(prompt: string) {
   'use workflow';
 
-  // You can also provide tools, and if those stools are `steps` - voila, you have yourself
+  // You can also provide tools, and if those tools are `steps` - voila, you have yourself
   // a durable agent with fetches and steps being offloaded
   const { text } = await generateText({
     model: 'anthropic/claude-4-opus-20250514',
