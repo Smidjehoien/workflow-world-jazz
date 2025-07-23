@@ -1,5 +1,12 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- Updated dependencies [030e899]
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.1
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes
