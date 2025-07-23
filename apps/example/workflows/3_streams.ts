@@ -1,28 +1,3 @@
-import { FatalError } from '@vercel/workflow-core';
-
-export async function add(a: number, b: number): Promise<number> {
-  'use step';
-
-  // Mimic a retryable error 50% of the time
-  if (Math.random() < 0.5) {
-    throw new Error('Retryable error');
-  }
-
-  // Mimic a 5% chance of the workflow actually failing
-  if (Math.random() < 0.05) {
-    throw new FatalError("We're cooked yo!");
-  }
-
-  return a + b;
-}
-
-export async function sleep(ms: number, message: string): Promise<string> {
-  'use step';
-  console.log(`Sleeping for ${ms}ms`);
-  await new Promise((resolve) => setTimeout(resolve, ms));
-  return message;
-}
-
 export async function genStream(): Promise<ReadableStream<Uint8Array>> {
   'use step';
   const stream = new ReadableStream<Uint8Array>({
@@ -63,4 +38,17 @@ export async function consumeStreams(
   );
 
   return Buffer.concat(parts).toString('utf8');
+}
+
+export async function streams() {
+  'use workflow';
+
+  const [s1, s2] = await Promise.all([genStream(), genStream()]);
+  const result = await consumeStreams(s1, s2);
+
+  return {
+    message: 'Streams processed successfully',
+    dataLength: result.length,
+    preview: result.slice(0, 100), // First 100 characters
+  };
 }

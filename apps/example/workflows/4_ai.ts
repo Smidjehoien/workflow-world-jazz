@@ -24,9 +24,24 @@ async function getWeatherInformation({ city }: { city: string }) {
   return weatherOptions[Math.floor(Math.random() * weatherOptions.length)];
 }
 
+export async function ai(prompt: string) {
+  'use workflow';
+
+  // AI SDK's `generateText` just works natively in a workflow
+  // Thanks to workflow's automatic fetch hoisting functionality
+  const { text } = await generateText({
+    model: 'openai/o3',
+    prompt,
+  });
+
+  return text;
+}
+
 export async function agent(prompt: string) {
   'use workflow';
 
+  // You can also provide tools, and if those stools are `steps` - voila, you have yourself
+  // a durable agent with fetches and steps being offloaded
   const { text } = await generateText({
     model: 'anthropic/claude-4-opus-20250514',
     prompt,
@@ -37,6 +52,7 @@ export async function agent(prompt: string) {
         execute: getWeatherInformation,
       },
     },
+    // This can be a high as you want - no restriction on the lambda workflow runtime
     stopWhen: stepCountIs(10),
   });
 

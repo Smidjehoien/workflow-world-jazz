@@ -2,7 +2,7 @@ import { start } from '@vercel/workflow-core/runtime';
 
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  const workflowId = url.searchParams.get('workflow') || 'example';
+  const workflowId = url.searchParams.get('workflow') || 'simple';
   const argVal = url.searchParams.get('args') || '42';
   const args = argVal.split(',').map((arg) => {
     const num = parseFloat(arg);

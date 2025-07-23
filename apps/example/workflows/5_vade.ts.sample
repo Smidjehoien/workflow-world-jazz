@@ -13,7 +13,7 @@ async function finishReview(pr: number, status: 'approved' | 'changes_requested'
   // Code to finish a review
 }
 
-export async function reviewCommit(input: GithubWebhookPayload) {
+export async function vade(input: GithubWebhookPayload) {
   'use workflow';
 
   const sandbox = await Sandbox.create({

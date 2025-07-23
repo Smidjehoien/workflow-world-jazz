@@ -1,15 +1,30 @@
-import { add, consumeStreams, genStream, sleep } from './steps';
+import { FatalError } from '@vercel/workflow-core';
 
-export async function example(i: number) {
-  'use workflow';
-  const [a, b] = await Promise.all([add(i, 7), add(i, 8)]);
-  const d = await add(a, b);
-  return d;
+async function add(a: number, b: number): Promise<number> {
+  'use step';
+
+  // Mimic a retryable error 50% of the time
+  if (Math.random() < 0.5) {
+    throw new Error('Retryable error');
+  }
+
+  // Mimic a 5% chance of the workflow actually failing
+  if (Math.random() < 0.05) {
+    throw new FatalError("We're cooked yo!");
+  }
+
+  return a + b;
 }
 
-export async function stream() {
+export async function simple(i: number) {
   'use workflow';
-  const [s1, s2] = await Promise.all([genStream(), genStream()]);
-  const b = await consumeStreams(s1, s2);
+  console.log('Simple workflow started');
+
+  const a = await add(i, 7);
+  console.log('Workflow step 1 completed - Result:', a);
+
+  const b = await add(a, 8);
+  console.log('Workflow completed - Result:', b);
+
   return b;
 }
