@@ -43,12 +43,16 @@ export async function consumeStreams(
 export async function streams() {
   'use workflow';
 
+  console.log('Streams workflow started');
+
   const [s1, s2] = await Promise.all([genStream(), genStream()]);
   const result = await consumeStreams(s1, s2);
+
+  console.log(`Streams workflow completed. Result: ${result.slice(0, 100)}`);
 
   return {
     message: 'Streams processed successfully',
     dataLength: result.length,
-    preview: result.slice(0, 100), // First 100 characters
+    preview: result.slice(0, 100),
   };
 }

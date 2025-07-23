@@ -24,7 +24,7 @@ export async function simple(i: number) {
   console.log('Workflow step 1 completed - Result:', a);
 
   const b = await add(a, 8);
-  console.log('Workflow completed - Result:', b);
+  console.log('Simple workflow completed. Result:', b);
 
   return b;
 }

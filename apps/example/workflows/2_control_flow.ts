@@ -56,7 +56,7 @@ export async function control_flow() {
     console.log('Caught error:', error);
   }
 
-  console.log('Control flow workflow completed');
+  console.log('Control flow workflow completed. See logs for results.');
 
   return {
     raceResult,

@@ -27,6 +27,8 @@ async function getWeatherInformation({ city }: { city: string }) {
 export async function ai(prompt: string) {
   'use workflow';
 
+  console.log('AI workflow started');
+
   // AI SDK's `generateText` just works natively in a workflow thanks to
   // workflow's automatic fetch hoisting functionality
   const { text } = await generateText({
@@ -34,11 +36,15 @@ export async function ai(prompt: string) {
     prompt,
   });
 
+  console.log(`AI workflow completed. Result: ${text}`);
+
   return text;
 }
 
 export async function agent(prompt: string) {
   'use workflow';
+
+  console.log('Agent workflow started');
 
   // You can also provide tools, and if those tools are `steps` - voila, you have yourself
   // a durable agent with fetches and steps being offloaded
@@ -55,6 +61,8 @@ export async function agent(prompt: string) {
     // This can be a high as you want - no restriction on the lambda workflow runtime
     stopWhen: stepCountIs(10),
   });
+
+  console.log(`Agent workflow completed. Result: ${text}`);
 
   return text;
 }
