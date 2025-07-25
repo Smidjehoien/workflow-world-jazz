@@ -18,11 +18,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-<<<<<<< HEAD
-          version: 8.15.8
-=======
           version: 9.14.4
->>>>>>> 6edcdeb (Use pnpm v9 in Release GH workflow)
 
       - name: Setup Node.js 22.x
         uses: actions/setup-node@v4
