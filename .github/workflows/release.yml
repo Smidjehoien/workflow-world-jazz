@@ -11,9 +11,6 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -40,5 +37,4 @@ jobs:
           publish: pnpm ci:publish
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN_PULL_REQUESTS }}
-          NPM_CONFIG_PROVENANCE: 'true'
           NPM_TOKEN: ${{ secrets.NPM_TOKEN_ELEVATED }}
