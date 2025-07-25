@@ -23,8 +23,8 @@
     "typecheck": "biome check",
     "clean": "turbo clean",
     "changeset": "changeset",
-    "version:prepare": "changeset version",
-    "release": "changeset publish"
+    "ci:version": "changeset version",
+    "ci:publish": "pnpm build && pnpm publish -r"
   },
   "lint-staged": {
     "**/*": "biome format --write"
