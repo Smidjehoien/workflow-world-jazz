@@ -1,5 +1,14 @@
 # @workflow/example-app
 
+## 0.0.2-alpha.4
+
+### Patch Changes
+
+- 71e4615: Clean up example
+- Updated dependencies [0d96052]
+- Updated dependencies [950d262]
+  - @vercel/workflow-core@0.0.1-alpha.4
+
 ## 0.0.2-alpha.3
 
 ### Patch Changes

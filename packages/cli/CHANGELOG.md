@@ -1,5 +1,14 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- 950d262: Enable "workflow" and "workflow:step" exports conditions for bundling
+- Updated dependencies [0d96052]
+- Updated dependencies [950d262]
+  - @vercel/workflow-core@0.0.1-alpha.4
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes

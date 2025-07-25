@@ -1,5 +1,14 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- 0d96052: Finish serialization/deserialization logic
+- 950d262: Implement `useContext()`
+- Updated dependencies [0d96052]
+  - @vercel/workflow-vm@0.0.1-alpha.2
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes
