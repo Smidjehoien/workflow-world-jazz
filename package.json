@@ -27,6 +27,6 @@
     "ci:publish": "pnpm build && pnpm publish -r"
   },
   "lint-staged": {
-    "**/*": "biome format --write"
+    "**/*": "biome format --write --no-errors-on-unmatched"
   }
 }
