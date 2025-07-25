@@ -7,7 +7,9 @@ import {
   dehydrateWorkflowReturnValue,
   hydrateWorkflowArguments,
 } from './serialization.js';
-import { createUseStep, type WorkflowContext } from './step.js';
+import { createUseStep, type WorkflowOrchestratorContext } from './step.js';
+import type { WorkflowContext } from './use-context.js';
+import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/use-context.js';
 
 class Deferred<T> {
   promise: Promise<T>;
@@ -45,7 +47,7 @@ export async function runWorkflow(
 
   const workflowDiscontinuation = new Deferred<void>();
 
-  const workflowContext: WorkflowContext = {
+  const workflowContext: WorkflowOrchestratorContext = {
     globalThis: vmGlobalThis,
     onWorkflowError: workflowDiscontinuation.reject,
     randomUUID: context.crypto.randomUUID,
@@ -67,6 +69,20 @@ export async function runWorkflow(
 
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
   vmGlobalThis[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
+
+  // For the workflow VM, we store the context in a symbol on the `globalThis` object
+  const ctx: WorkflowContext = {
+    workflowRunId: workflowRun.id,
+    workflowStartedAt: new vmGlobalThis.Date(+startedAt),
+    get stepId(): string {
+      throw ENOTSUP();
+    },
+    get attempt(): number {
+      throw ENOTSUP();
+    },
+  };
+  // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+  vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;
 
   // @ts-ignore Provide a hoisted fetch function
   vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');

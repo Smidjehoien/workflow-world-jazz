@@ -7,7 +7,12 @@
     "dist"
   ],
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "workflow": "./dist/workflow/index.js",
+      "workflow:step": "./dist/step/index.js",
+      "default": "./dist/index.js"
+    },
     "./runtime": "./dist/runtime.js",
     "./private": "./dist/private.js",
     "./builtins": "./dist/builtins.js"

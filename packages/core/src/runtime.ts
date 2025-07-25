@@ -27,6 +27,8 @@ import {
   dehydrateWorkflowArguments,
   hydrateStepArguments,
 } from './serialization.js';
+// TODO: move step handler out to a separate file
+import { contextStorage } from './step/use-context.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { runWorkflow } from './workflow.js';
 
@@ -126,6 +128,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
     const { runId } = WorkflowInvokePayloadSchema.parse(message_);
 
     // Invoke user workflow
+    let workflowStartedAt = -1;
     try {
       let workflowRun = await getWorkflowRun(runId);
 
@@ -134,6 +137,12 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
           // This sets the `started_at` timestamp at the database level
           status: 'running',
         });
+        if (!workflowRun.started_at) {
+          throw new Error(
+            `Workflow run "${runId}" has no "started_at" timestamp`
+          );
+        }
+        workflowStartedAt = +workflowRun.started_at;
       }
 
       // TODO: ensure that *all* events are loaded into memory before
@@ -170,6 +179,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
 
             const stepInvokePayload: StepInvokePayload = {
               workflowName,
+              workflowStartedAt,
               workflowRunId: runId,
               stepId: step.id,
             };
@@ -237,7 +247,7 @@ async function stepMessageHandler(
     );
   }
 
-  const { workflowName, workflowRunId, stepId } =
+  const { workflowName, workflowRunId, stepId, workflowStartedAt } =
     StepInvokePayloadSchema.parse(message_);
 
   let step = await getStep(workflowRunId, stepId);
@@ -268,6 +278,13 @@ async function stepMessageHandler(
     // Hydrate the step input arguments
     const ops: Promise<void>[] = [];
     const args = hydrateStepArguments(step.input, ops);
+
+    contextStorage.enterWith({
+      workflowRunId,
+      workflowStartedAt: new Date(workflowStartedAt),
+      stepId: step.invocation_id,
+      attempt: metadata.deliveryCount,
+    });
 
     result = await stepFn(...args);
     result = dehydrateStepReturnValue(result, ops);
@@ -348,12 +365,13 @@ async function stepMessageHandler(
         };
       }
     }
+  } finally {
+    contextStorage.disable();
   }
 
   const workflowInvokeMessage: WorkflowInvokePayload = {
     runId: workflowRunId,
   };
-
   await send(`__wkf_workflow_${workflowName}`, workflowInvokeMessage);
 }
 

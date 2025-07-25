@@ -1,10 +1,9 @@
-import { waitUntil } from '@vercel/functions';
 import { EventConsumerResult, type EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
 import type { Serializable } from './schemas.js';
 import { hydrateStepReturnValue } from './serialization.js';
 
-export interface WorkflowContext {
+export interface WorkflowOrchestratorContext {
   globalThis: typeof globalThis;
   eventsConsumer: EventsConsumer;
   invocationsQueue: {
@@ -16,7 +15,7 @@ export interface WorkflowContext {
   randomUUID: () => string;
 }
 
-export function createUseStep(ctx: WorkflowContext) {
+export function createUseStep(ctx: WorkflowOrchestratorContext) {
   return function useStep<Args extends Serializable[], Result>(
     stepName: string
   ) {

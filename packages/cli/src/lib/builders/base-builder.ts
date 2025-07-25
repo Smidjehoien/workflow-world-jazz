@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import * as esbuild from 'esbuild';
 import { glob } from 'tinyglobby';
@@ -47,7 +47,7 @@ export abstract class BaseBuilder {
     import '@vercel/workflow-core/builtins';
     // User steps
     ${imports}
-    // API entrypoint 
+    // API entrypoint
     export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
@@ -63,6 +63,7 @@ export abstract class BaseBuilder {
       bundle: true,
       format,
       platform: 'node',
+      conditions: ['workflow:step', 'node'],
       target: 'es2022',
       write: true,
       treeShaking: true,
@@ -101,6 +102,7 @@ export abstract class BaseBuilder {
       absWorkingDir: this.config.workingDir,
       format: 'cjs', // Runs inside the VM which expects cjs
       platform: 'node',
+      conditions: ['workflow', 'node'],
       target: 'es2022',
       write: false,
       treeShaking: true,

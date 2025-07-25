@@ -6,6 +6,7 @@ export const WorkflowInvokePayloadSchema = z.object({
 
 export const StepInvokePayloadSchema = z.object({
   workflowName: z.string(),
+  workflowStartedAt: z.number(),
   workflowRunId: z.string(),
   stepId: z.string(),
 });

@@ -8,3 +8,4 @@
 
 export { FatalError } from './global.js';
 export { sleep } from './sleep.js';
+export { useContext, type WorkflowContext } from './use-context.js';
