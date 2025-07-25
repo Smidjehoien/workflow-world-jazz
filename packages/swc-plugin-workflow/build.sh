@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if ! command -v cargo >/dev/null 2>&1; then
-  if [ "${CI:-0}" = "1" ]; then
+  if [ -n "${CI:-}" ]; then
     curl https://sh.rustup.rs -sSf | sh -s --  -y --profile minimal
     . "$HOME/.cargo/env"
     rustup target add wasm32-unknown-unknown
@@ -16,7 +16,7 @@ if ! command -v cargo >/dev/null 2>&1; then
 fi
 
 # Check if wasm32-unknown-unknown target exists when running locally
-if [ "${CI:-0}" != "1" ]; then
+if [ -n "${CI:-}" ]; then
   if ! rustup target list --installed | grep -q "wasm32-unknown-unknown"; then
     echo "The wasm32-unknown-unknown target is not installed."
     echo "Please run 'rustup target add wasm32-unknown-unknown' to install it."

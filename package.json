@@ -24,7 +24,7 @@
     "clean": "turbo clean",
     "changeset": "changeset",
     "ci:version": "changeset version",
-    "ci:publish": "env | sort && pnpm build && pnpm publish -r"
+    "ci:publish": "pnpm build && pnpm publish -r"
   },
   "lint-staged": {
     "**/*": "biome format --write --no-errors-on-unmatched"
