@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 # A temporary hack to merge the build output from .prebuilt into the
 # .vercel/output. This allows us to build workflow to the build output API
