@@ -13,8 +13,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "clean": "tsc --build --clean",
-    "test": "vitest"
+    "clean": "tsc --build --clean"
   },
   "dependencies": {
     "@swc/core": "1.11.24",

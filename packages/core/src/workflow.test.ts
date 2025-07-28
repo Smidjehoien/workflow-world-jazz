@@ -1,18 +1,24 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
 import type { Event, WorkflowRun } from './backend.js';
+import {
+  dehydrateStepReturnValue,
+  dehydrateWorkflowArguments,
+  hydrateWorkflowReturnValue,
+} from './serialization.js';
 import { runWorkflow } from './workflow.js';
 
 describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
+      const ops: Promise<any>[] = [];
       const workflowCode = 'function workflow() { return "success"; }';
 
       const workflowRun: WorkflowRun = {
         id: 'test-run-123',
         workflow_name: 'workflow',
         status: 'running',
-        input: [],
+        input: dehydrateWorkflowArguments([], ops),
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),
         started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -24,17 +30,18 @@ describe('runWorkflow', () => {
       const events: Event[] = [];
 
       const result = await runWorkflow(workflowCode, workflowRun, events);
-      expect(result).toEqual('success');
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual('success');
     });
 
     it('should execute workflow with arguments', async () => {
+      const ops: Promise<any>[] = [];
       const workflowCode = 'function workflow(a, b) { return a + b; }';
 
       const workflowRun: WorkflowRun = {
         id: 'test-run-123',
         workflow_name: 'workflow',
         status: 'running',
-        input: [1, 2],
+        input: dehydrateWorkflowArguments([1, 2], ops),
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),
         started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -46,10 +53,11 @@ describe('runWorkflow', () => {
       const events: Event[] = [];
 
       const result = await runWorkflow(workflowCode, workflowRun, events);
-      expect(result).toEqual(3);
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(3);
     });
 
     it('allow user code to handle user-defined errors', async () => {
+      const ops: Promise<any>[] = [];
       const workflowCode = `function workflow() {
         try {
           throw new TypeError("my workflow error");
@@ -62,7 +70,7 @@ describe('runWorkflow', () => {
         id: 'test-run-123',
         workflow_name: 'workflow',
         status: 'running',
-        input: [],
+        input: dehydrateWorkflowArguments([], ops),
         created_at: new Date('2024-01-01T00:00:00.000Z'),
         updated_at: new Date('2024-01-01T00:00:00.000Z'),
         started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -73,7 +81,10 @@ describe('runWorkflow', () => {
 
       const events: Event[] = [];
 
-      const result = await runWorkflow(workflowCode, workflowRun, events);
+      const result = hydrateWorkflowReturnValue(
+        (await runWorkflow(workflowCode, workflowRun, events)) as any,
+        ops
+      );
       assert(types.isNativeError(result));
       expect(result.name).toEqual('TypeError');
       expect(result.message).toEqual('my workflow error');
@@ -81,12 +92,13 @@ describe('runWorkflow', () => {
   });
 
   it('should resolve a step that has a `step_result` event', async () => {
+    const ops: Promise<any>[] = [];
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {
       id: workflowRunId,
       workflow_name: 'workflow',
       status: 'running',
-      input: [],
+      input: dehydrateWorkflowArguments([], ops),
       created_at: new Date('2024-01-01T00:00:00.000Z'),
       updated_at: new Date('2024-01-01T00:00:00.000Z'),
       started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -111,7 +123,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
         sequence_number: 1,
@@ -129,16 +141,17 @@ describe('runWorkflow', () => {
       workflowRun,
       events
     );
-    expect(result).toEqual(3);
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(3);
   });
 
   it('should update the timestamp in the vm context as events are replayed', async () => {
+    const ops: Promise<any>[] = [];
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {
       id: workflowRunId,
       workflow_name: 'workflow',
       status: 'running',
-      input: [],
+      input: dehydrateWorkflowArguments([], ops),
       created_at: new Date('2024-01-01T00:00:00.000Z'),
       updated_at: new Date('2024-01-01T00:00:00.000Z'),
       started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -163,7 +176,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
         sequence_number: 1,
@@ -184,7 +197,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
         },
         sequence_number: 3,
@@ -205,7 +218,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'ab4359f5-1521-4d72-b5e9-13e841129b90',
         },
         sequence_number: 5,
@@ -229,7 +242,7 @@ describe('runWorkflow', () => {
       workflowRun,
       events
     );
-    expect(result).toEqual([
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
       new Date('2024-01-01T00:00:00.000Z'),
       1704067203000,
       1704067205000,
@@ -238,12 +251,13 @@ describe('runWorkflow', () => {
   });
 
   it('should resolve `Promise.all()` steps that have `step_result` events', async () => {
+    const ops: Promise<any>[] = [];
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {
       id: workflowRunId,
       workflow_name: 'workflow',
       status: 'running',
-      input: [],
+      input: dehydrateWorkflowArguments([], ops),
       created_at: new Date('2024-01-01T00:00:00.000Z'),
       updated_at: new Date('2024-01-01T00:00:00.000Z'),
       started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -278,7 +292,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
         sequence_number: 2,
@@ -289,7 +303,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 7,
+          result: dehydrateStepReturnValue(7, ops),
           invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
         },
         sequence_number: 3,
@@ -306,16 +320,17 @@ describe('runWorkflow', () => {
       workflowRun,
       events
     );
-    expect(result).toEqual([3, 7]);
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([3, 7]);
   });
 
   it('should resolve `Promise.race()` steps that have `step_result` events (first promise resolves first)', async () => {
+    const ops: Promise<any>[] = [];
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {
       id: workflowRunId,
       workflow_name: 'workflow',
       status: 'running',
-      input: [],
+      input: dehydrateWorkflowArguments([], ops),
       created_at: new Date('2024-01-01T00:00:00.000Z'),
       updated_at: new Date('2024-01-01T00:00:00.000Z'),
       started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -350,7 +365,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
         sequence_number: 2,
@@ -361,7 +376,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 7,
+          result: dehydrateStepReturnValue(7, ops),
           invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
         },
         sequence_number: 3,
@@ -378,16 +393,17 @@ describe('runWorkflow', () => {
       workflowRun,
       events
     );
-    expect(result).toEqual(3);
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(3);
   });
 
   it('should resolve `Promise.race()` steps that have `step_result` events (second promise resolves first)', async () => {
+    const ops: Promise<any>[] = [];
     const workflowRunId = 'test-run-123';
     const workflowRun: WorkflowRun = {
       id: workflowRunId,
       workflow_name: 'workflow',
       status: 'running',
-      input: [],
+      input: dehydrateWorkflowArguments([], ops),
       created_at: new Date('2024-01-01T00:00:00.000Z'),
       updated_at: new Date('2024-01-01T00:00:00.000Z'),
       started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -422,7 +438,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 7,
+          result: dehydrateStepReturnValue(7, ops),
           invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
         },
         sequence_number: 2,
@@ -433,7 +449,7 @@ describe('runWorkflow', () => {
         workflow_run_id: workflowRunId,
         event_type: 'step_result',
         event_data: {
-          result: 3,
+          result: dehydrateStepReturnValue(3, ops),
           invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
         sequence_number: 3,
@@ -450,18 +466,19 @@ describe('runWorkflow', () => {
       workflowRun,
       events
     );
-    expect(result).toEqual(7);
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(7);
   });
 
   describe('error handling', () => {
     it('should throw ReferenceError when workflow code does not return a function', async () => {
       let error: Error | undefined;
       try {
+        const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
           id: 'test-run-123',
           workflow_name: 'value',
           status: 'running',
-          input: [],
+          input: dehydrateWorkflowArguments([], ops),
           created_at: new Date('2024-01-01T00:00:00.000Z'),
           updated_at: new Date('2024-01-01T00:00:00.000Z'),
           started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -486,11 +503,12 @@ describe('runWorkflow', () => {
     it('should throw user-defined error when workflow code throws an error', async () => {
       let error: Error | undefined;
       try {
+        const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
           id: 'test-run-123',
           workflow_name: 'workflow',
           status: 'running',
-          input: [],
+          input: dehydrateWorkflowArguments([], ops),
           created_at: new Date('2024-01-01T00:00:00.000Z'),
           updated_at: new Date('2024-01-01T00:00:00.000Z'),
           started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -517,11 +535,12 @@ describe('runWorkflow', () => {
     it('should throw `StepsNotRunError` when a step does not have an event result entry', async () => {
       let error: Error | undefined;
       try {
+        const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
           id: 'test-run-123',
           workflow_name: 'workflow',
           status: 'running',
-          input: [],
+          input: dehydrateWorkflowArguments([], ops),
           created_at: new Date('2024-01-01T00:00:00.000Z'),
           updated_at: new Date('2024-01-01T00:00:00.000Z'),
           started_at: new Date('2024-01-01T00:00:00.000Z'),
@@ -553,11 +572,12 @@ describe('runWorkflow', () => {
     it('`StepsNotRunError` should not be catchable by user code', async () => {
       let error: Error | undefined;
       try {
+        const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
           id: 'test-run-123',
           workflow_name: 'workflow',
           status: 'running',
-          input: [],
+          input: dehydrateWorkflowArguments([], ops),
           created_at: new Date('2024-01-01T00:00:00.000Z'),
           updated_at: new Date('2024-01-01T00:00:00.000Z'),
           started_at: new Date('2024-01-01T00:00:00.000Z'),

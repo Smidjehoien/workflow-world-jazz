@@ -1,20 +1,24 @@
-import { createRandomUUID } from '@vercel/workflow-vm/dist/uuid.js';
-import seedrandom from 'seedrandom';
+import { createContext } from '@vercel/workflow-vm';
 import { describe, expect, it, vi } from 'vitest';
 import { EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
-import { createUseStep, type WorkflowContext } from './step.js';
+import { createUseStep, type WorkflowOrchestratorContext } from './step.js';
 
 describe('createUseStep', () => {
   it('should resolve with the result of a step', async () => {
-    const ctx: WorkflowContext = {
+    const context = createContext({
+      seed: 'test',
+      fixedTimestamp: 1753481739458,
+    });
+    const ctx: WorkflowOrchestratorContext = {
+      globalThis: context.globalThis,
       eventsConsumer: new EventsConsumer([
         {
           id: 'event-0',
           workflow_run_id: 'run-123',
           event_type: 'step_result',
           event_data: {
-            result: 3,
+            result: [3],
             invocation_id: 'd6f45471-b67f-4f0c-b60b-9ac709c285e1',
           },
           sequence_number: 0,
@@ -23,7 +27,6 @@ describe('createUseStep', () => {
       ]),
       invocationsQueue: [],
       onWorkflowError: vi.fn(),
-      randomUUID: createRandomUUID(seedrandom('test')),
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -33,7 +36,11 @@ describe('createUseStep', () => {
   });
 
   it('should reject with a fatal error if the step fails', async () => {
-    const ctx: WorkflowContext = {
+    const context = createContext({
+      seed: 'test',
+      fixedTimestamp: 1753481739458,
+    });
+    const ctx: WorkflowOrchestratorContext = {
       eventsConsumer: new EventsConsumer([
         {
           id: 'event-0',
@@ -42,7 +49,7 @@ describe('createUseStep', () => {
           event_data: {
             error: 'test',
             fatal: true,
-            invocation_id: 'a6318e4e-853a-4b24-bc43-dd5b5863aabe',
+            invocation_id: 'd6f45471-b67f-4f0c-b60b-9ac709c285e1',
           },
           sequence_number: 0,
           created_at: new Date(),
@@ -50,7 +57,7 @@ describe('createUseStep', () => {
       ]),
       invocationsQueue: [],
       onWorkflowError: vi.fn(),
-      randomUUID: createRandomUUID(seedrandom('test2')),
+      globalThis: context.globalThis,
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -72,13 +79,17 @@ describe('createUseStep', () => {
       workflowErrorReject = reject;
     });
 
-    const ctx: WorkflowContext = {
+    const context = createContext({
+      seed: 'test',
+      fixedTimestamp: 1753481739458,
+    });
+    const ctx: WorkflowOrchestratorContext = {
       eventsConsumer: new EventsConsumer([]),
       invocationsQueue: [],
       onWorkflowError(err) {
         workflowErrorReject(err);
       },
-      randomUUID: createRandomUUID(seedrandom('test3')),
+      globalThis: context.globalThis,
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -93,13 +104,18 @@ describe('createUseStep', () => {
       '1 steps have not been run yet'
     );
     expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
-    expect((error as StepsNotRunError).steps).toEqual([
-      {
-        stepName: 'add',
-        args: [1, 2],
-        invocationId: '013d5317-4831-44a0-b48d-68fd283cbe80',
-      },
-    ]);
+    expect((error as StepsNotRunError).steps).toMatchInlineSnapshot(`
+      [
+        {
+          "args": [
+            1,
+            2,
+          ],
+          "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
+          "stepName": "add",
+        },
+      ]
+    `);
   });
 
   it('should invoke workflow error handler if step is not run (concurrent)', async () => {
@@ -108,13 +124,17 @@ describe('createUseStep', () => {
       workflowErrorReject = reject;
     });
 
-    const ctx: WorkflowContext = {
+    const context = createContext({
+      seed: 'test',
+      fixedTimestamp: 1753481739458,
+    });
+    const ctx: WorkflowOrchestratorContext = {
       eventsConsumer: new EventsConsumer([]),
       invocationsQueue: [],
       onWorkflowError(err) {
         workflowErrorReject(err);
       },
-      randomUUID: createRandomUUID(seedrandom('test4')),
+      globalThis: context.globalThis,
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -134,22 +154,33 @@ describe('createUseStep', () => {
       '3 steps have not been run yet'
     );
     expect(ctx.invocationsQueue).toEqual((error as StepsNotRunError).steps);
-    expect((error as StepsNotRunError).steps).toEqual([
-      {
-        stepName: 'add',
-        args: [1, 2],
-        invocationId: '79d54d5f-4f7c-4c39-b1d0-aeaa220cadd2',
-      },
-      {
-        stepName: 'add',
-        args: [3, 4],
-        invocationId: '817f8259-d23c-4462-b0a9-350eaf26e55e',
-      },
-      {
-        stepName: 'add',
-        args: [5, 6],
-        invocationId: 'f611f97e-0436-44bd-b41b-e812e6a7cd30',
-      },
-    ]);
+    expect((error as StepsNotRunError).steps).toMatchInlineSnapshot(`
+      [
+        {
+          "args": [
+            1,
+            2,
+          ],
+          "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
+          "stepName": "add",
+        },
+        {
+          "args": [
+            3,
+            4,
+          ],
+          "invocationId": "9ae6a38a-8447-4038-abcd-0ef772312266",
+          "stepName": "add",
+        },
+        {
+          "args": [
+            5,
+            6,
+          ],
+          "invocationId": "87228e82-3254-4b8b-9fc1-de64969755b5",
+          "stepName": "add",
+        },
+      ]
+    `);
   });
 });

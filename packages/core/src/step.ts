@@ -12,7 +12,6 @@ export interface WorkflowOrchestratorContext {
     invocationId: string;
   }[];
   onWorkflowError: (error: Error) => void;
-  randomUUID: () => string;
 }
 
 export function createUseStep(ctx: WorkflowOrchestratorContext) {
@@ -20,7 +19,7 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
     stepName: string
   ) {
     return (...args: Args): Promise<Result> => {
-      const invocationId = ctx.randomUUID();
+      const invocationId = ctx.globalThis.crypto.randomUUID();
       let gotStepStarted = false;
       ctx.invocationsQueue.push({ stepName, args, invocationId });
 

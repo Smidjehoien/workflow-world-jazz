@@ -1,9 +1,14 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { build } from 'esbuild';
 
+const staticDir = '.vercel/output/static';
 const outDir = '.vercel/output/functions/api/trigger.func';
 
+await mkdir(staticDir, { recursive: true });
 await mkdir(outDir, { recursive: true });
+
+// Return a 200 for the `patrickedqvist/wait-for-vercel-preview` GH action for e2e tests
+await writeFile(`${staticDir}/index.html`, '<h1>Workflows SDK Example</h1>');
 
 await writeFile(
   `${outDir}/package.json`,

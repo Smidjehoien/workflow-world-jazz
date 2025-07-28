@@ -15,12 +15,14 @@
     },
     "./runtime": "./dist/runtime.js",
     "./private": "./dist/private.js",
-    "./builtins": "./dist/builtins.js"
+    "./builtins": "./dist/builtins.js",
+    "./serialization": "./dist/serialization.js"
   },
   "scripts": {
     "build": "tsc",
     "clean": "tsc --build --clean",
-    "test": "vitest"
+    "test": "vitest src",
+    "test:e2e": "vitest e2e"
   },
   "dependencies": {
     "@aws-sdk/credential-provider-web-identity": "3.609.0",

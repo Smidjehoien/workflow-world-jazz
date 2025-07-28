@@ -139,6 +139,7 @@ export interface SerializableSpecial {
   Date: string; // ISO string
   Float32Array: string; // base64 string
   Float64Array: string; // base64 string
+  Error: Record<string, any>;
   Headers: [string, string][];
   Int8Array: string; // base64 string
   Int16Array: string; // base64 string
@@ -199,6 +200,14 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
       if (!(value instanceof global.Date)) return false;
       const valid = !Number.isNaN(value.getDate());
       return valid ? value.toISOString() : '';
+    },
+    Error: (value) => {
+      if (!(value instanceof global.Error)) return false;
+      return {
+        name: value.name,
+        message: value.message,
+        stack: value.stack,
+      };
     },
     Float32Array: (value) =>
       value instanceof global.Float32Array && viewToBase64(value),
@@ -423,6 +432,12 @@ function getCommonRevivers(global: Record<string, any> = globalThis) {
       return new global.BigUint64Array(ab);
     },
     Date: (value) => new global.Date(value),
+    Error: (value) => {
+      const error = new global.Error(value.message);
+      error.name = value.name;
+      error.stack = value.stack;
+      return error;
+    },
     Float32Array: (value: string) => {
       const ab = reviveArrayBuffer(value);
       return new global.Float32Array(ab);

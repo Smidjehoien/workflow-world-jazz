@@ -1,16 +1,32 @@
 import { start } from '@vercel/workflow-core/runtime';
+import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
 
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  const workflowId = url.searchParams.get('workflow') || 'simple';
-  const argVal = url.searchParams.get('args') || '42';
-  const args = argVal.split(',').map((arg) => {
-    const num = parseFloat(arg);
-    return Number.isNaN(num) ? arg.trim() : num;
-  });
-  const run = await start(workflowId, args);
+  const workflow = url.searchParams.get('workflow') || 'simple';
+
+  let args: any[] = [];
+
+  // Args from query string
+  const argsParam = url.searchParams.get('args');
+  if (argsParam) {
+    args = argsParam.split(',').map((arg) => {
+      const num = parseFloat(arg);
+      return Number.isNaN(num) ? arg.trim() : num;
+    });
+  } else {
+    // Args from body
+    const body = await req.text();
+    if (body) {
+      args = hydrateWorkflowArguments(JSON.parse(body), globalThis);
+    } else {
+      args = [42];
+    }
+  }
+  console.log(`Starting "${workflow}" workflow with args: ${args}`);
+
+  const run = await start(workflow, args);
   console.log('Run:', run);
-  return new Response(
-    `Starting "${workflowId}" workflow with run ID "${run.id}"`
-  );
+
+  return Response.json(run);
 }

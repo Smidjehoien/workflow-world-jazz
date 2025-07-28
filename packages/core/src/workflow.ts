@@ -50,7 +50,6 @@ export async function runWorkflow(
   const workflowContext: WorkflowOrchestratorContext = {
     globalThis: vmGlobalThis,
     onWorkflowError: workflowDiscontinuation.reject,
-    randomUUID: context.crypto.randomUUID,
     eventsConsumer: new EventsConsumer(events),
     invocationsQueue: [],
   };
