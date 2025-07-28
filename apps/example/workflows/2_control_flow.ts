@@ -1,4 +1,4 @@
-import { FatalError } from '@vercel/workflow-core';
+import { FatalError, RetryableError, useContext } from '@vercel/workflow-core';
 
 async function delayedMessage(ms: number, message: string): Promise<string> {
   'use step';
@@ -16,6 +16,21 @@ async function add(a: number, b: number): Promise<number> {
 async function failingStep(): Promise<string> {
   'use step';
   throw new FatalError(`A failed step (sent: ${new Date().toISOString()})`);
+}
+
+async function retryableStep(): Promise<string> {
+  'use step';
+  const { attempt } = useContext();
+  if (attempt === 1) {
+    console.log(
+      'Throwing retryable error - this will be retried after 60 seconds'
+    );
+    throw new RetryableError('Retryable error', {
+      // Retry after one minute
+      retryAfter: '1m',
+    });
+  }
+  return 'Success';
 }
 
 export async function control_flow() {
@@ -55,6 +70,10 @@ export async function control_flow() {
     // Only FatalErrors will bubble up here. Non-fatal errors are retried
     console.log('Caught error:', error);
   }
+
+  // Demo retryable error - this will fail the first time,
+  // and will be retried after one minute.
+  await retryableStep();
 
   console.log('Control flow workflow completed. See logs for results.');
 

@@ -12,7 +12,7 @@ import {
   WorkflowAPIError,
   type WorkflowRun,
 } from './backend.js';
-import { FatalError, StepsNotRunError } from './global.js';
+import { FatalError, RetryableError, StepsNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import {
   type Serializable,
@@ -358,11 +358,15 @@ async function stepMessageHandler(
             stack: getErrorStack(err),
           },
         });
-        const timeoutSeconds = 1;
-        // it's a retryable error - so have the queue keep the message visible so that it gets retried
-        return {
-          timeoutSeconds,
-        };
+        const timeoutSeconds = Math.max(
+          1,
+          isInstanceOf(err, RetryableError)
+            ? Math.floor((+err.retryAfter.getTime() - Date.now()) / 1000)
+            : 1
+        );
+        // It's a retryable error - so have the queue keep the message visible
+        // so that it gets retried.
+        return { timeoutSeconds };
       }
     }
   } finally {
