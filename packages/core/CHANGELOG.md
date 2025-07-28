@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- af3ca11: Add `RetryableError`
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes
