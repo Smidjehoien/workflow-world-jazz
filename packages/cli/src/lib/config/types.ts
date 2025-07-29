@@ -16,6 +16,8 @@ export interface WorkflowConfig {
   // method of using workflow is to use a loader within a framework (like
   // NextJS) that resolves client bindings on the fly.
   clientBundlePath?: string;
+
+  externalPackages?: string[];
 }
 
 export function isValidBuildTarget(

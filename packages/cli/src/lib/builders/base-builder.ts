@@ -12,13 +12,16 @@ export abstract class BaseBuilder {
     this.config = config;
   }
 
-  abstract build(): Promise<any>;
+  abstract build(): Promise<void>;
 
   protected async getInputFiles(): Promise<string[]> {
     return glob(
       this.config.dirs.map(
         (dir) =>
-          `${resolve(this.config.workingDir, dir)}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}`
+          `${resolve(
+            this.config.workingDir,
+            dir
+          )}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}`
       ),
       {
         ignore: [
@@ -69,10 +72,17 @@ export abstract class BaseBuilder {
       treeShaking: true,
       keepNames: true,
       minify: false,
-      external: ['@aws-sdk/credential-provider-web-identity'],
+      external: [
+        '@aws-sdk/credential-provider-web-identity',
+        ...(this.config.externalPackages || []),
+      ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       sourcemap: 'linked',
-      plugins: [createSwcPlugin({ mode: 'step' })],
+      plugins: [
+        createSwcPlugin({
+          mode: 'step',
+        }),
+      ],
     });
   }
 
@@ -108,7 +118,10 @@ export abstract class BaseBuilder {
       treeShaking: true,
       keepNames: true,
       minify: false,
-      external: ['@aws-sdk/credential-provider-web-identity'],
+      external: [
+        '@aws-sdk/credential-provider-web-identity',
+        ...(this.config.externalPackages || []),
+      ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'workflow' })],
     });

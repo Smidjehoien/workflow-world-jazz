@@ -2,12 +2,9 @@ import { constants } from 'node:fs';
 import { access, mkdir, stat, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { BaseBuilder } from './base-builder.js';
-import { nativeNodeModuleImporters } from './swc-esbuild-plugin.js';
 
 export class NextBuilder extends BaseBuilder {
-  async build(): Promise<{
-    nativeNodeModuleImporters: string[];
-  }> {
+  async build(): Promise<void> {
     const outputDir = await this.findAppDirectory();
     const apiGeneratedDir = join(outputDir, 'api/generated');
 
@@ -22,10 +19,6 @@ export class NextBuilder extends BaseBuilder {
     // instead of relying on workflows folder (will need to support watching)
     await this.buildStepsFunction(apiGeneratedDir);
     await this.buildWorkflowsFunction(apiGeneratedDir);
-
-    return {
-      nativeNodeModuleImporters: [...nativeNodeModuleImporters],
-    };
   }
 
   private async buildStepsFunction(apiGeneratedDir: string): Promise<void> {
@@ -37,14 +30,6 @@ export class NextBuilder extends BaseBuilder {
       format: 'esm',
       outfile: join(stepsRouteDir, 'route.js'),
     });
-
-    // we need to do a second pass if we detected native node modules
-    if (nativeNodeModuleImporters.size > 0) {
-      await this.createStepsBundle({
-        format: 'esm',
-        outfile: join(stepsRouteDir, 'route.js'),
-      });
-    }
   }
 
   private async buildWorkflowsFunction(apiGeneratedDir: string): Promise<void> {
