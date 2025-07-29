@@ -12,7 +12,7 @@ export abstract class BaseBuilder {
     this.config = config;
   }
 
-  abstract build(): Promise<void>;
+  abstract build(): Promise<any>;
 
   protected async getInputFiles(): Promise<string[]> {
     return glob(
