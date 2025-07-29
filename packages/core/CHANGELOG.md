@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 60f4152: Serialize `Error` instances
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

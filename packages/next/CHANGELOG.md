@@ -1,5 +1,17 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- ca3cffd: Rework .node external handling
+- 76f83a9: Mark `.node` files as external during esbuild bundling process for step functions
+- Updated dependencies [60f4152]
+- Updated dependencies [ca3cffd]
+- Updated dependencies [76f83a9]
+  - @vercel/workflow-core@0.0.1-alpha.6
+  - @vercel/workflow-cli@0.0.1-alpha.9
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes

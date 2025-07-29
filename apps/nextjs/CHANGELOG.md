@@ -1,5 +1,11 @@
 # nextjs
 
+## 0.0.2-alpha.3
+
+### Patch Changes
+
+- ca3cffd: Rework .node external handling
+
 ## 0.0.2-alpha.2
 
 ### Patch Changes
