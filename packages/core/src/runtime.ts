@@ -145,6 +145,14 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
         workflowStartedAt = +workflowRun.started_at;
       }
 
+      if (workflowRun.status !== 'running') {
+        // Workflow has already completed or failed, so we can skip it
+        console.warn(
+          `Workflow "${runId}" has status "${workflowRun.status}", skipping`
+        );
+        return;
+      }
+
       // TODO: ensure that *all* events are loaded into memory before
       // running, not just a paginated subset
       const events = await getWorkflowRunEvents(workflowRun.id);
@@ -265,12 +273,11 @@ async function stepMessageHandler(
           invocation_id: step.invocation_id,
         },
       });
-    } else if (step.status === 'completed') {
-      console.error(`Step "${stepId}" has already completed`);
-      return;
-    } else if (step.status === 'failed') {
+    }
+
+    if (step.status !== 'running') {
       console.error(
-        `Step "${stepId}" has already failed: ${step.error_message}`
+        `Step "${stepId}" has status "${step.status}", skipping${step.error_message ? `: ${step.error_message}` : ''}`
       );
       return;
     }
