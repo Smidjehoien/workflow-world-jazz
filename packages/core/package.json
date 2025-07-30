@@ -21,8 +21,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "tsc --build --clean",
-    "test": "vitest src",
-    "test:e2e": "vitest e2e"
+    "test": "vitest run src",
+    "test:e2e": "vitest run e2e"
   },
   "dependencies": {
     "@aws-sdk/credential-provider-web-identity": "3.609.0",

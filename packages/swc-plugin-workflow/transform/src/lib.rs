@@ -148,7 +148,7 @@ pub enum TransformMode {
 pub struct StepTransform {
     mode: TransformMode,
     // Track if the file has a top-level "use step" directive
-    has_file_directive: bool,
+    has_file_step_directive: bool,
     // Track if the file has a top-level "use workflow" directive
     has_file_workflow_directive: bool,
     // Set of function names that are step functions
@@ -234,7 +234,7 @@ impl StepTransform {
     pub fn new(mode: TransformMode) -> Self {
         Self {
             mode,
-            has_file_directive: false,
+            has_file_step_directive: false,
             has_file_workflow_directive: false,
             step_function_names: HashSet::new(),
             workflow_function_names: HashSet::new(),
@@ -646,47 +646,6 @@ impl StepTransform {
         }
     }
 
-    // Check if an arrow function should be treated as a step function
-    fn should_transform_arrow_function(&self, arrow_fn: &ArrowExpr, is_exported: bool) -> bool {
-        let has_directive = self.has_use_step_directive_arrow(&arrow_fn.body);
-
-        // Function has explicit directive OR file has directive and function is exported
-        (has_directive || (self.has_file_directive && is_exported)) && arrow_fn.is_async
-    }
-
-    // Check if an arrow function should be treated as a workflow function
-    fn should_transform_workflow_arrow_function(
-        &self,
-        arrow_fn: &ArrowExpr,
-        is_exported: bool,
-    ) -> bool {
-        let has_directive = self.has_use_workflow_directive_arrow(&arrow_fn.body);
-
-        // Function has explicit directive OR file has workflow directive and function is exported
-        (has_directive || (self.has_file_workflow_directive && is_exported)) && arrow_fn.is_async
-    }
-
-    // Validate that the arrow function is async
-    fn validate_async_arrow_function(
-        &self,
-        arrow_fn: &ArrowExpr,
-        span: swc_core::common::Span,
-    ) -> bool {
-        if !arrow_fn.is_async {
-            HANDLER.with(|handler| {
-                handler
-                    .struct_span_err(
-                        span,
-                        "Functions marked with \"use step\" must be async functions",
-                    )
-                    .emit()
-            });
-            false
-        } else {
-            true
-        }
-    }
-
     // Create a step run call for arrow functions (client mode)
     fn create_run_step_call_arrow(&self, fn_name: &str, params: &[Pat]) -> Expr {
         let args_array = Expr::Array(ArrayLit {
@@ -1055,7 +1014,7 @@ impl StepTransform {
         let has_directive = self.has_use_step_directive(&function.body);
 
         // Function has explicit directive OR file has directive and function is exported
-        (has_directive || (self.has_file_directive && is_exported)) && function.is_async
+        (has_directive || (self.has_file_step_directive && is_exported)) && function.is_async
     }
 
     // Check if a function should be treated as a workflow function
@@ -1141,6 +1100,26 @@ impl StepTransform {
         for i in imports_to_remove.into_iter().rev() {
             items.remove(i);
         }
+    }
+
+    // Check if a function has a step directive (regardless of async status)
+    fn has_step_directive(&self, function: &Function, is_exported: bool) -> bool {
+        (self.has_file_step_directive && is_exported) || self.has_use_step_directive(&function.body)
+    }
+
+    // Check if a function has a workflow directive (regardless of async status)
+    fn has_workflow_directive(&self, function: &Function, is_exported: bool) -> bool {
+        (self.has_file_workflow_directive && is_exported) || self.has_use_workflow_directive(&function.body)
+    }
+
+    // Check if an arrow function has a step directive (regardless of async status)
+    fn has_step_directive_arrow(&self, arrow_fn: &ArrowExpr, is_exported: bool) -> bool {
+        (self.has_file_step_directive && is_exported) || self.has_use_step_directive_arrow(&arrow_fn.body)
+    }
+
+    // Check if an arrow function has a workflow directive (regardless of async status)
+    fn has_workflow_directive_arrow(&self, arrow_fn: &ArrowExpr, is_exported: bool) -> bool {
+        (self.has_file_workflow_directive && is_exported) || self.has_use_workflow_directive_arrow(&arrow_fn.body)
     }
 }
 
@@ -1410,7 +1389,7 @@ impl VisitMut for StepTransform {
 
     fn visit_mut_module_items(&mut self, items: &mut Vec<ModuleItem>) {
         // Check for file-level directives
-        self.has_file_directive = self.check_module_directive(items);
+        self.has_file_step_directive = self.check_module_directive(items);
         self.has_file_workflow_directive = self.check_module_workflow_directive(items);
 
         // Remove file-level directive if present
@@ -1432,7 +1411,7 @@ impl VisitMut for StepTransform {
         // Visit children normally
         for item in items.iter_mut() {
             // Validate exports if we have a file-level directive
-            if self.has_file_directive || self.has_file_workflow_directive {
+            if self.has_file_step_directive || self.has_file_workflow_directive {
                 match item {
                     ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export)) => {
                         match &export.decl {
@@ -1440,7 +1419,7 @@ impl VisitMut for StepTransform {
                                 if !fn_decl.function.is_async {
                                     emit_error(WorkflowErrorKind::InvalidExport {
                                         span: export.span,
-                                        directive: if self.has_file_directive {
+                                        directive: if self.has_file_step_directive {
                                             "use step"
                                         } else {
                                             "use workflow"
@@ -1457,7 +1436,7 @@ impl VisitMut for StepTransform {
                                                 if !fn_expr.function.is_async {
                                                     emit_error(WorkflowErrorKind::InvalidExport {
                                                         span: export.span,
-                                                        directive: if self.has_file_directive {
+                                                        directive: if self.has_file_step_directive {
                                                             "use step"
                                                         } else {
                                                             "use workflow"
@@ -1469,7 +1448,7 @@ impl VisitMut for StepTransform {
                                                 if !arrow_expr.is_async {
                                                     emit_error(WorkflowErrorKind::InvalidExport {
                                                         span: export.span,
-                                                        directive: if self.has_file_directive {
+                                                        directive: if self.has_file_step_directive {
                                                             "use step"
                                                         } else {
                                                             "use workflow"
@@ -1481,7 +1460,7 @@ impl VisitMut for StepTransform {
                                                 // Literals are not allowed
                                                 emit_error(WorkflowErrorKind::InvalidExport {
                                                     span: export.span,
-                                                    directive: if self.has_file_directive {
+                                                    directive: if self.has_file_step_directive {
                                                         "use step"
                                                     } else {
                                                         "use workflow"
@@ -1500,7 +1479,7 @@ impl VisitMut for StepTransform {
                                 // Classes are not allowed
                                 emit_error(WorkflowErrorKind::InvalidExport {
                                     span: export.span,
-                                    directive: if self.has_file_directive {
+                                    directive: if self.has_file_step_directive {
                                         "use step"
                                     } else {
                                         "use workflow"
@@ -1516,7 +1495,7 @@ impl VisitMut for StepTransform {
                             Decl::Using(_) => {
                                 emit_error(WorkflowErrorKind::InvalidExport {
                                     span: export.span,
-                                    directive: if self.has_file_directive {
+                                    directive: if self.has_file_step_directive {
                                         "use step"
                                     } else {
                                         "use workflow"
@@ -1530,7 +1509,7 @@ impl VisitMut for StepTransform {
                             // Re-exports are not allowed
                             emit_error(WorkflowErrorKind::InvalidExport {
                                 span: named.span,
-                                directive: if self.has_file_directive {
+                                directive: if self.has_file_step_directive {
                                     "use step"
                                 } else {
                                     "use workflow"
@@ -1544,7 +1523,7 @@ impl VisitMut for StepTransform {
                                 if !fn_expr.function.is_async {
                                     emit_error(WorkflowErrorKind::InvalidExport {
                                         span: default.span,
-                                        directive: if self.has_file_directive {
+                                        directive: if self.has_file_step_directive {
                                             "use step"
                                         } else {
                                             "use workflow"
@@ -1555,7 +1534,7 @@ impl VisitMut for StepTransform {
                             DefaultDecl::Class(_) => {
                                 emit_error(WorkflowErrorKind::InvalidExport {
                                     span: default.span,
-                                    directive: if self.has_file_directive {
+                                    directive: if self.has_file_step_directive {
                                         "use step"
                                     } else {
                                         "use workflow"
@@ -1573,7 +1552,7 @@ impl VisitMut for StepTransform {
                                 if !fn_expr.function.is_async {
                                     emit_error(WorkflowErrorKind::InvalidExport {
                                         span: expr.span,
-                                        directive: if self.has_file_directive {
+                                        directive: if self.has_file_step_directive {
                                             "use step"
                                         } else {
                                             "use workflow"
@@ -1585,7 +1564,7 @@ impl VisitMut for StepTransform {
                                 if !arrow_expr.is_async {
                                     emit_error(WorkflowErrorKind::InvalidExport {
                                         span: expr.span,
-                                        directive: if self.has_file_directive {
+                                        directive: if self.has_file_step_directive {
                                             "use step"
                                         } else {
                                             "use workflow"
@@ -1597,7 +1576,7 @@ impl VisitMut for StepTransform {
                                 // Other default exports are not allowed
                                 emit_error(WorkflowErrorKind::InvalidExport {
                                     span: expr.span,
-                                    directive: if self.has_file_directive {
+                                    directive: if self.has_file_step_directive {
                                         "use step"
                                     } else {
                                         "use workflow"
@@ -1610,7 +1589,7 @@ impl VisitMut for StepTransform {
                         // export * from '...' is not allowed
                         emit_error(WorkflowErrorKind::InvalidExport {
                             span: export_all.span,
-                            directive: if self.has_file_directive {
+                            directive: if self.has_file_step_directive {
                                 "use step"
                             } else {
                                 "use workflow"
@@ -1631,8 +1610,16 @@ impl VisitMut for StepTransform {
     fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
         let fn_name = fn_decl.ident.sym.to_string();
 
-        if self.should_transform_function(&fn_decl.function, false) {
-            if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+        // Check for step directive first
+        if self.has_step_directive(&fn_decl.function, false) {
+            // Validate that it's async - emit error if not
+            if !fn_decl.function.is_async {
+                emit_error(WorkflowErrorKind::NonAsyncFunction {
+                    span: fn_decl.function.span,
+                    directive: "use step",
+                });
+            } else {
+                // It's valid - proceed with transformation
                 self.step_function_names.insert(fn_name.clone());
 
                 match self.mode {
@@ -1650,8 +1637,15 @@ impl VisitMut for StepTransform {
                     }
                 }
             }
-        } else if self.should_transform_workflow_function(&fn_decl.function, false) {
-            if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+        } else if self.has_workflow_directive(&fn_decl.function, false) {
+            // Validate that it's async - emit error if not
+            if !fn_decl.function.is_async {
+                emit_error(WorkflowErrorKind::NonAsyncFunction {
+                    span: fn_decl.function.span,
+                    directive: "use workflow",
+                });
+            } else {
+                // It's valid - proceed with transformation
                 self.workflow_function_names.insert(fn_name.clone());
 
                 match self.mode {
@@ -1784,8 +1778,16 @@ impl VisitMut for StepTransform {
             Decl::Fn(fn_decl) => {
                 let fn_name = fn_decl.ident.sym.to_string();
 
-                if self.should_transform_function(&fn_decl.function, true) {
-                    if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                // Check for step directive first
+                if self.has_step_directive(&fn_decl.function, true) {
+                    // Validate that it's async - emit error if not
+                    if !fn_decl.function.is_async {
+                        emit_error(WorkflowErrorKind::NonAsyncFunction {
+                            span: fn_decl.function.span,
+                            directive: "use step",
+                        });
+                    } else {
+                        // It's valid - proceed with transformation
                         self.step_function_names.insert(fn_name.clone());
 
                         match self.mode {
@@ -1841,8 +1843,15 @@ impl VisitMut for StepTransform {
                             }
                         }
                     }
-                } else if self.should_transform_workflow_function(&fn_decl.function, true) {
-                    if self.validate_async_function(&fn_decl.function, fn_decl.function.span) {
+                } else if self.has_workflow_directive(&fn_decl.function, true) {
+                    // Validate that it's async - emit error if not
+                    if !fn_decl.function.is_async {
+                        emit_error(WorkflowErrorKind::NonAsyncFunction {
+                            span: fn_decl.function.span,
+                            directive: "use workflow",
+                        });
+                    } else {
+                        // It's valid - proceed with transformation
                         self.workflow_function_names.insert(fn_name.clone());
 
                         match self.mode {
@@ -1996,11 +2005,16 @@ impl VisitMut for StepTransform {
                                     }
                                 }
                                 Expr::Arrow(arrow_expr) => {
-                                    if self.should_transform_arrow_function(arrow_expr, true) {
-                                        if self.validate_async_arrow_function(
-                                            arrow_expr,
-                                            arrow_expr.span,
-                                        ) {
+                                    // Check for step directive first
+                                    if self.has_step_directive_arrow(arrow_expr, true) {
+                                        // Validate that it's async - emit error if not
+                                        if !arrow_expr.is_async {
+                                            emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                                span: arrow_expr.span,
+                                                directive: "use step",
+                                            });
+                                        } else {
+                                            // It's valid - proceed with transformation
                                             self.step_function_names.insert(name.clone());
 
                                             match self.mode {
@@ -2058,13 +2072,15 @@ impl VisitMut for StepTransform {
                                                 }
                                             }
                                         }
-                                    } else if self
-                                        .should_transform_workflow_arrow_function(arrow_expr, true)
-                                    {
-                                        if self.validate_async_arrow_function(
-                                            arrow_expr,
-                                            arrow_expr.span,
-                                        ) {
+                                    } else if self.has_workflow_directive_arrow(arrow_expr, true) {
+                                        // Validate that it's async - emit error if not
+                                        if !arrow_expr.is_async {
+                                            emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                                span: arrow_expr.span,
+                                                directive: "use workflow",
+                                            });
+                                        } else {
+                                            // It's valid - proceed with transformation
                                             self.workflow_function_names.insert(name.clone());
 
                                             match self.mode {
@@ -2116,11 +2132,16 @@ impl VisitMut for StepTransform {
 
                     match &mut **init {
                         Expr::Fn(fn_expr) => {
-                            if self.should_transform_function(&fn_expr.function, false) {
-                                if self.validate_async_function(
-                                    &fn_expr.function,
-                                    fn_expr.function.span,
-                                ) {
+                            // Check for step directive first
+                            if self.has_step_directive(&fn_expr.function, false) {
+                                // Validate that it's async - emit error if not
+                                if !fn_expr.function.is_async {
+                                    emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                        span: fn_expr.function.span,
+                                        directive: "use step",
+                                    });
+                                } else {
+                                    // It's valid - proceed with transformation
                                     self.step_function_names.insert(name.clone());
 
                                     match self.mode {
@@ -2183,13 +2204,15 @@ impl VisitMut for StepTransform {
                                         }
                                     }
                                 }
-                            } else if self
-                                .should_transform_workflow_function(&fn_expr.function, false)
-                            {
-                                if self.validate_async_function(
-                                    &fn_expr.function,
-                                    fn_expr.function.span,
-                                ) {
+                            } else if self.has_workflow_directive(&fn_expr.function, false) {
+                                // Validate that it's async - emit error if not
+                                if !fn_expr.function.is_async {
+                                    emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                        span: fn_expr.function.span,
+                                        directive: "use workflow",
+                                    });
+                                } else {
+                                    // It's valid - proceed with transformation
                                     self.workflow_function_names.insert(name.clone());
 
                                     match self.mode {
@@ -2224,8 +2247,16 @@ impl VisitMut for StepTransform {
                             }
                         }
                         Expr::Arrow(arrow_expr) => {
-                            if self.should_transform_arrow_function(arrow_expr, false) {
-                                if self.validate_async_arrow_function(arrow_expr, arrow_expr.span) {
+                            // Check for step directive first
+                            if self.has_step_directive_arrow(arrow_expr, false) {
+                                // Validate that it's async - emit error if not
+                                if !arrow_expr.is_async {
+                                    emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                        span: arrow_expr.span,
+                                        directive: "use step",
+                                    });
+                                } else {
+                                    // It's valid - proceed with transformation
                                     self.step_function_names.insert(name.clone());
 
                                     match self.mode {
@@ -2278,10 +2309,15 @@ impl VisitMut for StepTransform {
                                         }
                                     }
                                 }
-                            } else if self
-                                .should_transform_workflow_arrow_function(arrow_expr, false)
-                            {
-                                if self.validate_async_arrow_function(arrow_expr, arrow_expr.span) {
+                            } else if self.has_workflow_directive_arrow(arrow_expr, false) {
+                                // Validate that it's async - emit error if not
+                                if !arrow_expr.is_async {
+                                    emit_error(WorkflowErrorKind::NonAsyncFunction {
+                                        span: arrow_expr.span,
+                                        directive: "use workflow",
+                                    });
+                                } else {
+                                    // It's valid - proceed with transformation
                                     self.workflow_function_names.insert(name.clone());
 
                                     match self.mode {
