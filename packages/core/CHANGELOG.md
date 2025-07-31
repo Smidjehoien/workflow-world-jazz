@@ -1,5 +1,12 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- 4c4d406: Return from workflow run unless status is "running"
+- 0b462ea: add embedded queue system that can be used with an env var
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes

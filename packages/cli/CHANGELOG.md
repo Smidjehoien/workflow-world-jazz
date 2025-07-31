@@ -1,5 +1,16 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- 6cd62d1: Switch to neutral target for workflow bundle
+- Updated dependencies [4c4d406]
+- Updated dependencies [0b462ea]
+- Updated dependencies [47e0ca9]
+  - @vercel/workflow-core@0.0.1-alpha.7
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.2
+
 ## 0.0.1-alpha.9
 
 ### Patch Changes
