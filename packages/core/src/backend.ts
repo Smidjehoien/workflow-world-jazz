@@ -226,8 +226,10 @@ async function makeRequest<T>(
 
   if (!response.ok) {
     const errorData = (await response.json().catch(() => ({}))) as any;
+    console.log(options.body);
     throw new WorkflowAPIError(
-      errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+      errorData.message ||
+        `${options.method ?? 'GET'} ${endpoint} -> HTTP ${response.status}: ${response.statusText}`,
       response.status,
       errorData.code
     );

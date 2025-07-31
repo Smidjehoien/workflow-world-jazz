@@ -48,8 +48,8 @@ export default function Message({
             // render text parts as simple text:
             case 'text':
               return (
-                // biome-ignore lint/correctness/useJsxKeyInIterable: No good key available
                 <Markdown
+                  key={`${part.type}_${i}`}
                   components={{
                     ul({ children }) {
                       return (
@@ -103,7 +103,7 @@ export default function Message({
                       className="my-2 p-3 bg-blue-50 rounded-md"
                     >
                       <div className="text-sm font-medium mb-1">
-                        ✈️ Searching flights
+                        ✈ Searching flights
                       </div>
                       <div className="text-xs text-gray-600">
                         From: {(part.input as any).from} → To:{' '}

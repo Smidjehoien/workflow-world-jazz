@@ -78,7 +78,10 @@ export function withWorkflow(nextConfig: NextConfig) {
     await workflowBuilder.build();
 
     if (phase === 'phase-development-server') {
+      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
       // handle watching
+    } else if (phase === 'phase-production-server') {
+      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
     }
 
     return nextConfig;
