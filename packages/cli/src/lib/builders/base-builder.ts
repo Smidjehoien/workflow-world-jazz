@@ -111,8 +111,9 @@ export abstract class BaseBuilder {
       bundle: true,
       absWorkingDir: this.config.workingDir,
       format: 'cjs', // Runs inside the VM which expects cjs
-      platform: 'node',
-      conditions: ['workflow', 'node'],
+      platform: 'neutral', // The platform is neither node nor browser
+      mainFields: ['module', 'main'], // To support npm style imports
+      conditions: ['workflow'], // Allow packages to export 'workflow' compliant versions
       target: 'es2022',
       write: false,
       treeShaking: true,
