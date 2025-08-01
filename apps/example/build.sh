@@ -10,5 +10,5 @@ set -euo pipefail
 # build the workflow
 pnpm run build:workflow
 
-# setup a trigger function
-node build-trigger.mjs
+# setup API endpoints
+node build-api.mjs

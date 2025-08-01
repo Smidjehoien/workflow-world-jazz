@@ -1,12 +1,15 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
 import type { Event, WorkflowRun } from './backend.js';
+import type { StepsNotRunError } from './global.js';
 import {
   dehydrateStepReturnValue,
   dehydrateWorkflowArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 import { runWorkflow } from './workflow.js';
+
+process.env.WORKFLOW_WEBHOOK_SECRET = 'test';
 
 describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
@@ -567,6 +570,110 @@ describe('runWorkflow', () => {
       assert(error);
       expect(error.name).toEqual('StepsNotRunError');
       expect(error.message).toEqual('1 steps have not been run yet');
+      expect((error as StepsNotRunError).steps).toEqual([
+        {
+          stepName: 'add',
+          invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          args: [1, 2],
+        },
+      ]);
+    });
+
+    it('should throw `StepsNotRunError` when a step has only a "step_started" event', async () => {
+      let error: Error | undefined;
+      try {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [
+          {
+            id: 'event-0',
+            workflow_run_id: workflowRun.id,
+            event_type: 'step_started',
+            event_data: {
+              invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+            },
+            sequence_number: 0,
+            created_at: new Date(),
+          },
+        ];
+
+        await runWorkflow(
+          `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            const a = await add(1, 2);
+            return a;
+          }`,
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err;
+      }
+      assert(error);
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('0 steps have not been run yet');
+      expect((error as StepsNotRunError).steps).toEqual([]);
+    });
+
+    it('should throw `StepsNotRunError` for multiple steps with `Promise.all()`', async () => {
+      let error: Error | undefined;
+      try {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          id: 'test-run-123',
+          workflow_name: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          created_at: new Date('2024-01-01T00:00:00.000Z'),
+          updated_at: new Date('2024-01-01T00:00:00.000Z'),
+          started_at: new Date('2024-01-01T00:00:00.000Z'),
+          owner_id: 'test-owner',
+          project_id: 'test-project',
+          environment: 'test',
+        };
+
+        const events: Event[] = [];
+
+        await runWorkflow(
+          `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+          async function workflow() {
+            const a = await Promise.all([add(1, 2), add(3, 4)]);
+            return a;
+          }`,
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err;
+      }
+      assert(error);
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('2 steps have not been run yet');
+      expect((error as StepsNotRunError).steps).toEqual([
+        {
+          stepName: 'add',
+          invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          args: [1, 2],
+        },
+        {
+          stepName: 'add',
+          invocationId: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+          args: [3, 4],
+        },
+      ]);
     });
 
     it('`StepsNotRunError` should not be catchable by user code', async () => {
@@ -609,5 +716,460 @@ describe('runWorkflow', () => {
       expect(error.name).toEqual('StepsNotRunError');
       expect(error.message).toEqual('1 steps have not been run yet');
     });
+  });
+
+  it('should throw `StepsNotRunError` when a webhook is awaiting without a "webhook_request" event', async () => {
+    let error: Error | undefined;
+    try {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        id: 'test-run-123',
+        workflow_name: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        created_at: new Date('2024-01-01T00:00:00.000Z'),
+        updated_at: new Date('2024-01-01T00:00:00.000Z'),
+        started_at: new Date('2024-01-01T00:00:00.000Z'),
+        owner_id: 'test-owner',
+        project_id: 'test-project',
+        environment: 'test',
+      };
+
+      const events: Event[] = [];
+
+      await runWorkflow(
+        `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+          async function workflow() {
+            const webhook = useWebhook();
+            const req = await webhook;
+            return req.url;
+          }`,
+        workflowRun,
+        events
+      );
+    } catch (err) {
+      error = err;
+    }
+    assert(error);
+    expect(error.name).toEqual('StepsNotRunError');
+    expect(error.message).toEqual('0 steps have not been run yet');
+    expect((error as StepsNotRunError).steps).toEqual([]);
+  });
+
+  it('should resolve `useWebhook` await upon "webhook_request" event', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      async function workflow() {
+        const webhook = useWebhook();
+        const req = await webhook;
+        return req.url;
+      }`,
+      workflowRun,
+      events
+    );
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(
+      'https://example.com/'
+    );
+  });
+
+  it('should resolve multiple `useWebhook` awaits upon "webhook_request" events', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com/2'),
+            ops
+          ),
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      async function workflow() {
+        const webhook = useWebhook();
+        const req1 = await webhook;
+        const req2 = await webhook;
+        return [req1.url, req2.url];
+      }`,
+      workflowRun,
+      events
+    );
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+      'https://example.com/',
+      'https://example.com/2',
+    ]);
+  });
+
+  it('should support `for await` loops with `useWebhook`', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com/2', {
+              method: 'POST',
+            }),
+            ops
+          ),
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      async function workflow() {
+        const webhook = useWebhook();
+        const reqs = [];
+        for await (const req of webhook) {
+          reqs.push({ url: req.url, method: req.method });
+          if (reqs.length === 2) {
+            break;
+          }
+        }
+        return reqs;
+      }`,
+      workflowRun,
+      events
+    );
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+      { url: 'https://example.com/', method: 'GET' },
+      { url: 'https://example.com/2', method: 'POST' },
+    ]);
+  });
+
+  it('should support multiple "webhook_request" events even when the workflow is only interested in one', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com/2', {
+              method: 'POST',
+            }),
+            ops
+          ),
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      async function workflow() {
+        const webhook = useWebhook();
+        const req = await webhook;
+        return { url: req.url, method: req.method };
+      }`,
+      workflowRun,
+      events
+    );
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+      url: 'https://example.com/',
+      method: 'GET',
+    });
+  });
+
+  it('should support multiple queued "webhook_request" events with step events in between', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com/2', {
+              method: 'POST',
+            }),
+            ops
+          ),
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRun.id,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 2,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-3',
+        workflow_run_id: workflowRun.id,
+        event_type: 'step_result',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+          result: dehydrateStepReturnValue(3, ops),
+        },
+        sequence_number: 3,
+        created_at: new Date(),
+      },
+    ];
+
+    const result = await runWorkflow(
+      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      async function workflow() {
+        const webhook = useWebhook();
+        const req1 = await webhook;
+        const a = await add(1, 2);
+        const req2 = await webhook;
+        return {
+          url: req1.url,
+          method: req1.method,
+          a,
+          url2: req2.url,
+          method2: req2.method,
+        };
+      }`,
+      workflowRun,
+      events
+    );
+    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+      url: 'https://example.com/',
+      method: 'GET',
+      a: 3,
+      url2: 'https://example.com/2',
+      method2: 'POST',
+    });
+  });
+
+  it('should throw `StepsNotRunError` when a webhook is awaited after the event log is empty', async () => {
+    const ops: Promise<any>[] = [];
+    const workflowRun: WorkflowRun = {
+      id: 'test-run-123',
+      workflow_name: 'workflow',
+      status: 'running',
+      input: dehydrateWorkflowArguments([], ops),
+      created_at: new Date('2024-01-01T00:00:00.000Z'),
+      updated_at: new Date('2024-01-01T00:00:00.000Z'),
+      started_at: new Date('2024-01-01T00:00:00.000Z'),
+      owner_id: 'test-owner',
+      project_id: 'test-project',
+      environment: 'test',
+    };
+
+    const events: Event[] = [
+      {
+        id: 'event-0',
+        workflow_run_id: workflowRun.id,
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          request: dehydrateStepReturnValue(
+            new Request('https://example.com'),
+            ops
+          ),
+        },
+        sequence_number: 0,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-1',
+        workflow_run_id: workflowRun.id,
+        event_type: 'step_started',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        },
+        sequence_number: 1,
+        created_at: new Date(),
+      },
+      {
+        id: 'event-2',
+        workflow_run_id: workflowRun.id,
+        event_type: 'step_result',
+        event_data: {
+          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+          result: dehydrateStepReturnValue(3, ops),
+        },
+        sequence_number: 2,
+        created_at: new Date(),
+      },
+    ];
+
+    let error: Error | undefined;
+    try {
+      await runWorkflow(
+        `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      async function workflow() {
+        const webhook = useWebhook();
+        for await (const req of webhook) {
+          await add(1, 2);
+        }
+      }`,
+        workflowRun,
+        events
+      );
+    } catch (err) {
+      error = err;
+    }
+    assert(error);
+    expect(error.name).toEqual('StepsNotRunError');
+    expect(error.message).toEqual('0 steps have not been run yet');
+    expect((error as StepsNotRunError).steps).toEqual([]);
   });
 });

@@ -147,6 +147,13 @@ export interface SerializableSpecial {
   Map: [any, any][];
   ReadableStream: { name: string; type?: 'bytes' };
   RegExp: { source: string; flags: string };
+  Request: {
+    method: string;
+    url: string;
+    headers: SerializableSpecial['Headers'];
+    body: SerializableSpecial['ReadableStream'];
+    duplex: globalThis.Request['duplex'];
+  };
   Response: {
     type: globalThis.Response['type'];
     url: string;
@@ -226,6 +233,16 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
         source: value.source,
         flags: value.flags,
       },
+    Request: (value) => {
+      if (!(value instanceof global.Request)) return false;
+      return {
+        method: value.method,
+        url: value.url,
+        headers: value.headers,
+        body: value.body,
+        duplex: value.duplex,
+      };
+    },
     Response: (value) => {
       if (!(value instanceof global.Response)) return false;
       return {
@@ -496,6 +513,15 @@ function getExternalRevivers(
 ): Revivers {
   return {
     ...getCommonRevivers(global),
+
+    Request: (value) => {
+      return new global.Request(value.url, {
+        method: value.method,
+        headers: new global.Headers(value.headers),
+        body: value.body,
+        duplex: value.duplex,
+      });
+    },
     Response: (value) => {
       return new global.Response(value.body, {
         type: value.type,
@@ -541,6 +567,10 @@ function getWorkflowRevivers(
 ): Revivers {
   return {
     ...getCommonRevivers(global),
+    Request: (value) => {
+      Object.setPrototypeOf(value, global.Request.prototype);
+      return value;
+    },
     Response: (value) => {
       Object.setPrototypeOf(value, global.Response.prototype);
       return value;
@@ -582,6 +612,15 @@ function getStepRevivers(
 ): Revivers {
   return {
     ...getCommonRevivers(global),
+
+    Request: (value) => {
+      return new global.Request(value.url, {
+        method: value.method,
+        headers: new global.Headers(value.headers),
+        body: value.body,
+        duplex: value.duplex,
+      });
+    },
     Response: (value) => {
       return new global.Response(value.body, {
         type: value.type,

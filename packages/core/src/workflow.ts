@@ -3,26 +3,16 @@ import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import { ENOTSUP } from './global.js';
+import type { WorkflowOrchestratorContext } from './private.js';
 import {
   dehydrateWorkflowReturnValue,
   hydrateWorkflowArguments,
 } from './serialization.js';
-import { createUseStep, type WorkflowOrchestratorContext } from './step.js';
+import { createUseStep } from './step.js';
 import type { WorkflowContext } from './use-context.js';
+import { withResolvers } from './util.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/use-context.js';
-
-class Deferred<T> {
-  promise: Promise<T>;
-  resolve!: (value: T) => void;
-  reject!: (reason?: any) => void;
-
-  constructor() {
-    this.promise = new Promise((resolve, reject) => {
-      this.resolve = resolve;
-      this.reject = reject;
-    });
-  }
-}
+import { createUseWebhook } from './workflow/webhook.js';
 
 export async function runWorkflow(
   workflowCode: string,
@@ -45,9 +35,14 @@ export async function runWorkflow(
     fixedTimestamp: +startedAt,
   });
 
-  const workflowDiscontinuation = new Deferred<void>();
+  const workflowDiscontinuation = withResolvers<void>();
+
+  const url = `https://${process.env.VERCEL_URL}`;
 
   const workflowContext: WorkflowOrchestratorContext = {
+    url,
+    workflowName: workflowRun.workflow_name,
+    workflowRunId: workflowRun.id,
     globalThis: vmGlobalThis,
     onWorkflowError: workflowDiscontinuation.reject,
     eventsConsumer: new EventsConsumer(events),
@@ -65,9 +60,12 @@ export async function runWorkflow(
   });
 
   const useStep = createUseStep(workflowContext);
+  const useWebhook = createUseWebhook(workflowContext);
 
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
   vmGlobalThis[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
+  // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+  vmGlobalThis[Symbol.for('WORKFLOW_USE_WEBHOOK')] = useWebhook;
 
   // For the workflow VM, we store the context in a symbol on the `globalThis` object
   const ctx: WorkflowContext = {
@@ -79,6 +77,7 @@ export async function runWorkflow(
     get attempt(): number {
       throw ENOTSUP();
     },
+    url,
   };
   // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
   vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;
@@ -86,8 +85,53 @@ export async function runWorkflow(
   // @ts-ignore Provide a hoisted fetch function
   vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
 
-  // `Response` is a special built-in class that invokes steps
+  // `Request` and `Response` are special built-in classes that invoke steps
   // for the `json()`, `text()` and `arrayBuffer()` instance methods
+  class Request implements globalThis.Request {
+    constructor(_url: string, _options: RequestInit) {
+      ENOTSUP();
+    }
+    cache!: globalThis.Request['cache'];
+    credentials!: globalThis.Request['credentials'];
+    destination!: globalThis.Request['destination'];
+    headers!: Headers;
+    integrity!: string;
+    method!: string;
+    mode!: globalThis.Request['mode'];
+    redirect!: globalThis.Request['redirect'];
+    referrer!: string;
+    referrerPolicy!: globalThis.Request['referrerPolicy'];
+    url!: string;
+    keepalive!: boolean;
+    signal!: AbortSignal;
+    duplex!: 'half';
+    clone(): Request {
+      ENOTSUP();
+    }
+    body!: ReadableStream<any> | null;
+
+    get bodyUsed() {
+      return false;
+    }
+
+    // TODO: implement these
+    blob!: () => Promise<Blob>;
+    formData!: () => Promise<FormData>;
+
+    async arrayBuffer() {
+      return resArrayBuffer(this);
+    }
+
+    async json() {
+      return resJson(this);
+    }
+
+    async text() {
+      return resText(this);
+    }
+  }
+  vmGlobalThis.Request = Request;
+
   const resJson = useStep<[any], any>('__builtin_response_json');
   const resText = useStep<[any], string>('__builtin_response_text');
   const resArrayBuffer = useStep<[any], ArrayBuffer>(

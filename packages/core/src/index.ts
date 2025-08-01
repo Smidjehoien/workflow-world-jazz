@@ -13,3 +13,4 @@ export {
 } from './global.js';
 export { sleep } from './sleep.js';
 export { useContext, type WorkflowContext } from './use-context.js';
+export { useWebhook, type Webhook } from './use-webhook.js';

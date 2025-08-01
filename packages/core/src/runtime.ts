@@ -30,6 +30,7 @@ import {
 // TODO: move step handler out to a separate file
 import { contextStorage } from './step/use-context.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
+import type { WorkflowContext } from './use-context.js';
 import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';
@@ -289,14 +290,17 @@ export const vercelAPIStepsEntrypoint =
         const ops: Promise<void>[] = [];
         const args = hydrateStepArguments(step.input, ops);
 
-        contextStorage.enterWith({
+        const ctx: WorkflowContext = {
           workflowRunId,
           workflowStartedAt: new Date(workflowStartedAt),
           stepId: step.invocation_id,
           attempt: metadata.attempt,
-        });
+          url: `https://${process.env.VERCEL_URL}`,
+        };
+        contextStorage.enterWith(ctx);
 
         result = await stepFn(...args);
+
         result = dehydrateStepReturnValue(result, ops);
 
         waitUntil(Promise.all(ops));
@@ -388,3 +392,5 @@ export const vercelAPIStepsEntrypoint =
       } satisfies WorkflowInvokePayload);
     }
   );
+
+export { vercelAPIWebhooksEntrypoint } from './runtime/webhook.js';

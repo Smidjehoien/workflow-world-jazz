@@ -27,6 +27,11 @@ export interface WorkflowContext {
    * Accessing this property in a workflow function will throw an error.
    */
   attempt: number;
+
+  /**
+   * The URL where the workflow can be triggered.
+   */
+  url: string;
 }
 
 export function useContext(): WorkflowContext {

@@ -11,8 +11,26 @@ export const StepInvokePayloadSchema = z.object({
   stepId: z.string(),
 });
 
+const MethodEnumSchema = z.enum([
+  'GET',
+  'POST',
+  'PUT',
+  'DELETE',
+  'PATCH',
+  'OPTIONS',
+  'HEAD',
+]);
+
+export const WebhookTokenPayloadSchema = z.object({
+  workflowName: z.string(),
+  workflowRunId: z.string(),
+  webhookId: z.string(),
+  method: z.union([MethodEnumSchema, z.array(MethodEnumSchema)]).optional(),
+});
+
 export type WorkflowInvokePayload = z.infer<typeof WorkflowInvokePayloadSchema>;
 export type StepInvokePayload = z.infer<typeof StepInvokePayloadSchema>;
+export type WebhookTokenPayload = z.infer<typeof WebhookTokenPayloadSchema>;
 
 /**
  * A serializable value:

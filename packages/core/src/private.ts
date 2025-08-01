@@ -2,6 +2,7 @@
  * Utils used by the bundler when transforming code
  */
 
+import type { EventsConsumer } from './events-consumer.js';
 import type { Serializable } from './schemas.js';
 
 export type StepFunction<
@@ -25,4 +26,18 @@ export function registerStepFunction(stepFn: StepFunction) {
  */
 export function getStepFunction(stepName: string): StepFunction | undefined {
   return registeredSteps.get(stepName);
+}
+
+export interface WorkflowOrchestratorContext {
+  url: string;
+  workflowName: string;
+  workflowRunId: string;
+  globalThis: typeof globalThis;
+  eventsConsumer: EventsConsumer;
+  invocationsQueue: {
+    stepName: string;
+    args: Serializable[];
+    invocationId: string;
+  }[];
+  onWorkflowError: (error: Error) => void;
 }
