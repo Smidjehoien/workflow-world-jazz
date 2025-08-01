@@ -1,5 +1,11 @@
 # @vercel/swc-plugin-workflow
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- cabc890: Recursive Dead Code Elimination
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes
