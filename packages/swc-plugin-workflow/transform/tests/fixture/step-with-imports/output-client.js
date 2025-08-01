@@ -10,6 +10,7 @@ export async function processData(data) {
     });
 }
 export function normalFunction() {
+    // since this function is exported we can't remove it
     useful.doSomething();
     return usefulHelper();
 }

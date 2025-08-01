@@ -1027,7 +1027,9 @@ impl StepTransform {
 
 
 
-    // Analyze which imports are used in the entire module (excluding step function bodies)
+    // Legacy method - now replaced by analyze_usage_comprehensive
+    // TODO: Remove this once we're confident the new implementation works
+    #[allow(dead_code)]
     fn analyze_import_usage(&self, module: &Module) -> HashSet<String> {
         let mut used_identifiers = HashSet::new();
         let mut visitor = UsageCollector {
@@ -1052,54 +1054,129 @@ impl StepTransform {
         used_identifiers
     }
 
-    // Remove unused imports in workflow mode
-    fn remove_unused_imports(&self, items: &mut Vec<ModuleItem>) {
+    // Remove dead code (unused functions and imports) recursively
+    fn remove_dead_code(&self, items: &mut Vec<ModuleItem>) {
         // Only runs in workflow and client mode
         if !matches!(self.mode, TransformMode::Workflow | TransformMode::Client) {
             return;
         }
 
-        // Analyze which identifiers are used outside of step functions
-        let module = Module {
-            span: DUMMY_SP,
-            body: items.clone(),
-            shebang: None,
-        };
-        let used_identifiers = self.analyze_import_usage(&module);
+        // Keep removing dead code until no more changes are made
+        loop {
+            // Analyze which identifiers are used
+            let module = Module {
+                span: DUMMY_SP,
+                body: items.clone(),
+                shebang: None,
+            };
+            let used_identifiers = self.analyze_usage_comprehensive(&module);
+            
+            // Note: used_identifiers now contains only actually referenced identifiers
 
-        // Track which imports to keep
-        let mut imports_to_remove = Vec::new();
-        
-        for (i, item) in items.iter_mut().enumerate() {
-            if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
-                let mut new_specifiers = Vec::new();
-                
-                for spec in &import_decl.specifiers {
-                    let local_name = match spec {
-                        ImportSpecifier::Named(named) => named.local.sym.to_string(),
-                        ImportSpecifier::Default(default) => default.local.sym.to_string(),
-                        ImportSpecifier::Namespace(ns) => ns.local.sym.to_string(),
-                    };
-                    
-                    // Keep the import if it's used outside step functions
-                    if used_identifiers.contains(&local_name) {
-                        new_specifiers.push(spec.clone());
+            // Remove unused functions first (only if not using module-level directives)
+            let mut functions_changed = false;
+            let mut functions_to_remove = Vec::new();
+            for (i, item) in items.iter().enumerate() {
+                if let ModuleItem::Stmt(Stmt::Decl(Decl::Fn(fn_decl))) = item {
+                    let fn_name = fn_decl.ident.sym.to_string();
+                    // Don't remove exported functions or step functions
+                    if !used_identifiers.contains(&fn_name) && !self.step_function_names.contains(&fn_name) {
+                        functions_to_remove.push(i);
                     }
                 }
-                
-                // Update or mark for removal
-                if new_specifiers.is_empty() {
-                    imports_to_remove.push(i);
-                } else if new_specifiers.len() != import_decl.specifiers.len() {
-                    import_decl.specifiers = new_specifiers;
+            }
+            
+            // Remove unused functions (in reverse order to maintain indices)
+            if !functions_to_remove.is_empty() {
+                functions_changed = true;
+                for i in functions_to_remove.into_iter().rev() {
+                    items.remove(i);
+                }
+            }
+
+            // Remove unused imports
+            let mut imports_to_remove = Vec::new();
+            let mut imports_modified = false;
+            
+            for (i, item) in items.iter_mut().enumerate() {
+                if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = item {
+                    let mut new_specifiers = Vec::new();
+                    
+                    for spec in &import_decl.specifiers {
+                        let local_name = match spec {
+                            ImportSpecifier::Named(named) => named.local.sym.to_string(),
+                            ImportSpecifier::Default(default) => default.local.sym.to_string(),
+                            ImportSpecifier::Namespace(ns) => ns.local.sym.to_string(),
+                        };
+                        
+                        // Keep the import if it's used
+                        if used_identifiers.contains(&local_name) {
+                            new_specifiers.push(spec.clone());
+                        }
+                    }
+                    
+                    // Update or mark for removal
+                    if new_specifiers.is_empty() {
+                        imports_to_remove.push(i);
+                    } else if new_specifiers.len() != import_decl.specifiers.len() {
+                        imports_modified = true;
+                        import_decl.specifiers = new_specifiers;
+                    }
+                }
+            }
+            
+            // Remove imports marked for removal (in reverse order to maintain indices)
+            let imports_removed = !imports_to_remove.is_empty();
+            for i in imports_to_remove.into_iter().rev() {
+                items.remove(i);
+            }
+
+            // If nothing changed, we're done
+            if !functions_changed && !imports_removed && !imports_modified {
+                break;
+            }
+        }
+    }
+
+    // Comprehensive usage analysis that considers all remaining code
+    fn analyze_usage_comprehensive(&self, module: &Module) -> HashSet<String> {
+        let mut used_identifiers = HashSet::new();
+        
+        // First, mark exported identifiers as used
+        for item in &module.body {
+            if let ModuleItem::ModuleDecl(ModuleDecl::ExportDecl(export_decl)) = item {
+                match &export_decl.decl {
+                    Decl::Fn(fn_decl) => {
+                        let fn_name = fn_decl.ident.sym.to_string();
+                        // Exported functions are considered used unless they're step functions
+                        if !self.step_function_names.contains(&fn_name) {
+                            used_identifiers.insert(fn_name);
+                        }
+                    }
+                    Decl::Var(var_decl) => {
+                        for declarator in &var_decl.decls {
+                            if let Pat::Ident(binding) = &declarator.name {
+                                used_identifiers.insert(binding.id.sym.to_string());
+                            }
+                        }
+                    }
+                    _ => {}
                 }
             }
         }
         
-        // Remove imports marked for removal (in reverse order to maintain indices)
-        for i in imports_to_remove.into_iter().rev() {
-            items.remove(i);
-        }
+        // Then, visit all items to find used identifiers
+        let mut visitor = ComprehensiveUsageCollector {
+            used_identifiers: &mut used_identifiers,
+            step_function_names: &self.step_function_names,
+            current_function: None,
+        };
+        
+        // Visit the module directly (not clones) to analyze the already-transformed code
+        let mut module_clone = module.clone();
+        module_clone.visit_mut_with(&mut visitor);
+        
+        used_identifiers
     }
 
     // Check if a function has a step directive (regardless of async status)
@@ -1161,6 +1238,123 @@ impl<'a> VisitMut for UsageCollector<'a> {
             _ => {}
         }
         export_decl.visit_mut_children_with(self);
+    }
+    
+    fn visit_mut_var_declarator(&mut self, var_decl: &mut VarDeclarator) {
+        // Check if this is a step function assigned to a variable
+        if let Some(init) = &var_decl.init {
+            if let Pat::Ident(binding) = &var_decl.name {
+                let name = binding.id.sym.to_string();
+                
+                let is_step_fn = match &**init {
+                    Expr::Fn(_) | Expr::Arrow(_) => {
+                        self.step_function_names.contains(&name)
+                    }
+                    _ => false,
+                };
+                
+                if is_step_fn {
+                    // Don't visit the initializer if it's a step function
+                    return;
+                }
+            }
+        }
+        
+        var_decl.visit_mut_children_with(self);
+    }
+    
+    noop_visit_mut_type!();
+}
+
+// Comprehensive usage collector that tracks identifier usage (calls, not declarations)
+struct ComprehensiveUsageCollector<'a> {
+    used_identifiers: &'a mut HashSet<String>,
+    step_function_names: &'a HashSet<String>,
+    current_function: Option<String>,
+}
+
+impl<'a> VisitMut for ComprehensiveUsageCollector<'a> {
+    fn visit_mut_module_item(&mut self, item: &mut ModuleItem) {
+        match item {
+            ModuleItem::ModuleDecl(ModuleDecl::Import(_)) => {
+                // Skip import declarations
+                return;
+            }
+            ModuleItem::Stmt(Stmt::Decl(Decl::Fn(_))) => {
+                // Handle function declarations specially to avoid marking them as "used" by declaration
+                item.visit_mut_children_with(self);
+            }
+            _ => {
+                // Visit all other items
+                item.visit_mut_children_with(self);
+            }
+        }
+    }
+
+    fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {
+        let fn_name = fn_decl.ident.sym.to_string();
+        let is_step_function = self.step_function_names.contains(&fn_name);
+        
+        if is_step_function {
+            // Step functions have their bodies replaced, so don't analyze their original content
+            return;
+        }
+        
+        // Set current function context and visit the body
+        let prev_function = self.current_function.clone();
+        self.current_function = Some(fn_name.clone());
+        
+        // Visit the function content to find used identifiers (but don't mark the function name itself as used)
+        if let Some(body) = &mut fn_decl.function.body {
+            body.visit_mut_with(self);
+        }
+        
+        self.current_function = prev_function;
+    }
+    
+    fn visit_mut_call_expr(&mut self, call: &mut CallExpr) {
+        // Track function calls specifically
+        if let Callee::Expr(expr) = &call.callee {
+            if let Expr::Ident(ident) = &**expr {
+                let name = ident.sym.to_string();
+                self.used_identifiers.insert(name);
+            }
+        }
+        
+        // Visit arguments
+        call.visit_mut_children_with(self);
+    }
+    
+    fn visit_mut_ident(&mut self, ident: &mut Ident) {
+        // Track identifier usage, but be careful about function names in declarations
+        let name = ident.sym.to_string();
+        
+        // Don't track the function name itself when it's being declared
+        if let Some(current_fn) = &self.current_function {
+            if name == *current_fn {
+                return; // Skip the function's own name in its declaration
+            }
+        }
+        
+        self.used_identifiers.insert(name);
+    }
+    
+    fn visit_mut_export_decl(&mut self, export_decl: &mut ExportDecl) {
+        match &mut export_decl.decl {
+            Decl::Fn(fn_decl) => {
+                let fn_name = fn_decl.ident.sym.to_string();
+                if self.step_function_names.contains(&fn_name) {
+                    // Step functions have their bodies replaced
+                    return;
+                }
+                
+                // For exported functions, visit their body
+                self.visit_mut_fn_decl(fn_decl);
+            }
+            _ => {
+                export_decl.visit_mut_children_with(self);
+            }
+        }
     }
     
     fn visit_mut_var_declarator(&mut self, var_decl: &mut VarDeclarator) {
@@ -1604,7 +1798,7 @@ impl VisitMut for StepTransform {
         }
 
         // Perform dead code elimination in workflow and client mode
-        self.remove_unused_imports(items);
+        self.remove_dead_code(items);
     }
 
     fn visit_mut_fn_decl(&mut self, fn_decl: &mut FnDecl) {

@@ -1,7 +1,4 @@
 'use step';
-async function local(input) {
-    return input.foo;
-}
 const localArrow = async (input)=>{
     return input.bar;
 };

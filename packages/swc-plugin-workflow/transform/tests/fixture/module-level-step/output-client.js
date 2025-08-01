@@ -1,7 +1,4 @@
 import { runStep as __private_run_step } from "@vercel/workflow-core/runtime";
-async function local(input) {
-    return input.foo;
-}
 const localArrow = async (input)=>{
     return input.bar;
 };
