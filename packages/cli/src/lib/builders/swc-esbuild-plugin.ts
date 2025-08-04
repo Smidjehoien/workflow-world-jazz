@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import { transformSync } from '@swc/core';
 import type { Plugin } from 'esbuild';
-import { createRequire } from 'module';
 
 const require = createRequire(import.meta.url);
 

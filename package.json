@@ -2,7 +2,7 @@
   "name": "workflow-workspace",
   "private": true,
   "devDependencies": {
-    "@biomejs/biome": "^2.0.5",
+    "@biomejs/biome": "2.1.3",
     "@changesets/cli": "^2.29.5",
     "esbuild": "^0.25.5",
     "husky": "^9.1.7",

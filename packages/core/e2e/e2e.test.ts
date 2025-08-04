@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;

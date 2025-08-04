@@ -1,7 +1,7 @@
-import { JsonTransport } from '@vercel/queue';
-import { MessageId, ValidQueueName, type World } from '../world.js';
 import { setTimeout } from 'node:timers/promises';
+import { JsonTransport } from '@vercel/queue';
 import z from 'zod/v4';
+import { MessageId, ValidQueueName, type World } from '../world.js';
 
 export function createEmbedded(): World {
   const transport = new JsonTransport();
