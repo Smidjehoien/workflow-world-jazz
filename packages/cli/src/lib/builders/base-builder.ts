@@ -1,4 +1,4 @@
-import { mkdir } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import * as esbuild from 'esbuild';
 import { glob } from 'tinyglobby';
@@ -54,7 +54,7 @@ export abstract class BaseBuilder {
     export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
-    await esbuild.build({
+    const result = await esbuild.build({
       stdin: {
         contents: entryContent,
         resolveDir: this.config.workingDir,
@@ -68,7 +68,7 @@ export abstract class BaseBuilder {
       platform: 'node',
       conditions: ['workflow:step', 'node'],
       target: 'es2022',
-      write: true,
+      write: false,
       treeShaking: true,
       keepNames: true,
       minify: false,
@@ -77,13 +77,30 @@ export abstract class BaseBuilder {
         ...(this.config.externalPackages || []),
       ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
-      sourcemap: 'linked',
+      sourcemap: 'inline',
       plugins: [
         createSwcPlugin({
           mode: 'step',
         }),
       ],
     });
+
+    if (outfile) {
+      // Ensure the output directory exists
+      const outputDir = dirname(outfile);
+      await mkdir(outputDir, { recursive: true });
+
+      // we need to make require usage from esbuild non-statically
+      // analyzable so webpack doesn't break externals from
+      // too dynamic of a require
+      await writeFile(
+        outfile,
+        result.outputFiles[0].text.replace(
+          /([^\w])require((?!:)[^\w])/g,
+          '$1eval("require")$2'
+        )
+      );
+    }
   }
 
   protected async createWorkflowsBundle({
