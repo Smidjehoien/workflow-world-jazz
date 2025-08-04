@@ -31,5 +31,6 @@ export interface WebhookOptions {
  * @returns A `Webhook` that can awaited on to receive `Request` instances. Can be awaited multiple times, or used in a `for await` loop.
  */
 export function useWebhook(options?: WebhookOptions): Webhook {
+  void options;
   throw new Error('Webhooks are not supported outside of workflow functions');
 }
