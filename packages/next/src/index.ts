@@ -62,28 +62,31 @@ export function withWorkflow(nextConfig: NextConfig) {
   };
 
   return async function buildConfig(phase: string) {
-    const workflowBuilder = new NextBuilder({
-      // Support both workflows and src/workflows folders
-      dirs: ['workflows', 'src/workflows'],
-      workingDir: process.cwd(),
-      buildTarget: 'next',
-      workflowsBundlePath: '',
-      stepsBundlePath: '',
-      externalPackages: [
-        ...require('next/dist/lib/server-external-packages.json'),
-        ...(nextConfig.serverExternalPackages || []),
-      ],
-    });
+    // only run this in the main process so it only runs once
+    // as Next.js uses child processes for different builds
+    if (typeof process.send !== 'function') {
+      const workflowBuilder = new NextBuilder({
+        // Support both workflows and src/workflows folders
+        dirs: ['workflows', 'src/workflows'],
+        workingDir: process.cwd(),
+        buildTarget: 'next',
+        workflowsBundlePath: '',
+        stepsBundlePath: '',
+        externalPackages: [
+          ...require('next/dist/lib/server-external-packages.json'),
+          ...(nextConfig.serverExternalPackages || []),
+        ],
+      });
 
-    await workflowBuilder.build();
+      await workflowBuilder.build();
 
-    if (phase === 'phase-development-server') {
-      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
-      // handle watching
-    } else if (phase === 'phase-production-server') {
-      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+      if (phase === 'phase-development-server') {
+        process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+        // handle watching
+      } else if (phase === 'phase-production-server') {
+        process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+      }
     }
-
     return nextConfig;
   };
 }
