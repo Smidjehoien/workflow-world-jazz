@@ -113,7 +113,7 @@ export async function runStep(_stepId: string, _options: StartOptions = {}) {
  * functions at the top level.
  * @returns A function that can be used as a Vercel API route.
  */
-export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
+export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
   return world.createQueueHandler(
     '__wkf_workflow_',
     async (message_, metadata) => {
@@ -235,7 +235,7 @@ export const vercelAPIWorkflowsEntrypoint = (workflowCode: string) => {
       }
     }
   );
-};
+}
 
 /**
  * A single route that handles any step execution request and routes to the

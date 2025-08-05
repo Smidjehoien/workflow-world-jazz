@@ -28,9 +28,9 @@ function verifyCallbackToken(token: string) {
  * A single route that handles webhook requests by validating the JWT,
  * registering the request to the event log and retriggers the workflow.
  */
-export const vercelAPIWebhooksEntrypoint = /* @__PURE__ */ async (
+export async function vercelAPIWebhooksEntrypoint(
   req: Request
-): Promise<Response> => {
+): Promise<Response> {
   const url = new URL(req.url);
   const token = url.searchParams.get('token');
   if (!token) {
@@ -83,4 +83,4 @@ export const vercelAPIWebhooksEntrypoint = /* @__PURE__ */ async (
 
     return new Response(reason, { status });
   }
-};
+}
