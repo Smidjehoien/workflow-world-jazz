@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- dbb6973: Skip bundling workflow output for Next.js
+
 ## 0.0.1-alpha.13
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- d9d7863: Only run workflow build once in Next.js
+- Updated dependencies [dbb6973]
+  - @vercel/workflow-cli@0.0.1-alpha.14
+
 ## 0.0.1-alpha.13
 
 ### Patch Changes
