@@ -1,5 +1,13 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- fe2a430: Fix dynamic require breaking webpack bundling
+- Updated dependencies [ab7185e]
+  - @vercel/workflow-core@0.0.1-alpha.8
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

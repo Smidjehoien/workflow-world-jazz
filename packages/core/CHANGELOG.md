@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- ab7185e: Implement `useWebhook()`
+
 ## 0.0.1-alpha.7
 
 ### Patch Changes
