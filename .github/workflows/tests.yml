@@ -55,13 +55,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Waiting for the Vercel deployment
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
         id: waitForDeployment
+        uses: ./.github/actions/wait-for-vercel-project
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 60
+          project-id: prj_xWq20Dd860HHAfzMjK2Mb6TPVxMa
+          vercel-token: ${{ secrets.VERCEL_UNCURATED_TESTS }}
+          timeout: 1000
+          check-interval: 15
+          environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
 
       - name: Run E2E Tests
         run: pnpm run test:e2e
         env:
-          DEPLOYMENT_URL: ${{ steps.waitForDeployment.outputs.url }}
+          DEPLOYMENT_URL: ${{ steps.waitForDeployment.outputs.deployment-url }}
