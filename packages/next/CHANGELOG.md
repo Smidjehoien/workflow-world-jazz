@@ -1,5 +1,11 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- 3bb72a8: Always set embedded env for Next.js'
+
 ## 0.0.1-alpha.14
 
 ### Patch Changes
