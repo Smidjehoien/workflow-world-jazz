@@ -96,7 +96,7 @@ export abstract class BaseBuilder {
       await writeFile(
         outfile,
         result.outputFiles[0].text.replace(
-          /([^\w])require((?!:)[^\w])/g,
+          /([\s;])require((?!:)[\s(])/g,
           '$1eval("require")$2'
         )
       );
