@@ -39,6 +39,7 @@ export class NextBuilder extends BaseBuilder {
     await this.createWorkflowsBundle({
       format: 'esm',
       outfile: join(workflowsRouteDir, 'route.js'),
+      bundleFinalOutput: false,
     });
   }
 

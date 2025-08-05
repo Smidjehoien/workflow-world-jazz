@@ -1,9 +1,12 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import * as esbuild from 'esbuild';
+import { createRequire } from 'module';
 import { glob } from 'tinyglobby';
 import type { WorkflowConfig } from '../config/types.js';
 import { createSwcPlugin } from './swc-esbuild-plugin.js';
+
+const require = createRequire(import.meta.url);
 
 export abstract class BaseBuilder {
   protected config: WorkflowConfig;
@@ -106,7 +109,10 @@ export abstract class BaseBuilder {
   protected async createWorkflowsBundle({
     format = 'cjs',
     outfile,
-  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'>): Promise<void> {
+    bundleFinalOutput = true,
+  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'> & {
+    bundleFinalOutput?: boolean;
+  }): Promise<void> {
     const inputFiles = await this.getInputFiles();
 
     // Create a virtual entry that imports all files
@@ -151,12 +157,29 @@ export abstract class BaseBuilder {
     const workflowBundleCode = interimBundle.outputFiles[0].text;
 
     // Create the workflow function handler
-    const workflowFunctionCode = `import { vercelAPIWorkflowsEntrypoint } from '@vercel/workflow-core/runtime';
+    const workflowFunctionCode = `import { 
+    vercelAPIWorkflowsEntrypoint } from '${
+      // we need to resolve here so it is absolute and
+      // doesn't need to be a dependency of the Next.js project
+      require.resolve('@vercel/workflow-core/runtime')
+    }';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
 
 export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
 
+    // we skip the final bundling step for Next.js so it can bundle itself
+    if (!bundleFinalOutput) {
+      if (!outfile) {
+        throw new Error(`Invariant: missing outfile for workflow bundle`);
+      }
+      // Ensure the output directory exists
+      const outputDir = dirname(outfile);
+      await mkdir(outputDir, { recursive: true });
+
+      await writeFile(outfile, workflowFunctionCode);
+      return;
+    }
     console.log('Creating final workflow bundle');
 
     // Now bundle this so we can resolve the @vercel/workflow-core dependency
