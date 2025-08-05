@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- 84d7162: Update regex for externals handling
+
 ## 0.0.1-alpha.12
 
 ### Patch Changes

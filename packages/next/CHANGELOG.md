@@ -1,5 +1,12 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- Updated dependencies [84d7162]
+  - @vercel/workflow-cli@0.0.1-alpha.13
+
 ## 0.0.1-alpha.12
 
 ### Patch Changes
