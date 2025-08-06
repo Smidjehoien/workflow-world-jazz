@@ -1,4 +1,5 @@
-import { start } from '@vercel/workflow-core/runtime';
+import { inspect } from 'node:util';
+import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
 import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
 
 export async function POST(req: Request) {
@@ -29,4 +30,15 @@ export async function POST(req: Request) {
   console.log('Run:', run);
 
   return Response.json(run);
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+  const returnValue = await getWorkflowReturnValue(runId);
+  console.log('Return value:', returnValue);
+  return new Response(inspect(returnValue, { depth: Infinity }));
 }

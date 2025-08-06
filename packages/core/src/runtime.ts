@@ -5,8 +5,8 @@ import {
   createWorkflowRun,
   createWorkflowRunEvent,
   getStep,
-  getWorkflowRun,
   getWorkflowRunEvents,
+  getWorkflowRun as getWorkflowRunFromDB,
   updateStep,
   updateWorkflowRun,
   WorkflowAPIError,
@@ -26,6 +26,7 @@ import {
   dehydrateStepReturnValue,
   dehydrateWorkflowArguments,
   hydrateStepArguments,
+  hydrateWorkflowReturnValue,
 } from './serialization.js';
 // TODO: move step handler out to a separate file
 import { contextStorage } from './step/use-context.js';
@@ -90,6 +91,26 @@ export async function start(
   } satisfies WorkflowInvokePayload);
 
   return run;
+}
+
+export async function getWorkflowRun(runId: string) {
+  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID;
+  if (!deploymentId) {
+    throw new Error('A `deploymentId` must be provided to get a workflow run');
+  }
+  return getWorkflowRunFromDB(runId);
+}
+
+export async function getWorkflowReturnValue(
+  runId: string,
+  ops: Promise<any>[] = [],
+  global: Record<string, any> = globalThis
+) {
+  const run = await getWorkflowRun(runId);
+  if (run.status !== 'completed') {
+    throw new Error('Workflow run is not completed');
+  }
+  return hydrateWorkflowReturnValue(run.output as any, ops, global);
 }
 
 /**
