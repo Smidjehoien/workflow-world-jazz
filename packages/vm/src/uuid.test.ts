@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createRandomUUID } from './uuid';
+import { createRandomUUID } from './uuid.js';
 
 describe('createRandomUUID', () => {
   // Helper function to create a mock RNG that returns predictable values

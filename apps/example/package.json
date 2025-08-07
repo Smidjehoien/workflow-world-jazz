@@ -6,9 +6,7 @@
   "scripts": {
     "workflow": "workflow",
     "wf": "wf",
-    "build:workflow": "workflow build --target vercel-build-output-api",
-    "build": "./build.sh",
-    "clean": "rm -rf public; rm -rf generated; rm -rf api/generated; rm -rf .vercel/output;"
+    "build": "workflow build --target vercel-build-output-api"
   },
   "devDependencies": {
     "@types/node": "^24.0.3",

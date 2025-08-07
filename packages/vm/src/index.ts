@@ -1,6 +1,6 @@
 import { runInContext, createContext as vmCreateContext } from 'node:vm';
 import seedrandom from 'seedrandom';
-import { createRandomUUID } from './uuid';
+import { createRandomUUID } from './uuid.js';
 
 export interface CreateContextOptions {
   seed: string;
