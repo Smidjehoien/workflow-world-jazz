@@ -12,6 +12,10 @@ import {
   WorkflowAPIError,
   type WorkflowRun,
 } from './backend.js';
+import {
+  WorkflowRunFailedError,
+  WorkflowRunNotCompletedError,
+} from './errors.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import {
@@ -107,10 +111,19 @@ export async function getWorkflowReturnValue(
   global: Record<string, any> = globalThis
 ) {
   const run = await getWorkflowRun(runId);
-  if (run.status !== 'completed') {
-    throw new Error('Workflow run is not completed');
+
+  if (run.status === 'completed' || run.status === 'cancelled') {
+    return hydrateWorkflowReturnValue(run.output as any, ops, global);
   }
-  return hydrateWorkflowReturnValue(run.output as any, ops, global);
+
+  if (run.status === 'failed') {
+    throw new WorkflowRunFailedError(
+      runId,
+      run.error_message ?? 'Unknown error'
+    );
+  }
+
+  throw new WorkflowRunNotCompletedError(runId, run.status);
 }
 
 /**

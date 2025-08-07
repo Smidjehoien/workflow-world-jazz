@@ -1,4 +1,3 @@
-import { inspect } from 'node:util';
 import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
 import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
 
@@ -38,7 +37,50 @@ export async function GET(req: Request) {
   if (!runId) {
     return new Response('No runId provided', { status: 400 });
   }
-  const returnValue = await getWorkflowReturnValue(runId);
-  console.log('Return value:', returnValue);
-  return new Response(inspect(returnValue, { depth: Infinity }));
+  try {
+    const returnValue = await getWorkflowReturnValue(runId);
+    console.log('Return value:', returnValue);
+    return returnValue instanceof ReadableStream
+      ? new Response(returnValue, {
+          headers: {
+            'Content-Type': 'application/octet-stream',
+          },
+        })
+      : Response.json(returnValue);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'WorkflowRunNotCompletedError') {
+        return Response.json(
+          {
+            ...error,
+            name: error.name,
+            message: error.message,
+          },
+          { status: 202 }
+        );
+      }
+
+      if (error.name === 'WorkflowRunFailedError') {
+        return Response.json(
+          {
+            ...error,
+            name: error.name,
+            message: error.message,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.error(
+      'Unexpected error while getting workflow return value:',
+      error
+    );
+    return Response.json(
+      {
+        error: 'Internal server error',
+      },
+      { status: 500 }
+    );
+  }
 }
