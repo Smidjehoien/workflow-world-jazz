@@ -15,7 +15,7 @@ async function triggerWorkflow(workflow: string, args: any[]) {
   });
   if (!res.ok) {
     throw new Error(
-      `Failed to trigger workflow: ${res.statusText}: ${await res.text()}`
+      `Failed to trigger workflow: ${res.url} ${res.status}: ${await res.text()}`
     );
   }
   const run = await res.json();

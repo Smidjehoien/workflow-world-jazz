@@ -6,7 +6,7 @@
   "scripts": {
     "workflow": "workflow",
     "wf": "wf",
-    "build": "workflow build --target vercel-build-output-api"
+    "build": "workflow build --target vercel-build-output-api && rm -rf .vercel/output/static && cp -rv public .vercel/output/static"
   },
   "devDependencies": {
     "@types/node": "^24.0.3",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@vercel/functions": "^2.2.2",
+    "@vercel/otel": "^1.13.0",
     "@vercel/workflow-core": "workspace:*",
     "ai": "beta",
     "mixpart": "^0.0.4",

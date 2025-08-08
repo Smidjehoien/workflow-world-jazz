@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
+// OpenTelemetry trace context for distributed tracing
+const TraceCarrierSchema = z.record(z.string(), z.string());
+
 export const WorkflowInvokePayloadSchema = z.object({
   runId: z.string(),
+  traceCarrier: TraceCarrierSchema.optional(),
 });
 
 export const StepInvokePayloadSchema = z.object({
@@ -9,6 +13,7 @@ export const StepInvokePayloadSchema = z.object({
   workflowStartedAt: z.number(),
   workflowRunId: z.string(),
   stepId: z.string(),
+  traceCarrier: TraceCarrierSchema.optional(),
 });
 
 const MethodEnumSchema = z.enum([
