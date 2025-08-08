@@ -739,9 +739,9 @@ describe('runWorkflow', () => {
       const events: Event[] = [];
 
       await runWorkflow(
-        `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
           async function workflow() {
-            const webhook = useWebhook();
+            const webhook = getWebhook();
             const req = await webhook;
             return req.url;
           }`,
@@ -758,7 +758,7 @@ describe('runWorkflow', () => {
     expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
   });
 
-  it('should resolve `useWebhook` await upon "webhook_request" event', async () => {
+  it('should resolve `getWebhook` await upon "webhook_request" event', async () => {
     const ops: Promise<any>[] = [];
     const workflowRun: WorkflowRun = {
       id: 'test-run-123',
@@ -791,9 +791,9 @@ describe('runWorkflow', () => {
     ];
 
     const result = await runWorkflow(
-      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         const req = await webhook;
         return req.url;
       }`,
@@ -805,7 +805,7 @@ describe('runWorkflow', () => {
     );
   });
 
-  it('should resolve multiple `useWebhook` awaits upon "webhook_request" events', async () => {
+  it('should resolve multiple `getWebhook` awaits upon "webhook_request" events', async () => {
     const ops: Promise<any>[] = [];
     const workflowRun: WorkflowRun = {
       id: 'test-run-123',
@@ -852,9 +852,9 @@ describe('runWorkflow', () => {
     ];
 
     const result = await runWorkflow(
-      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         const req1 = await webhook;
         const req2 = await webhook;
         return [req1.url, req2.url];
@@ -868,7 +868,7 @@ describe('runWorkflow', () => {
     ]);
   });
 
-  it('should support `for await` loops with `useWebhook`', async () => {
+  it('should support `for await` loops with `getWebhook`', async () => {
     const ops: Promise<any>[] = [];
     const workflowRun: WorkflowRun = {
       id: 'test-run-123',
@@ -917,9 +917,9 @@ describe('runWorkflow', () => {
     ];
 
     const result = await runWorkflow(
-      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         const reqs = [];
         for await (const req of webhook) {
           reqs.push({ url: req.url, method: req.method });
@@ -987,9 +987,9 @@ describe('runWorkflow', () => {
     ];
 
     const result = await runWorkflow(
-      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         const req = await webhook;
         return { url: req.url, method: req.method };
       }`,
@@ -1072,10 +1072,10 @@ describe('runWorkflow', () => {
     ];
 
     const result = await runWorkflow(
-      `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         const req1 = await webhook;
         const a = await add(1, 2);
         const req2 = await webhook;
@@ -1155,10 +1155,10 @@ describe('runWorkflow', () => {
     let error: Error | undefined;
     try {
       await runWorkflow(
-        `const useWebhook = globalThis[Symbol.for("WORKFLOW_USE_WEBHOOK")];
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
       async function workflow() {
-        const webhook = useWebhook();
+        const webhook = getWebhook();
         for await (const req of webhook) {
           await add(1, 2);
         }

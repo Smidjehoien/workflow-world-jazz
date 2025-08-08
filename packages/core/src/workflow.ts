@@ -14,7 +14,7 @@ import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-context.js';
-import { createUseWebhook } from './workflow/webhook.js';
+import { createGetWebhook } from './workflow/webhook.js';
 
 export async function runWorkflow(
   workflowCode: string,
@@ -70,12 +70,12 @@ export async function runWorkflow(
     });
 
     const useStep = createUseStep(workflowContext);
-    const useWebhook = createUseWebhook(workflowContext);
+    const getWebhook = createGetWebhook(workflowContext);
 
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
     vmGlobalThis[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-    vmGlobalThis[Symbol.for('WORKFLOW_USE_WEBHOOK')] = useWebhook;
+    vmGlobalThis[Symbol.for('WORKFLOW_GET_WEBHOOK')] = getWebhook;
 
     // For the workflow VM, we store the context in a symbol on the `globalThis` object
     const ctx: WorkflowContext = {

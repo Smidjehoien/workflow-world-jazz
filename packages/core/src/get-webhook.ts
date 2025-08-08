@@ -30,7 +30,7 @@ export interface WebhookOptions {
    * @example
    *
    * ```ts
-   * const webhook = useWebhook({
+   * const webhook = getWebhook({
    *   url: '/api/github/webhook',
    * });
    * ```
@@ -53,7 +53,7 @@ export interface WebhookOptions {
    * @example
    *
    * ```ts
-   * const webhook = useWebhook({
+   * const webhook = getWebhook({
    *   headers: {
    *     'X-Api-Key': z.literal('123'),
    *   },
@@ -71,7 +71,7 @@ export interface WebhookOptions {
    * @example
    *
    * ```ts
-   * const webhook = useWebhook({
+   * const webhook = getWebhook({
    *   searchParams: {
    *     approve: z.enum(['yes', 'no']),
    *   },
@@ -90,7 +90,7 @@ export interface WebhookOptions {
    * @example
    *
    * ```ts
-   * const webhook = useWebhook({
+   * const webhook = getWebhook({
    *   body: z.object({
    *     name: z.literal('John'),
    *   }),
@@ -108,7 +108,7 @@ export interface WebhookOptions {
  * @param options - Configuration options for the webhook.
  * @returns A `Webhook` that can awaited on to receive one or more `Request` instances.
  */
-export function useWebhook(options?: WebhookOptions): Webhook {
+export function getWebhook(options?: WebhookOptions): Webhook {
   void options;
   throw new Error('Webhooks are not supported outside of workflow functions');
 }

@@ -1,4 +1,4 @@
-import { getContext, useWebhook } from '@vercel/workflow-core';
+import { getContext, getWebhook } from '@vercel/workflow-core';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
@@ -50,13 +50,13 @@ async function getOpenAIResponse(respId: string): Promise<string> {
 }
 
 /**
- * `useWebhook()` is a hook that allows you to register a webhook URL
+ * `getWebhook()` is a hook that allows you to register a webhook URL
  * that can be passed to external services as a callback URL, or used
  * for human-in-the-loop workflows by, for example, including in an email.
  *
  * The workflow run will be suspended until the webhook is called.
  */
-export async function withUseWebhook() {
+export async function withGetWebhook() {
   'use workflow';
 
   // Initiate a background "Response" request to OpenAI,
@@ -66,7 +66,7 @@ export async function withUseWebhook() {
   // Register the webhook URL and provide the schema for the
   // type of events that we are interested in, and specifically
   // for the exact response ID that we just created.
-  const webhook = useWebhook({
+  const webhook = getWebhook({
     url: '/api/openai/webhook',
     body: z.object({
       type: z.string().startsWith('response.'),

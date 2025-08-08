@@ -2,13 +2,13 @@ import type { JSONSchema7 } from 'json-schema';
 import z from 'zod';
 import type { Event } from '../backend.js';
 import { EventConsumerResult } from '../events-consumer.js';
+import type { Webhook, WebhookOptions, WebhookSchema } from '../get-webhook.js';
 import {
   StepsNotRunError,
   type WebhookInvocationQueueItem,
 } from '../global.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
 import { hydrateStepReturnValue } from '../serialization.js';
-import type { Webhook, WebhookOptions, WebhookSchema } from '../use-webhook.js';
 import { type PromiseWithResolvers, withResolvers } from '../util.js';
 
 function toJSONSchema(
@@ -48,8 +48,8 @@ function toJSONSchemaRecord(
   return Object.keys(result).length > 0 ? result : undefined;
 }
 
-export function createUseWebhook(ctx: WorkflowOrchestratorContext) {
-  return function useWebhook(options: WebhookOptions = {}): Webhook {
+export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
+  return function getWebhook(options: WebhookOptions = {}): Webhook {
     const { url, workflowRunId } = ctx;
 
     // `options.url` is a pathname, not a full URL

@@ -1,4 +1,4 @@
-import { FatalError, useWebhook } from '@vercel/workflow-core';
+import { FatalError, getWebhook } from '@vercel/workflow-core';
 
 //////////////////////////////////////////////////////////
 
@@ -94,7 +94,7 @@ export async function readableStreamWorkflow() {
 
 export async function namedWebhookWorkflow() {
   'use workflow';
-  const webhook = useWebhook({
+  const webhook = getWebhook({
     url: '/api/e2e/webhook',
     method: ['GET', 'POST', 'DELETE'],
   });
