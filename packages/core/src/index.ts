@@ -6,11 +6,11 @@
  * `workflow` and `workflow/runtime`?
  */
 
+export { getContext, type WorkflowContext } from './get-context.js';
 export {
   FatalError,
   RetryableError,
   type RetryableErrorOptions,
 } from './global.js';
 export { sleep } from './sleep.js';
-export { useContext, type WorkflowContext } from './use-context.js';
 export { useWebhook, type Webhook } from './use-webhook.js';

@@ -1,15 +1,15 @@
-import { useContext, useWebhook } from '@vercel/workflow-core';
+import { getContext, useWebhook } from '@vercel/workflow-core';
 
 /**
- * `useContext()` is a hook that allows you to access the context
+ * `getContext()` is a hook that allows you to access the context
  * of the current workflow run.
  *
  * It is useful for accessing the context of the current workflow run, such as
  * the workflow run ID, the workflow started at, and the attempt number.
  */
-async function stepWithUseContext() {
+async function stepWithGetContext() {
   'use step';
-  const ctx = useContext();
+  const ctx = getContext();
   console.log('step context', ctx);
 
   // Mimic a retryable error 50% of the time (so that the `attempt` counter increases)
@@ -18,12 +18,12 @@ async function stepWithUseContext() {
   }
 }
 
-export async function withUseContext() {
+export async function withGetContext() {
   'use workflow';
-  const ctx = useContext();
+  const ctx = getContext();
   console.log('workflow context', ctx);
 
-  await stepWithUseContext();
+  await stepWithGetContext();
 }
 
 /**

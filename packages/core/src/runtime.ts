@@ -16,6 +16,7 @@ import {
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
 } from './errors.js';
+import type { WorkflowContext } from './get-context.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
 import { getStepFunction } from './private.js';
 import {
@@ -33,9 +34,8 @@ import {
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 // TODO: move step handler out to a separate file
-import { contextStorage } from './step/use-context.js';
+import { contextStorage } from './step/get-context.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
-import type { WorkflowContext } from './use-context.js';
 import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';

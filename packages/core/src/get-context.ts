@@ -34,8 +34,8 @@ export interface WorkflowContext {
   url: string;
 }
 
-export function useContext(): WorkflowContext {
+export function getContext(): WorkflowContext {
   throw new Error(
-    '`useContext()` can only be called inside a workflow or step function'
+    '`getContext()` can only be called inside a workflow or step function'
   );
 }

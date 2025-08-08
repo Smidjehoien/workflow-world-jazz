@@ -1,4 +1,4 @@
-import { FatalError, RetryableError, useContext } from '@vercel/workflow-core';
+import { FatalError, getContext, RetryableError } from '@vercel/workflow-core';
 
 async function delayedMessage(ms: number, message: string): Promise<string> {
   'use step';
@@ -20,7 +20,7 @@ async function failingStep(): Promise<string> {
 
 async function retryableStep(): Promise<string> {
   'use step';
-  const { attempt } = useContext();
+  const { attempt } = getContext();
   if (attempt === 1) {
     console.log(
       'Throwing retryable error - this will be retried after 60 seconds'

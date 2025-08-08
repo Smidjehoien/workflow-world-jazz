@@ -2,6 +2,7 @@ import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from './backend.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
+import type { WorkflowContext } from './get-context.js';
 import { ENOTSUP } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import {
@@ -9,9 +10,8 @@ import {
   hydrateWorkflowArguments,
 } from './serialization.js';
 import { createUseStep } from './step.js';
-import type { WorkflowContext } from './use-context.js';
 import { withResolvers } from './util.js';
-import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/use-context.js';
+import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-context.js';
 import { createUseWebhook } from './workflow/webhook.js';
 
 export async function runWorkflow(
