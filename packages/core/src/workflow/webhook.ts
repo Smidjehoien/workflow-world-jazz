@@ -1,41 +1,92 @@
-import jwt from 'jsonwebtoken';
+import type { JSONSchema7 } from 'json-schema';
+import z from 'zod';
 import type { Event } from '../backend.js';
 import { EventConsumerResult } from '../events-consumer.js';
-import { StepsNotRunError } from '../global.js';
+import {
+  StepsNotRunError,
+  type WebhookInvocationQueueItem,
+} from '../global.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
-import type { WebhookTokenPayload } from '../schemas.js';
 import { hydrateStepReturnValue } from '../serialization.js';
-import type { Webhook, WebhookOptions } from '../use-webhook.js';
+import type { Webhook, WebhookOptions, WebhookSchema } from '../use-webhook.js';
 import { type PromiseWithResolvers, withResolvers } from '../util.js';
+
+function toJSONSchema(
+  schema: WebhookSchema | undefined
+): JSONSchema7 | undefined {
+  if (!schema) {
+    return undefined;
+  }
+  if (schema instanceof z.ZodType) {
+    return z.toJSONSchema(schema, { io: 'input' }) as JSONSchema7;
+  }
+  if (
+    schema &&
+    'toJSONSchema' in schema &&
+    typeof schema.toJSONSchema === 'function'
+  ) {
+    return schema.toJSONSchema();
+  }
+  return schema as JSONSchema7;
+}
+
+function toJSONSchemaRecord(
+  schemaRecord: Record<string, WebhookSchema> | undefined
+): Record<string, JSONSchema7> | undefined {
+  if (!schemaRecord) {
+    return undefined;
+  }
+
+  const result: Record<string, JSONSchema7> = {};
+  for (const [key, schema] of Object.entries(schemaRecord)) {
+    const jsonSchema = toJSONSchema(schema);
+    if (jsonSchema) {
+      result[key] = jsonSchema;
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
+}
 
 export function createUseWebhook(ctx: WorkflowOrchestratorContext) {
   return function useWebhook(options: WebhookOptions = {}): Webhook {
-    const secret = process.env.WORKFLOW_WEBHOOK_SECRET;
-    if (!secret) {
-      throw new Error(
-        '`WORKFLOW_WEBHOOK_SECRET` environment variable is not set'
-      );
-    }
-    const { url, workflowRunId, workflowName } = ctx;
+    const { url, workflowRunId } = ctx;
 
-    const webhookUrl = new URL(`/api/webhook`, url);
+    // `options.url` is a pathname, not a full URL
+    if (options.url && !options.url.startsWith('/')) {
+      throw new Error('Webhook URL must start with a slash.');
+    }
 
     // Deterministically generated webhook ID for this webhook
     const webhookId = ctx.globalThis.crypto.randomUUID();
 
-    const payload: WebhookTokenPayload & { iat: number } = {
-      method: options.method,
-      workflowRunId,
-      webhookId,
-      workflowName,
-
-      // Generate a deterministic "issued at" timestamp based
-      // on the current fixed timestamp of the workflow run
-      iat: Math.floor(ctx.globalThis.Date.now() / 1000),
+    // Prepare webhook data for database creation
+    const webhookData: WebhookInvocationQueueItem['webhookData'] = {
+      url: options.url,
+      workflow_run_id: workflowRunId,
+      webhook_id: webhookId,
+      allowed_methods: options.method
+        ? typeof options.method === 'string'
+          ? [options.method]
+          : options.method
+        : ['POST'],
+      headers_schema: toJSONSchemaRecord(options.headers),
+      search_params_schema: toJSONSchemaRecord(options.searchParams),
+      body_schema: toJSONSchema(options.body),
     };
-    const token = jwt.sign(payload, secret, { algorithm: 'HS256' });
 
-    webhookUrl.searchParams.set('token', token);
+    // Add webhook creation to invocations queue instead of creating immediately
+    // This ensures proper replay behavior and idempotency
+    ctx.invocationsQueue.push({
+      type: 'webhook',
+      webhookId,
+      webhookData,
+    });
+
+    // Construct the webhook URL using the webhook ID
+    const pathname =
+      options.url ?? `/api/webhook/${encodeURIComponent(webhookId)}`;
+    const webhookUrl = new URL(pathname, url);
 
     // Queue of webhook events that have been received but not yet processed
     const requestsQueue: Event[] = [];
@@ -60,6 +111,23 @@ export function createUseWebhook(ctx: WorkflowOrchestratorContext) {
           }, 0);
           return EventConsumerResult.Finished;
         }
+      }
+
+      // Check for webhook_created event to remove this webhook from the queue if it was already created
+      if (
+        event?.event_type === 'webhook_created' &&
+        event.event_data.webhook_id === webhookId
+      ) {
+        // Remove this webhook from the invocations queue if it exists
+        const index = ctx.invocationsQueue.findIndex(
+          (item) =>
+            item.type === 'webhook' &&
+            (item as WebhookInvocationQueueItem).webhookId === webhookId
+        );
+        if (index !== -1) {
+          ctx.invocationsQueue.splice(index, 1);
+        }
+        return EventConsumerResult.Consumed;
       }
 
       if (

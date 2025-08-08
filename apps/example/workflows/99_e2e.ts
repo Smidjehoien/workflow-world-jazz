@@ -1,4 +1,4 @@
-import { FatalError } from '@vercel/workflow-core';
+import { FatalError, useWebhook } from '@vercel/workflow-core';
 
 //////////////////////////////////////////////////////////
 
@@ -88,4 +88,33 @@ export async function readableStreamWorkflow() {
   'use workflow';
   const stream = await genStream();
   return stream;
+}
+
+//////////////////////////////////////////////////////////
+
+export async function namedWebhookWorkflow() {
+  'use workflow';
+  const webhook = useWebhook({
+    url: '/api/e2e/webhook',
+    method: ['GET', 'POST', 'DELETE'],
+  });
+
+  const requests: {
+    method: string;
+    headers: Record<string, string>;
+    body: any;
+  }[] = [];
+  for await (const request of webhook) {
+    requests.push({
+      method: request.method,
+      headers: Object.fromEntries(request.headers.entries()),
+      body: await request.text(),
+    });
+
+    if (request.method === 'DELETE') {
+      // The DELETE request will be the last one, so break out of the loop
+      break;
+    }
+  }
+  return requests;
 }

@@ -22,14 +22,17 @@
     "build": "tsc",
     "clean": "tsc --build --clean",
     "test": "vitest run src",
-    "test:e2e": "vitest run e2e"
+    "test:e2e": "vitest run e2e",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@aws-sdk/credential-provider-web-identity": "3.609.0",
+    "@types/json-schema": "^7.0.15",
     "@types/ms": "^2.1.0",
     "@vercel/functions": "^2.2.2",
     "@vercel/queue": "0.0.0-alpha.12",
     "@vercel/workflow-vm": "workspace:*",
+    "ajv": "^8.17.1",
     "devalue": "^5.1.1",
     "jsonwebtoken": "^9.0.2",
     "ms": "2.1.3",

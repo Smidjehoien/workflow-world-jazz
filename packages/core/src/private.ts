@@ -3,6 +3,7 @@
  */
 
 import type { EventsConsumer } from './events-consumer.js';
+import type { QueueItem } from './global.js';
 import type { Serializable } from './schemas.js';
 
 export type StepFunction<
@@ -34,10 +35,6 @@ export interface WorkflowOrchestratorContext {
   workflowRunId: string;
   globalThis: typeof globalThis;
   eventsConsumer: EventsConsumer;
-  invocationsQueue: {
-    stepName: string;
-    args: Serializable[];
-    invocationId: string;
-  }[];
+  invocationsQueue: QueueItem[];
   onWorkflowError: (error: Error) => void;
 }

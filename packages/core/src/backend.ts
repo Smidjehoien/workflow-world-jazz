@@ -1,6 +1,7 @@
 // API wrapper functions for workflow-server endpoints
 // These functions provide a type-safe interface to interact with the workflow API
 import { getVercelOidcTokenSync } from '@vercel/functions/oidc';
+import type { JSONSchema7 } from 'json-schema';
 import type { Serializable } from './schemas.js';
 
 /**
@@ -165,6 +166,35 @@ export interface HealthCheckResponse {
     [key: string]: any;
   };
   message: string;
+}
+
+export interface Webhook {
+  id: string;
+  workflow_run_id: string;
+  webhook_id: string;
+  url?: string;
+  allowed_methods: string[];
+  search_params_schema?: Record<string, JSONSchema7>;
+  headers_schema?: Record<string, JSONSchema7>;
+  body_schema?: JSONSchema7;
+  created_at: Date;
+  updated_at: Date;
+  disposed_at?: Date;
+}
+
+export interface CreateWebhookRequest {
+  workflow_run_id: string;
+  webhook_id: string;
+  url?: string;
+  allowed_methods?: string[];
+  search_params_schema?: Record<string, JSONSchema7>;
+  headers_schema?: Record<string, JSONSchema7>;
+  body_schema?: JSONSchema7;
+}
+
+export interface ListWebhooksByUrlParams {
+  page?: number;
+  limit?: number;
 }
 
 export class WorkflowAPIError extends Error {
@@ -499,4 +529,77 @@ export interface CreateStepRequest {
   next_retry_at?: Date;
   timeout_seconds?: number;
   step_config?: Record<string, any>;
+}
+
+/**
+ * Create a new webhook
+ */
+export async function createWebhook(
+  data: CreateWebhookRequest,
+  config?: APIConfig
+): Promise<Webhook> {
+  return makeRequest<Webhook>(
+    '/api/webhooks/create',
+    {
+      method: 'POST',
+      body: JSON.stringify(data, dateToStringReplacer),
+    },
+    config
+  );
+}
+
+/**
+ * Get a webhook by webhook ID
+ */
+export async function getWebhook(
+  webhookId: string,
+  deploymentId: string,
+  config?: APIConfig
+): Promise<Webhook> {
+  return makeRequest<Webhook>(
+    `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
+    { method: 'GET' },
+    config
+  );
+}
+
+/**
+ * Dispose a webhook by webhook ID
+ */
+export async function disposeWebhook(
+  webhookId: string,
+  deploymentId: string,
+  config?: APIConfig
+): Promise<Webhook> {
+  return makeRequest<Webhook>(
+    `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
+    { method: 'DELETE' },
+    config
+  );
+}
+
+/**
+ * Get webhooks by URL with pagination
+ */
+export async function getWebhooksByUrl(
+  url: string,
+  deploymentId: string,
+  params: ListWebhooksByUrlParams = {},
+  config?: APIConfig
+): Promise<PaginatedResponse<Webhook>> {
+  const searchParams = new URLSearchParams();
+  searchParams.set('url', url);
+  searchParams.set('deploymentId', deploymentId);
+
+  if (params.page) searchParams.set('page', params.page.toString());
+  if (params.limit) searchParams.set('limit', params.limit.toString());
+
+  const queryString = searchParams.toString();
+  const endpoint = `/api/webhooks/by-url?${queryString}`;
+
+  return makeRequest<PaginatedResponse<Webhook>>(
+    endpoint,
+    { method: 'GET' },
+    config
+  );
 }

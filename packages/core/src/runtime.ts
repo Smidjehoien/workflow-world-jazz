@@ -2,6 +2,7 @@ import { waitUntil } from '@vercel/functions';
 import { world } from './adapters/index.js';
 import {
   createStep,
+  createWebhook,
   createWorkflowRunEvent,
   getStep,
   getWorkflowRunEvents,
@@ -39,7 +40,7 @@ import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';
 export { type StartOptions, start } from './runtime/start.js';
-export { vercelAPIWebhooksEntrypoint } from './runtime/webhook.js';
+export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 
 export async function getWorkflowRun(runId: string) {
   const deploymentId = process.env.VERCEL_DEPLOYMENT_ID;
@@ -155,50 +156,83 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
             });
           } catch (err) {
             if (isInstanceOf(err, StepsNotRunError)) {
-              // Create a step for each step that was not run and enqueue the step invocations
-              for (const stepEntry of err.steps) {
-                const ops: Promise<void>[] = [];
-                const dehydratedArgs = dehydrateStepArguments(
-                  stepEntry.args,
-                  err.globalThis
-                );
-
-                try {
-                  const step = await createStep(runId, {
-                    workflow_run_id: runId,
-                    invocation_id: stepEntry.invocationId,
-                    step_name: stepEntry.stepName,
-                    step_type: 'function_call',
-                    arguments: dehydratedArgs as Serializable[],
-                  });
-
-                  waitUntil(Promise.all(ops));
-
-                  await world.queue(
-                    `__wkf_step_${stepEntry.stepName}`,
-                    {
-                      workflowName,
-                      workflowStartedAt,
-                      workflowRunId: runId,
-                      stepId: step.id,
-                      traceCarrier: await serializeTraceCarrier(),
-                    } satisfies StepInvokePayload,
-                    {
-                      idempotencyKey: stepEntry.invocationId,
-                    }
+              // Process each operation in the queue (steps and webhooks)
+              for (const queueItem of err.steps) {
+                if (queueItem.type === 'step') {
+                  // Handle step operations
+                  const ops: Promise<void>[] = [];
+                  const dehydratedArgs = dehydrateStepArguments(
+                    queueItem.args,
+                    err.globalThis
                   );
-                } catch (err) {
-                  if (
-                    isInstanceOf(err, WorkflowAPIError) &&
-                    err.status === 409
-                  ) {
-                    // Step already exists, so we can skip it
-                    console.warn(
-                      `Step "${stepEntry.stepName}" with invocation ID "${stepEntry.invocationId}" already exists, skipping: ${err.message}`
+
+                  try {
+                    const step = await createStep(runId, {
+                      workflow_run_id: runId,
+                      invocation_id: queueItem.invocationId,
+                      step_name: queueItem.stepName,
+                      step_type: 'function_call',
+                      arguments: dehydratedArgs as Serializable[],
+                    });
+
+                    waitUntil(Promise.all(ops));
+
+                    await world.queue(
+                      `__wkf_step_${queueItem.stepName}`,
+                      {
+                        workflowName,
+                        workflowStartedAt,
+                        workflowRunId: runId,
+                        stepId: step.id,
+                        traceCarrier: await serializeTraceCarrier(),
+                      } satisfies StepInvokePayload,
+                      {
+                        idempotencyKey: queueItem.invocationId,
+                      }
                     );
-                    continue;
+                  } catch (err) {
+                    if (
+                      isInstanceOf(err, WorkflowAPIError) &&
+                      err.status === 409
+                    ) {
+                      // Step already exists, so we can skip it
+                      console.warn(
+                        `Step "${queueItem.stepName}" with invocation ID "${queueItem.invocationId}" already exists, skipping: ${err.message}`
+                      );
+                      continue;
+                    }
+                    throw err;
                   }
-                  throw err;
+                } else if (queueItem.type === 'webhook') {
+                  // Handle webhook operations
+                  try {
+                    // Create webhook in database
+                    await createWebhook(queueItem.webhookData);
+
+                    // Create webhook_created event in event log
+                    await createWorkflowRunEvent(runId, {
+                      event_type: 'webhook_created',
+                      event_data: {
+                        webhook_id: queueItem.webhookId,
+                      },
+                    });
+
+                    console.log(
+                      `Created webhook "${queueItem.webhookId}" for workflow run "${runId}"`
+                    );
+                  } catch (err) {
+                    if (
+                      isInstanceOf(err, WorkflowAPIError) &&
+                      err.status === 409
+                    ) {
+                      // Webhook already exists (duplicate webhook_id constraint), so we can skip it
+                      console.warn(
+                        `Webhook "${queueItem.webhookId}" already exists, skipping: ${err.message}`
+                      );
+                      continue;
+                    }
+                    throw err;
+                  }
                 }
               }
               span?.setAttributes({

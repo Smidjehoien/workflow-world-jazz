@@ -88,4 +88,69 @@ describe('e2e', () => {
     }
     expect(contents).toBe('0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n');
   });
+
+  test('namedWebhookWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('namedWebhookWorkflow', []);
+
+    // Wait a few seconds so that the webhook is registered.
+    // TODO: make this more efficient when we add subscription support.
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+
+    // Send a GET request to the webhook.
+    const webhookUrl = new URL('/api/e2e/webhook', deploymentUrl);
+    const getRes = await fetch(webhookUrl, {
+      method: 'GET',
+      headers: {
+        'x-workflow-e2e-custom-header': '1',
+      },
+    });
+    expect(getRes.status).toBe(200);
+
+    // Send a POST request to the webhook.
+    const postRes = await fetch(webhookUrl, {
+      method: 'POST',
+      body: 'Hello, world from POST!',
+      headers: {
+        'x-workflow-e2e-custom-header': '2',
+      },
+    });
+    expect(postRes.status).toBe(200);
+
+    // Send a DELETE request to the webhook.
+    const deleteRes = await fetch(webhookUrl, {
+      method: 'DELETE',
+      body: 'Hello, world from DELETE!',
+      headers: {
+        'x-workflow-e2e-custom-header': '3',
+      },
+    });
+    expect(deleteRes.status).toBe(200);
+
+    const returnValue = await getWorkflowReturnValue(run.id);
+    expect(returnValue).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          method: 'GET',
+          body: '',
+          headers: expect.objectContaining({
+            'x-workflow-e2e-custom-header': '1',
+          }),
+        }),
+        expect.objectContaining({
+          method: 'POST',
+          body: 'Hello, world from POST!',
+          headers: expect.objectContaining({
+            'x-workflow-e2e-custom-header': '2',
+          }),
+        }),
+        expect.objectContaining({
+          method: 'DELETE',
+          body: 'Hello, world from DELETE!',
+          headers: expect.objectContaining({
+            'x-workflow-e2e-custom-header': '3',
+          }),
+        }),
+      ])
+    );
+  });
 });

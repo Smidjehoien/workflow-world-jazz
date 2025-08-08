@@ -113,6 +113,7 @@ describe('createUseStep', () => {
           ],
           "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
           "stepName": "add",
+          "type": "step",
         },
       ]
     `);
@@ -163,6 +164,7 @@ describe('createUseStep', () => {
           ],
           "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
           "stepName": "add",
+          "type": "step",
         },
         {
           "args": [
@@ -171,6 +173,7 @@ describe('createUseStep', () => {
           ],
           "invocationId": "9ae6a38a-8447-4038-abcd-0ef772312266",
           "stepName": "add",
+          "type": "step",
         },
         {
           "args": [
@@ -179,6 +182,7 @@ describe('createUseStep', () => {
           ],
           "invocationId": "87228e82-3254-4b8b-9fc1-de64969755b5",
           "stepName": "add",
+          "type": "step",
         },
       ]
     `);

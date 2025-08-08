@@ -1,5 +1,9 @@
 import { EventConsumerResult } from './events-consumer.js';
-import { FatalError, StepsNotRunError } from './global.js';
+import {
+  FatalError,
+  type StepInvocationQueueItem,
+  StepsNotRunError,
+} from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import type { Serializable } from './schemas.js';
 import { hydrateStepReturnValue } from './serialization.js';
@@ -13,7 +17,12 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
       const { promise, resolve, reject } = withResolvers<Result>();
 
       const invocationId = ctx.globalThis.crypto.randomUUID();
-      ctx.invocationsQueue.push({ stepName, args, invocationId });
+      ctx.invocationsQueue.push({
+        type: 'step',
+        stepName,
+        args,
+        invocationId,
+      });
 
       ctx.eventsConsumer.subscribe((event) => {
         if (!event) {
@@ -37,7 +46,10 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
         if (event.event_type === 'step_started') {
           // Step has started - so remove from the invocations queue
           const invocationsQueueIndex = ctx.invocationsQueue.findIndex(
-            (invocation) => invocation.invocationId === invocationId
+            (invocation) =>
+              invocation.type === 'step' &&
+              (invocation as StepInvocationQueueItem).invocationId ===
+                invocationId
           );
           if (invocationsQueueIndex !== -1) {
             ctx.invocationsQueue.splice(invocationsQueueIndex, 1);

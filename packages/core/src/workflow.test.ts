@@ -9,8 +9,6 @@ import {
 } from './serialization.js';
 import { runWorkflow } from './workflow.js';
 
-process.env.WORKFLOW_WEBHOOK_SECRET = 'test';
-
 describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
@@ -572,6 +570,7 @@ describe('runWorkflow', () => {
       expect(error.message).toEqual('1 steps have not been run yet');
       expect((error as StepsNotRunError).steps).toEqual([
         {
+          type: 'step',
           stepName: 'add',
           invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
           args: [1, 2],
@@ -664,11 +663,13 @@ describe('runWorkflow', () => {
       expect(error.message).toEqual('2 steps have not been run yet');
       expect((error as StepsNotRunError).steps).toEqual([
         {
+          type: 'step',
           stepName: 'add',
           invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
           args: [1, 2],
         },
         {
+          type: 'step',
           stepName: 'add',
           invocationId: '84459663-47c5-4dd4-b3cc-08d267df2c13',
           args: [3, 4],
@@ -752,8 +753,9 @@ describe('runWorkflow', () => {
     }
     assert(error);
     expect(error.name).toEqual('StepsNotRunError');
-    expect(error.message).toEqual('0 steps have not been run yet');
-    expect((error as StepsNotRunError).steps).toEqual([]);
+    expect(error.message).toEqual('1 webhooks have not been created yet');
+    expect((error as StepsNotRunError).steps).toHaveLength(1);
+    expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
   });
 
   it('should resolve `useWebhook` await upon "webhook_request" event', async () => {
@@ -1169,7 +1171,8 @@ describe('runWorkflow', () => {
     }
     assert(error);
     expect(error.name).toEqual('StepsNotRunError');
-    expect(error.message).toEqual('0 steps have not been run yet');
-    expect((error as StepsNotRunError).steps).toEqual([]);
+    expect(error.message).toEqual('1 webhooks have not been created yet');
+    expect((error as StepsNotRunError).steps).toHaveLength(1);
+    expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
   });
 });

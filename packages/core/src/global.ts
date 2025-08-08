@@ -49,24 +49,51 @@ export class RetryableError extends Error {
   }
 }
 
-export interface InvocationQueueItem {
+export interface StepInvocationQueueItem {
+  type: 'step';
   stepName: string;
   args: Serializable[];
   invocationId: string;
 }
 
+export interface WebhookInvocationQueueItem {
+  type: 'webhook';
+  webhookId: string;
+  webhookData: {
+    workflow_run_id: string;
+    webhook_id: string;
+    url?: string;
+    allowed_methods?: string[];
+    search_params_schema?: Record<string, any>;
+    headers_schema?: Record<string, any>;
+    body_schema?: Record<string, any>;
+  };
+}
+
+export type QueueItem = StepInvocationQueueItem | WebhookInvocationQueueItem;
+
 /**
- * An error that is thrown when one or more steps are called but do
- * not yet have a `step_started` entry in the event log. The workflow
- * dispatcher will catch this error and push the step invocations
+ * An error that is thrown when one or more operations (steps/webhooks) are called but do
+ * not yet have corresponding entries in the event log. The workflow
+ * dispatcher will catch this error and push the operations
  * onto the queue.
  */
 export class StepsNotRunError extends Error {
-  steps: InvocationQueueItem[];
+  steps: QueueItem[];
   globalThis: typeof globalThis;
 
-  constructor(steps: InvocationQueueItem[], global: typeof globalThis) {
-    super(`${steps.length} steps have not been run yet`);
+  constructor(steps: QueueItem[], global: typeof globalThis) {
+    const stepCount = steps.filter((s) => s.type === 'step').length;
+    const webhookCount = steps.filter((s) => s.type === 'webhook').length;
+    const description =
+      stepCount > 0 && webhookCount > 0
+        ? `${stepCount} steps and ${webhookCount} webhooks have not been run yet`
+        : stepCount > 0
+          ? `${stepCount} steps have not been run yet`
+          : webhookCount > 0
+            ? `${webhookCount} webhooks have not been created yet`
+            : '0 steps have not been run yet'; // Default case for empty array
+    super(description);
     this.name = 'StepsNotRunError';
     this.steps = steps;
     this.globalThis = global;
