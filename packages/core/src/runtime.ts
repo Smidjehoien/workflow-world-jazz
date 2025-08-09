@@ -221,15 +221,20 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                       `Created webhook "${queueItem.webhookId}" for workflow run "${runId}"`
                     );
                   } catch (err) {
-                    if (
-                      isInstanceOf(err, WorkflowAPIError) &&
-                      err.status === 409
-                    ) {
-                      // Webhook already exists (duplicate webhook_id constraint), so we can skip it
-                      console.warn(
-                        `Webhook "${queueItem.webhookId}" already exists, skipping: ${err.message}`
-                      );
-                      continue;
+                    if (isInstanceOf(err, WorkflowAPIError)) {
+                      if (err.status === 409) {
+                        // Webhook already exists (duplicate webhook_id constraint), so we can skip it
+                        console.warn(
+                          `Webhook "${queueItem.webhookId}" already exists, skipping: ${err.message}`
+                        );
+                        continue;
+                      } else if (err.status === 410) {
+                        // Workflow has already completed, so no-op
+                        console.warn(
+                          `Workflow run "${runId}" has already completed, skipping webhook "${queueItem.webhookId}": ${err.message}`
+                        );
+                        continue;
+                      }
                     }
                     throw err;
                   }
@@ -399,6 +404,21 @@ export const vercelAPIStepsEntrypoint =
               ...Attribute.StepResultType(typeof result),
             });
           } catch (err: unknown) {
+            span?.setAttributes({
+              ...Attribute.StepErrorName(getErrorName(err)),
+              ...Attribute.StepErrorMessage(String(err)),
+            });
+
+            if (isInstanceOf(err, WorkflowAPIError)) {
+              if (err.status === 410) {
+                // Workflow has already completed, so no-op
+                console.warn(
+                  `Workflow run "${workflowRunId}" has already completed, skipping step "${stepId}": ${err.message}`
+                );
+                return;
+              }
+            }
+
             console.error(
               `${getErrorName(
                 err
@@ -406,11 +426,6 @@ export const vercelAPIStepsEntrypoint =
                 err
               )}`
             );
-
-            span?.setAttributes({
-              ...Attribute.StepErrorName(getErrorName(err)),
-              ...Attribute.StepErrorMessage(String(err)),
-            });
 
             if (isInstanceOf(err, FatalError)) {
               // Fatal error - store the error in the event log and re-invoke the workflow
