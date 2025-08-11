@@ -1,5 +1,20 @@
 # @workflow/example-app
 
+## 0.0.2-alpha.9
+
+### Patch Changes
+
+- 64cf6f1: Add getWorkflowReturnValue
+- Updated dependencies [3a342bb]
+- Updated dependencies [12cb3fb]
+- Updated dependencies [954b621]
+- Updated dependencies [bf0c666]
+- Updated dependencies [64cf6f1]
+- Updated dependencies [bf51020]
+- Updated dependencies [466cb68]
+- Updated dependencies [49bf2a5]
+  - @vercel/workflow-core@0.0.1-alpha.9
+
 ## 0.0.2-alpha.8
 
 ### Patch Changes

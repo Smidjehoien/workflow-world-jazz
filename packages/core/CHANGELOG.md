@@ -1,5 +1,20 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- 3a342bb: Implement "named webhooks"
+- 12cb3fb: Rename useContext to getContext
+- 954b621: Make `getWorkflowReturnValue()` return more meaningful errors
+- bf0c666: Bail gracefully when a step completes after the workflow has already finished
+- 64cf6f1: Add getWorkflowReturnValue
+- bf51020: Use `function` instead of arrow syntax for exported functions
+- 466cb68: Rename `useWebhook()` to `getWebhook()`
+- 49bf2a5: Add OpenTelemetry tracing
+- Updated dependencies [b34c907]
+  - @vercel/workflow-vm@0.0.1-alpha.3
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes

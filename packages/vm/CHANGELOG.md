@@ -1,5 +1,11 @@
 # @vercel/workflow-vm
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- b34c907: Compile as ESM
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes
