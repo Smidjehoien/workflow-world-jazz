@@ -8,17 +8,58 @@ export class NextBuilder extends BaseBuilder {
     const outputDir = await this.findAppDirectory();
     const apiGeneratedDir = join(outputDir, 'api/generated');
 
-    // TODO: add .gitignore of the api/generated outputs
-
     // Ensure output directories exist
     await mkdir(apiGeneratedDir, { recursive: true });
     // ignore the generated assets
+
     await writeFile(join(apiGeneratedDir, '.gitignore'), '*');
 
     // TODO: discover 'use workflow' and 'use step' files as inputs
     // instead of relying on workflows folder (will need to support watching)
     await this.buildStepsFunction(apiGeneratedDir);
     await this.buildWorkflowsFunction(apiGeneratedDir);
+    await this.writeFunctionsConfig(outputDir);
+  }
+
+  private async writeFunctionsConfig(outputDir: string) {
+    // we don't run this in development mode as it's not needed
+    if (process.env.NODE_ENV === 'development') {
+      return;
+    }
+    const generatedConfig = {
+      version: '0',
+      steps: {
+        experimentalTriggers: [
+          {
+            type: 'queue/v1beta',
+            topic: '__wkf_step_*',
+            consumer: 'default',
+            maxDeliveries: 64,
+            retryAfterSeconds: 5,
+            initialDelaySeconds: 0,
+          },
+        ],
+      },
+      workflows: {
+        experimentalTriggers: [
+          {
+            type: 'queue/v1beta',
+            topic: '__wkf_workflow_*',
+            consumer: 'default',
+            maxDeliveries: 64,
+            retryAfterSeconds: 5,
+            initialDelaySeconds: 0,
+          },
+        ],
+      },
+    };
+
+    // We write this file to the generated directory for
+    // the Next.js builder to consume
+    await writeFile(
+      join(outputDir, 'api/generated/config.json'),
+      JSON.stringify(generatedConfig, null, 2)
+    );
   }
 
   private async buildStepsFunction(apiGeneratedDir: string): Promise<void> {
