@@ -1,5 +1,11 @@
 # nextjs
 
+## 0.0.2-alpha.4
+
+### Patch Changes
+
+- c791360: Add generated config for Next.js builder
+
 ## 0.0.2-alpha.3
 
 ### Patch Changes

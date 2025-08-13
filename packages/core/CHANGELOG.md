@@ -1,5 +1,15 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- b8b39e7: Add `stepStartedAt` to `getContext()`
+- 326d01f: Re-introduce `sleep()` function
+- 2f5b253: Remove 2 second sleep in `start()` function
+- 5a0e901: Add OpenTelemetry trace propagation to webhook processing
+- 1fed112: Add `@__PURE__` annotation to `contextStorage`
+
 ## 0.0.1-alpha.9
 
 ### Patch Changes
