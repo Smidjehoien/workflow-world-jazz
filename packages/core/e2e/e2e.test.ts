@@ -127,31 +127,17 @@ describe('e2e', () => {
     expect(deleteRes.status).toBe(200);
 
     const returnValue = await getWorkflowReturnValue(run.id);
-    expect(returnValue).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          method: 'GET',
-          body: '',
-          headers: expect.objectContaining({
-            'x-workflow-e2e-custom-header': '1',
-          }),
-        }),
-        expect.objectContaining({
-          method: 'POST',
-          body: 'Hello, world from POST!',
-          headers: expect.objectContaining({
-            'x-workflow-e2e-custom-header': '2',
-          }),
-        }),
-        expect.objectContaining({
-          method: 'DELETE',
-          body: 'Hello, world from DELETE!',
-          headers: expect.objectContaining({
-            'x-workflow-e2e-custom-header': '3',
-          }),
-        }),
-      ])
-    );
+    expect(returnValue).toBeInstanceOf(Array);
+    expect(returnValue.length).toBe(3);
+    expect(returnValue[0].method).toBe('GET');
+    expect(returnValue[0].body).toBe('');
+    expect(returnValue[0].headers['x-workflow-e2e-custom-header']).toBe('1');
+    expect(returnValue[1].method).toBe('POST');
+    expect(returnValue[1].body).toBe('Hello, world from POST!');
+    expect(returnValue[1].headers['x-workflow-e2e-custom-header']).toBe('2');
+    expect(returnValue[2].method).toBe('DELETE');
+    expect(returnValue[2].body).toBe('Hello, world from DELETE!');
+    expect(returnValue[2].headers['x-workflow-e2e-custom-header']).toBe('3');
   });
 
   test('sleepingWorkflow', { timeout: 60_000 }, async () => {
