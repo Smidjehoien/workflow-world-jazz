@@ -5,8 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "node src/pack.ts",
-    "vercel-build": "turbo build && pnpm run build"
+    "vercel-build": "turbo build && node src/pack.ts"
   },
   "keywords": [],
   "author": "",
