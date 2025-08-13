@@ -1,7 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 import type { WorkflowContext } from '../get-context.js';
 
-export const contextStorage = new AsyncLocalStorage<WorkflowContext>();
+export const contextStorage =
+  /* @__PURE__ */ new AsyncLocalStorage<WorkflowContext>();
 
 /**
  * This is the step function implementation of `getContext`.
