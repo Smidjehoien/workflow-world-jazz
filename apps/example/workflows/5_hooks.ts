@@ -2,10 +2,6 @@ import { getContext, getWebhook } from '@vercel/workflow-core';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
-const openai = new OpenAI({
-  apiKey: process.env.NATES_OPENAI_KEY,
-});
-
 /**
  * `getContext()` is a hook that allows you to access the context
  * of the current workflow run.
@@ -34,6 +30,7 @@ export async function withGetContext() {
 
 async function initiateOpenAIResponse() {
   'use step';
+  const openai = new OpenAI();
   const resp = await openai.responses.create({
     model: 'o3',
     input: 'Write a very long novel about otters in space.',
@@ -45,6 +42,7 @@ async function initiateOpenAIResponse() {
 
 async function getOpenAIResponse(respId: string): Promise<string> {
   'use step';
+  const openai = new OpenAI();
   const resp = await openai.responses.retrieve(respId);
   return resp.output_text;
 }
