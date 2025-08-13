@@ -1,4 +1,4 @@
-import { FatalError, getWebhook } from '@vercel/workflow-core';
+import { FatalError, getWebhook, sleep } from '@vercel/workflow-core';
 
 //////////////////////////////////////////////////////////
 
@@ -117,4 +117,14 @@ export async function namedWebhookWorkflow() {
     }
   }
   return requests;
+}
+
+//////////////////////////////////////////////////////////
+
+export async function sleepingWorkflow() {
+  'use workflow';
+  const startTime = Date.now();
+  await sleep('10s');
+  const endTime = Date.now();
+  return { startTime, endTime };
 }

@@ -153,4 +153,11 @@ describe('e2e', () => {
       ])
     );
   });
+
+  test('sleepingWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('sleepingWorkflow', []);
+    const returnValue = await getWorkflowReturnValue(run.id);
+    expect(returnValue.startTime).toBeLessThan(returnValue.endTime);
+    expect(returnValue.endTime - returnValue.startTime).toBeGreaterThan(9999);
+  });
 });
