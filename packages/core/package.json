@@ -30,7 +30,7 @@
     "@types/json-schema": "^7.0.15",
     "@types/ms": "^2.1.0",
     "@vercel/functions": "^2.2.2",
-    "@vercel/queue": "0.0.0-alpha.12",
+    "@vercel/queue": "0.0.0-alpha.20",
     "@vercel/workflow-vm": "workspace:*",
     "ajv": "^8.17.1",
     "devalue": "^5.1.1",

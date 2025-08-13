@@ -174,8 +174,8 @@ importers:
         specifier: ^2.2.2
         version: 2.2.3(@aws-sdk/credential-provider-web-identity@3.609.0(@aws-sdk/client-sts@3.844.0))
       '@vercel/queue':
-        specifier: 0.0.0-alpha.12
-        version: 0.0.0-alpha.12
+        specifier: 0.0.0-alpha.20
+        version: 0.0.0-alpha.20
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../vm
@@ -1594,9 +1594,10 @@ packages:
       '@opentelemetry/sdk-metrics': '>=1.19.0 <2.0.0'
       '@opentelemetry/sdk-trace-base': '>=1.19.0 <2.0.0'
 
-  '@vercel/queue@0.0.0-alpha.12':
-    resolution: {integrity: sha512-qU3O9VEkC+TQ5f2ZNnFY/888HffArI+83heCkCQZrSZTQ6+iwjM0eMjDke//Fn7jcsxbooMfuoHZiZshfYAUqQ==}
-    engines: {node: '>=22.0.0'}
+  '@vercel/queue@0.0.0-alpha.20':
+    resolution: {integrity: sha512-FCiOIAO/gwuAzlaFDd3Q/PCKxB4GiIeK4JJvjAdWNiWftC3pnbLZ2gL/kHLDeQbm2rHOyLx8cBiQX4jgBLZE3A==}
+    engines: {node: '>=20.0.0'}
+    hasBin: true
 
   '@vitest/expect@3.2.4':
     resolution: {integrity: sha512-Io0yyORnB6sikFlt8QW5K7slY4OjqNX9jmJQ02QDda8lyM6B5oNgVWoSoKPac8/kgnCUzuHQKrSLtu/uOqqrig==}
@@ -2401,6 +2402,10 @@ packages:
 
   mixpart@0.0.4:
     resolution: {integrity: sha512-RAoaOSXnMLrfUfmFbNynRYjeMru/bhgAYRy/GQVI8gmRq7vm9V9c2gGVYnYoQ008X6YTmRIu5b0397U7vb0bIA==}
+    engines: {node: '>=22.0.0'}
+
+  mixpart@0.0.5-alpha.0:
+    resolution: {integrity: sha512-XS3bfxqdHsxqLoK0DnkGiM++KZGhXFj8KrzfNND/4d0DDBkbVdmlEajIAOQ+2+tHVw2zFI1ng8SnJSOfVZg0HA==}
     engines: {node: '>=22.0.0'}
 
   mkdirp@3.0.1:
@@ -4583,9 +4588,9 @@ snapshots:
       '@opentelemetry/sdk-metrics': 1.30.1(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base': 1.30.1(@opentelemetry/api@1.9.0)
 
-  '@vercel/queue@0.0.0-alpha.12':
+  '@vercel/queue@0.0.0-alpha.20':
     dependencies:
-      mixpart: 0.0.4
+      mixpart: 0.0.5-alpha.0
 
   '@vitest/expect@3.2.4':
     dependencies:
@@ -5503,6 +5508,8 @@ snapshots:
       minipass: 7.1.2
 
   mixpart@0.0.4: {}
+
+  mixpart@0.0.5-alpha.0: {}
 
   mkdirp@3.0.1: {}
 
