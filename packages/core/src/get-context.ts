@@ -20,6 +20,14 @@ export interface WorkflowContext {
   stepId: string;
 
   /**
+   * Timestamp when the current step started.
+   *
+   * **Note:** Only available inside a step function.
+   * Accessing this property in a workflow function will throw an error.
+   */
+  stepStartedAt: Date;
+
+  /**
    * The number of times the current step has been executed.
    * Will increase with each retry.
    *

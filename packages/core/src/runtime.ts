@@ -113,13 +113,16 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                 // This sets the `started_at` timestamp at the database level
                 status: 'running',
               });
-              if (!workflowRun.started_at) {
-                throw new Error(
-                  `Workflow run "${runId}" has no "started_at" timestamp`
-                );
-              }
-              workflowStartedAt = +workflowRun.started_at;
             }
+
+            // At this point, the workflow is "running" and `started_at` should
+            // definitely be set.
+            if (!workflowRun.started_at) {
+              throw new Error(
+                `Workflow run "${runId}" has no "started_at" timestamp`
+              );
+            }
+            workflowStartedAt = +workflowRun.started_at;
 
             span?.setAttributes({
               ...Attribute.WorkflowRunStatus(workflowRun.status),
@@ -361,6 +364,10 @@ export const vercelAPIStepsEntrypoint =
               return;
             }
 
+            if (!step.started_at) {
+              throw new Error(`Step "${stepId}" has no "started_at" timestamp`);
+            }
+
             // Hydrate the step input arguments
             const ops: Promise<void>[] = [];
             const args = hydrateStepArguments(step.input, ops);
@@ -373,6 +380,7 @@ export const vercelAPIStepsEntrypoint =
               workflowRunId,
               workflowStartedAt: new Date(workflowStartedAt),
               stepId: step.invocation_id,
+              stepStartedAt: new Date(+step.started_at),
               attempt: metadata.attempt,
               url: `https://${process.env.VERCEL_URL}`,
             };

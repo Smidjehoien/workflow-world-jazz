@@ -84,6 +84,9 @@ export async function runWorkflow(
       get stepId(): string {
         throw ENOTSUP();
       },
+      get stepStartedAt(): Date {
+        throw ENOTSUP();
+      },
       get attempt(): number {
         throw ENOTSUP();
       },
