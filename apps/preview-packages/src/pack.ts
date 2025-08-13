@@ -31,7 +31,7 @@ async function main() {
   const sha = await getSha();
 
   const { stdout: turboStdout } = await exec('turbo run build --dry-run=json', {
-    cwd: rootDir,
+    cwd: new URL('../', import.meta.url),
   });
   const turboJson: TurboDryRun = JSON.parse(turboStdout);
   for (const task of turboJson.tasks) {

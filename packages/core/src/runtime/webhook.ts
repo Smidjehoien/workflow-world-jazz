@@ -1,6 +1,6 @@
 import { waitUntil } from '@vercel/functions';
-import { send } from '@vercel/queue';
-import { Ajv2020 } from 'ajv/dist/2020.js';
+import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
+import { world } from '../adapters/index.js';
 import {
   createWorkflowRunEvent,
   getWebhook,
@@ -10,6 +10,7 @@ import {
 } from '../backend.js';
 import type { WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateStepReturnValue } from '../serialization.js';
+import { getSpanContextForTraceCarrier, trace } from '../telemetry.js';
 
 const ajv = new Ajv2020({ strict: false });
 
@@ -29,39 +30,53 @@ async function* webhooksIterator(
   }
 }
 
-async function processWebhook(
+function ajvError(errors: Ajv2020['errors']): AggregateError | undefined {
+  if (!errors || errors.length === 0) return undefined;
+  return new AggregateError(
+    errors.map((error) => (error.message ? new Error(error.message) : error)),
+    'Validation failed'
+  );
+}
+
+class WebhookValidationError<T> extends Error {
+  constructor(message: string, cause?: T) {
+    super(message, { cause });
+    this.name = 'WebhookValidationError';
+  }
+}
+
+function validateAjv<T>(
+  validate: ValidateFunction<T>,
+  value: unknown,
+  path: string
+): asserts value is T {
+  if (!validate(value)) {
+    throw new WebhookValidationError(
+      `${path} fails validation`,
+      ajvError(validate.errors)
+    );
+  }
+}
+
+async function validateWebhook(
   webhook: Webhook,
   request: Request,
-  getBody: () => Promise<any>
-): Promise<boolean> {
+  getBody: () => Promise<unknown>
+): Promise<void> {
   // Validate the request method
   const methods = webhook.allowed_methods ?? ['POST'];
   if (!methods.includes(request.method)) {
-    console.warn(
+    throw new WebhookValidationError(
       `Method "${request.method}" not allowed for webhook ${webhook.webhook_id}`
     );
-    return false;
   }
 
   // If a headers schema was provided, validate each header individually
-  if (webhook.headers_schema) {
-    for (const [headerName, headerSchema] of Object.entries(
-      webhook.headers_schema
-    )) {
-      const header = request.headers.get(headerName);
-
-      // Note: header will be `null` if header is missing
-      // The JSON Schema should define whether `null` values
-      // are acceptable (meaning that the header is optional)
-
-      const validate = ajv.compile(headerSchema);
-      if (!validate(header)) {
-        console.warn(
-          `Invalid header: "${headerName}" for webhook ${webhook.webhook_id}`
-        );
-        return false;
-      }
-    }
+  for (const [headerName, headerSchema] of Object.entries(
+    webhook.headers_schema ?? {}
+  )) {
+    const header = request.headers.get(headerName);
+    validateAjv(ajv.compile(headerSchema), header, `headers[${headerName}]`);
   }
 
   // If a search params schema was provided, validate each search param individually
@@ -84,65 +99,77 @@ async function processWebhook(
             ? allParamValues[0]
             : allParamValues;
 
-      const validate = ajv.compile(paramSchema);
-      if (!validate(paramValue)) {
-        console.warn(
-          `Invalid search parameter: "${paramName}" for webhook ${webhook.webhook_id}`
-        );
-        return false;
-      }
+      validateAjv(ajv.compile(paramSchema), paramValue, `search[${paramName}]`);
     }
   }
 
   // If a body schema was provided, validate the request body
   if (webhook.body_schema) {
     const body = await getBody();
-    console.log('body', body);
-    const validate = ajv.compile(webhook.body_schema);
-    if (!validate(body)) {
-      console.warn(`Invalid request body for webhook ${webhook.webhook_id}`);
+    validateAjv(ajv.compile(webhook.body_schema), body, `body`);
+  }
+}
+
+async function processWebhook(
+  webhook: Webhook,
+  request: Request,
+  getBody: () => Promise<any>
+): Promise<boolean> {
+  return await trace('WEBHOOK.processWebhook', async (span) => {
+    try {
+      await trace('WEBHOOK.validate', () =>
+        validateWebhook(webhook, request, getBody)
+      );
+    } catch (err) {
+      console.warn(String(err));
       return false;
     }
-  }
 
-  try {
-    // Create a workflow run event
-    const ops: Promise<any>[] = [];
-    await createWorkflowRunEvent(webhook.workflow_run_id, {
-      event_type: 'webhook_request',
-      event_data: {
-        webhook_id: webhook.webhook_id,
-        request: dehydrateStepReturnValue(request.clone(), ops, globalThis),
-      },
-    });
-    waitUntil(Promise.all(ops));
+    try {
+      // Create a workflow run event
+      const ops: Promise<any>[] = [];
+      await createWorkflowRunEvent(webhook.workflow_run_id, {
+        event_type: 'webhook_request',
+        event_data: {
+          webhook_id: webhook.webhook_id,
+          request: dehydrateStepReturnValue(request.clone(), ops, globalThis),
+        },
+      });
+      waitUntil(Promise.all(ops));
 
-    // Re-trigger the workflow
-    const workflowInvokeMessage: WorkflowInvokePayload = {
-      runId: webhook.workflow_run_id,
-    };
+      // TODO: maybe we should store the workflow name in the
+      // webhook table to avoid this extra database fetch?
+      const workflowRun = await getWorkflowRun(webhook.workflow_run_id);
 
-    // TODO: maybe we should store the workflow name in the
-    // webhook table to avoid this extra database fetch?
-    const workflowRun = await getWorkflowRun(webhook.workflow_run_id);
+      const traceCarrier = workflowRun.execution_context?.traceCarrier;
 
-    await send(
-      `__wkf_workflow_${workflowRun.workflow_name}`,
-      workflowInvokeMessage
-    );
+      if (traceCarrier) {
+        const context = await getSpanContextForTraceCarrier(traceCarrier);
+        if (context) {
+          span?.addLink?.({ context });
+        }
+      }
 
-    console.log(
-      `Dispatched workflow "${workflowRun.workflow_name}" for webhook ID "${webhook.webhook_id}"`
-    );
-  } catch (err) {
-    console.error(
-      `Error creating workflow run event for webhook ${webhook.webhook_id}`,
-      err
-    );
-    return false;
-  }
+      // Re-trigger the workflow
+      await world.queue(`__wkf_workflow_${workflowRun.workflow_name}`, {
+        runId: webhook.workflow_run_id,
+        // attach the trace carrier from the workflow run
+        traceCarrier: workflowRun.execution_context?.traceCarrier ?? undefined,
+      } satisfies WorkflowInvokePayload);
 
-  return true;
+      console.log(
+        `Dispatched workflow "${workflowRun.workflow_name}" for webhook ID "${webhook.webhook_id}"`
+      );
+    } catch (err) {
+      console.error(
+        `Error creating workflow run event for webhook ${webhook.webhook_id}`,
+        err
+      );
+      return false;
+    }
+
+    return true;
+  });
 }
 
 export async function processWebhooks(
@@ -172,7 +199,9 @@ export async function processWebhooks(
 
   let handledCount = 0;
   for await (const webhook of webhooksIterator(deploymentId, request)) {
-    const handled = await processWebhook(webhook, request, getBody);
+    const handled = await trace('WEBHOOK.process', () =>
+      processWebhook(webhook, request, getBody)
+    );
     if (handled) {
       handledCount++;
     }

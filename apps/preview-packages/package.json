@@ -5,12 +5,17 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "node src/pack.ts"
+    "build": "node src/pack.ts",
+    "vercel-build": "turbo build && pnpm run build"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@types/node": "^24.2.1"
+    "@types/node": "^24.2.1",
+    "@vercel/workflow-core": "workspace:*",
+    "@vercel/workflow-next": "workspace:*",
+    "@vercel/workflow-vm": "workspace:*",
+    "@vercel/swc-plugin-workflow": "workspace:*"
   }
 }

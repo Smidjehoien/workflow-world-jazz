@@ -54,10 +54,14 @@ export async function start(
     const deploymentId = opts.deploymentId ?? (await world.getDeploymentId());
     const ops: Promise<void>[] = [];
     const workflowArguments = dehydrateWorkflowArguments(args, ops);
+    // Serialize current trace context to propagate across queue boundary
+    const traceCarrier = await serializeTraceCarrier();
+
     const run = await createWorkflowRun({
       deployment_id: deploymentId,
       workflow_name: workflowName,
       arguments: workflowArguments,
+      execution_context: { traceCarrier },
     });
     waitUntil(Promise.all(ops));
 
@@ -72,9 +76,6 @@ export async function start(
     if (!process.env.VERCEL_DEPLOYMENT_ID) {
       process.env.VERCEL_DEPLOYMENT_ID = deploymentId;
     }
-
-    // Serialize current trace context to propagate across queue boundary
-    const traceCarrier = await serializeTraceCarrier();
 
     await world.queue(`__wkf_workflow_${workflowName}`, {
       runId: run.id,

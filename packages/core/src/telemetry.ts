@@ -105,3 +105,14 @@ export async function trace<T>(
     }
   });
 }
+
+export async function getSpanContextForTraceCarrier(
+  carrier: Record<string, string>
+) {
+  const [deserialized, otel] = await Promise.all([
+    deserializeTraceCarrier(carrier),
+    OtelApi.value,
+  ]);
+  if (!deserialized || !otel) return;
+  return otel.trace.getSpanContext(deserialized);
+}

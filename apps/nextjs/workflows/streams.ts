@@ -18,3 +18,16 @@ export async function pumpData(writable: WritableStream) {
 
   return true;
 }
+
+export async function write(
+  writable: WritableStream<Uint8Array>,
+  data: string,
+  eof = false
+) {
+  'use step';
+  const writer = writable.getWriter();
+  await writer.write(new TextEncoder().encode(data));
+  if (eof) {
+    writer.close();
+  }
+}
