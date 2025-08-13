@@ -33,7 +33,6 @@ export async function start(
   options?: StartOptions
 ) {
   return trace(`WORKFLOW.start ${workflowName}`, async (span) => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     span?.setAttributes({
       ...Attribute.WorkflowName(workflowName),
       ...Attribute.WorkflowOperation('start'),
