@@ -1,5 +1,15 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.18
+
+### Patch Changes
+
+- aff52c1: Add initial readme instructions
+- Updated dependencies [aff52c1]
+- Updated dependencies [06b74d2]
+  - @vercel/workflow-core@0.0.1-alpha.11
+  - @vercel/workflow-cli@0.0.1-alpha.17
+
 ## 0.0.1-alpha.17
 
 ### Patch Changes

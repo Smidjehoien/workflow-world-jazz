@@ -1,5 +1,12 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.11
+
+### Patch Changes
+
+- aff52c1: Add initial readme instructions
+- 06b74d2: Run e2e tests in parallel
+
 ## 0.0.1-alpha.10
 
 ### Patch Changes
