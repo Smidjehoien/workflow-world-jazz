@@ -50,13 +50,7 @@ async function getWorkflowReturnValue(runId: string) {
   }
 }
 
-describe.concurrent('e2e', () => {
-  beforeAll(async () => {
-    // HACK: Wait 2 seconds for queues to be available. VQS has a bug at
-    // the time of writing that errors if we attempt too early
-    await new Promise((resolve) => setTimeout(resolve, 2_000));
-  });
-
+describe('e2e', () => {
   test('addTenWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('addTenWorkflow', [123]);
     const returnValue = await getWorkflowReturnValue(run.id);
