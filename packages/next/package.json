@@ -8,7 +8,8 @@
   ],
   "exports": {
     ".": "./dist/index.js",
-    "./loader": "./dist/loader.js"
+    "./loader": "./dist/loader.js",
+    "./runtime": "./dist/runtime.js"
   },
   "scripts": {
     "build": "tsc",

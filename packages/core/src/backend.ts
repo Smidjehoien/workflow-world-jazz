@@ -1,6 +1,6 @@
 // API wrapper functions for workflow-server endpoints
 // These functions provide a type-safe interface to interact with the workflow API
-import { getVercelOidcTokenSync } from '@vercel/functions/oidc';
+import { getVercelOidcTokenSync } from '@vercel/oidc';
 import type { JSONSchema7 } from 'json-schema';
 import type { Serializable } from './schemas.js';
 

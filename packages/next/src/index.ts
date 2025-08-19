@@ -76,6 +76,7 @@ export function withWorkflow(nextConfig: NextConfig) {
           ...require('next/dist/lib/server-external-packages.json'),
           ...(nextConfig.serverExternalPackages || []),
         ],
+        runtimeImportPath: '@vercel/workflow-next/runtime',
       });
 
       await workflowBuilder.build();

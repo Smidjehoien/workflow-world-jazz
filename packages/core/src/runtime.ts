@@ -527,3 +527,7 @@ export const vercelAPIStepsEntrypoint =
       });
     }
   );
+
+// this is a no-op placeholder as the client is
+// expecting this to be present but we aren't actually using it
+export function runStep() {}

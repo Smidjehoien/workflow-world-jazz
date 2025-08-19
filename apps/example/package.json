@@ -14,7 +14,7 @@
     "esbuild": "^0.25.5"
   },
   "dependencies": {
-    "@vercel/functions": "^2.2.2",
+    "@vercel/functions": "^2.2.12",
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow-core": "workspace:*",
     "ai": "beta",

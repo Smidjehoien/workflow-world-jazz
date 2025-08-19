@@ -1,12 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import * as esbuild from 'esbuild';
-import { createRequire } from 'module';
 import { glob } from 'tinyglobby';
 import type { WorkflowConfig } from '../config/types.js';
 import { createSwcPlugin } from './swc-esbuild-plugin.js';
-
-const require = createRequire(import.meta.url);
 
 export abstract class BaseBuilder {
   protected config: WorkflowConfig;
@@ -157,11 +154,12 @@ export abstract class BaseBuilder {
     const workflowBundleCode = interimBundle.outputFiles[0].text;
 
     // Create the workflow function handler
-    const workflowFunctionCode = `import { 
+    const workflowFunctionCode = `import {
     vercelAPIWorkflowsEntrypoint } from '${
-      // we need to resolve here so it is absolute and
-      // doesn't need to be a dependency of the Next.js project
-      require.resolve('@vercel/workflow-core/runtime')
+      // The runtime import path is configurable so that the Next.js loader
+      // runtime path can be resolved. This is to avoid the user needing to
+      // add @vercel/workflow-core as a dependency to their Next.js project.
+      this.config.runtimeImportPath || '@vercel/workflow-core/runtime'
     }';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;

@@ -8,6 +8,7 @@ export type BuildTarget = (typeof validBuildTargets)[number];
 export interface WorkflowConfig {
   dirs: string[];
   workingDir: string;
+  runtimeImportPath?: string;
   buildTarget: BuildTarget;
   stepsBundlePath: string;
   workflowsBundlePath: string;
