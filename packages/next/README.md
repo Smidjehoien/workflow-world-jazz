@@ -15,11 +15,11 @@ Next.js integration for Workflow SDK. Wraps your `next.config` to:
 ### Installation
 
 ```bash
-pnpm add @vercel/workflow-next
+pnpm add @vercel/workflow-next @vercel/workflow-core
 # or
-npm i @vercel/workflow-next
+npm i @vercel/workflow-next @vercel/workflow-core
 # or
-yarn add @vercel/workflow-next
+yarn add @vercel/workflow-next @vercel/workflow-core
 ```
 
 ### Getting Started
