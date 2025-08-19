@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- 265c34e: Use `@vercel/oidc` package for retrieving the OIDC token information (instead of `@vercel/functions`)
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

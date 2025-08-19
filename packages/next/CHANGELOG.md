@@ -1,5 +1,15 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.19
+
+### Patch Changes
+
+- 265c34e: Support Next.js apps using the `--turbopack` flag
+- Updated dependencies [265c34e]
+- Updated dependencies [265c34e]
+  - @vercel/workflow-core@0.0.1-alpha.12
+  - @vercel/workflow-cli@0.0.1-alpha.18
+
 ## 0.0.1-alpha.18
 
 ### Patch Changes
