@@ -1,10 +1,43 @@
 import { setTimeout } from 'node:timers/promises';
 import { JsonTransport } from '@vercel/queue';
+import { pidToPorts } from 'pid-port';
 import z from 'zod/v4';
+import { once } from '../util.js';
 import { MessageId, ValidQueueName, type World } from '../world.js';
+
+export const configSchema = z.object({
+  port: z.coerce.number().optional().catch(undefined),
+});
+
+const config = once(async () => {
+  const provided = process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG || '{}';
+  let json;
+  try {
+    json = JSON.parse(provided);
+  } catch (error) {
+    throw new Error(`Invalid JSON in WORKFLOWS_EMBEDDED_WORLD_CONFIG environment variable: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  const parsed = configSchema.parse(json);
+
+  return {
+    port:
+      parsed.port ??
+      (await (async () => {
+        const ports = await pidToPorts(process.pid);
+        if (ports.size === 0) {
+          throw new Error(
+            'No ports detected for current process. Please configure a port explicitly using nextConfig.workflows.embedded.port'
+          );
+        }
+        const smallest = Math.min(...ports);
+        return smallest;
+      })()),
+  };
+});
 
 export function createEmbedded(): World {
   const transport = new JsonTransport();
+  const serverPort = config.value.then((x) => x.port);
 
   const queue: World['queue'] = async (queueName, x) => {
     const body = transport.serialize(x);
@@ -23,7 +56,7 @@ export function createEmbedded(): World {
       for (let attempt = 0; defaultRetriesLeft > 0; attempt++) {
         defaultRetriesLeft--;
         const response = await fetch(
-          `http://localhost:3000/api/generated/${pathname}`,
+          `http://localhost:${await serverPort}/api/generated/${pathname}`,
           {
             method: 'POST',
             duplex: 'half',

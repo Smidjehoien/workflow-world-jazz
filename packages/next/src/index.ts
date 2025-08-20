@@ -1,7 +1,15 @@
 import { NextBuilder } from '@vercel/workflow-cli/dist/lib/builders/next-build';
 import type { NextConfig } from 'next';
 
-export function withWorkflow(nextConfig: NextConfig) {
+export function withWorkflow(
+  nextConfig: NextConfig & {
+    workflows?: {
+      embedded?: {
+        port?: number;
+      };
+    };
+  }
+) {
   // configure the loader if turbopack is being used
   if (!nextConfig.turbopack) {
     nextConfig.turbopack = {};
@@ -82,11 +90,16 @@ export function withWorkflow(nextConfig: NextConfig) {
       await workflowBuilder.build();
     }
 
+    const embeddedWorldConfig = JSON.stringify(
+      nextConfig.workflows?.embedded ?? {}
+    );
     if (phase === 'phase-development-server') {
       process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+      process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
       // handle watching
     } else if (phase === 'phase-production-server') {
       process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+      process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
     }
     return nextConfig;
   };
