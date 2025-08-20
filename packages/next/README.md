@@ -46,16 +46,6 @@ This will:
 - Run the Workflow build as a sidecar during the `next build` process (using `@vercel/workflow-cli`)
 - Adds transparent support for Workflow execution in `next dev`
 
-#### Disable Vercel Authentication
-
-![](../core/docs/images/disable-vercel-authentication.png)
-
-For now, the **Vercel Authentication** feature must be _disabled_ on your Project.
-
-> [!IMPORTANT]
->
-> This is a **temporary restriction** imposed by the Vercel Queue product, which workflows relies on.
-
 #### Disable the generated route files from your ESLint config
 
 If you have eslint enabled for your Next.js app, you will most likely need to
@@ -91,6 +81,16 @@ something like this:
 >
 > Depending on your eslint version, you might use the `.eslintignore` file instead.
 
+#### Add `.swc` to gitignore
+
+Workflow uses a custom [swc](https://swc.rs/) plugin that caches artifacts to a local `.swc`
+directory which you likely want to remove from your version control
+
+```diff
+ # .gitignore
++.swc
+```
+
 #### Add your workflow
 
 Workflow functions and step functions can be added inside the `workflows`
@@ -125,4 +125,4 @@ export const POST = (req: Request) => {
 ### Troubleshooting
 
 - The loader only runs on files that contain `"use step"` or `"use workflow"`.
-- Ensure your workflows are inside the `workflows` (or `src/workflows`, if you are using `src`) directory.
+- Ensure your workflows and steps are inside the `workflows` (or `src/workflows`, if you are using `src`) directory.
