@@ -126,3 +126,10 @@ export const POST = (req: Request) => {
 
 - The loader only runs on files that contain `"use step"` or `"use workflow"`.
 - Ensure your workflows and steps are inside the `workflows` (or `src/workflows`, if you are using `src`) directory.
+- **External packages causing build/runtime errors**: The workflow step bundling is currently being improved. If an external node module used in a step is causing weird build time or runtime errors, try externalizing it in your `next.config.ts`:
+
+  ```ts
+  const nextConfig: NextConfig = {
+    serverExternalPackages: ['@node-rs/xxhash'],
+  };
+  ```
