@@ -384,9 +384,7 @@ export const vercelAPIStepsEntrypoint =
               attempt: metadata.attempt,
               url: `https://${process.env.VERCEL_URL}`,
             };
-            contextStorage.enterWith(ctx);
-
-            result = await stepFn(...args);
+            result = await contextStorage.run(ctx, () => stepFn(...args));
 
             result = dehydrateStepReturnValue(result, ops);
 
@@ -515,8 +513,6 @@ export const vercelAPIStepsEntrypoint =
                 return { timeoutSeconds };
               }
             }
-          } finally {
-            contextStorage.disable();
           }
 
           await world.queue(`__wkf_workflow_${workflowName}`, {
