@@ -1,5 +1,19 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- 1b3dd56: allow to configure the server port. otherwise, a port exposed from the current pid will be used.
+
+  The configuration is done by using a stringified JSON in env vars.
+
+  In case the port is not assigned, we will try to grab the port from the pids,
+  and will choose the lowest exposed port, assuming random ports are in the 5-digit range--while the main server ports are usually in the 4-digit range like 3000.
+
+- 54d1ec1: Use `run()` instead of `enterWith()` for AsyncLocalStorage
+- de9b26d: Make `pid-port` be a regular dependency
+
 ## 0.0.1-alpha.12
 
 ### Patch Changes

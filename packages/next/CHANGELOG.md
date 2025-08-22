@@ -1,5 +1,16 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.20
+
+### Patch Changes
+
+- 1b3dd56: add nextConfig.workflows.embedded that will be propagated as an env var to the embedded workflow world
+- Updated dependencies [1b3dd56]
+- Updated dependencies [54d1ec1]
+- Updated dependencies [de9b26d]
+  - @vercel/workflow-core@0.0.1-alpha.13
+  - @vercel/workflow-cli@0.0.1-alpha.19
+
 ## 0.0.1-alpha.19
 
 ### Patch Changes
