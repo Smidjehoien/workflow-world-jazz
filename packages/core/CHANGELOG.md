@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- 94ee3b3: embedded server: use process.env.PORT if exists
+
 ## 0.0.1-alpha.13
 
 ### Patch Changes

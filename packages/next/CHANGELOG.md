@@ -1,5 +1,14 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.21
+
+### Patch Changes
+
+- d2ef1dd: Add troubleshooting doc for external package
+- Updated dependencies [94ee3b3]
+  - @vercel/workflow-core@0.0.1-alpha.14
+  - @vercel/workflow-cli@0.0.1-alpha.20
+
 ## 0.0.1-alpha.20
 
 ### Patch Changes

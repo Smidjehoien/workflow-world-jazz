@@ -1,5 +1,12 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.20
+
+### Patch Changes
+
+- Updated dependencies [94ee3b3]
+  - @vercel/workflow-core@0.0.1-alpha.14
+
 ## 0.0.1-alpha.19
 
 ### Patch Changes
