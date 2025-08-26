@@ -1,4 +1,5 @@
 // @ts-nocheck illustrative example
+// This is just pseudocode for development, it doens't work
 
 import { generateText } from 'workflow/ai';
 
