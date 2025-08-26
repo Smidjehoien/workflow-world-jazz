@@ -46,6 +46,22 @@ This will:
 - Run the Workflow build as a sidecar during the `next build` process (using `@vercel/workflow-cli`)
 - Adds transparent support for Workflow execution in `next dev`
 
+### Enable ESM for your nextJS app
+
+> [!NOTE]
+>
+> This is a temporary limitation with workflow we plan to address soon.
+
+```diff
+// package.json
+{
++ "type": "module",
+// ...
+}
+
+```
+
+
 #### Disable the generated route files from your ESLint config
 
 If you have eslint enabled for your Next.js app, you will most likely need to
@@ -124,8 +140,12 @@ export const POST = (req: Request) => {
 
 ### Troubleshooting
 
-- The loader only runs on files that contain `"use step"` or `"use workflow"`.
-- Ensure your workflows and steps are inside the `workflows` (or `src/workflows`, if you are using `src`) directory.
+- Ensure your workflows and steps are inside the `workflows` (or `src/workflows`, if you are using `src`) directory. `"use workflow"` and `"use steps"` only work in this directory,
+- Local dev **currently** still requires you to register the project on vercel, and use `vc link` and `vc dev` locally before you can run `next dev`.
+- Keeping "use workflow" functions and "use step" functions in separate files often addresses a lot of odd build or runtime errors. These errors are often because invalid workflow code can sneak into the generated workflow route (for example, initializing an SDK in global scope).
+  > [!TIP]
+  >
+  > We like the dil structure of a `workflows/index.ts` file for your workflows, and a `workflow/steps/` directory for steps
 - **External packages causing build/runtime errors**: The workflow step bundling is currently being improved. If an external node module used in a step is causing weird build time or runtime errors, try externalizing it in your `next.config.ts`:
 
   ```ts
@@ -133,3 +153,4 @@ export const POST = (req: Request) => {
     serverExternalPackages: ['@node-rs/xxhash'],
   };
   ```
+- The loader only runs on files that contain `"use step"` or `"use workflow"`.
