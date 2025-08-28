@@ -195,8 +195,8 @@ importers:
         specifier: ^2.2.12
         version: 2.2.12(@aws-sdk/credential-provider-web-identity@3.609.0(@aws-sdk/client-sts@3.844.0))
       '@vercel/oidc':
-        specifier: ^2.0.1
-        version: 2.0.1
+        specifier: ^2.0.2
+        version: 2.0.2
       '@vercel/queue':
         specifier: 0.0.0-alpha.20
         version: 0.0.0-alpha.20
@@ -1614,6 +1614,10 @@ packages:
 
   '@vercel/oidc@2.0.1':
     resolution: {integrity: sha512-p/rFk8vz+AggU0bHXjwtRUyXNxboLvfCjwN0KH5xhBJ5wGS+n/psLJP1c69QPdWIZM4aVVIrTqdjUuDwuJGYzQ==}
+    engines: {node: '>= 18'}
+
+  '@vercel/oidc@2.0.2':
+    resolution: {integrity: sha512-59PBFx3T+k5hLTEWa3ggiMpGRz1OVvl9eN8SUai+A43IsqiOuAe7qPBf+cray/Fj6mkgnxm/D7IAtjc8zSHi7g==}
     engines: {node: '>= 18'}
 
   '@vercel/otel@1.13.0':
@@ -4667,6 +4671,11 @@ snapshots:
       '@aws-sdk/credential-provider-web-identity': 3.844.0
 
   '@vercel/oidc@2.0.1':
+    dependencies:
+      '@types/ms': 2.1.0
+      ms: 2.1.3
+
+  '@vercel/oidc@2.0.2':
     dependencies:
       '@types/ms': 2.1.0
       ms: 2.1.3
