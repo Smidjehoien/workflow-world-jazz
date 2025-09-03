@@ -22,3 +22,6 @@ target
 
 # SWC plugin cache
 .swc
+
+# claude local settings
+.claude/settings.local.json

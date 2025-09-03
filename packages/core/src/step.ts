@@ -1,9 +1,6 @@
+import { WorkflowRuntimeError } from './errors.js';
 import { EventConsumerResult } from './events-consumer.js';
-import {
-  FatalError,
-  type StepInvocationQueueItem,
-  StepsNotRunError,
-} from './global.js';
+import { FatalError, StepsNotRunError } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import type { Serializable } from './schemas.js';
 import { hydrateStepReturnValue } from './serialization.js';
@@ -16,14 +13,18 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
     return (...args: Args): Promise<Result> => {
       const { promise, resolve, reject } = withResolvers<Result>();
 
-      const invocationId = ctx.globalThis.crypto.randomUUID();
+      const correlationId = `step_${ctx.generateUlid()}`;
       ctx.invocationsQueue.push({
         type: 'step',
+        correlationId,
         stepName,
         args,
-        invocationId,
       });
 
+      // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
+      // console.log(
+      //   `STEP CONSUMER SETUP ${correlationId} -> ${stepName}(${args.join(', ')})\n`
+      // );
       ctx.eventsConsumer.subscribe((event) => {
         if (!event) {
           // We've reached the end of the events, so this step has either not been run or is currently running.
@@ -38,53 +39,63 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
           return EventConsumerResult.NotConsumed;
         }
 
-        if (event.event_data.invocation_id !== invocationId) {
-          // We're not interested in this event - the invocationId belongs to a different step
+        // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
+        // console.log(
+        //   `STEP CONSUMER ${correlationId} -> ${stepName}(${args.join(', ')})\n`,
+        //   `->  incoming ${event.correlationId} ${correlationId === event.correlationId ? ' (match)' : ''}\n`,
+        //   `->  eventType: ${event.eventType}\n`
+        // );
+
+        if (event.correlationId !== correlationId) {
+          // We're not interested in this event - the correlationId belongs to a different step
           return EventConsumerResult.NotConsumed;
         }
 
-        if (event.event_type === 'step_started') {
+        if (event.eventType === 'step_started') {
           // Step has started - so remove from the invocations queue
           const invocationsQueueIndex = ctx.invocationsQueue.findIndex(
             (invocation) =>
               invocation.type === 'step' &&
-              (invocation as StepInvocationQueueItem).invocationId ===
-                invocationId
+              invocation.correlationId === correlationId
           );
           if (invocationsQueueIndex !== -1) {
             ctx.invocationsQueue.splice(invocationsQueueIndex, 1);
           } else {
             console.warn(
-              `Step ${stepName} started but not found in invocations queue (should not happen)`
+              `Step ${correlationId} (${stepName}) started but not found in invocations queue (should not happen)\n\n`,
+              `invocationsQueue: ${JSON.stringify(ctx.invocationsQueue, null, 2)}`
             );
           }
           return EventConsumerResult.Consumed;
         }
 
-        if (event.event_type === 'step_failed') {
+        if (event.eventType === 'step_failed') {
           // Step failed - bubble up to workflow
-          if (event.event_data.fatal) {
-            reject(new FatalError(event.event_data.error));
+          if (event.eventData.fatal) {
+            reject(new FatalError(event.eventData.error));
+            return EventConsumerResult.Finished;
           } else {
             // This is a retryable error, so nothing to do here,
             // but we will consume the event
             return EventConsumerResult.Consumed;
           }
-        } else if (event.event_type === 'step_result') {
+        } else if (event.eventType === 'step_completed') {
           // Step has already completed, so resolve the Promise with the cached result
           const hydratedResult = hydrateStepReturnValue(
-            event.event_data.result,
+            event.eventData.result,
             ctx.globalThis
           );
           resolve(hydratedResult);
+          return EventConsumerResult.Finished;
         } else {
-          // An unexpected event type has been received, but it does belong to this step (matching `invocationId`)
+          // An unexpected event type has been received, but it does belong to this step (matching `correlationId`)
           reject(
-            new FatalError(`Unexpected event type: "${event.event_type}"`)
+            new WorkflowRuntimeError(
+              `Unexpected event type: "${event.eventType}"`
+            )
           );
+          return EventConsumerResult.Finished;
         }
-
-        return EventConsumerResult.Finished;
       });
 
       return promise;

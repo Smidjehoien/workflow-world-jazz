@@ -1,33 +1,46 @@
 import { createContext } from '@vercel/workflow-vm';
+import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
+import type { Event } from './backend/index.js';
 import { EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
-import { createUseStep, type WorkflowOrchestratorContext } from './step.js';
+import type { WorkflowOrchestratorContext } from './private.js';
+import { createUseStep } from './step.js';
+
+// Helper to setup context to simulate a workflow run
+function setupWorkflowContext(events: Event[]): WorkflowOrchestratorContext {
+  const context = createContext({
+    seed: 'test',
+    fixedTimestamp: 1753481739458,
+  });
+  const ulid = monotonicFactory(() => context.globalThis.Math.random());
+  const workflowStartedAt = context.globalThis.Date.now();
+  return {
+    url: 'https://test.com',
+    workflowName: 'test',
+    workflowRunId: 'wrun_123',
+    globalThis: context.globalThis,
+    eventsConsumer: new EventsConsumer(events),
+    invocationsQueue: [],
+    generateUlid: () => ulid(workflowStartedAt), // All generated ulids use the workflow's started at time
+    onWorkflowError: vi.fn(),
+  };
+}
 
 describe('createUseStep', () => {
   it('should resolve with the result of a step', async () => {
-    const context = createContext({
-      seed: 'test',
-      fixedTimestamp: 1753481739458,
-    });
-    const ctx: WorkflowOrchestratorContext = {
-      globalThis: context.globalThis,
-      eventsConsumer: new EventsConsumer([
-        {
-          id: 'event-0',
-          workflow_run_id: 'run-123',
-          event_type: 'step_result',
-          event_data: {
-            result: [3],
-            invocation_id: 'd6f45471-b67f-4f0c-b60b-9ac709c285e1',
-          },
-          sequence_number: 0,
-          created_at: new Date(),
+    const ctx = setupWorkflowContext([
+      {
+        eventId: 'evnt_0',
+        runId: 'wrun_123',
+        eventType: 'step_completed',
+        correlationId: 'step_01K11TFZ62YS0YYFDQ3E8B9YCV',
+        eventData: {
+          result: [3],
         },
-      ]),
-      invocationsQueue: [],
-      onWorkflowError: vi.fn(),
-    };
+        createdAt: new Date(),
+      },
+    ]);
     const useStep = createUseStep(ctx);
     const add = useStep('add');
     const result = await add(1, 2);
@@ -36,29 +49,19 @@ describe('createUseStep', () => {
   });
 
   it('should reject with a fatal error if the step fails', async () => {
-    const context = createContext({
-      seed: 'test',
-      fixedTimestamp: 1753481739458,
-    });
-    const ctx: WorkflowOrchestratorContext = {
-      eventsConsumer: new EventsConsumer([
-        {
-          id: 'event-0',
-          workflow_run_id: 'run-123',
-          event_type: 'step_failed',
-          event_data: {
-            error: 'test',
-            fatal: true,
-            invocation_id: 'd6f45471-b67f-4f0c-b60b-9ac709c285e1',
-          },
-          sequence_number: 0,
-          created_at: new Date(),
+    const ctx = setupWorkflowContext([
+      {
+        eventId: 'evnt_0',
+        runId: 'wrun_123',
+        eventType: 'step_failed',
+        correlationId: 'step_01K11TFZ62YS0YYFDQ3E8B9YCV',
+        eventData: {
+          error: 'test',
+          fatal: true,
         },
-      ]),
-      invocationsQueue: [],
-      onWorkflowError: vi.fn(),
-      globalThis: context.globalThis,
-    };
+        createdAt: new Date(),
+      },
+    ]);
     const useStep = createUseStep(ctx);
     const add = useStep('add');
     let error: Error | undefined;
@@ -74,22 +77,13 @@ describe('createUseStep', () => {
   });
 
   it('should invoke workflow error handler if step is not run (single)', async () => {
+    const ctx = setupWorkflowContext([]);
     let workflowErrorReject: (err: Error) => void;
     const workflowErrorPromise = new Promise<Error>((_, reject) => {
       workflowErrorReject = reject;
     });
-
-    const context = createContext({
-      seed: 'test',
-      fixedTimestamp: 1753481739458,
-    });
-    const ctx: WorkflowOrchestratorContext = {
-      eventsConsumer: new EventsConsumer([]),
-      invocationsQueue: [],
-      onWorkflowError(err) {
-        workflowErrorReject(err);
-      },
-      globalThis: context.globalThis,
+    ctx.onWorkflowError = (err) => {
+      workflowErrorReject(err);
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -111,7 +105,7 @@ describe('createUseStep', () => {
             1,
             2,
           ],
-          "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
+          "correlationId": "step_01K11TFZ62YS0YYFDQ3E8B9YCV",
           "stepName": "add",
           "type": "step",
         },
@@ -125,17 +119,9 @@ describe('createUseStep', () => {
       workflowErrorReject = reject;
     });
 
-    const context = createContext({
-      seed: 'test',
-      fixedTimestamp: 1753481739458,
-    });
-    const ctx: WorkflowOrchestratorContext = {
-      eventsConsumer: new EventsConsumer([]),
-      invocationsQueue: [],
-      onWorkflowError(err) {
-        workflowErrorReject(err);
-      },
-      globalThis: context.globalThis,
+    const ctx = setupWorkflowContext([]);
+    ctx.onWorkflowError = (err) => {
+      workflowErrorReject(err);
     };
     const useStep = createUseStep(ctx);
     const add = useStep('add');
@@ -162,7 +148,7 @@ describe('createUseStep', () => {
             1,
             2,
           ],
-          "invocationId": "d6f45471-b67f-4f0c-b60b-9ac709c285e1",
+          "correlationId": "step_01K11TFZ62YS0YYFDQ3E8B9YCV",
           "stepName": "add",
           "type": "step",
         },
@@ -171,7 +157,7 @@ describe('createUseStep', () => {
             3,
             4,
           ],
-          "invocationId": "9ae6a38a-8447-4038-abcd-0ef772312266",
+          "correlationId": "step_01K11TFZ62YS0YYFDQ3E8B9YCW",
           "stepName": "add",
           "type": "step",
         },
@@ -180,7 +166,7 @@ describe('createUseStep', () => {
             5,
             6,
           ],
-          "invocationId": "87228e82-3254-4b8b-9fc1-de64969755b5",
+          "correlationId": "step_01K11TFZ62YS0YYFDQ3E8B9YCX",
           "stepName": "add",
           "type": "step",
         },

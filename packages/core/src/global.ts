@@ -51,23 +51,19 @@ export class RetryableError extends Error {
 
 export interface StepInvocationQueueItem {
   type: 'step';
+  correlationId: string;
   stepName: string;
   args: Serializable[];
-  invocationId: string;
 }
 
 export interface WebhookInvocationQueueItem {
   type: 'webhook';
-  webhookId: string;
-  webhookData: {
-    workflow_run_id: string;
-    webhook_id: string;
-    url?: string;
-    allowed_methods?: string[];
-    search_params_schema?: Record<string, any>;
-    headers_schema?: Record<string, any>;
-    body_schema?: Record<string, any>;
-  };
+  correlationId: string;
+  url?: string;
+  allowedMethods?: string[];
+  searchParamsSchema?: Record<string, any>;
+  headersSchema?: Record<string, any>;
+  bodySchema?: Record<string, any>;
 }
 
 export type QueueItem = StepInvocationQueueItem | WebhookInvocationQueueItem;

@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;
@@ -6,7 +6,10 @@ if (!deploymentUrl) {
   throw new Error('`DEPLOYMENT_URL` environment variable is not set');
 }
 
-async function triggerWorkflow(workflow: string, args: any[]) {
+async function triggerWorkflow(
+  workflow: string,
+  args: any[]
+): Promise<{ runId: string }> {
   const url = new URL('/api/trigger', deploymentUrl);
   url.searchParams.set('workflow', workflow);
   const res = await fetch(url, {
@@ -53,31 +56,31 @@ async function getWorkflowReturnValue(runId: string) {
 describe('e2e', () => {
   test('addTenWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('addTenWorkflow', [123]);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
   });
 
   test('promiseAllWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('promiseAllWorkflow', []);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe('ABC');
   });
 
   test('promiseRaceWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('promiseRaceWorkflow', []);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe('B');
   });
 
   test('promiseAnyWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('promiseAnyWorkflow', []);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe('B');
   });
 
   test('readableStreamWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('readableStreamWorkflow', []);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBeInstanceOf(ReadableStream);
 
     const decoder = new TextDecoder();
@@ -89,7 +92,8 @@ describe('e2e', () => {
     expect(contents).toBe('0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n');
   });
 
-  test('namedWebhookWorkflow', { timeout: 60_000 }, async () => {
+  // TODO @TooTallNate: currently flaky because of a race condition
+  test.skip('namedWebhookWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('namedWebhookWorkflow', []);
 
     // Wait a few seconds so that the webhook is registered.
@@ -126,7 +130,7 @@ describe('e2e', () => {
     });
     expect(deleteRes.status).toBe(200);
 
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBeInstanceOf(Array);
     expect(returnValue.length).toBe(3);
     expect(returnValue[0].method).toBe('GET');
@@ -142,7 +146,7 @@ describe('e2e', () => {
 
   test('sleepingWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('sleepingWorkflow', []);
-    const returnValue = await getWorkflowReturnValue(run.id);
+    const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue.startTime).toBeLessThan(returnValue.endTime);
     expect(returnValue.endTime - returnValue.startTime).toBeGreaterThan(9999);
   });

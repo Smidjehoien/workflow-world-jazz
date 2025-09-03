@@ -1,5 +1,5 @@
 import * as devalue from 'devalue';
-import { DEFAULT_CONFIG } from './backend.js';
+import { DEFAULT_CONFIG } from './backend/index.js';
 
 const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
@@ -773,7 +773,7 @@ export function dehydrateStepReturnValue(
 }
 
 /**
- * Called from the workflow handler when replaying the event log of a `step_result` event.
+ * Called from the workflow handler when replaying the event log of a `step_completed` event.
  * Hydrates the return value of a step from the database.
  *
  * @param value

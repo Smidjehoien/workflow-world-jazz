@@ -1,5 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 import { world } from './adapters/index.js';
+import type { Event } from './backend/events.js';
 import {
   createStep,
   createWebhook,
@@ -9,11 +10,12 @@ import {
   getWorkflowRun as getWorkflowRunFromDB,
   updateStep,
   updateWorkflowRun,
-  WorkflowAPIError,
-} from './backend.js';
+} from './backend/index.js';
 import {
+  WorkflowAPIError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
+  WorkflowRuntimeError,
 } from './errors.js';
 import type { WorkflowContext } from './get-context.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
@@ -62,13 +64,33 @@ export async function getWorkflowReturnValue(
   }
 
   if (run.status === 'failed') {
-    throw new WorkflowRunFailedError(
-      runId,
-      run.error_message ?? 'Unknown error'
-    );
+    throw new WorkflowRunFailedError(runId, run.error ?? 'Unknown error');
   }
 
   throw new WorkflowRunNotCompletedError(runId, run.status);
+}
+
+/**
+ * Loads all workflow run events by iterating through all pages of paginated results.
+ * This ensures that *all* events are loaded into memory before running the workflow.
+ */
+async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
+  const allEvents: Event[] = [];
+  let cursor: string | null = null;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await getWorkflowRunEvents({
+      runId,
+      pagination: cursor ? { cursor } : undefined,
+    });
+
+    allEvents.push(...response.data);
+    hasMore = response.hasMore;
+    cursor = response.cursor;
+  }
+
+  return allEvents;
 }
 
 /**
@@ -110,19 +132,19 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
             if (workflowRun.status === 'pending') {
               workflowRun = await updateWorkflowRun(runId, {
-                // This sets the `started_at` timestamp at the database level
+                // This sets the `startedAt` timestamp at the database level
                 status: 'running',
               });
             }
 
-            // At this point, the workflow is "running" and `started_at` should
+            // At this point, the workflow is "running" and `startedAt` should
             // definitely be set.
-            if (!workflowRun.started_at) {
+            if (!workflowRun.startedAt) {
               throw new Error(
-                `Workflow run "${runId}" has no "started_at" timestamp`
+                `Workflow run "${runId}" has no "startedAt" timestamp`
               );
             }
-            workflowStartedAt = +workflowRun.started_at;
+            workflowStartedAt = +workflowRun.startedAt;
 
             span?.setAttributes({
               ...Attribute.WorkflowRunStatus(workflowRun.status),
@@ -137,15 +159,10 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               return;
             }
 
-            // TODO: ensure that *all* events are loaded into memory before
-            // running, not just a paginated subset
-            const events = await getWorkflowRunEvents(workflowRun.id);
+            // Load all events into memory before running
+            const events = await getAllWorkflowRunEvents(workflowRun.runId);
 
-            const result = await runWorkflow(
-              workflowCode,
-              workflowRun,
-              events.data
-            );
+            const result = await runWorkflow(workflowCode, workflowRun, events);
 
             // Update the workflow run with the result
             await updateWorkflowRun(runId, {
@@ -155,7 +172,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
             span?.setAttributes({
               ...Attribute.WorkflowRunStatus('completed'),
-              ...Attribute.WorkflowEventsCount(events.data.length),
+              ...Attribute.WorkflowEventsCount(events.length),
             });
           } catch (err) {
             if (isInstanceOf(err, StepsNotRunError)) {
@@ -171,11 +188,9 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
                   try {
                     const step = await createStep(runId, {
-                      workflow_run_id: runId,
-                      invocation_id: queueItem.invocationId,
-                      step_name: queueItem.stepName,
-                      step_type: 'function_call',
-                      arguments: dehydratedArgs as Serializable[],
+                      stepId: queueItem.correlationId,
+                      stepName: queueItem.stepName,
+                      input: dehydratedArgs as Serializable[],
                     });
 
                     waitUntil(Promise.all(ops));
@@ -186,11 +201,11 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                         workflowName,
                         workflowStartedAt,
                         workflowRunId: runId,
-                        stepId: step.id,
+                        stepId: step.stepId,
                         traceCarrier: await serializeTraceCarrier(),
                       } satisfies StepInvokePayload,
                       {
-                        idempotencyKey: queueItem.invocationId,
+                        idempotencyKey: queueItem.correlationId,
                       }
                     );
                   } catch (err) {
@@ -200,7 +215,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                     ) {
                       // Step already exists, so we can skip it
                       console.warn(
-                        `Step "${queueItem.stepName}" with invocation ID "${queueItem.invocationId}" already exists, skipping: ${err.message}`
+                        `Step "${queueItem.stepName}" with correlation ID "${queueItem.correlationId}" already exists, skipping: ${err.message}`
                       );
                       continue;
                     }
@@ -210,31 +225,32 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                   // Handle webhook operations
                   try {
                     // Create webhook in database
-                    await createWebhook(queueItem.webhookData);
+                    await createWebhook(runId, {
+                      webhookId: queueItem.correlationId,
+                      url: queueItem.url,
+                      allowedMethods: queueItem.allowedMethods,
+                      headersSchema: queueItem.headersSchema,
+                      searchParamsSchema: queueItem.searchParamsSchema,
+                      bodySchema: queueItem.bodySchema,
+                    });
 
                     // Create webhook_created event in event log
                     await createWorkflowRunEvent(runId, {
-                      event_type: 'webhook_created',
-                      event_data: {
-                        webhook_id: queueItem.webhookId,
-                      },
+                      eventType: 'webhook_created',
+                      correlationId: queueItem.correlationId,
                     });
-
-                    console.log(
-                      `Created webhook "${queueItem.webhookId}" for workflow run "${runId}"`
-                    );
                   } catch (err) {
                     if (isInstanceOf(err, WorkflowAPIError)) {
                       if (err.status === 409) {
                         // Webhook already exists (duplicate webhook_id constraint), so we can skip it
                         console.warn(
-                          `Webhook "${queueItem.webhookId}" already exists, skipping: ${err.message}`
+                          `Webhook with correlation ID "${queueItem.correlationId}" already exists, skipping: ${err.message}`
                         );
                         continue;
                       } else if (err.status === 410) {
                         // Workflow has already completed, so no-op
                         console.warn(
-                          `Workflow run "${runId}" has already completed, skipping webhook "${queueItem.webhookId}": ${err.message}`
+                          `Workflow run "${runId}" has already completed, skipping webhook "${queueItem.correlationId}": ${err.message}`
                         );
                         continue;
                       }
@@ -247,7 +263,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                 ...Attribute.WorkflowRunStatus('pending_steps'),
                 ...Attribute.WorkflowStepsCreated(err.steps.length),
               });
-            } else if (isInstanceOf(err, Error)) {
+            } else {
               const errorName = getErrorName(err);
               const errorStack = getErrorStack(err);
               console.error(
@@ -255,26 +271,13 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               );
               await updateWorkflowRun(runId, {
                 status: 'failed',
-                error_name: errorName,
-                error_stack: errorStack,
-                error_message: String(err),
+                error: String(err),
+                // TODO: include error codes when we define them
+                // TODO: serialize/include the error name and stack?
               });
               span?.setAttributes({
                 ...Attribute.WorkflowRunStatus('failed'),
                 ...Attribute.WorkflowErrorName(errorName),
-              });
-            } else {
-              console.error(
-                `${getErrorName(
-                  err
-                )} while running "${runId}" workflow:\n\n${getErrorStack(err)}`
-              );
-              await updateWorkflowRun(runId, {
-                status: 'failed',
-                error_message: String(err),
-              });
-              span?.setAttributes({
-                ...Attribute.WorkflowRunStatus('failed'),
                 ...Attribute.WorkflowErrorMessage(String(err)),
               });
             }
@@ -333,9 +336,11 @@ export const vercelAPIStepsEntrypoint =
 
           let step = await getStep(workflowRunId, stepId);
 
+          // console.log(`STEP ${stepName}`, { step });
+
           span?.setAttributes({
             ...Attribute.StepStatus(step.status),
-            ...Attribute.StepRetryCount(step.retry_count),
+            ...Attribute.StepRetryCount(step.attempt),
           });
 
           let result: unknown;
@@ -345,17 +350,14 @@ export const vercelAPIStepsEntrypoint =
                 status: 'running',
               });
               await createWorkflowRunEvent(workflowRunId, {
-                event_type: 'step_started',
-                event_data: {
-                  step_id: stepId,
-                  invocation_id: step.invocation_id,
-                },
+                eventType: 'step_started',
+                correlationId: stepId,
               });
             }
 
             if (step.status !== 'running') {
               console.error(
-                `Step "${stepId}" has status "${step.status}", skipping${step.error_message ? `: ${step.error_message}` : ''}`
+                `Step "${stepId}" has status "${step.status}", skipping${step.error ? `: ${step.error}` : ''}`
               );
               span?.setAttributes({
                 ...Attribute.StepSkipped(true),
@@ -364,8 +366,10 @@ export const vercelAPIStepsEntrypoint =
               return;
             }
 
-            if (!step.started_at) {
-              throw new Error(`Step "${stepId}" has no "started_at" timestamp`);
+            if (!step.startedAt) {
+              throw new WorkflowRuntimeError(
+                `Step "${stepId}" has no "startedAt" timestamp`
+              );
             }
 
             // Hydrate the step input arguments
@@ -379,8 +383,8 @@ export const vercelAPIStepsEntrypoint =
             const ctx: WorkflowContext = {
               workflowRunId,
               workflowStartedAt: new Date(workflowStartedAt),
-              stepId: step.invocation_id,
-              stepStartedAt: new Date(+step.started_at),
+              stepId,
+              stepStartedAt: new Date(+step.startedAt),
               attempt: metadata.attempt,
               url: `https://${process.env.VERCEL_URL}`,
             };
@@ -392,10 +396,9 @@ export const vercelAPIStepsEntrypoint =
 
             // Update the event log with the step result
             await createWorkflowRunEvent(workflowRunId, {
-              event_type: 'step_result',
-              event_data: {
-                step_id: stepId,
-                invocation_id: step.invocation_id,
+              eventType: 'step_completed',
+              correlationId: stepId,
+              eventData: {
                 result: result as Serializable,
               },
             });
@@ -436,10 +439,9 @@ export const vercelAPIStepsEntrypoint =
             if (isInstanceOf(err, FatalError)) {
               // Fatal error - store the error in the event log and re-invoke the workflow
               await createWorkflowRunEvent(workflowRunId, {
-                event_type: 'step_failed',
-                event_data: {
-                  step_id: stepId,
-                  invocation_id: step.invocation_id,
+                eventType: 'step_failed',
+                correlationId: stepId,
+                eventData: {
                   error: String(err),
                   stack: err.stack,
                   fatal: true,
@@ -447,7 +449,9 @@ export const vercelAPIStepsEntrypoint =
               });
               await updateStep(workflowRunId, stepId, {
                 status: 'failed',
-                error_message: String(err),
+                error: String(err),
+                // TODO: include error codes when we define them
+                // TODO: serialize/include the error name and stack?
               });
 
               span?.setAttributes({
@@ -467,17 +471,16 @@ export const vercelAPIStepsEntrypoint =
                 // Max retries reached - store the error in the event log and re-invoke the workflow
                 const error = `Max retries reached`;
                 await createWorkflowRunEvent(workflowRunId, {
-                  event_type: 'step_failed',
-                  event_data: {
-                    step_id: stepId,
-                    invocation_id: step.invocation_id,
+                  eventType: 'step_failed',
+                  correlationId: stepId,
+                  eventData: {
                     error,
                     fatal: true,
                   },
                 });
                 await updateStep(workflowRunId, stepId, {
                   status: 'failed',
-                  error_message: error,
+                  error: error,
                 });
 
                 span?.setAttributes({
@@ -486,10 +489,9 @@ export const vercelAPIStepsEntrypoint =
                 });
               } else {
                 await createWorkflowRunEvent(workflowRunId, {
-                  event_type: 'step_failed',
-                  event_data: {
-                    step_id: stepId,
-                    invocation_id: step.invocation_id,
+                  eventType: 'step_failed',
+                  correlationId: stepId,
+                  eventData: {
                     error: String(err),
                     stack: getErrorStack(err),
                   },

@@ -1,4 +1,4 @@
-import type { Event } from './backend.js';
+import type { Event } from './backend/index.js';
 
 export enum EventConsumerResult {
   /**

@@ -37,4 +37,5 @@ export interface WorkflowOrchestratorContext {
   eventsConsumer: EventsConsumer;
   invocationsQueue: QueueItem[];
   onWorkflowError: (error: Error) => void;
+  generateUlid: () => string;
 }

@@ -23,11 +23,11 @@ async function retryableStep(): Promise<string> {
   const { attempt } = getContext();
   if (attempt === 1) {
     console.log(
-      'Throwing retryable error - this will be retried after 60 seconds'
+      'Throwing retryable error - this will be retried after 5 seconds'
     );
     throw new RetryableError('Retryable error', {
-      // Retry after one minute
-      retryAfter: '1m',
+      // Retry after 5 seconds
+      retryAfter: '5s',
     });
   }
   return 'Success';
@@ -68,7 +68,7 @@ export async function control_flow() {
     await failingStep();
   } catch (error) {
     // Only FatalErrors will bubble up here. Non-fatal errors are retried
-    console.log('Caught error:', error);
+    console.log('Caught error:', String(error));
   }
 
   // Demo retryable error - this will fail the first time,

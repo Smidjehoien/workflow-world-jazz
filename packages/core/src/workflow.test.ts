@@ -1,6 +1,6 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
-import type { Event, WorkflowRun } from './backend.js';
+import type { Event, WorkflowRun } from './backend/index.js';
 import type { StepsNotRunError } from './global.js';
 import {
   dehydrateStepReturnValue,
@@ -16,16 +16,17 @@ describe('runWorkflow', () => {
       const workflowCode = 'function workflow() { return "success"; }';
 
       const workflowRun: WorkflowRun = {
-        id: 'test-run-123',
-        workflow_name: 'workflow',
+        runId: 'wrun_123',
+        workflowName: 'workflow',
         status: 'running',
         input: dehydrateWorkflowArguments([], ops),
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-        started_at: new Date('2024-01-01T00:00:00.000Z'),
-        owner_id: 'test-owner',
-        project_id: 'test-project',
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
         environment: 'test',
+        deploymentId: 'test-deployment',
       };
 
       const events: Event[] = [];
@@ -39,16 +40,17 @@ describe('runWorkflow', () => {
       const workflowCode = 'function workflow(a, b) { return a + b; }';
 
       const workflowRun: WorkflowRun = {
-        id: 'test-run-123',
-        workflow_name: 'workflow',
+        runId: 'wrun_123',
+        workflowName: 'workflow',
         status: 'running',
         input: dehydrateWorkflowArguments([1, 2], ops),
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-        started_at: new Date('2024-01-01T00:00:00.000Z'),
-        owner_id: 'test-owner',
-        project_id: 'test-project',
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
         environment: 'test',
+        deploymentId: 'test-deployment',
       };
 
       const events: Event[] = [];
@@ -68,16 +70,17 @@ describe('runWorkflow', () => {
       }`;
 
       const workflowRun: WorkflowRun = {
-        id: 'test-run-123',
-        workflow_name: 'workflow',
+        runId: 'wrun_123',
+        workflowName: 'workflow',
         status: 'running',
         input: dehydrateWorkflowArguments([], ops),
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-        started_at: new Date('2024-01-01T00:00:00.000Z'),
-        owner_id: 'test-owner',
-        project_id: 'test-project',
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
         environment: 'test',
+        deploymentId: 'test-deployment',
       };
 
       const events: Event[] = [];
@@ -92,43 +95,40 @@ describe('runWorkflow', () => {
     });
   });
 
-  it('should resolve a step that has a `step_result` event', async () => {
+  it('should resolve a step that has a `step_completed` event', async () => {
     const ops: Promise<any>[] = [];
-    const workflowRunId = 'test-run-123';
+    const workflowRunId = 'wrun_123';
     const workflowRun: WorkflowRun = {
-      id: workflowRunId,
-      workflow_name: 'workflow',
+      runId: workflowRunId,
+      workflowName: 'workflow',
       status: 'running',
       input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
+      createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+      startedAt: new Date('2024-01-01T00:00:00.000Z'),
+      ownerId: 'test-owner',
+      projectId: 'test-project',
       environment: 'test',
+      deploymentId: 'test-deployment',
     };
 
     const events: Event[] = [
       {
-        id: 'event-0',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-        },
-        sequence_number: 0,
-        created_at: new Date(),
+        eventId: 'event-0',
+        runId: workflowRunId,
+        eventType: 'step_started',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HF',
+        createdAt: new Date(),
       },
       {
-        id: 'event-1',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
+        eventId: 'event-1',
+        runId: workflowRunId,
+        eventType: 'step_completed',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HF',
+        eventData: {
           result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
-        sequence_number: 1,
-        created_at: new Date(),
+        createdAt: new Date(),
       },
     ];
 
@@ -147,83 +147,72 @@ describe('runWorkflow', () => {
 
   it('should update the timestamp in the vm context as events are replayed', async () => {
     const ops: Promise<any>[] = [];
-    const workflowRunId = 'test-run-123';
+    const workflowRunId = 'wrun_123';
     const workflowRun: WorkflowRun = {
-      id: workflowRunId,
-      workflow_name: 'workflow',
+      runId: workflowRunId,
+      workflowName: 'workflow',
       status: 'running',
       input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
+      createdAt: new Date('2024-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+      startedAt: new Date('2024-01-01T00:00:00.000Z'),
+      ownerId: 'test-owner',
+      projectId: 'test-project',
       environment: 'test',
+      deploymentId: 'test-deployment',
     };
 
     const events: Event[] = [
       {
-        id: 'event-0',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-        },
-        sequence_number: 0,
-        created_at: new Date('2024-01-01T00:00:01.000Z'),
+        eventId: 'event-0',
+        runId: workflowRunId,
+        eventType: 'step_started',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HF',
+        createdAt: new Date('2024-01-01T00:00:01.000Z'),
       },
       {
-        id: 'event-1',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
+        eventId: 'event-1',
+        runId: workflowRunId,
+        eventType: 'step_completed',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HF',
+        eventData: {
           result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
         },
-        sequence_number: 1,
-        created_at: new Date('2024-01-01T00:00:02.000Z'),
+        createdAt: new Date('2024-01-01T00:00:02.000Z'),
       },
       {
-        id: 'event-2',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
-        },
-        sequence_number: 2,
-        created_at: new Date('2024-01-01T00:00:03.000Z'),
+        eventId: 'event-2',
+        runId: workflowRunId,
+        eventType: 'step_started',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HG',
+        createdAt: new Date('2024-01-01T00:00:03.000Z'),
       },
       {
-        id: 'event-3',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
+        eventId: 'event-3',
+        runId: workflowRunId,
+        eventType: 'step_completed',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HG',
+        eventData: {
           result: dehydrateStepReturnValue(3, ops),
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
         },
-        sequence_number: 3,
-        created_at: new Date('2024-01-01T00:00:04.000Z'),
+        createdAt: new Date('2024-01-01T00:00:04.000Z'),
       },
       {
-        id: 'event-4',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'ab4359f5-1521-4d72-b5e9-13e841129b90',
-        },
-        sequence_number: 4,
-        created_at: new Date('2024-01-01T00:00:05.000Z'),
+        eventId: 'event-4',
+        runId: workflowRunId,
+        eventType: 'step_started',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HH',
+        createdAt: new Date('2024-01-01T00:00:05.000Z'),
       },
       {
-        id: 'event-5',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
+        eventId: 'event-5',
+        runId: workflowRunId,
+        eventType: 'step_completed',
+        correlationId: 'step_01HK153X00Y11PCQTCHQRK34HH',
+        eventData: {
           result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'ab4359f5-1521-4d72-b5e9-13e841129b90',
         },
-        sequence_number: 5,
-        created_at: new Date('2024-01-01T00:00:06.000Z'),
+        createdAt: new Date('2024-01-01T00:00:06.000Z'),
       },
     ];
 
@@ -251,223 +240,283 @@ describe('runWorkflow', () => {
     ]);
   });
 
-  it('should resolve `Promise.all()` steps that have `step_result` events', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRunId = 'test-run-123';
-    const workflowRun: WorkflowRun = {
-      id: workflowRunId,
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+  // TODO: Date.now determinism is currently broken in the workflow!!
+  it.fails(
+    'should maintain determinism of `Date` across executions',
+    async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRunId = 'test-run-123';
+      const workflowRun: WorkflowRun = {
+        runId: workflowRunId,
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-1',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-2',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        {
+          eventId: 'event-2',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            result: dehydrateStepReturnValue(undefined, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:03.000Z'),
         },
-        sequence_number: 2,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-3',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(7, ops),
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
-        },
-        sequence_number: 3,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      const workflowCode = `
+      const sleep = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("sleep");
+      async function workflow() {
+        await Promise.race([sleep(1), sleep(2)]);
+        return Date.now();
+      }`;
+
+      // Execute the workflow with only sleep(1) resolved
+      const result1 = await runWorkflow(workflowCode, workflowRun, events);
+
+      // Execute again with both sleeps resolved this time
+      const result2 = await runWorkflow(workflowCode, workflowRun, [
+        ...events,
+        {
+          eventId: 'event-3',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(undefined, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:04.000Z'),
+        },
+      ]);
+
+      // The date should be the same
+      const date1 = hydrateWorkflowReturnValue(result1 as any, ops);
+      const date2 = hydrateWorkflowReturnValue(result2 as any, ops);
+      expect(date1).toEqual(date2);
+    }
+  );
+
+  describe('concurrency', () => {
+    it('should resolve `Promise.all()` steps that have `step_completed` events', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRunId = 'test-run-123';
+      const workflowRun: WorkflowRun = {
+        runId: workflowRunId,
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-2',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-3',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(7, ops),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
           }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([3, 7]);
-  });
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([3, 7]);
+    });
 
-  it('should resolve `Promise.race()` steps that have `step_result` events (first promise resolves first)', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRunId = 'test-run-123';
-    const workflowRun: WorkflowRun = {
-      id: workflowRunId,
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should resolve `Promise.race()` steps that have `step_completed` events (first promise resolves first)', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRunId = 'test-run-123';
+      const workflowRun: WorkflowRun = {
+        runId: workflowRunId,
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-1',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date(),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-2',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        {
+          eventId: 'event-2',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 2,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-3',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(7, ops),
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-3',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(7, ops),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 3,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      const result = await runWorkflow(
+        `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
           }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(3);
-  });
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(3);
+    });
 
-  it('should resolve `Promise.race()` steps that have `step_result` events (second promise resolves first)', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRunId = 'test-run-123';
-    const workflowRun: WorkflowRun = {
-      id: workflowRunId,
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should resolve `Promise.race()` steps that have `step_completed` events (second promise resolves first)', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRunId = 'test-run-123';
+      const workflowRun: WorkflowRun = {
+        runId: workflowRunId,
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-1',
+          runId: workflowRunId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date(),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-2',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(7, ops),
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-2',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            result: dehydrateStepReturnValue(7, ops),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 2,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-3',
-        workflow_run_id: workflowRunId,
-        event_type: 'step_result',
-        event_data: {
-          result: dehydrateStepReturnValue(3, ops),
-          invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+        {
+          eventId: 'event-3',
+          runId: workflowRunId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 3,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      const result = await runWorkflow(
+        `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
           }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(7);
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(7);
+    });
   });
 
   describe('error handling', () => {
@@ -476,16 +525,17 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'value',
+          runId: 'test-run-123',
+          workflowName: 'value',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
@@ -506,16 +556,17 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'workflow',
+          runId: 'test-run-123',
+          workflowName: 'workflow',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
@@ -538,16 +589,17 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'workflow',
+          runId: 'test-run-123',
+          workflowName: 'workflow',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
@@ -572,7 +624,7 @@ describe('runWorkflow', () => {
         {
           type: 'step',
           stepName: 'add',
-          invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
           args: [1, 2],
         },
       ]);
@@ -583,28 +635,26 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'workflow',
+          runId: 'test-run-123',
+          workflowName: 'workflow',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [
           {
-            id: 'event-0',
-            workflow_run_id: workflowRun.id,
-            event_type: 'step_started',
-            event_data: {
-              invocation_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-            },
-            sequence_number: 0,
-            created_at: new Date(),
+            eventId: 'event-0',
+            runId: workflowRun.runId,
+            eventType: 'step_started',
+            correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+            createdAt: new Date(),
           },
         ];
 
@@ -632,16 +682,17 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'workflow',
+          runId: 'test-run-123',
+          workflowName: 'workflow',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
@@ -665,13 +716,13 @@ describe('runWorkflow', () => {
         {
           type: 'step',
           stepName: 'add',
-          invocationId: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
           args: [1, 2],
         },
         {
           type: 'step',
           stepName: 'add',
-          invocationId: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
           args: [3, 4],
         },
       ]);
@@ -682,16 +733,17 @@ describe('runWorkflow', () => {
       try {
         const ops: Promise<any>[] = [];
         const workflowRun: WorkflowRun = {
-          id: 'test-run-123',
-          workflow_name: 'workflow',
+          runId: 'test-run-123',
+          workflowName: 'workflow',
           status: 'running',
           input: dehydrateWorkflowArguments([], ops),
-          created_at: new Date('2024-01-01T00:00:00.000Z'),
-          updated_at: new Date('2024-01-01T00:00:00.000Z'),
-          started_at: new Date('2024-01-01T00:00:00.000Z'),
-          owner_id: 'test-owner',
-          project_id: 'test-project',
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
           environment: 'test',
+          deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
@@ -719,205 +771,205 @@ describe('runWorkflow', () => {
     });
   });
 
-  it('should throw `StepsNotRunError` when a webhook is awaiting without a "webhook_request" event', async () => {
-    let error: Error | undefined;
-    try {
-      const ops: Promise<any>[] = [];
-      const workflowRun: WorkflowRun = {
-        id: 'test-run-123',
-        workflow_name: 'workflow',
-        status: 'running',
-        input: dehydrateWorkflowArguments([], ops),
-        created_at: new Date('2024-01-01T00:00:00.000Z'),
-        updated_at: new Date('2024-01-01T00:00:00.000Z'),
-        started_at: new Date('2024-01-01T00:00:00.000Z'),
-        owner_id: 'test-owner',
-        project_id: 'test-project',
-        environment: 'test',
-      };
+  describe('webhook', () => {
+    it('should throw `StepsNotRunError` when a webhook is awaiting without a "webhook_request" event', async () => {
+      let error: Error | undefined;
+      try {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          ownerId: 'test-owner',
+          projectId: 'test-project',
+          environment: 'test',
+          deploymentId: 'test-deployment',
+        };
 
-      const events: Event[] = [];
+        const events: Event[] = [];
 
-      await runWorkflow(
-        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+        await runWorkflow(
+          `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
           async function workflow() {
             const webhook = getWebhook();
             const req = await webhook;
             return req.url;
           }`,
-        workflowRun,
-        events
-      );
-    } catch (err) {
-      error = err;
-    }
-    assert(error);
-    expect(error.name).toEqual('StepsNotRunError');
-    expect(error.message).toEqual('1 webhooks have not been created yet');
-    expect((error as StepsNotRunError).steps).toHaveLength(1);
-    expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
-  });
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err;
+      }
+      assert(error);
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('1 webhooks have not been created yet');
+      expect((error as StepsNotRunError).steps).toHaveLength(1);
+      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+    });
 
-  it('should resolve `getWebhook` await upon "webhook_request" event', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should resolve `getWebhook` await upon "webhook_request" event', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      const result = await runWorkflow(
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
         const webhook = getWebhook();
         const req = await webhook;
         return req.url;
       }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(
-      'https://example.com/'
-    );
-  });
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(
+        'https://example.com/'
+      );
+    });
 
-  it('should resolve multiple `getWebhook` awaits upon "webhook_request" events', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should resolve multiple `getWebhook` awaits upon "webhook_request" events', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com/2'),
-            ops
-          ),
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com/2'),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      const result = await runWorkflow(
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
         const webhook = getWebhook();
         const req1 = await webhook;
         const req2 = await webhook;
         return [req1.url, req2.url];
       }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
-      'https://example.com/',
-      'https://example.com/2',
-    ]);
-  });
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+        'https://example.com/',
+        'https://example.com/2',
+      ]);
+    });
 
-  it('should support `for await` loops with `getWebhook`', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should support `for await` loops with `getWebhook`', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com/2', {
-              method: 'POST',
-            }),
-            ops
-          ),
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com/2', {
+                method: 'POST',
+              }),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      const result = await runWorkflow(
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
         const webhook = getWebhook();
         const reqs = [];
@@ -929,150 +981,144 @@ describe('runWorkflow', () => {
         }
         return reqs;
       }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
-      { url: 'https://example.com/', method: 'GET' },
-      { url: 'https://example.com/2', method: 'POST' },
-    ]);
-  });
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+        { url: 'https://example.com/', method: 'GET' },
+        { url: 'https://example.com/2', method: 'POST' },
+      ]);
+    });
 
-  it('should support multiple "webhook_request" events even when the workflow is only interested in one', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should support multiple "webhook_request" events even when the workflow is only interested in one', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com/2', {
-              method: 'POST',
-            }),
-            ops
-          ),
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com/2', {
+                method: 'POST',
+              }),
+              ops
+            ),
+          },
+          createdAt: new Date(),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      const result = await runWorkflow(
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       async function workflow() {
         const webhook = getWebhook();
         const req = await webhook;
         return { url: req.url, method: req.method };
       }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
-      url: 'https://example.com/',
-      method: 'GET',
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+        url: 'https://example.com/',
+        method: 'GET',
+      });
     });
-  });
 
-  it('should support multiple queued "webhook_request" events with step events in between', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should support multiple queued "webhook_request" events with step events in between', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com/2', {
-              method: 'POST',
-            }),
-            ops
-          ),
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com/2', {
+                method: 'POST',
+              }),
+              ops
+            ),
+          },
+          createdAt: new Date('2024-01-01T00:00:02.000Z'),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-2',
-        workflow_run_id: workflowRun.id,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-2',
+          runId: workflowRun.runId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date('2024-01-01T00:00:03.000Z'),
         },
-        sequence_number: 2,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-3',
-        workflow_run_id: workflowRun.id,
-        event_type: 'step_result',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
-          result: dehydrateStepReturnValue(3, ops),
+        {
+          eventId: 'event-3',
+          runId: workflowRun.runId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:04.000Z'),
         },
-        sequence_number: 3,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    const result = await runWorkflow(
-      `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      const result = await runWorkflow(
+        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
       async function workflow() {
         const webhook = getWebhook();
@@ -1087,75 +1133,71 @@ describe('runWorkflow', () => {
           method2: req2.method,
         };
       }`,
-      workflowRun,
-      events
-    );
-    expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
-      url: 'https://example.com/',
-      method: 'GET',
-      a: 3,
-      url2: 'https://example.com/2',
-      method2: 'POST',
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+        url: 'https://example.com/',
+        method: 'GET',
+        a: 3,
+        url2: 'https://example.com/2',
+        method2: 'POST',
+      });
     });
-  });
 
-  it('should throw `StepsNotRunError` when a webhook is awaited after the event log is empty', async () => {
-    const ops: Promise<any>[] = [];
-    const workflowRun: WorkflowRun = {
-      id: 'test-run-123',
-      workflow_name: 'workflow',
-      status: 'running',
-      input: dehydrateWorkflowArguments([], ops),
-      created_at: new Date('2024-01-01T00:00:00.000Z'),
-      updated_at: new Date('2024-01-01T00:00:00.000Z'),
-      started_at: new Date('2024-01-01T00:00:00.000Z'),
-      owner_id: 'test-owner',
-      project_id: 'test-project',
-      environment: 'test',
-    };
+    it('should throw `StepsNotRunError` when a webhook is awaited after the event log is empty', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        ownerId: 'test-owner',
+        projectId: 'test-project',
+        environment: 'test',
+        deploymentId: 'test-deployment',
+      };
 
-    const events: Event[] = [
-      {
-        id: 'event-0',
-        workflow_run_id: workflowRun.id,
-        event_type: 'webhook_request',
-        event_data: {
-          webhook_id: 'e93eb481-2e7f-43dc-9ab7-475ed32659f6',
-          request: dehydrateStepReturnValue(
-            new Request('https://example.com'),
-            ops
-          ),
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'webhook_request',
+          correlationId: 'wbhk_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            request: dehydrateStepReturnValue(
+              new Request('https://example.com'),
+              ops
+            ),
+          },
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
         },
-        sequence_number: 0,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-1',
-        workflow_run_id: workflowRun.id,
-        event_type: 'step_started',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date('2024-01-01T00:00:02.000Z'),
         },
-        sequence_number: 1,
-        created_at: new Date(),
-      },
-      {
-        id: 'event-2',
-        workflow_run_id: workflowRun.id,
-        event_type: 'step_result',
-        event_data: {
-          invocation_id: '84459663-47c5-4dd4-b3cc-08d267df2c13',
-          result: dehydrateStepReturnValue(3, ops),
+        {
+          eventId: 'event-2',
+          runId: workflowRun.runId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:03.000Z'),
         },
-        sequence_number: 2,
-        created_at: new Date(),
-      },
-    ];
+      ];
 
-    let error: Error | undefined;
-    try {
-      await runWorkflow(
-        `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
+      let error: Error | undefined;
+      try {
+        await runWorkflow(
+          `const getWebhook = globalThis[Symbol.for("WORKFLOW_GET_WEBHOOK")];
       const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
       async function workflow() {
         const webhook = getWebhook();
@@ -1163,16 +1205,17 @@ describe('runWorkflow', () => {
           await add(1, 2);
         }
       }`,
-        workflowRun,
-        events
-      );
-    } catch (err) {
-      error = err;
-    }
-    assert(error);
-    expect(error.name).toEqual('StepsNotRunError');
-    expect(error.message).toEqual('1 webhooks have not been created yet');
-    expect((error as StepsNotRunError).steps).toHaveLength(1);
-    expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err;
+      }
+      assert(error);
+      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.message).toEqual('1 webhooks have not been created yet');
+      expect((error as StepsNotRunError).steps).toHaveLength(1);
+      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+    });
   });
 });

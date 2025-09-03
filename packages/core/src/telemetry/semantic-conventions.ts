@@ -37,7 +37,7 @@
  * @packageDocumentation
  */
 
-import type { Step, WorkflowRun } from '../backend.js';
+import type { Step, WorkflowRun } from '../backend/index.js';
 
 /**
  * Creates a semantic convention function that returns an attribute object.

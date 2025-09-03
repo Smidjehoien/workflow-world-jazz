@@ -1,6 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 import { world } from '../adapters/index.js';
-import { createWorkflowRun, type WorkflowRun } from '../backend.js';
+import { createWorkflowRun, type WorkflowRun } from '../backend/index.js';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
@@ -57,15 +57,15 @@ export async function start(
     const traceCarrier = await serializeTraceCarrier();
 
     const run = await createWorkflowRun({
-      deployment_id: deploymentId,
-      workflow_name: workflowName,
-      arguments: workflowArguments,
-      execution_context: { traceCarrier },
+      deploymentId: deploymentId,
+      workflowName: workflowName,
+      input: workflowArguments,
+      executionContext: { traceCarrier },
     });
     waitUntil(Promise.all(ops));
 
     span?.setAttributes({
-      ...Attribute.WorkflowRunId(run.id),
+      ...Attribute.WorkflowRunId(run.runId),
       ...Attribute.WorkflowRunStatus(run.status),
       ...Attribute.DeploymentId(deploymentId),
     });
@@ -77,7 +77,7 @@ export async function start(
     }
 
     await world.queue(`__wkf_workflow_${workflowName}`, {
-      runId: run.id,
+      runId: run.runId,
       traceCarrier,
     } satisfies WorkflowInvokePayload);
 

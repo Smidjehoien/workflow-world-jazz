@@ -1,6 +1,8 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
-import type { Event, WorkflowRun } from './backend.js';
+import { monotonicFactory } from 'ulid';
+
+import type { Event, WorkflowRun } from './backend/index.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import type { WorkflowContext } from './get-context.js';
 import { ENOTSUP } from './global.js';
@@ -21,18 +23,18 @@ export async function runWorkflow(
   workflowRun: WorkflowRun,
   events: Event[]
 ): Promise<unknown> {
-  return trace(`WORKFLOW.run ${workflowRun.workflow_name}`, async (span) => {
+  return trace(`WORKFLOW.run ${workflowRun.workflowName}`, async (span) => {
     span?.setAttributes({
-      ...Attribute.WorkflowName(workflowRun.workflow_name),
-      ...Attribute.WorkflowRunId(workflowRun.id),
+      ...Attribute.WorkflowName(workflowRun.workflowName),
+      ...Attribute.WorkflowRunId(workflowRun.runId),
       ...Attribute.WorkflowRunStatus(workflowRun.status),
       ...Attribute.WorkflowEventsCount(events.length),
     });
 
-    const startedAt = workflowRun.started_at;
+    const startedAt = workflowRun.startedAt;
     if (!startedAt) {
       throw new Error(
-        `Workflow run "${workflowRun.id}" has no "started_at" timestamp (should not happen)`
+        `Workflow run "${workflowRun.runId}" has no "startedAt" timestamp (should not happen)`
       );
     }
 
@@ -41,27 +43,29 @@ export async function runWorkflow(
       globalThis: vmGlobalThis,
       updateTimestamp,
     } = createContext({
-      seed: workflowRun.id,
+      seed: workflowRun.runId,
       fixedTimestamp: +startedAt,
     });
 
     const workflowDiscontinuation = withResolvers<void>();
 
     const url = `https://${process.env.VERCEL_URL}`;
+    const ulid = monotonicFactory(() => vmGlobalThis.Math.random());
 
     const workflowContext: WorkflowOrchestratorContext = {
       url,
-      workflowName: workflowRun.workflow_name,
-      workflowRunId: workflowRun.id,
+      workflowName: workflowRun.workflowName,
+      workflowRunId: workflowRun.runId,
       globalThis: vmGlobalThis,
       onWorkflowError: workflowDiscontinuation.reject,
       eventsConsumer: new EventsConsumer(events),
+      generateUlid: () => ulid(+startedAt),
       invocationsQueue: [],
     };
 
     // Subscribe to the events log to update the timestamp in the vm context
     workflowContext.eventsConsumer.subscribe((event) => {
-      const createdAt = event?.created_at;
+      const createdAt = event?.createdAt;
       if (createdAt) {
         updateTimestamp(+createdAt);
       }
@@ -79,7 +83,7 @@ export async function runWorkflow(
 
     // For the workflow VM, we store the context in a symbol on the `globalThis` object
     const ctx: WorkflowContext = {
-      workflowRunId: workflowRun.id,
+      workflowRunId: workflowRun.runId,
       workflowStartedAt: new vmGlobalThis.Date(+startedAt),
       get stepId(): string {
         throw ENOTSUP();
@@ -287,14 +291,14 @@ export async function runWorkflow(
 
     // Get a reference to the user-defined workflow function
     const workflowFn = runInContext(
-      `${workflowCode};${workflowRun.workflow_name}`,
+      `${workflowCode};${workflowRun.workflowName}`,
       context
     );
 
     if (typeof workflowFn !== 'function') {
       throw new ReferenceError(
         `Workflow ${JSON.stringify(
-          workflowRun.workflow_name
+          workflowRun.workflowName
         )} must be a function, but got "${typeof workflowFn}" instead`
       );
     }

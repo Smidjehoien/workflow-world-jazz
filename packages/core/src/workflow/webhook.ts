@@ -1,12 +1,9 @@
 import type { JSONSchema7 } from 'json-schema';
 import z from 'zod';
-import type { Event } from '../backend.js';
+import type { WebhookRequestEvent } from '../backend/events.js';
 import { EventConsumerResult } from '../events-consumer.js';
 import type { Webhook, WebhookOptions, WebhookSchema } from '../get-webhook.js';
-import {
-  StepsNotRunError,
-  type WebhookInvocationQueueItem,
-} from '../global.js';
+import { StepsNotRunError } from '../global.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
 import { hydrateStepReturnValue } from '../serialization.js';
 import { type PromiseWithResolvers, withResolvers } from '../util.js';
@@ -50,7 +47,7 @@ function toJSONSchemaRecord(
 
 export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
   return function getWebhook(options: WebhookOptions = {}): Webhook {
-    const { url, workflowRunId } = ctx;
+    const { url } = ctx;
 
     // `options.url` is a pathname, not a full URL
     if (options.url && !options.url.startsWith('/')) {
@@ -58,29 +55,23 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
     }
 
     // Deterministically generated webhook ID for this webhook
-    const webhookId = ctx.globalThis.crypto.randomUUID();
-
-    // Prepare webhook data for database creation
-    const webhookData: WebhookInvocationQueueItem['webhookData'] = {
-      url: options.url,
-      workflow_run_id: workflowRunId,
-      webhook_id: webhookId,
-      allowed_methods: options.method
-        ? typeof options.method === 'string'
-          ? [options.method]
-          : options.method
-        : ['POST'],
-      headers_schema: toJSONSchemaRecord(options.headers),
-      search_params_schema: toJSONSchemaRecord(options.searchParams),
-      body_schema: toJSONSchema(options.body),
-    };
+    const webhookId = ctx.generateUlid();
+    const correlationId = `wbhk_${webhookId}`;
 
     // Add webhook creation to invocations queue instead of creating immediately
     // This ensures proper replay behavior and idempotency
     ctx.invocationsQueue.push({
       type: 'webhook',
-      webhookId,
-      webhookData,
+      correlationId,
+      url: options.url,
+      allowedMethods: options.method
+        ? typeof options.method === 'string'
+          ? [options.method]
+          : options.method
+        : ['POST'],
+      headersSchema: toJSONSchemaRecord(options.headers),
+      searchParamsSchema: toJSONSchemaRecord(options.searchParams),
+      bodySchema: toJSONSchema(options.body),
     });
 
     // Construct the webhook URL using the webhook ID
@@ -89,13 +80,15 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
     const webhookUrl = new URL(pathname, url);
 
     // Queue of webhook events that have been received but not yet processed
-    const requestsQueue: Event[] = [];
+    const requestsQueue: WebhookRequestEvent[] = [];
 
     // Queue of promises that resolve to the next webhook request
     const promises: PromiseWithResolvers<Request>[] = [];
 
     let eventLogEmpty = false;
 
+    // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
+    // console.log(`WEBHOOK CONSUMER SETUP ${correlationId}\n`);
     ctx.eventsConsumer.subscribe((event) => {
       // If there are no events and there are promises waiting,
       // it means the webhook has been awaited, but an incoming request has not yet been received on the webhook URL.
@@ -113,16 +106,22 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
         }
       }
 
+      // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
+      // console.log(
+      //   `WEBHOOK CONSUMER ${correlationId}\n`,
+      //   `->  incoming ${event?.correlationId}${correlationId === event?.correlationId ? ' match' : ''}\n`,
+      //   `->  eventType: ${event?.eventType}\n`
+      // );
+
       // Check for webhook_created event to remove this webhook from the queue if it was already created
       if (
-        event?.event_type === 'webhook_created' &&
-        event.event_data.webhook_id === webhookId
+        event?.eventType === 'webhook_created' &&
+        event.correlationId === correlationId
       ) {
         // Remove this webhook from the invocations queue if it exists
         const index = ctx.invocationsQueue.findIndex(
           (item) =>
-            item.type === 'webhook' &&
-            (item as WebhookInvocationQueueItem).webhookId === webhookId
+            item.type === 'webhook' && item.correlationId === correlationId
         );
         if (index !== -1) {
           ctx.invocationsQueue.splice(index, 1);
@@ -131,15 +130,15 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
       }
 
       if (
-        event?.event_type === 'webhook_request' &&
-        event.event_data.webhook_id === webhookId
+        event?.eventType === 'webhook_request' &&
+        event.correlationId === correlationId
       ) {
         if (promises.length > 0) {
           const next = promises.shift();
           if (next) {
             // Reconstruct the Request object from the event data
             const request = hydrateStepReturnValue(
-              event.event_data.request,
+              event.eventData.request,
               ctx.globalThis
             );
             next.resolve(request);
@@ -161,7 +160,7 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
         const nextRequest = requestsQueue.shift();
         if (nextRequest) {
           const request = hydrateStepReturnValue(
-            nextRequest.event_data.request,
+            nextRequest.eventData.request,
             ctx.globalThis
           );
           resolvers.resolve(request);
