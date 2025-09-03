@@ -1,5 +1,16 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.22
+
+### Patch Changes
+
+- 8a80797: Docs: add more troubleshooting instructions
+- d19b423: Update core to use new workflow server implementation
+- Updated dependencies [a88eeba]
+- Updated dependencies [d19b423]
+  - @vercel/workflow-core@0.0.1-alpha.15
+  - @vercel/workflow-cli@0.0.1-alpha.21
+
 ## 0.0.1-alpha.21
 
 ### Patch Changes

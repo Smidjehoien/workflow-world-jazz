@@ -1,5 +1,12 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- a88eeba: automatic oidc token refresh (using newer @vercel/oidc package)
+- d19b423: Update core to use new workflow server implementation
+
 ## 0.0.1-alpha.14
 
 ### Patch Changes

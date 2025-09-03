@@ -1,5 +1,14 @@
 # @workflow/example-app
 
+## 0.0.2-alpha.15
+
+### Patch Changes
+
+- d19b423: Update core to use new workflow server implementation
+- Updated dependencies [a88eeba]
+- Updated dependencies [d19b423]
+  - @vercel/workflow-core@0.0.1-alpha.15
+
 ## 0.0.2-alpha.14
 
 ### Patch Changes
