@@ -53,7 +53,7 @@ async function getWorkflowReturnValue(runId: string) {
   }
 }
 
-describe('e2e', () => {
+describe.concurrent('e2e', () => {
   test('addTenWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('addTenWorkflow', [123]);
     const returnValue = await getWorkflowReturnValue(run.runId);
@@ -149,5 +149,11 @@ describe('e2e', () => {
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue.startTime).toBeLessThan(returnValue.endTime);
     expect(returnValue.endTime - returnValue.startTime).toBeGreaterThan(9999);
+  });
+
+  test('nullByteWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('nullByteWorkflow', []);
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue).toBe('null byte \0');
   });
 });
