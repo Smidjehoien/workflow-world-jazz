@@ -74,8 +74,8 @@ export function withWorkflow(
     // as Next.js uses child processes for different builds
     if (typeof process.send !== 'function') {
       const workflowBuilder = new NextBuilder({
-        // Support both workflows and src/workflows folders
-        dirs: ['workflows', 'src/workflows'],
+        // discover workflows from pages/app entries
+        dirs: ['pages', 'app', 'src/pages', 'src/app'],
         workingDir: process.cwd(),
         buildTarget: 'next',
         workflowsBundlePath: '',

@@ -14,8 +14,6 @@ export class NextBuilder extends BaseBuilder {
 
     await writeFile(join(apiGeneratedDir, '.gitignore'), '*');
 
-    // TODO: discover 'use workflow' and 'use step' files as inputs
-    // instead of relying on workflows folder (will need to support watching)
     await this.buildStepsFunction(apiGeneratedDir);
     await this.buildWorkflowsFunction(apiGeneratedDir);
     await this.writeFunctionsConfig(outputDir);
@@ -68,8 +66,14 @@ export class NextBuilder extends BaseBuilder {
     const stepsRouteDir = join(apiGeneratedDir, 'steps');
     await mkdir(stepsRouteDir, { recursive: true });
     await this.createStepsBundle({
+      // If any dynamic requires are used when bundling with ESM
+      // esbuild will create a too dynamic wrapper around require
+      // which turbopack/webpack fail to analyze. If we externalize
+      // correctly this shouldn't be an issue although we might want
+      // to use cjs as alternative to avoid
       format: 'esm',
       outfile: join(stepsRouteDir, 'route.js'),
+      externalizeNonSteps: true,
     });
   }
 

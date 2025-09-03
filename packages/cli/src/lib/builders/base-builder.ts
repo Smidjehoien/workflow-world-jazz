@@ -1,9 +1,14 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { promisify } from 'node:util';
+import enhancedResolveOriginal from 'enhanced-resolve';
 import * as esbuild from 'esbuild';
 import { glob } from 'tinyglobby';
 import type { WorkflowConfig } from '../config/types.js';
+import { createDiscoverEntriesPlugin } from './discover-entries-esbuild-plugin.js';
 import { createSwcPlugin } from './swc-esbuild-plugin.js';
+
+const enhancedResolve = promisify(enhancedResolveOriginal);
 
 export abstract class BaseBuilder {
   protected config: WorkflowConfig;
@@ -14,8 +19,13 @@ export abstract class BaseBuilder {
 
   abstract build(): Promise<void>;
 
+  private cachedInputFiles: string[] | undefined;
+
   protected async getInputFiles(): Promise<string[]> {
-    return glob(
+    if (this.cachedInputFiles) {
+      return this.cachedInputFiles;
+    }
+    const result = await glob(
       this.config.dirs.map(
         (dir) =>
           `${resolve(
@@ -34,27 +44,92 @@ export abstract class BaseBuilder {
         absolute: true,
       }
     );
+    this.cachedInputFiles = result;
+    return result;
+  }
+
+  private discoveredEntries: WeakMap<
+    string[],
+    {
+      discoveredSteps: string[];
+      discoveredWorkflows: string[];
+    }
+  > = new WeakMap();
+
+  protected async discoverEntries(
+    inputs: string[],
+    outdir: string
+  ): Promise<{
+    discoveredSteps: string[];
+    discoveredWorkflows: string[];
+  }> {
+    const previousResult = this.discoveredEntries.get(inputs);
+
+    if (previousResult) {
+      return previousResult;
+    }
+    const state: {
+      discoveredSteps: string[];
+      discoveredWorkflows: string[];
+    } = {
+      discoveredSteps: [],
+      discoveredWorkflows: [],
+    };
+
+    try {
+      await esbuild.build({
+        treeShaking: true,
+        entryPoints: inputs,
+        plugins: [createDiscoverEntriesPlugin(state)],
+        platform: 'node',
+        write: false,
+        outdir,
+        bundle: true,
+        absWorkingDir: this.config.workingDir,
+        logLevel: 'silent',
+      });
+    } catch (_) {}
+
+    this.discoveredEntries.set(inputs, state);
+    return state;
   }
 
   protected async createStepsBundle({
     format = 'cjs',
     outfile,
-  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'>): Promise<void> {
+    externalizeNonSteps,
+  }: {
+    outfile: string;
+    format?: 'cjs' | 'esm';
+    externalizeNonSteps?: boolean;
+  }): Promise<void> {
+    // These need to handle watching for dev to scan for
+    // new entries and changes to existing ones
     const inputFiles = await this.getInputFiles();
+    const { discoveredSteps: stepFiles } = await this.discoverEntries(
+      inputFiles,
+      dirname(outfile)
+    );
+    const builtInSteps = '@vercel/workflow-core/builtins';
+
+    const resolvedBuiltInSteps = await enhancedResolve(
+      dirname(outfile),
+      '@vercel/workflow-core/builtins'
+    );
 
     // Create a virtual entry that imports all files. All step definitions
     // will get registered thanks to the swc transform.
-    const imports = inputFiles.map((file) => `import '${file}';`).join('\n');
+    const imports = stepFiles.map((file) => `import '${file}';`).join('\n');
     const entryContent = `
     // Built in steps
-    import '@vercel/workflow-core/builtins';
+    import '${builtInSteps}';
     // User steps
     ${imports}
     // API entrypoint
     export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
-    const result = await esbuild.build({
+    await esbuild.build({
       stdin: {
         contents: entryContent,
         resolveDir: this.config.workingDir,
@@ -68,52 +143,44 @@ export abstract class BaseBuilder {
       platform: 'node',
       conditions: ['workflow:step', 'node'],
       target: 'es2022',
-      write: false,
+      write: true,
       treeShaking: true,
       keepNames: true,
       minify: false,
-      external: [
-        '@aws-sdk/credential-provider-web-identity',
-        ...(this.config.externalPackages || []),
-      ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
-      sourcemap: 'inline',
+      sourcemap: true,
       plugins: [
         createSwcPlugin({
           mode: 'step',
+          entriesToBundle: externalizeNonSteps
+            ? [
+                ...stepFiles,
+                ...(resolvedBuiltInSteps ? [resolvedBuiltInSteps] : []),
+              ]
+            : undefined,
+          outdir: outfile ? dirname(outfile) : undefined,
         }),
       ],
     });
-
-    if (outfile) {
-      // Ensure the output directory exists
-      const outputDir = dirname(outfile);
-      await mkdir(outputDir, { recursive: true });
-
-      // we need to make require usage from esbuild non-statically
-      // analyzable so webpack doesn't break externals from
-      // too dynamic of a require
-      await writeFile(
-        outfile,
-        result.outputFiles[0].text.replace(
-          /([\s;])require((?!:)[\s(])/g,
-          '$1eval("require")$2'
-        )
-      );
-    }
   }
 
   protected async createWorkflowsBundle({
     format = 'cjs',
     outfile,
     bundleFinalOutput = true,
-  }: Pick<esbuild.BuildOptions, 'outfile' | 'format'> & {
+  }: {
+    outfile: string;
+    format?: 'cjs' | 'esm';
     bundleFinalOutput?: boolean;
   }): Promise<void> {
     const inputFiles = await this.getInputFiles();
+    const { discoveredWorkflows: workflowFiles } = await this.discoverEntries(
+      inputFiles,
+      dirname(outfile)
+    );
 
     // Create a virtual entry that imports all files
-    const imports = inputFiles
+    const imports = workflowFiles
       .map((file) => `export * from '${file}';`)
       .join('\n');
 
@@ -139,6 +206,7 @@ export abstract class BaseBuilder {
       treeShaking: true,
       keepNames: true,
       minify: false,
+      sourcemap: 'inline',
       external: [
         '@aws-sdk/credential-provider-web-identity',
         ...(this.config.externalPackages || []),
@@ -189,6 +257,7 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
         loader: 'js',
       },
       outfile,
+      sourcemap: 'inline',
       absWorkingDir: this.config.workingDir,
       bundle: true,
       format,

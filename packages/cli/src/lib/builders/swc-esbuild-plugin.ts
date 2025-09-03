@@ -1,58 +1,131 @@
 import { readFile } from 'node:fs/promises';
-import { createRequire } from 'node:module';
-import { transformSync } from '@swc/core';
+import enhancedResolveOrig from 'enhanced-resolve';
 import type { Plugin } from 'esbuild';
-
-const require = createRequire(import.meta.url);
+import { relative } from 'path';
+import { promisify } from 'util';
+import { applySwcTransform } from './apply-swc-transform.js';
+import {
+  jsTsRegex,
+  parentHasChild,
+} from './discover-entries-esbuild-plugin.js';
 
 export interface SwcPluginOptions {
   mode: 'step' | 'workflow' | 'client';
+  entriesToBundle?: string[];
+  outdir?: string;
 }
+
+const NODE_RESOLVE_OPTIONS = {
+  dependencyType: 'commonjs',
+  modules: ['node_modules'],
+  exportsFields: ['exports'],
+  importsFields: ['imports'],
+  conditionNames: ['node', 'require'],
+  descriptionFiles: ['package.json'],
+  extensions: ['.ts', '.mts', '.cjs', '.js', '.json', '.node'],
+  enforceExtensions: false,
+  symlinks: true,
+  mainFields: ['main'],
+  mainFiles: ['index'],
+  roots: [],
+  fullySpecified: false,
+  preferRelative: false,
+  preferAbsolute: false,
+  restrictions: [],
+};
+
+const NODE_ESM_RESOLVE_OPTIONS = {
+  ...NODE_RESOLVE_OPTIONS,
+  dependencyType: 'esm',
+  conditionNames: ['node', 'import'],
+};
 
 export function createSwcPlugin(options: SwcPluginOptions): Plugin {
   return {
     name: 'swc-workflow-plugin',
     setup(build) {
-      // Handle TypeScript and JavaScript files
-      build.onLoad({ filter: /\.(ts|tsx|js|jsx|mjs|cjs)$/ }, async (args) => {
-        // Read the file content
-        const source = await readFile(args.path, 'utf8');
+      // everything is external unless explicitly configured
+      // to be bundled
+      const cjsResolver = promisify(
+        enhancedResolveOrig.create(NODE_RESOLVE_OPTIONS)
+      );
+      const esmResolver = promisify(
+        enhancedResolveOrig.create(NODE_ESM_RESOLVE_OPTIONS)
+      );
 
+      const enhancedResolve = async (context: string, path: string) => {
+        try {
+          return await esmResolver(context, path);
+        } catch (_) {
+          return cjsResolver(context, path);
+        }
+      };
+
+      build.onResolve({ filter: /.*/ }, async (args) => {
+        if (!options.entriesToBundle) {
+          return null;
+        }
+
+        try {
+          const resolvedPath = await enhancedResolve(
+            // `args.resolveDir` is not used here to ensure we only
+            // externalize packages that can be resolved in the
+            // project's working directory e.g. a nested dep can't
+            // be externalized as we won't be able to resolve it once
+            // it's parent has been bundled
+            build.initialOptions.absWorkingDir || process.cwd(),
+            args.path
+          );
+
+          if (!resolvedPath) return null;
+
+          for (const entryToBundle of options.entriesToBundle) {
+            if (resolvedPath === entryToBundle) {
+              return null;
+            }
+
+            // if the current entry imports a child that needs
+            // to be bundled then it needs to also be bundled so
+            // that the child can have our transform applied
+            if (parentHasChild(resolvedPath, entryToBundle)) {
+              return null;
+            }
+          }
+
+          const isFilePath =
+            args.path.startsWith('.') || args.path.startsWith('/');
+
+          return {
+            external: true,
+            path: isFilePath
+              ? relative(options.outdir || '', resolvedPath)
+              : args.path,
+          };
+        } catch (_) {}
+        return null;
+      });
+
+      // Handle TypeScript and JavaScript files
+      build.onLoad({ filter: jsTsRegex }, async (args) => {
         // Determine if this is a TypeScript file
         const isTypeScript =
           args.path.endsWith('.ts') || args.path.endsWith('.tsx');
-        const isTsx = args.path.endsWith('.tsx');
 
         try {
-          // Transform with SWC
-          const result = transformSync(source, {
-            filename: args.path,
-            jsc: {
-              parser: {
-                syntax: isTypeScript ? 'typescript' : 'ecmascript',
-                tsx: isTsx,
-              },
-              target: 'es2022',
-              experimental: {
-                plugins: [
-                  [
-                    require.resolve('@vercel/swc-plugin-workflow'),
-                    { mode: options.mode },
-                  ],
-                ],
-              },
-            },
-            minify: false,
-          });
-
           // Determine the loader based on the output
           let loader: 'js' | 'jsx' = 'js';
           if (!isTypeScript && args.path.endsWith('.jsx')) {
             loader = 'jsx';
           }
+          const source = await readFile(args.path, 'utf8');
+          const transformedCode = await applySwcTransform(
+            args.path,
+            source,
+            options.mode
+          );
 
           return {
-            contents: result.code,
+            contents: transformedCode,
             loader,
           };
         } catch (error) {

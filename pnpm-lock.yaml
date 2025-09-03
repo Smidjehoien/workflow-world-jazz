@@ -166,6 +166,9 @@ importers:
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
+      enhanced-resolve:
+        specifier: 5.18.2
+        version: 5.18.2
       esbuild:
         specifier: ^0.25.6
         version: 0.25.6

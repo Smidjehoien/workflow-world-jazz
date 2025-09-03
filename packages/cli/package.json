@@ -37,6 +37,7 @@
     "chokidar": "^4.0.3",
     "esbuild": "^0.25.6",
     "mixpart": "^0.0.4",
+    "enhanced-resolve": "5.18.2",
     "tinyglobby": "^0.2.14"
   }
 }
