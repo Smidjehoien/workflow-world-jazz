@@ -70,7 +70,9 @@ export async function promiseAnyWorkflow() {
 
 //////////////////////////////////////////////////////////
 
-async function genStream() {
+// Name should not conflict with genStream in 3_streams.ts
+// TODO: swc transform should mangle names to avoid conflicts
+async function genReadableStream() {
   'use step';
   const encoder = new TextEncoder();
   return new ReadableStream({
@@ -86,7 +88,7 @@ async function genStream() {
 
 export async function readableStreamWorkflow() {
   'use workflow';
-  const stream = await genStream();
+  const stream = await genReadableStream();
   return stream;
 }
 
