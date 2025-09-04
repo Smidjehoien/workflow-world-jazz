@@ -1,5 +1,13 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.23
+
+### Patch Changes
+
+- ff71d4d: Rework bundling steps and discovering workflows
+- Updated dependencies [ff71d4d]
+  - @vercel/workflow-cli@0.0.1-alpha.22
+
 ## 0.0.1-alpha.22
 
 ### Patch Changes
