@@ -94,6 +94,22 @@ export abstract class BaseBuilder {
     return state;
   }
 
+  // write debug information to JSON file (maybe move to diagnostics folder)
+  // if on Vercel
+  private async writeDebugFile(
+    outfile: string,
+    debugData: object
+  ): Promise<void> {
+    try {
+      await writeFile(
+        `${outfile}.debug.json`,
+        JSON.stringify(debugData, null, 2)
+      );
+    } catch (error: unknown) {
+      console.warn('Failed to write debug file:', error);
+    }
+  }
+
   protected async createStepsBundle({
     format = 'cjs',
     outfile,
@@ -110,6 +126,10 @@ export abstract class BaseBuilder {
       inputFiles,
       dirname(outfile)
     );
+
+    // log the step files for debugging
+    await this.writeDebugFile(outfile, { stepFiles });
+
     const builtInSteps = '@vercel/workflow-core/builtins';
 
     const resolvedBuiltInSteps = await enhancedResolve(
@@ -162,24 +182,6 @@ export abstract class BaseBuilder {
         }),
       ],
     });
-
-    // write debug information to JSON file (maybe move to diagnostics folder)
-    // if on Vercel
-    try {
-      await writeFile(
-        `${outfile}.debug.json`,
-        JSON.stringify(
-          {
-            stepFiles,
-          },
-          null,
-          2
-        )
-      );
-    } catch (error: unknown) {
-      // Debug file write failure shouldn't break the build
-      console.warn('Failed to write debug file:', error);
-    }
   }
 
   protected async createWorkflowsBundle({
@@ -196,6 +198,9 @@ export abstract class BaseBuilder {
       inputFiles,
       dirname(outfile)
     );
+
+    // log the workflow files for debugging
+    await this.writeDebugFile(outfile, { workflowFiles });
 
     // Create a virtual entry that imports all files
     const imports = workflowFiles
@@ -251,24 +256,6 @@ export abstract class BaseBuilder {
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
 
 export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
-
-    // write debug information to JSON file (maybe move to diagnostics folder)
-    // if on Vercel
-    try {
-      await writeFile(
-        `${outfile}.debug.json`,
-        JSON.stringify(
-          {
-            workflowFiles,
-          },
-          null,
-          2
-        )
-      );
-    } catch (error: unknown) {
-      // Debug file write failure shouldn't break the build
-      console.warn('Failed to write debug file:', error);
-    }
 
     // we skip the final bundling step for Next.js so it can bundle itself
     if (!bundleFinalOutput) {
