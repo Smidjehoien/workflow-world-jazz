@@ -25,6 +25,7 @@ export interface Queue {
     queueName: ValidQueueName,
     message: unknown,
     opts?: {
+      deploymentId?: string;
       idempotencyKey?: string;
     }
   ): Promise<{ messageId: MessageId }>;

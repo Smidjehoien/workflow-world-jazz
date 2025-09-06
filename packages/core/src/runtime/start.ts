@@ -70,16 +70,16 @@ export async function start(
       ...Attribute.DeploymentId(deploymentId),
     });
 
-    // XXX: The `send()` function requires the `VERCEL_DEPLOYMENT_ID` environment
-    // variable to be set. Ideally it would be accepted as an option to `send()`.
-    if (!process.env.VERCEL_DEPLOYMENT_ID) {
-      process.env.VERCEL_DEPLOYMENT_ID = deploymentId;
-    }
-
-    await world.queue(`__wkf_workflow_${workflowName}`, {
-      runId: run.runId,
-      traceCarrier,
-    } satisfies WorkflowInvokePayload);
+    await world.queue(
+      `__wkf_workflow_${workflowName}`,
+      {
+        runId: run.runId,
+        traceCarrier,
+      } satisfies WorkflowInvokePayload,
+      {
+        deploymentId,
+      }
+    );
 
     return run;
   });

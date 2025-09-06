@@ -2,8 +2,8 @@ import { handleCallback, send } from '@vercel/queue';
 import { MessageId, ValidQueueName, type World } from '../world.js';
 
 export function createVqs(): World {
-  const queue: World['queue'] = async (queueName, x) => {
-    const { messageId } = await send(queueName, x);
+  const queue: World['queue'] = async (queueName, x, opts) => {
+    const { messageId } = await send(queueName, x, opts);
     return { messageId: MessageId.parse(messageId) };
   };
 

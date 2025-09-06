@@ -137,8 +137,6 @@ async function processWebhook(
       });
       waitUntil(Promise.all(ops));
 
-      // TODO: maybe we should store the workflow name in the
-      // webhook table to avoid this extra database fetch?
       const workflowRun = await getWorkflowRun(webhook.runId);
 
       const traceCarrier = workflowRun.executionContext?.traceCarrier;
@@ -150,15 +148,22 @@ async function processWebhook(
         }
       }
 
-      // Re-trigger the workflow
-      await world.queue(`__wkf_workflow_${workflowRun.workflowName}`, {
-        runId: webhook.runId,
-        // attach the trace carrier from the workflow run
-        traceCarrier: workflowRun.executionContext?.traceCarrier ?? undefined,
-      } satisfies WorkflowInvokePayload);
+      // Re-trigger the workflow against the deployment ID associated
+      // with the workflow run that the webhook belongs to
+      await world.queue(
+        `__wkf_workflow_${workflowRun.workflowName}`,
+        {
+          runId: webhook.runId,
+          // attach the trace carrier from the workflow run
+          traceCarrier: workflowRun.executionContext?.traceCarrier ?? undefined,
+        } satisfies WorkflowInvokePayload,
+        {
+          deploymentId: workflowRun.deploymentId,
+        }
+      );
 
       console.log(
-        `Dispatched workflow "${workflowRun.workflowName}" for webhook ID "${webhook.webhookId}"`
+        `Dispatched workflow "${workflowRun.workflowName}" for webhook ID "${webhook.webhookId}" (workflow run ID: ${workflowRun.runId})`
       );
     } catch (err) {
       console.error(
