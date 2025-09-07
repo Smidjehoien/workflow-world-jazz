@@ -1,0 +1,15 @@
+# Troubleshooting
+
+- Ensure your workflows and steps are inside the `workflows` (or `src/workflows`, if you are using `src`) directory. `"use workflow"` and `"use steps"` only work in this directory,
+- Local dev **currently** still requires you to register the project on vercel, and use `vc link` and `vc dev` locally before you can run `next dev`.
+- Keeping "use workflow" functions and "use step" functions in separate files often addresses a lot of odd build or runtime errors. These errors are often because invalid workflow code can sneak into the generated workflow route (for example, initializing an SDK in global scope).
+  > We like the file structure of a `workflows/index.ts` file for your workflows, and a `workflow/steps/` directory for steps
+- **External packages causing build/runtime errors**: The workflow step bundling is currently being improved. If an external node module used in a step is causing weird build time or runtime errors, try externalizing it in your `next.config.ts`:
+
+  ```ts
+  const nextConfig: NextConfig = {
+    serverExternalPackages: ['@node-rs/xxhash'],
+  };
+  ```
+
+- The loader only runs on files that contain `"use step"` or `"use workflow"`

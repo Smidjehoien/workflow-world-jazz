@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+.nextra-code span {
+  font-size: 0.8rem;
+}
+
+.nextra-callout {
+  font-size: 0.9rem !important;
+}
+
+.nextra-callout svg {
+  margin-top: 0.4rem !important;
+}

@@ -1,0 +1,31 @@
+# Workflow SDK
+
+Build resilient, long-running applications with durable functions for JavaScript/TypeScript.
+
+[Get Started](/docs/getting-started) · [Examples](/examples)
+
+## Overview
+
+Workflow SDK brings the power of durable execution to JavaScript and TypeScript. Write complex, multi-step processes that can run for days or months, survive failures, and automatically resume from interruptions - all with simple async/await syntax.
+
+Whether you're building order processing pipelines, data synchronization workflows, or complex business automations, Workflow SDK ensures your code runs reliably without managing state machines, queues, or recovery logic.
+
+```ts
+export async function onboardCustomer(customerId: string) {
+  "use workflow";
+  
+  // Each step is automatically retried and persisted
+  const account = await createAccount(customerId);
+  const [profile, preferences] = await Promise.all([
+    setupProfile(account.id),
+    configurePreferences(account.id)
+  ]);
+  
+  await sendWelcomeEmail(account.email);
+  await scheduleOnboardingCall(account.id, { delay: "3 days" });
+  
+  return { accountId: account.id, status: "onboarded" };
+}
+```
+
+## Features

@@ -7,7 +7,11 @@
  */
 
 export { getContext, type WorkflowContext } from './get-context.js';
-export { getWebhook, type Webhook } from './get-webhook.js';
+export {
+  getWebhook,
+  type Webhook,
+  type WebhookOptions,
+} from './get-webhook.js';
 export {
   FatalError,
   RetryableError,

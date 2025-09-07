@@ -1,0 +1,121 @@
+import { Callout, Table, Tabs } from 'nextra/components'
+import { generateDefinition, TSDoc } from 'nextra/tsdoc'
+
+# API Reference
+
+## @vercel/workflow-core
+
+The core package contains the functions and primitives that are used within workflows.
+
+### Core Functions
+
+#### `getContext`
+
+Returns the current workflow or step execution context. This is a context-safe accessor that works in both workflow and step functions.
+
+```ts
+import { getContext } from '@vercel/workflow-core';
+```
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { getContext } from "@vercel/workflow-core"
+export default getContext
+    `
+  })}
+  typeLinkMap={{
+    "WorkflowContext": "api-reference#workflowcontext"
+  }}
+/>
+
+<Callout type="info">
+The `stepId`, `stepStartedAt`, and `attempt` properties are only available inside step functions.
+</Callout>
+
+#### `sleep`
+
+Sleep within a workflow for a given duration. This is deterministic and replay-safe.
+
+```ts
+import { sleep } from '@vercel/workflow-core';
+```
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { sleep } from '@vercel/workflow-core';
+export default sleep
+    `
+  })}
+/>
+
+#### `getWebhook`
+
+Registers a webhook URL that can be provided to external systems outside of the workflow run (such as sending in an email for human-in-the-loop workflows).
+
+```ts
+import { getWebhook } from '@vercel/workflow-core';
+```
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { getWebhook } from "@vercel/workflow-core";
+export default getWebhook;
+    `
+  })}
+/>
+
+### Types
+
+#### `WorkflowContext`
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import type { WorkflowContext } from "@vercel/workflow-core"
+export default WorkflowContext
+    `
+  })}
+/>
+
+#### `WebhookOptions`
+
+TODO: need WebhookOptions exported
+
+### Error Classes
+
+#### `FatalError`
+
+Throw this error in a step function to indicate a permanent failure that should not be retried.
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { FatalError } from '@vercel/workflow-core';
+export default FatalError
+    `
+  })}
+/>
+
+#### `RetryableError`
+
+Throw this error in a step function to indicate a temporary failure with (an optional) retry policy.
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { RetryableError } from '@vercel/workflow-core';
+export default RetryableError
+    `
+  })}
+/>
+
+<Callout>
+Always use `FatalError` for permanent failures (like validation errors) and `RetryableError` for temporary issues (like network failures or rate limits).
+</Callout>
+
+### Next.js Integration
+
+For Next.js applications, you can use the `@vercel/workflow-next` package which provides the `withWorkflow()` configuration wrapper. See the [Getting Started guide](/docs/getting-started) for setup instructions.

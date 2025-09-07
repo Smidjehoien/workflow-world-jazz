@@ -1,21 +1,32 @@
 {
   "name": "preview-packages",
-  "version": "1.0.0",
-  "type": "module",
+  "version": "0.1.0",
   "private": true,
-  "description": "",
-  "main": "index.js",
   "scripts": {
-    "vercel-build": "turbo build && node src/pack.ts"
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "postbuild": "pagefind --site .next/server/app --output-path public/_pagefind && node scripts/pack.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "next": "15.5.2",
+    "nextra": "^4.4.0",
+    "nextra-theme-docs": "^4.4.0",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
   "devDependencies": {
-    "@types/node": "^24.2.1",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
     "@vercel/workflow-vm": "workspace:*",
-    "@vercel/swc-plugin-workflow": "workspace:*"
+    "@vercel/swc-plugin-workflow": "workspace:*",
+    "pagefind": "^1.4.0",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
 }

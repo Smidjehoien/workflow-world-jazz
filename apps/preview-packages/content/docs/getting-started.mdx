@@ -1,0 +1,149 @@
+import { Callout, Steps, Tabs } from 'nextra/components'
+import InstallCommandTabs from '@/components/install-command-tabs'
+
+# Getting Started
+
+Get up and running with Workflow SDK in your Next.js application in under 5 minutes.
+
+<Steps>
+
+## Installation
+
+Inside your Next.js project directory, run the following:
+
+<InstallCommandTabs />
+
+## Configure Next.js
+
+Wrap your main Next.js config with the `withWorkflow()` function:
+
+```ts filename="next.config.ts" {1,4-6,8}
+import { withWorkflow } from '@vercel/workflow-next';
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  // … rest of your Next.js config
+};
+
+export default withWorkflow(nextConfig);
+```
+
+Wrapping your config with `withWorkflow()` will:
+
+- Add a Turbopack/webpack loader that compiles files containing `"use workflow"`/`"use step"`
+- Build the workflow and step bundles during `next build` via the Workflow CLI
+- Enable the embedded transport in dev for local testing
+
+## Enable ESM
+
+```diff filename="package.json"
+{
++ "type": "module",
+// ...
+}
+```
+
+<Callout type="info">
+Workflow SDK currently requires ESM. CommonJS support is coming soon.
+</Callout>
+
+## Update `.gitignore`
+
+Add `.swc` to your `.gitignore` file to exclude the SWC plugin cache artifacts from version control.
+
+```diff filename=".gitignore"
+...
++.swc
+```
+
+<Callout type="info">
+Workflow uses a custom [swc](https://swc.rs) plugin that caches artifacts to a local `.swc` directory.
+</Callout>
+
+## Configure ESLint
+
+If you have eslint enabled for your Next.js app, you'll most likely need to
+explicitly disable checking route files that Workflow SDK generates during
+the build process.
+
+Everything in the `app/api/generated` directory should be ignored. That might look
+something like this:
+
+```ts filename="eslint.config.mjs" {4,15}
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
+import { globalIgnores } from "eslint/config";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+ 
+const compat = new FlatCompat({
+    baseDirectory: __dirname,
+});
+ 
+const eslintConfig = [
+    ...compat.extends("next/core-web-vitals", "next/typescript"),
+   globalIgnores(["./app/api/generated"]),
+];
+
+ export default eslintConfig;
+```
+
+_Depending on your eslint version, you might use the `.eslintignore` file instead._
+
+## Create your first workflow
+
+Create a new file in the `workflows` directory:
+
+```ts filename="workflows/hello-world.ts"
+export async function helloWorkflow(word: string) {
+  "use workflow";
+  
+  const greeting = await createGreeting(word);
+}
+
+async function createGreeting(word: string) {
+  "use step";
+  
+  // This runs with full Node.js access
+  console.log(`Running greeting step with word: ${word}`)
+  return `Hello ${word}!`;
+}
+```
+
+<Callout type="info">
+Workflow functions orchestrate execution, while step functions perform the actual work. Learn more in [Concepts](./concepts).
+</Callout>
+
+## Invoke your workflow
+
+```ts filename="app/api/hello/route.ts"
+import { helloWorkflow } from '@/workflows/hello-world';
+import { NextResponse } from 'next/server';
+
+export async function GET(request: Request) {
+  // Start the workflow (non-blocking)
+  helloWorkflow("world");
+  
+  return NextResponse.json({ 
+    message: `Workflow started` 
+  });
+}
+```
+
+<Callout>
+Workflows can be triggered from API routes, Server Actions, or any server-side code.
+</Callout>
+
+<Callout type="info">
+Workflows execute asynchronously and don't block your application. The SDK handles queuing, execution, and retry logic automatically.
+</Callout>
+
+## Next Steps
+
+- Learn core concepts in [Concepts](./concepts)
+- Explore the [API Reference](./api-reference)
+- Check [Troubleshooting](./troubleshooting) if you encounter issues
+
+</Steps>
