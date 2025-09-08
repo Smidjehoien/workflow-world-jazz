@@ -1,5 +1,5 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { parse } from 'comment-json';
 import enhancedResolveOriginal from 'enhanced-resolve';
@@ -197,6 +197,9 @@ export abstract class BaseBuilder {
 
     // Bundle with esbuild and our custom SWC plugin
     await esbuild.build({
+      banner: {
+        js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
+      },
       stdin: {
         contents: entryContent,
         resolveDir: this.config.workingDir,
@@ -231,6 +234,9 @@ export abstract class BaseBuilder {
         }),
       ],
     });
+
+    // Create .gitignore in .swc directory
+    await this.createSwcGitignore();
   }
 
   protected async createWorkflowsBundle({
@@ -292,14 +298,20 @@ export abstract class BaseBuilder {
       plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
 
+    // Create .gitignore in .swc directory
+    await this.createSwcGitignore();
+
     if (!interimBundle.outputFiles || interimBundle.outputFiles.length === 0) {
       throw new Error('No output files generated from esbuild');
     }
 
     const workflowBundleCode = interimBundle.outputFiles[0].text;
 
-    // Create the workflow function handler
-    const workflowFunctionCode = `import {
+    // Create the workflow function handler with proper linter suppressions
+    const workflowFunctionCode = `// biome-ignore-all lint: generated file
+/* eslint-disable */
+
+import {
     vercelAPIWorkflowsEntrypoint } from '${
       // The runtime import path is configurable so that the Next.js loader
       // runtime path can be resolved. This is to avoid the user needing to
@@ -327,6 +339,9 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
 
     // Now bundle this so we can resolve the @vercel/workflow-core dependency
     await esbuild.build({
+      banner: {
+        js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
+      },
       stdin: {
         contents: workflowFunctionCode,
         resolveDir: this.config.workingDir,
@@ -371,6 +386,9 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
 
     // Bundle with esbuild and our custom SWC plugin
     await esbuild.build({
+      banner: {
+        js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
+      },
       stdin: {
         contents: imports,
         resolveDir: this.config.workingDir,
@@ -388,5 +406,19 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'client' })],
     });
+
+    // Create .gitignore in .swc directory
+    await this.createSwcGitignore();
+  }
+
+  private async createSwcGitignore(): Promise<void> {
+    try {
+      await writeFile(
+        join(this.config.workingDir, '.swc', '.gitignore'),
+        '*\n'
+      );
+    } catch {
+      // We're intentionally silently ignoring this error - creating .gitignore isn't critical
+    }
   }
 }
