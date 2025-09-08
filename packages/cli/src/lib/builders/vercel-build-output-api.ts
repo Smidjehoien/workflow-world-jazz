@@ -11,21 +11,42 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     // Ensure output directories exist
     await mkdir(apiGeneratedDir, { recursive: true });
 
-    await this.buildStepsFunction(apiGeneratedDir);
-    await this.buildWorkflowsFunction(apiGeneratedDir);
+    const inputFiles = await this.getInputFiles();
+    const tsConfig = await this.getTsConfigOptions();
+    const options = {
+      inputFiles,
+      apiGeneratedDir,
+      tsBaseUrl: tsConfig.baseUrl,
+      tsPaths: tsConfig.paths,
+    };
+    await this.buildStepsFunction(options);
+    await this.buildWorkflowsFunction(options);
     await this.createBuildOutputConfig(outputDir);
 
     await this.buildClientLibrary();
   }
 
-  private async buildStepsFunction(apiGeneratedDir: string): Promise<void> {
+  private async buildStepsFunction({
+    inputFiles,
+    apiGeneratedDir,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    apiGeneratedDir: string;
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log('Creating Vercel Build Output API steps function');
     const stepsFuncDir = join(apiGeneratedDir, 'steps.func');
     await mkdir(stepsFuncDir, { recursive: true });
 
     // Create steps bundle
     await this.createStepsBundle({
+      inputFiles,
       outfile: join(stepsFuncDir, 'index.js'),
+      tsBaseUrl,
+      tsPaths,
     });
 
     // Create package.json for ESM support
@@ -63,13 +84,26 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     );
   }
 
-  private async buildWorkflowsFunction(apiGeneratedDir: string): Promise<void> {
+  private async buildWorkflowsFunction({
+    inputFiles,
+    apiGeneratedDir,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    apiGeneratedDir: string;
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log('Creating Vercel Build Output API workflows function');
     const workflowsFuncDir = join(apiGeneratedDir, 'workflows.func');
     await mkdir(workflowsFuncDir, { recursive: true });
 
     await this.createWorkflowsBundle({
       outfile: join(workflowsFuncDir, 'index.js'),
+      inputFiles,
+      tsBaseUrl,
+      tsPaths,
     });
 
     // Create package.json for ESM support

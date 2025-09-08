@@ -4,13 +4,29 @@ import { BaseBuilder } from './base-builder.js';
 
 export class VercelStaticBuilder extends BaseBuilder {
   async build(): Promise<void> {
-    await this.buildStepsBundle();
-    await this.buildWorkflowsBundle();
+    const inputFiles = await this.getInputFiles();
+    const tsConfig = await this.getTsConfigOptions();
+
+    const options = {
+      inputFiles,
+      tsBaseUrl: tsConfig.baseUrl,
+      tsPaths: tsConfig.paths,
+    };
+    await this.buildStepsBundle(options);
+    await this.buildWorkflowsBundle(options);
 
     await this.buildClientLibrary();
   }
 
-  private async buildStepsBundle(): Promise<void> {
+  private async buildStepsBundle({
+    inputFiles,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log(
       'Creating Vercel API steps bundle at',
       this.config.stepsBundlePath
@@ -26,10 +42,21 @@ export class VercelStaticBuilder extends BaseBuilder {
 
     await this.createStepsBundle({
       outfile: stepsBundlePath,
+      inputFiles,
+      tsBaseUrl,
+      tsPaths,
     });
   }
 
-  private async buildWorkflowsBundle(): Promise<void> {
+  private async buildWorkflowsBundle({
+    inputFiles,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log(
       'Creating vercel API workflows bundle at',
       this.config.workflowsBundlePath
@@ -45,6 +72,9 @@ export class VercelStaticBuilder extends BaseBuilder {
 
     await this.createWorkflowsBundle({
       outfile: workflowBundlePath,
+      inputFiles,
+      tsBaseUrl,
+      tsPaths,
     });
   }
 }

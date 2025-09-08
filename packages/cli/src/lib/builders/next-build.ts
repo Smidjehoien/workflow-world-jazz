@@ -14,8 +14,17 @@ export class NextBuilder extends BaseBuilder {
 
     await writeFile(join(apiGeneratedDir, '.gitignore'), '*');
 
-    await this.buildStepsFunction(apiGeneratedDir);
-    await this.buildWorkflowsFunction(apiGeneratedDir);
+    const inputFiles = await this.getInputFiles();
+    const tsConfig = await this.getTsConfigOptions();
+
+    const options = {
+      inputFiles,
+      apiGeneratedDir,
+      tsBaseUrl: tsConfig.baseUrl,
+      tsPaths: tsConfig.paths,
+    };
+    await this.buildStepsFunction(options);
+    await this.buildWorkflowsFunction(options);
     await this.writeFunctionsConfig(outputDir);
   }
 
@@ -60,7 +69,17 @@ export class NextBuilder extends BaseBuilder {
     );
   }
 
-  private async buildStepsFunction(apiGeneratedDir: string): Promise<void> {
+  private async buildStepsFunction({
+    inputFiles,
+    apiGeneratedDir,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    apiGeneratedDir: string;
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log('Creating steps function');
     // Create steps bundle
     const stepsRouteDir = join(apiGeneratedDir, 'steps');
@@ -72,12 +91,25 @@ export class NextBuilder extends BaseBuilder {
       // correctly this shouldn't be an issue although we might want
       // to use cjs as alternative to avoid
       format: 'esm',
+      inputFiles,
       outfile: join(stepsRouteDir, 'route.js'),
       externalizeNonSteps: true,
+      tsBaseUrl,
+      tsPaths,
     });
   }
 
-  private async buildWorkflowsFunction(apiGeneratedDir: string): Promise<void> {
+  private async buildWorkflowsFunction({
+    inputFiles,
+    apiGeneratedDir,
+    tsPaths,
+    tsBaseUrl,
+  }: {
+    inputFiles: string[];
+    apiGeneratedDir: string;
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+  }): Promise<void> {
     console.log('Creating Next JS workflows route');
     const workflowsRouteDir = join(apiGeneratedDir, 'workflows');
     await mkdir(workflowsRouteDir, { recursive: true });
@@ -85,6 +117,9 @@ export class NextBuilder extends BaseBuilder {
       format: 'esm',
       outfile: join(workflowsRouteDir, 'route.js'),
       bundleFinalOutput: false,
+      inputFiles,
+      tsBaseUrl,
+      tsPaths,
     });
   }
 

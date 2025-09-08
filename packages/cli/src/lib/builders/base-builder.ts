@@ -1,8 +1,10 @@
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import { parse } from 'comment-json';
 import enhancedResolveOriginal from 'enhanced-resolve';
 import * as esbuild from 'esbuild';
+import { findUp } from 'find-up';
 import { glob } from 'tinyglobby';
 import type { WorkflowConfig } from '../config/types.js';
 import { createDiscoverEntriesPlugin } from './discover-entries-esbuild-plugin.js';
@@ -19,12 +21,52 @@ export abstract class BaseBuilder {
 
   abstract build(): Promise<void>;
 
-  private cachedInputFiles: string[] | undefined;
+  protected async getTsConfigOptions(): Promise<{
+    baseUrl?: string;
+    paths?: Record<string, string[]>;
+  }> {
+    const options: {
+      paths?: Record<string, string[]>;
+      baseUrl?: string;
+    } = {};
+
+    const cwd = this.config.workingDir || process.cwd();
+
+    const tsJsConfig = await findUp(['tsconfig.json', 'jsconfig.json'], {
+      cwd,
+    });
+
+    if (tsJsConfig) {
+      try {
+        const rawJson = await readFile(tsJsConfig, 'utf8');
+        const parsed: null | {
+          compilerOptions?: {
+            paths?: Record<string, string[]> | undefined;
+            baseUrl?: string;
+          };
+        } = parse(rawJson) as any;
+
+        if (parsed) {
+          options.paths = parsed.compilerOptions?.paths;
+
+          if (parsed.compilerOptions?.baseUrl) {
+            options.baseUrl = resolve(cwd, parsed.compilerOptions.baseUrl);
+          } else {
+            options.baseUrl = cwd;
+          }
+        }
+      } catch (err) {
+        console.error(
+          `Failed to parse ${tsJsConfig} aliases might not apply properly`,
+          err
+        );
+      }
+    }
+
+    return options;
+  }
 
   protected async getInputFiles(): Promise<string[]> {
-    if (this.cachedInputFiles) {
-      return this.cachedInputFiles;
-    }
     const result = await glob(
       this.config.dirs.map(
         (dir) =>
@@ -40,11 +82,11 @@ export abstract class BaseBuilder {
           '**/.next/**',
           '**/.vercel/**',
           '**/.workflow/**',
+          '**/generated/**',
         ],
         absolute: true,
       }
     );
-    this.cachedInputFiles = result;
     return result;
   }
 
@@ -111,17 +153,22 @@ export abstract class BaseBuilder {
   }
 
   protected async createStepsBundle({
+    inputFiles,
     format = 'cjs',
     outfile,
     externalizeNonSteps,
+    tsBaseUrl,
+    tsPaths,
   }: {
+    tsPaths?: Record<string, string[]>;
+    tsBaseUrl?: string;
+    inputFiles: string[];
     outfile: string;
     format?: 'cjs' | 'esm';
     externalizeNonSteps?: boolean;
   }): Promise<void> {
     // These need to handle watching for dev to scan for
     // new entries and changes to existing ones
-    const inputFiles = await this.getInputFiles();
     const { discoveredSteps: stepFiles } = await this.discoverEntries(
       inputFiles,
       dirname(outfile)
@@ -179,21 +226,28 @@ export abstract class BaseBuilder {
               ]
             : undefined,
           outdir: outfile ? dirname(outfile) : undefined,
+          tsBaseUrl,
+          tsPaths,
         }),
       ],
     });
   }
 
   protected async createWorkflowsBundle({
+    inputFiles,
     format = 'cjs',
     outfile,
     bundleFinalOutput = true,
+    tsBaseUrl,
+    tsPaths,
   }: {
+    tsPaths?: Record<string, string[]>;
+    tsBaseUrl?: string;
+    inputFiles: string[];
     outfile: string;
     format?: 'cjs' | 'esm';
     bundleFinalOutput?: boolean;
   }): Promise<void> {
-    const inputFiles = await this.getInputFiles();
     const { discoveredWorkflows: workflowFiles } = await this.discoverEntries(
       inputFiles,
       dirname(outfile)
@@ -235,7 +289,7 @@ export abstract class BaseBuilder {
         ...(this.config.externalPackages || []),
       ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
-      plugins: [createSwcPlugin({ mode: 'workflow' })],
+      plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
 
     if (!interimBundle.outputFiles || interimBundle.outputFiles.length === 0) {

@@ -6,7 +6,12 @@ const require = createRequire(import.meta.filename);
 export async function applySwcTransform(
   filename: string,
   source: string,
-  mode: 'workflow' | 'step' | 'client' | false
+  mode: 'workflow' | 'step' | 'client' | false,
+  jscConfig?: {
+    paths?: Record<string, string[]>;
+    // this must be absolute path
+    baseUrl?: string;
+  }
 ): Promise<string> {
   // Determine if this is a TypeScript file
   const isTypeScript = filename.endsWith('.ts') || filename.endsWith('.tsx');
@@ -28,6 +33,7 @@ export async function applySwcTransform(
             ],
           }
         : undefined,
+      ...jscConfig,
     },
     sourceMaps: 'inline',
     minify: false,

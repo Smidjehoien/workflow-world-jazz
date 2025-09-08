@@ -13,6 +13,8 @@ export interface SwcPluginOptions {
   mode: 'step' | 'workflow' | 'client';
   entriesToBundle?: string[];
   outdir?: string;
+  tsPaths?: Record<string, string[]>;
+  tsBaseUrl?: string;
 }
 
 const NODE_RESOLVE_OPTIONS = {
@@ -67,15 +69,22 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
         }
 
         try {
-          const resolvedPath = await enhancedResolve(
-            // `args.resolveDir` is not used here to ensure we only
-            // externalize packages that can be resolved in the
-            // project's working directory e.g. a nested dep can't
-            // be externalized as we won't be able to resolve it once
-            // it's parent has been bundled
-            build.initialOptions.absWorkingDir || process.cwd(),
-            args.path
-          );
+          let resolvedPath: string | false | undefined = args.path;
+
+          // handle local imports e.g. ./hello or ../another
+          if (args.path.startsWith('.')) {
+            resolvedPath = await enhancedResolve(args.resolveDir, args.path);
+          } else {
+            resolvedPath = await enhancedResolve(
+              // `args.resolveDir` is not used here to ensure we only
+              // externalize packages that can be resolved in the
+              // project's working directory e.g. a nested dep can't
+              // be externalized as we won't be able to resolve it once
+              // it's parent has been bundled
+              build.initialOptions.absWorkingDir || process.cwd(),
+              args.path
+            );
+          }
 
           if (!resolvedPath) return null;
 
@@ -121,7 +130,14 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
           const transformedCode = await applySwcTransform(
             args.path,
             source,
-            options.mode
+            options.mode,
+            // we need to provide the tsconfig/jsconfig
+            // alias via swc so that we can resolve them
+            // with our custom resolve logic
+            {
+              paths: options.tsPaths,
+              baseUrl: options.tsBaseUrl,
+            }
           );
 
           return {
