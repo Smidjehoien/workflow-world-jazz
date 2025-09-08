@@ -1,5 +1,12 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.16
+
+### Patch Changes
+
+- 0b2ac90: Set the `deploymentId` option in vqs `send()`
+- 7e1e4cf: Export WebhookOptions type
+
 ## 0.0.1-alpha.15
 
 ### Patch Changes

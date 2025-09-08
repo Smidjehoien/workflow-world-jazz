@@ -1,5 +1,16 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.23
+
+### Patch Changes
+
+- e9c1c72: Tweak bundling logic to handle more cases
+- be67661: Add debug meta files for step/workflow bundles'
+- b35f5f8: move the route debug logging earlier
+- Updated dependencies [0b2ac90]
+- Updated dependencies [7e1e4cf]
+  - @vercel/workflow-core@0.0.1-alpha.16
+
 ## 0.0.1-alpha.22
 
 ### Patch Changes
