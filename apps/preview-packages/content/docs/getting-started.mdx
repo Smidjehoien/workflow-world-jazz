@@ -34,19 +34,6 @@ Wrapping your config with `withWorkflow()` will:
 - Build the workflow and step bundles during `next build` via the Workflow CLI
 - Enable the embedded transport in dev for local testing
 
-## Enable ESM
-
-```diff filename="package.json"
-{
-+ "type": "module",
-// ...
-}
-```
-
-<Callout type="info">
-Workflow SDK currently requires ESM. CommonJS support is coming soon.
-</Callout>
-
 ## Update `.gitignore`
 
 Add `.swc` to your `.gitignore` file to exclude the SWC plugin cache artifacts from version control.
@@ -77,11 +64,11 @@ import { globalIgnores } from "eslint/config";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
- 
+
 const compat = new FlatCompat({
     baseDirectory: __dirname,
 });
- 
+
 const eslintConfig = [
     ...compat.extends("next/core-web-vitals", "next/typescript"),
    globalIgnores(["./app/api/generated"]),
@@ -99,13 +86,13 @@ Create a new file in the `workflows` directory:
 ```ts filename="workflows/hello-world.ts"
 export async function helloWorkflow(word: string) {
   "use workflow";
-  
+
   const greeting = await createGreeting(word);
 }
 
 async function createGreeting(word: string) {
   "use step";
-  
+
   // This runs with full Node.js access
   console.log(`Running greeting step with word: ${word}`)
   return `Hello ${word}!`;
@@ -125,9 +112,9 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   // Start the workflow (non-blocking)
   helloWorkflow("world");
-  
-  return NextResponse.json({ 
-    message: `Workflow started` 
+
+  return NextResponse.json({
+    message: `Workflow started`
   });
 }
 ```
