@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.17
+
+### Patch Changes
+
+- c7f0d52: Use `world.getDeploymentId()` more consistently to fix local dev
+
 ## 0.0.1-alpha.16
 
 ### Patch Changes
