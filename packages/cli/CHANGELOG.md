@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.24
+
+### Patch Changes
+
+- d3fe4ea: Add linter suppressions to generated files and auto-create .swc/.gitignore
+
 ## 0.0.1-alpha.23
 
 ### Patch Changes
