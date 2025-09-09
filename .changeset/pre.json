@@ -10,7 +10,7 @@
     "@vercel/workflow-next": "0.0.0",
     "@vercel/workflow-tsconfig": "0.0.0",
     "@vercel/workflow-vm": "0.0.0",
-    "preview-packages": "1.0.0"
+    "docs": "1.0.0"
   },
   "changesets": [
     "breezy-parents-fall",

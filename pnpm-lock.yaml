@@ -36,6 +36,58 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.2.1)(jiti@2.4.2)(lightningcss@1.30.1)(yaml@2.8.0)
 
+  apps/docs:
+    dependencies:
+      next:
+        specifier: 15.5.2
+        version: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      nextra:
+        specifier: ^4.4.0
+        version: 4.4.0(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
+      nextra-theme-docs:
+        specifier: ^4.4.0
+        version: 4.4.0(@types/react@19.1.8)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nextra@4.4.0(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
+      react:
+        specifier: 19.1.0
+        version: 19.1.0
+      react-dom:
+        specifier: 19.1.0
+        version: 19.1.0(react@19.1.0)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.1.11
+      '@types/node':
+        specifier: ^20
+        version: 20.19.7
+      '@types/react':
+        specifier: ^19
+        version: 19.1.8
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.1.6(@types/react@19.1.8)
+      '@vercel/swc-plugin-workflow':
+        specifier: workspace:*
+        version: link:../../packages/swc-plugin-workflow
+      '@vercel/workflow-core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@vercel/workflow-next':
+        specifier: workspace:*
+        version: link:../../packages/next
+      '@vercel/workflow-vm':
+        specifier: workspace:*
+        version: link:../../packages/vm
+      pagefind:
+        specifier: ^1.4.0
+        version: 1.4.0
+      tailwindcss:
+        specifier: ^4
+        version: 4.1.11
+      typescript:
+        specifier: ^5
+        version: 5.8.3
+
   apps/example:
     dependencies:
       '@vercel/functions':
@@ -121,58 +173,6 @@ importers:
       '@vercel/workflow-next':
         specifier: workspace:*
         version: link:../../packages/next
-      tailwindcss:
-        specifier: ^4
-        version: 4.1.11
-      typescript:
-        specifier: ^5
-        version: 5.8.3
-
-  apps/preview-packages:
-    dependencies:
-      next:
-        specifier: 15.5.2
-        version: 15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-      nextra:
-        specifier: ^4.4.0
-        version: 4.4.0(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3)
-      nextra-theme-docs:
-        specifier: ^4.4.0
-        version: 4.4.0(@types/react@19.1.8)(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(nextra@4.4.0(next@15.5.2(@opentelemetry/api@1.9.0)(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(typescript@5.8.3))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(use-sync-external-store@1.5.0(react@19.1.0))
-      react:
-        specifier: 19.1.0
-        version: 19.1.0
-      react-dom:
-        specifier: 19.1.0
-        version: 19.1.0(react@19.1.0)
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.1.11
-      '@types/node':
-        specifier: ^20
-        version: 20.19.7
-      '@types/react':
-        specifier: ^19
-        version: 19.1.8
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.1.6(@types/react@19.1.8)
-      '@vercel/swc-plugin-workflow':
-        specifier: workspace:*
-        version: link:../../packages/swc-plugin-workflow
-      '@vercel/workflow-core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@vercel/workflow-next':
-        specifier: workspace:*
-        version: link:../../packages/next
-      '@vercel/workflow-vm':
-        specifier: workspace:*
-        version: link:../../packages/vm
-      pagefind:
-        specifier: ^1.4.0
-        version: 1.4.0
       tailwindcss:
         specifier: ^4
         version: 4.1.11

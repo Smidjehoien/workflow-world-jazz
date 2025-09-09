@@ -8,8 +8,6 @@ export default async function InstallCommandTabs() {
   // Package names with tarball extensions
   const corePackage = `https://${baseUrl}/vercel-workflow-core.tgz`;
   const nextPackage = `https://${baseUrl}/vercel-workflow-next.tgz`;
-  const cliPackage = `https://${baseUrl}/vercel-workflow-cli.tgz`;
-  const swcPluginPackage = `https://${baseUrl}/vercel-swc-plugin-workflow.tgz`;
 
   const mdxSource = `
   <Tabs items={['pnpm', 'npm', 'yarn']}>
