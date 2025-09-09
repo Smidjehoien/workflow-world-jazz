@@ -111,7 +111,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
   // Start the workflow (non-blocking)
-  helloWorkflow("world");
+  await helloWorkflow("world");
 
   return NextResponse.json({
     message: `Workflow started`

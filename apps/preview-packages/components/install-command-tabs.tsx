@@ -8,9 +8,11 @@ export default async function InstallCommandTabs() {
   // Package names with tarball extensions
   const corePackage = `https://${baseUrl}/vercel-workflow-core.tgz`;
   const nextPackage = `https://${baseUrl}/vercel-workflow-next.tgz`;
+  const cliPackage = `https://${baseUrl}/vercel-workflow-cli.tgz`;
+  const swcPluginPackage = `https://${baseUrl}/vercel-swc-plugin-workflow.tgz`;
 
   const mdxSource = `
-  <Tabs items={['pnpm', 'npm', 'bun', 'yarn']}>
+  <Tabs items={['pnpm', 'npm', 'yarn']}>
   <Tabs.Tab>
 
   \`\`\`bash copy
@@ -22,13 +24,6 @@ export default async function InstallCommandTabs() {
 
   \`\`\`bash copy
   npm i ${nextPackage} ${corePackage}
-  \`\`\`
-
-  </Tabs.Tab>
-    <Tabs.Tab>
-
-  \`\`\`bash copy
-  bun add ${nextPackage} ${corePackage}
   \`\`\`
 
   </Tabs.Tab>
