@@ -45,7 +45,7 @@ export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 
 export async function getWorkflowRun(runId: string) {
-  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID;
+  const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
     throw new Error('A `deploymentId` must be provided to get a workflow run');
   }

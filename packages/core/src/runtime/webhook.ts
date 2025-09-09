@@ -230,10 +230,10 @@ export async function handleWebhook(
   request: Request,
   body?: any
 ): Promise<Response> {
-  const deploymentId = process.env.VERCEL_DEPLOYMENT_ID;
+  const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
     // This should not happen when running inside Vercel Functions
-    console.error('`VERCEL_DEPLOYMENT_ID` environment variable is not set');
+    console.error('`deploymentId` is not set');
     return new Response('Internal server error', { status: 500 });
   }
 
