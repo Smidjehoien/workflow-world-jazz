@@ -50,7 +50,7 @@ export function createDiscoverEntriesPlugin(state: {
           const resolved = await enhancedResolve(args.resolveDir, args.path);
 
           if (resolved) {
-            importParents.set(resolved, args.importer);
+            importParents.set(args.importer, resolved);
           }
         } catch (_) {}
         return null;
