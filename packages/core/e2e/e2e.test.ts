@@ -156,4 +156,38 @@ describe.concurrent('e2e', () => {
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe('null byte \0');
   });
+
+  test('getContextWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('getContextWorkflow', []);
+    const returnValue = await getWorkflowReturnValue(run.runId);
+
+    expect(returnValue).toHaveProperty('workflowCtx');
+    expect(returnValue).toHaveProperty('stepCtx');
+
+    // workflow and context
+
+    // Both contexts should have the same runId
+    expect(returnValue.workflowCtx.workflowRunId).toBe(run.runId);
+    expect(returnValue.stepCtx.workflowRunId).toBe(run.runId);
+
+    // Both contexts should have matching workflowStartedAt timestamp
+    expect(typeof returnValue.workflowCtx.workflowStartedAt).toBe('string');
+    expect(typeof returnValue.stepCtx.workflowStartedAt).toBe('string');
+    expect(returnValue.workflowCtx.workflowStartedAt).toBe(
+      returnValue.stepCtx.workflowStartedAt
+    );
+
+    // Both contexts should have matching url
+    expect(typeof returnValue.workflowCtx.url).toBe('string');
+    expect(typeof returnValue.stepCtx.url).toBe('string');
+    expect(returnValue.workflowCtx.url).toBe(returnValue.stepCtx.url);
+
+    // step context
+
+    // Attempt should be atleast 1
+    expect(returnValue.stepCtx.attempt).toBeGreaterThanOrEqual(1);
+
+    // stepStartedAt should be a Date
+    expect(typeof returnValue.stepCtx.stepStartedAt).toBe('string');
+  });
 });

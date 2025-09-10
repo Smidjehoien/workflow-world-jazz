@@ -1,4 +1,9 @@
-import { FatalError, getWebhook, sleep } from '@vercel/workflow-core';
+import {
+  FatalError,
+  getContext,
+  getWebhook,
+  sleep,
+} from '@vercel/workflow-core';
 
 //////////////////////////////////////////////////////////
 
@@ -142,4 +147,26 @@ export async function nullByteWorkflow() {
   'use workflow';
   const a = await nullByteStep();
   return a;
+}
+
+//////////////////////////////////////////////////////////
+
+async function stepWithContext() {
+  'use step';
+  const ctx = getContext();
+  return ctx;
+}
+
+export async function getContextWorkflow() {
+  'use workflow';
+  const workflowCtx = getContext();
+  const stepCtx = await stepWithContext();
+  return {
+    workflowCtx: {
+      workflowRunId: workflowCtx.workflowRunId,
+      workflowStartedAt: workflowCtx.workflowStartedAt,
+      url: workflowCtx.url,
+    },
+    stepCtx,
+  };
 }
