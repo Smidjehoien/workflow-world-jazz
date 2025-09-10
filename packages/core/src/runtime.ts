@@ -330,7 +330,7 @@ export const vercelAPIStepsEntrypoint =
             ...Attribute.WorkflowName(workflowName),
             ...Attribute.WorkflowRunId(workflowRunId),
             ...Attribute.StepId(stepId),
-            ...Attribute.StepMaxRetries(stepFn.maxRetries ?? 32),
+            ...Attribute.StepMaxRetries(stepFn.maxRetries ?? 3),
             ...Attribute.StepTracePropagated(!!traceContext),
           });
 
@@ -460,7 +460,7 @@ export const vercelAPIStepsEntrypoint =
               });
             } else {
               const attempt = metadata.attempt;
-              const maxRetries = stepFn.maxRetries ?? 32;
+              const maxRetries = stepFn.maxRetries ?? 3;
 
               span?.setAttributes({
                 ...Attribute.StepAttempt(attempt),
