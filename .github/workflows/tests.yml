@@ -37,8 +37,16 @@ jobs:
         run: pnpm test
 
   e2e:
-    name: E2E Tests
+    name: E2E Tests (${{ matrix.app.name }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app:
+          - name: "example-app"
+            project-id: "prj_xWq20Dd860HHAfzMjK2Mb6TPVxMa"
+          - name: "nextjs-app"
+            project-id: "prj_yjkM7UdHliv8bfxZ1sMJQf1pMpdi"
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
@@ -64,8 +72,9 @@ jobs:
         id: waitForDeployment
         uses: ./.github/actions/wait-for-vercel-project
         with:
-          project-id: prj_xWq20Dd860HHAfzMjK2Mb6TPVxMa
-          vercel-token: ${{ secrets.VERCEL_UNCURATED_TESTS }}
+          team-id: 'team_nO2mCG4W8IxPIeKoSsqwAxxB'
+          project-id: ${{ matrix.app.project-id }}
+          vercel-token: ${{ secrets.VERCEL_LABS_TOKEN }}
           timeout: 1000
           check-interval: 15
           environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}

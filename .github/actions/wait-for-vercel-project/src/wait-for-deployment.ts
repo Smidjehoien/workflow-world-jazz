@@ -24,6 +24,7 @@ interface VercelDeployment {
 async function run(): Promise<void> {
   try {
     // Get inputs
+    const teamId = core.getInput('team-id', { required: true });
     const projectId = core.getInput('project-id', { required: true });
     const vercelToken = core.getInput('vercel-token', { required: true });
     const timeoutInput = parseInt(core.getInput('timeout') || '600', 10);
@@ -102,7 +103,7 @@ async function run(): Promise<void> {
         const deploymentParams: any = {
           projectId: projectId,
           limit: 10,
-          teamId: 'team_MtLD9hKuWAvoDd3KmiHs9zUg',
+          teamId: teamId,
           sha: targetSha, // Filter by exact commit SHA
           branch: branchName, // Filter by git branch name
         };

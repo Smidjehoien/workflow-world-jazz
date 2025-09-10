@@ -6,6 +6,9 @@ inputs:
   project-id:
     description: 'Vercel project ID for identification'
     required: true
+  team-id:
+    description: 'Vercel team ID for identification'
+    required: true
   vercel-token:
     description: 'Vercel API token for authentication'
     required: true

@@ -1,4 +1,3 @@
-import '../instrumentation.js';
 import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
 import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
 
