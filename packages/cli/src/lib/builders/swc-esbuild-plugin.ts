@@ -145,11 +145,17 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
             loader,
           };
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.error(
+            `❌ SWC transform error in ${args.path}:`,
+            errorMessage
+          );
           return {
             errors: [
               {
-                text: error instanceof Error ? error.message : String(error),
-                location: null,
+                text: `SWC transform failed: ${errorMessage}`,
+                location: { file: args.path, line: 0, column: 0 },
               },
             ],
           };

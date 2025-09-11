@@ -152,6 +152,35 @@ export abstract class BaseBuilder {
     }
   }
 
+  private logEsbuildMessages(
+    result: { errors?: any[]; warnings?: any[] },
+    phase: string
+  ): void {
+    if (result.errors && result.errors.length > 0) {
+      console.error(`❌ esbuild errors in ${phase}:`);
+      for (const error of result.errors) {
+        console.error(`  ${error.text}`);
+        if (error.location) {
+          console.error(
+            `    at ${error.location.file}:${error.location.line}:${error.location.column}`
+          );
+        }
+      }
+    }
+
+    if (result.warnings && result.warnings.length > 0) {
+      console.warn(`⚠️  esbuild warnings in ${phase}:`);
+      for (const warning of result.warnings) {
+        console.warn(`  ${warning.text}`);
+        if (warning.location) {
+          console.warn(
+            `    at ${warning.location.file}:${warning.location.line}:${warning.location.column}`
+          );
+        }
+      }
+    }
+  }
+
   protected async createStepsBundle({
     inputFiles,
     format = 'cjs',
@@ -196,7 +225,7 @@ export abstract class BaseBuilder {
     export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
-    await esbuild.build({
+    const stepsResult = await esbuild.build({
       banner: {
         js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
       },
@@ -234,6 +263,8 @@ export abstract class BaseBuilder {
         }),
       ],
     });
+
+    this.logEsbuildMessages(stepsResult, 'steps bundle creation');
 
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();
@@ -298,6 +329,8 @@ export abstract class BaseBuilder {
       plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
 
+    this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');
+
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();
 
@@ -310,9 +343,7 @@ export abstract class BaseBuilder {
     // Create the workflow function handler with proper linter suppressions
     const workflowFunctionCode = `// biome-ignore-all lint: generated file
 /* eslint-disable */
-
-import {
-    vercelAPIWorkflowsEntrypoint } from '${
+import { vercelAPIWorkflowsEntrypoint } from '${
       // The runtime import path is configurable so that the Next.js loader
       // runtime path can be resolved. This is to avoid the user needing to
       // add @vercel/workflow-core as a dependency to their Next.js project.
@@ -338,7 +369,7 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
     console.log('Creating final workflow bundle');
 
     // Now bundle this so we can resolve the @vercel/workflow-core dependency
-    await esbuild.build({
+    const finalWorkflowResult = await esbuild.build({
       banner: {
         js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
       },
@@ -360,6 +391,8 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       minify: false,
       external: ['@aws-sdk/credential-provider-web-identity'],
     });
+
+    this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
   }
 
   protected async buildClientLibrary(): Promise<void> {
@@ -385,7 +418,7 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       .join('\n');
 
     // Bundle with esbuild and our custom SWC plugin
-    await esbuild.build({
+    const clientResult = await esbuild.build({
       banner: {
         js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
       },
@@ -406,6 +439,8 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'client' })],
     });
+
+    this.logEsbuildMessages(clientResult, 'client library bundle');
 
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();

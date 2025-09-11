@@ -90,11 +90,17 @@ export function createDiscoverEntriesPlugin(state: {
             loader,
           };
         } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+          console.error(
+            `❌ Entry discovery error in ${args.path}:`,
+            errorMessage
+          );
           return {
             errors: [
               {
-                text: error instanceof Error ? error.message : String(error),
-                location: null,
+                text: `Entry discovery failed: ${errorMessage}`,
+                location: { file: args.path, line: 0, column: 0 },
               },
             ],
           };
