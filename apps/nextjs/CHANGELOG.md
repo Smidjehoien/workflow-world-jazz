@@ -1,5 +1,11 @@
 # nextjs
 
+## 0.0.2-alpha.5
+
+### Patch Changes
+
+- 91190f3: Fix `get-context` with externalizing handling in Next.js
+
 ## 0.0.2-alpha.4
 
 ### Patch Changes

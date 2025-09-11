@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.18
+
+### Patch Changes
+
+- 5d04853: Change default max retries from 32 to 3 for workflow steps
+
 ## 0.0.1-alpha.17
 
 ### Patch Changes

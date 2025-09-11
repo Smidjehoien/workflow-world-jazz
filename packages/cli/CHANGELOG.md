@@ -1,5 +1,14 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.26
+
+### Patch Changes
+
+- 91190f3: Fix `get-context` with externalizing handling in Next.js
+- 2c52144: Add comprehensive esbuild error and warning logging to CLI builds
+- Updated dependencies [5d04853]
+  - @vercel/workflow-core@0.0.1-alpha.18
+
 ## 0.0.1-alpha.25
 
 ### Patch Changes

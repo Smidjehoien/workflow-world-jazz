@@ -1,5 +1,12 @@
 # @workflow/example-app
 
+## 0.0.2-alpha.18
+
+### Patch Changes
+
+- Updated dependencies [5d04853]
+  - @vercel/workflow-core@0.0.1-alpha.18
+
 ## 0.0.2-alpha.17
 
 ### Patch Changes
