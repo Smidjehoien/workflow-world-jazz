@@ -18,7 +18,7 @@ This repository contains the client side SDK code for workflows, along example a
 - **packages/vm**: Sandboxed execution environment (`@vercel/workflow-vm`)
 - **packages/swc-plugin-workflow**: SWC compiler plugin for workflow transformations
 - **apps/example**: Basic workflow examples using the CLI (aka "standalone mode")
-- **apps/nextjs**: Workflow examples using the Next.js integration
+- **apps/nextjs-turbopack**: Workflow examples using the Next.js integration
 
 ### Workflow Execution Model
 
@@ -77,13 +77,13 @@ cd apps/example && pnpm wf [command]  # shorthand
 ### Next.js App Development
 ```bash
 # Start Next.js dev server with workflow support
-cd apps/nextjs && pnpm dev
+cd apps/nextjs-turbopack && pnpm dev
 
 # Build Next.js app with workflows
-cd apps/nextjs && pnpm build
+cd apps/nextjs-turbopack && pnpm build
 
 # Production server
-cd apps/nextjs && pnpm start
+cd apps/nextjs-turbopack && pnpm start
 ```
 
 ## Key Workflow Concepts

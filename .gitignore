@@ -25,3 +25,5 @@ target
 
 # claude local settings
 .claude/settings.local.json
+
+.next

@@ -45,7 +45,7 @@ jobs:
         app:
           - name: "example-app"
             project-id: "prj_xWq20Dd860HHAfzMjK2Mb6TPVxMa"
-          - name: "nextjs-app"
+          - name: "nextjs-app-turbopack"
             project-id: "prj_yjkM7UdHliv8bfxZ1sMJQf1pMpdi"
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

@@ -1,0 +1,4 @@
+{
+  "buildCommand": "turbo run build && pnpm next build",
+  "devCommand": "turbo run build && pnpm next"
+}
