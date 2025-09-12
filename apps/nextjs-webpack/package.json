@@ -3,7 +3,8 @@
   "version": "0.0.2-alpha.5",
   "private": true,
   "scripts": {
-    "dev": "eval `node -e \"console.log(require('./vercel.json').devCommand)\"`",
+    "dev": "next dev",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },

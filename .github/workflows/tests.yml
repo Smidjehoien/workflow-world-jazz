@@ -47,6 +47,8 @@ jobs:
             project-id: "prj_xWq20Dd860HHAfzMjK2Mb6TPVxMa"
           - name: "nextjs-app-turbopack"
             project-id: "prj_yjkM7UdHliv8bfxZ1sMJQf1pMpdi"
+          - name: "nextjs-app-webpack"
+            project-id: "prj_avRPBF3eWjh6iDNQgmhH4VOg27h0"
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
