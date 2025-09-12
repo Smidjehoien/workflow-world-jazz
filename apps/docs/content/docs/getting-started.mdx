@@ -3,7 +3,11 @@ import InstallCommandTabs from '@/components/install-command-tabs'
 
 # Getting Started
 
-Get up and running with Workflow SDK in your Next.js application in under 5 minutes.
+Let's build your first reliable, multi-step workflow. Your workflow will automatically retry failed steps and resume after any interruption.
+
+<Callout type="info">
+Workflow currently requires you to have (or create) a Next.js app
+</Callout>
 
 <Steps>
 
@@ -13,11 +17,15 @@ Inside your Next.js project directory, run the following:
 
 <InstallCommandTabs />
 
+<Callout type="info">
+During the private beta, check back here often to get the latest versions of the packages
+</Callout>
+
 ## Configure Next.js
 
 Wrap your main Next.js config with the `withWorkflow()` function:
 
-```ts filename="next.config.ts" {1,4-6,8}
+```ts filename="next.config.ts" {1,8}
 import { withWorkflow } from '@vercel/workflow-next';
 import type { NextConfig } from 'next';
 
@@ -28,29 +36,53 @@ const nextConfig: NextConfig = {
 export default withWorkflow(nextConfig);
 ```
 
-Wrapping your config with `withWorkflow()` will:
-
-- Add a Turbopack/webpack loader that compiles files containing `"use workflow"`/`"use step"`
-- Build the workflow and step bundles during `next build` via the Workflow CLI
-- Enable the embedded transport in dev for local testing
+Wrapping your config with `withWorkflow()` will enable using the `"use workflow"` and `"use step"` directives in both local development and when deployed on Vercel.
 
 ## Create your first workflow
 
 Create a new file in the `workflows` directory:
 
-```ts filename="workflows/hello-world.ts"
-export async function helloWorkflow(word: string) {
-  "use workflow";
+```ts filename="workflows/user-signup.ts" {4,18,26,37}
+import { sleep } from "@vercel/workflow-core";
 
-  const greeting = await createGreeting(word);
+export async function userSignupWorkflow(email: string) {
+	"use workflow";
+
+	// Steps are executed in the background using a queue
+	// The workflow process is suspended and consumes no resources
+	const user = await createUser(email);
+	await sendWelcomeEmail(user.id);
+
+	await sleep("30s"); // Pause for 30s or 2 days or a year without consuming resources
+	await sendOnboardingEmail(user.id);
+
+	return { userId: user.id, status: "onboarded" };
 }
 
-async function createGreeting(word: string) {
-  "use step";
+async function createUser(email: string) {
+	"use step";
 
-  // This runs with full Node.js access
-  console.log(`Running greeting step with word: ${word}`)
-  return `Hello ${word}!`;
+	// Full Node.js access - database calls, APIs, etc.
+	console.log(`Creating user with email: ${email}`);
+	return { id: crypto.randomUUID(), email };
+}
+
+async function sendWelcomeEmail(userId: string) {
+	"use step";
+
+	console.log(`Sending welcome email to user: ${userId}`);
+
+	if (Math.random() < 0.3) {
+    // By default, steps will be retried 3 times for unhandled errors
+		throw new Error("Retryable!");
+	}
+}
+
+async function sendOnboardingEmail(userId: string) {
+	"use step";
+
+	console.log(`Sending onboarding email to user: ${userId}`);
+	// Email API call here
 }
 ```
 
@@ -58,19 +90,23 @@ async function createGreeting(word: string) {
 Workflow functions orchestrate execution, while step functions perform the actual work. Learn more in [Concepts](./concepts).
 </Callout>
 
-## Invoke your workflow
+## Create your API route
 
-```ts filename="app/api/hello/route.ts"
-import { helloWorkflow } from '@/workflows/hello-world';
-import { NextResponse } from 'next/server';
+Create an API route to trigger your new workflow:
 
-export async function GET(request: Request) {
-  // Start the workflow (non-blocking)
-  await helloWorkflow("world");
+```ts filename="app/api/signup/route.ts" {1,8}
+import { userSignupWorkflow } from "@/workflows/user-signup";
+import { NextResponse } from "next/server";
 
-  return NextResponse.json({
-    message: `Workflow started`
-  });
+export async function POST(request: Request) {
+	const { email } = await request.json();
+
+	// Workflows execute asynchronously and don't block your application
+	await userSignupWorkflow(email);
+
+	return NextResponse.json({
+		message: "User signup workflow started",
+	});
 }
 ```
 
@@ -78,14 +114,34 @@ export async function GET(request: Request) {
 Workflows can be triggered from API routes, Server Actions, or any server-side code.
 </Callout>
 
-<Callout type="info">
-Workflows execute asynchronously and don't block your application. The SDK handles queuing, execution, and retry logic automatically.
+## Run in development
+
+<Callout type="warning">
+Currently in local development, you'll need to link a Vercel project and use `npx vercel link` and `npx vercel env pull` in order to test your workflow. This will be removed in the near future.
+
+For more information check out [Vercel CLI Link Docs](https://vercel.com/docs/cli/link) and [Vercel CLI Env Docs](https://vercel.com/docs/cli/env)
 </Callout>
+
+Start the development server:
+
+```bash
+pnpm run dev
+```
+
+Once your development server is running, trigger the workflow by running this command in your terminal:
+
+```bash
+curl -X POST --json '{"email":"hello@example.com"}' http://localhost:3000/api/signup
+```
+
+Watch the Next.js dev server logs to see your workflow execute to completion.
+
+</Steps>
+
+Congrats on running your first workflow locally! To deploy into production, simply push your code to Vercel.
 
 ## Next Steps
 
 - Learn core concepts in [Concepts](./concepts)
 - Explore the [API Reference](./api-reference)
 - Check [Troubleshooting](./troubleshooting) if you encounter issues
-
-</Steps>

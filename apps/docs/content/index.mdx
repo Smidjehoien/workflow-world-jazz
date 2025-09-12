@@ -4,28 +4,53 @@ Build resilient, long-running applications with durable functions for JavaScript
 
 [Get Started](/docs/getting-started) · [Examples](/examples)
 
-## Overview
+## What are workflows?
 
-Workflow SDK brings the power of durable execution to JavaScript and TypeScript. Write complex, multi-step processes that can run for days or months, survive failures, and automatically resume from interruptions - all with simple async/await syntax.
+Workflows are reliable, multi-step processes that automatically resume after failures. Perfect for operations like order processing, user onboarding, AI agents, or any business logic that involves multiple API calls, delays, or external dependencies.
 
-Whether you're building order processing pipelines, data synchronization workflows, or complex business automations, Workflow SDK ensures your code runs reliably without managing state machines, queues, or recovery logic.
+**The problem**: Traditional code is susceptible to sporadic failures, not durable, and bound by the max serverless function time.
+
+**The solution**: Workflows automatically save progress after each step and resume exactly where they left off, no matter what interrupted them.
 
 ```ts
-export async function onboardCustomer(customerId: string) {
+import { sleep } from '@vercel/workflow-core';
+
+export async function processOrder(orderId: string) {
   "use workflow";
   
   // Each step is automatically retried and persisted
-  const account = await createAccount(customerId);
-  const [profile, preferences] = await Promise.all([
-    setupProfile(account.id),
-    configurePreferences(account.id)
-  ]);
+  const order = await fetchOrder(orderId);
+  const payment = await processPayment(order.total);
   
-  await sendWelcomeEmail(account.email);
-  await scheduleOnboardingCall(account.id, { delay: "3 days" });
+  // Wait 1 day, then ship - the workflow suspends
+  // and resumes where it left off
+  await sleep("1d");
+  await createShipment(order);
   
-  return { accountId: account.id, status: "onboarded" };
+  await sendOrderConfirmation(order.email);
+  
+  return { orderId, status: "completed" };
 }
 ```
 
 ## Features
+
+**Automatic Retries** - Steps retry on failure with configurable delays and error types
+
+**Sleep & Scheduling** - Built-in `sleep()` function for delays from seconds to years
+
+**Webhooks** - Wait for external HTTP requests to resume workflow execution
+
+**Durability Guarantees** - Progress persisted automatically, workflows resume after any interruption
+
+**Parallel Execution** - Use `Promise.all()` and `Promise.race()` just like regular JavaScript
+
+**Simple Async/Await** - Write workflows with familiar JavaScript patterns, no special syntax
+
+**Built-in Fetch** - HTTP requests automatically converted to reliable, retryable steps
+
+**Context & Metadata** - Access run IDs, timestamps, retry attempts, and other execution context
+
+**Streaming Support** - Handle ReadableStreams and real-time data processing
+
+👉 Next: [Get Started here](/docs/getting-started)

@@ -82,7 +82,14 @@ export default WorkflowContext
 
 #### `WebhookOptions`
 
-TODO: need WebhookOptions exported
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import type { WebhookOptions } from "@vercel/workflow-core"
+export default WebhookOptions
+    `
+  })}
+/>
 
 ### Error Classes
 
@@ -101,7 +108,7 @@ export default FatalError
 
 #### `RetryableError`
 
-Throw this error in a step function to indicate a temporary failure with (an optional) retry policy.
+Throw this error in a step function to indicate a temporary failure that should be retried. When a step function throws a `RetryableError`, the workflow runtime will automatically retry the step up to 3 times before marking it as failed.
 
 <TSDoc
   definition={generateDefinition({
@@ -113,7 +120,7 @@ export default RetryableError
 />
 
 <Callout>
-Always use `FatalError` for permanent failures (like validation errors) and `RetryableError` for temporary issues (like network failures or rate limits).
+Always use `FatalError` for permanent failures (like validation errors) and `RetryableError` for temporary issues (like network failures or rate limits). Step functions will automatically retry up to 3 times when a `RetryableError` is thrown.
 </Callout>
 
 ### Next.js Integration

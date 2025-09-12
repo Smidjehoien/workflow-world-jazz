@@ -14,21 +14,24 @@ export default async function InstallCommandTabs() {
   <Tabs.Tab>
 
   \`\`\`bash copy
-  pnpm i ${nextPackage} ${corePackage}
+  pnpm i ${nextPackage} \\
+    ${corePackage}
   \`\`\`
 
   </Tabs.Tab>
   <Tabs.Tab>
 
   \`\`\`bash copy
-  npm i ${nextPackage} ${corePackage}
+  npm i ${nextPackage} \\
+    ${corePackage}
   \`\`\`
 
   </Tabs.Tab>
   <Tabs.Tab>
 
   \`\`\`bash copy
-  yarn add ${nextPackage} ${corePackage}
+  yarn add ${nextPackage} \\
+    ${corePackage}
   \`\`\`
 
   </Tabs.Tab>

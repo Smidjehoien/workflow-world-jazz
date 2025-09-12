@@ -183,12 +183,12 @@ async function reliableAPICall(endpoint: string) {
   }
   
   if (response.status === 429) {
-    // Retry later - temporary failure
+    // Retry later - temporary failure (will retry up to 3 times)
     throw new RetryableError('Rate limited');
   }
   
   if (!response.ok) {
-    // Default behavior - will retry
+    // Default behavior - will retry up to 3 times
     throw new Error(`HTTP ${response.status}`);
   }
   
@@ -196,7 +196,8 @@ async function reliableAPICall(endpoint: string) {
 }
 ```
 
-<Callout type="info">
+<Callout>
+Any error thrown (besides a `FatalError`) will act just like a `RetryableError`!
 To learn more about error classes, refer to the [API Reference](./api-reference#error-classes).
 </Callout>
 
@@ -226,28 +227,3 @@ export async function scheduledWorkflow(userId: string) {
   await sendSurveyEmail(userId);
 }
 ```
-
-## Best Practices
-
-### 1. Workflows Are Deterministic
-
-```ts
-// ❌ Bad - Non-deterministic in workflow
-export async function badWorkflow() {
-  "use workflow";
-  const id = Math.random(); // Changes on replay, different each time!
-}
-
-// ✅ Good - Non-deterministic in step
-async function generateId() {
-  "use step";
-  return { id: Math.random(), timestamp: Date.now() };
-}
-
-export async function goodWorkflow() {
-  "use workflow";
-  const { id, timestamp } = await generateId();
-}
-```
-
-### 2. TODO: we'll have more later on?
