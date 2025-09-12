@@ -10,7 +10,7 @@
   },
   "type": "module",
   "dependencies": {
-    "next": "15.5.2",
+    "next": "15.5.3",
     "nextra": "^4.4.0",
     "nextra-theme-docs": "^4.4.0",
     "react": "19.1.0",
