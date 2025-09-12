@@ -262,6 +262,9 @@ export abstract class BaseBuilder {
           tsPaths,
         }),
       ],
+      // Plugin should catch most things, but this lets users hard override
+      // if the plugin misses anything that should be externalized
+      external: this.config.externalPackages || [],
     });
 
     this.logEsbuildMessages(stepsResult, 'steps bundle creation');
@@ -321,10 +324,6 @@ export abstract class BaseBuilder {
       keepNames: true,
       minify: false,
       sourcemap: 'inline',
-      external: [
-        '@aws-sdk/credential-provider-web-identity',
-        ...(this.config.externalPackages || []),
-      ],
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
