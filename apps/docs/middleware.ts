@@ -1,20 +1,58 @@
-import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { checkTeamMembership } from './lib/check-membership';
 
-export function middleware(request: NextRequest) {
-  const hostname = request.headers.get('host') || '';
-  const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+// Add teams we want to allow here
+const ALLOWED_TEAM_IDS = [
+  'team_nLlpyC6REAqxydlFKbrMDlud', // Vercel
+  'team_nO2mCG4W8IxPIeKoSsqwAxxB', // Vercel Labs
+  'team_xiRKInFi7lBd1gTqyAGuzmkC', // Garden Computer (jazz tools, for workflow)
+  'team_rS1hfVQpiVcXq9ZTnAUAh6ym', // Interfere
+  'team_HNGfD0SVayaivBJpSGH6VqAM', // Midpage AI
+  'team_druD8aGMg4cYS4zzJ2Pb6c3r', // Comfy Deploy
+];
 
-  // If we have a production URL configured and the current hostname matches it,
-  // redirect to the coming soon page
-  if (productionUrl && hostname === productionUrl) {
-    // Don't redirect if already on the coming-soon page
-    if (!request.nextUrl.pathname.startsWith('/coming-soon')) {
-      return NextResponse.redirect(new URL('/coming-soon', request.url));
-    }
+export async function middleware(request: NextRequest) {
+  const response = NextResponse.next();
+
+  // Skip auth for auth routes and coming-soon page
+  if (
+    request.nextUrl.pathname.startsWith('/api/auth/') ||
+    request.nextUrl.pathname.startsWith('/coming-soon') ||
+    request.nextUrl.pathname.startsWith('/auth/error')
+  ) {
+    return response;
   }
 
-  return NextResponse.next();
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get('access_token');
+
+  if (!accessToken) {
+    return NextResponse.redirect(new URL('/api/auth/authorize', request.url));
+  }
+
+  try {
+    const teamIds = await checkTeamMembership(accessToken.value);
+
+    const isAllowed = ALLOWED_TEAM_IDS.some((teamId) =>
+      teamIds.includes(teamId)
+    );
+
+    if (!isAllowed) {
+      return NextResponse.redirect(new URL('/coming-soon', request.url));
+    }
+
+    response.headers.set(
+      'Cache-Control',
+      'private, no-cache, no-store, must-revalidate'
+    );
+  } catch (error) {
+    console.error('Error checking team membership:', error);
+    return NextResponse.redirect(new URL('/coming-soon', request.url));
+  }
+
+  return response;
 }
 
 export const config = {
@@ -26,7 +64,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - robots.txt (robots file)
+     * - *.tgz (tgz files)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|.*\\.tgz$).*)',
   ],
 };
