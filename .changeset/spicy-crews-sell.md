@@ -1,7 +1,6 @@
 ---
 "@vercel/workflow-core": patch
 "@vercel/workflow-next": patch
-"@workflow/example-app": patch
 "@vercel/workflow-cli": patch
 ---
 

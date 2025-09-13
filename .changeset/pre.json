@@ -2,8 +2,6 @@
   "mode": "pre",
   "tag": "alpha",
   "initialVersions": {
-    "@workflow/example-app": "0.0.1",
-    "nextjs": "0.0.1",
     "@vercel/swc-plugin-workflow": "0.0.0",
     "@vercel/workflow-cli": "0.0.0",
     "@vercel/workflow-core": "0.0.0",
