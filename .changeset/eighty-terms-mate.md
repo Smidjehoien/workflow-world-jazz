@@ -1,5 +1,4 @@
 ---
-"nextjs": patch
 "@vercel/workflow-cli": patch
 ---
 
