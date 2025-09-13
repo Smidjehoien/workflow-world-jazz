@@ -1,5 +1,11 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.27
+
+### Patch Changes
+
+- ae0cbc0: Wire in external packagese from config
+
 ## 0.0.1-alpha.26
 
 ### Patch Changes

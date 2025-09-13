@@ -8,7 +8,10 @@
     "@vercel/workflow-next": "0.0.0",
     "@vercel/workflow-tsconfig": "0.0.0",
     "@vercel/workflow-vm": "0.0.0",
-    "docs": "1.0.0"
+    "docs": "1.0.0",
+    "@workflow/example-app": "0.0.2-alpha.18",
+    "nextjs-turbopack": "0.0.2-alpha.5",
+    "nextjs-webpack": "0.0.2-alpha.5"
   },
   "changesets": [
     "breezy-parents-fall",
@@ -22,6 +25,7 @@
     "clever-heads-throw",
     "cold-carpets-double",
     "cold-regions-beg",
+    "cool-tables-double",
     "crazy-hotels-cry",
     "cuddly-showers-clap",
     "cuddly-webs-flash",
@@ -33,7 +37,6 @@
     "default-retries-change",
     "dirty-feet-fry",
     "dirty-hounds-pump",
-    "dull-worms-laugh",
     "eight-steaks-remain",
     "eighty-eyes-rhyme",
     "eighty-terms-mate",
@@ -44,8 +47,10 @@
     "flat-corners-design",
     "floppy-rivers-cheat",
     "fruity-queens-reply",
+    "funny-monkey-fall",
     "fuzzy-baboons-smell",
     "gold-hats-travel",
+    "grumpy-boats-behave",
     "grumpy-clowns-unite",
     "happy-flowers-chew",
     "happy-trees-sing",
@@ -80,6 +85,7 @@
     "tangy-lamps-flash",
     "three-rooms-stare",
     "tricky-walls-join",
+    "twenty-tires-rescue",
     "two-cities-behave",
     "upset-guests-nail",
     "vast-mice-slide",
@@ -89,6 +95,7 @@
     "weak-wombats-battle",
     "wet-baths-search",
     "wild-clubs-dress",
+    "yellow-cycles-show",
     "young-lamps-deny"
   ]
 }

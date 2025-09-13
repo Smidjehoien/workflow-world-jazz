@@ -1,5 +1,14 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.28
+
+### Patch Changes
+
+- eb7625c: Fix dev env not set in time for webpack
+- c7eab04: Upgrade next to 15.5.3
+- Updated dependencies [ae0cbc0]
+  - @vercel/workflow-cli@0.0.1-alpha.27
+
 ## 0.0.1-alpha.27
 
 ### Patch Changes
