@@ -10,6 +10,14 @@ export function withWorkflow(
     };
   }
 ) {
+  const embeddedWorldConfig = JSON.stringify(
+    nextConfig.workflows?.embedded ?? {}
+  );
+  if (!process.env.VERCEL_DEPLOYMENT_ID) {
+    process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
+    process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
+  }
+
   // configure the loader if turbopack is being used
   if (!nextConfig.turbopack) {
     nextConfig.turbopack = {};
@@ -69,7 +77,7 @@ export function withWorkflow(
       : webpackConfig;
   };
 
-  return async function buildConfig(phase: string) {
+  return async function buildConfig() {
     // only run this in the main process so it only runs once
     // as Next.js uses child processes for different builds
     if (typeof process.send !== 'function') {
@@ -88,18 +96,6 @@ export function withWorkflow(
       });
 
       await workflowBuilder.build();
-    }
-
-    const embeddedWorldConfig = JSON.stringify(
-      nextConfig.workflows?.embedded ?? {}
-    );
-    if (phase === 'phase-development-server') {
-      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
-      process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
-      // handle watching
-    } else if (phase === 'phase-production-server') {
-      process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
-      process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
     }
     return nextConfig;
   };

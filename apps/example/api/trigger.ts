@@ -25,10 +25,14 @@ export async function POST(req: Request) {
   }
   console.log(`Starting "${workflow}" workflow with args: ${args}`);
 
-  const run = await start(workflow, args);
-  console.log('Run:', run);
-
-  return Response.json(run);
+  try {
+    const run = await start(workflow, args);
+    console.log('Run:', run);
+    return Response.json(run);
+  } catch (err) {
+    console.error(`Failed to start!!`, err);
+    throw err;
+  }
 }
 
 export async function GET(req: Request) {
