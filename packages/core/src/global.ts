@@ -77,6 +77,8 @@ export type QueueItem = StepInvocationQueueItem | WebhookInvocationQueueItem;
 export class StepsNotRunError extends Error {
   steps: QueueItem[];
   globalThis: typeof globalThis;
+  stepCount: number;
+  webhookCount: number;
 
   constructor(steps: QueueItem[], global: typeof globalThis) {
     const stepCount = steps.filter((s) => s.type === 'step').length;
@@ -93,6 +95,8 @@ export class StepsNotRunError extends Error {
     this.name = 'StepsNotRunError';
     this.steps = steps;
     this.globalThis = global;
+    this.stepCount = stepCount;
+    this.webhookCount = webhookCount;
   }
 }
 

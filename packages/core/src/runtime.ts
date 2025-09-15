@@ -38,6 +38,7 @@ import { contextStorage } from './step/get-context.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
+import { buildWorkflowSuspensionMessage } from './util.js';
 import { runWorkflow } from './workflow.js';
 
 export { StepsNotRunError } from './global.js';
@@ -176,6 +177,14 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
             });
           } catch (err) {
             if (isInstanceOf(err, StepsNotRunError)) {
+              const suspensionMessage = buildWorkflowSuspensionMessage(
+                runId,
+                err.stepCount,
+                err.webhookCount
+              );
+              if (suspensionMessage) {
+                console.log(suspensionMessage);
+              }
               // Process each operation in the queue (steps and webhooks)
               for (const queueItem of err.steps) {
                 if (queueItem.type === 'step') {
@@ -428,15 +437,11 @@ export const vercelAPIStepsEntrypoint =
               }
             }
 
-            console.error(
-              `${getErrorName(
-                err
-              )} while running "${stepId}" step (Workflow run ID: ${workflowRunId}):\n\n${getErrorStack(
-                err
-              )}`
-            );
-
             if (isInstanceOf(err, FatalError)) {
+              const stackLines = getErrorStack(err).split('\n').slice(0, 4);
+              console.error(
+                `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step:\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
+              );
               // Fatal error - store the error in the event log and re-invoke the workflow
               await createWorkflowRunEvent(workflowRunId, {
                 eventType: 'step_failed',
@@ -468,19 +473,24 @@ export const vercelAPIStepsEntrypoint =
               });
 
               if (attempt >= maxRetries) {
-                // Max retries reached - store the error in the event log and re-invoke the workflow
-                const error = `Max retries reached`;
+                // Max retries reached
+                const stackLines = getErrorStack(err).split('\n').slice(0, 4);
+                console.error(
+                  `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
+                );
+                const errorMessage = `Max retries reached: ${String(err)}`;
                 await createWorkflowRunEvent(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
                   eventData: {
-                    error,
+                    error: errorMessage,
+                    stack: getErrorStack(err),
                     fatal: true,
                   },
                 });
                 await updateStep(workflowRunId, stepId, {
                   status: 'failed',
-                  error: error,
+                  error: errorMessage,
                 });
 
                 span?.setAttributes({
@@ -488,6 +498,17 @@ export const vercelAPIStepsEntrypoint =
                   ...Attribute.StepRetryExhausted(true),
                 });
               } else {
+                // Not at max retries yet - log as a retryable error
+                if (isInstanceOf(err, RetryableError)) {
+                  console.warn(
+                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step (attempt ${attempt}):\n  > ${String(err.message)}\n\n  Request will return 503 to trigger retry`
+                  );
+                } else {
+                  const stackLines = getErrorStack(err).split('\n').slice(0, 4);
+                  console.error(
+                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Request will return 503 to trigger retry`
+                  );
+                }
                 await createWorkflowRunEvent(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
