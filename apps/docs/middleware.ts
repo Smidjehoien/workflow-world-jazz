@@ -11,6 +11,7 @@ const ALLOWED_TEAM_IDS = [
   'team_rS1hfVQpiVcXq9ZTnAUAh6ym', // Interfere
   'team_HNGfD0SVayaivBJpSGH6VqAM', // Midpage AI
   'team_druD8aGMg4cYS4zzJ2Pb6c3r', // Comfy Deploy
+  'team_bMVoi9ApQgPhcZaoXuutyicf', // Mandolin
 ];
 
 export async function middleware(request: NextRequest) {
