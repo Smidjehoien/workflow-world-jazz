@@ -77,6 +77,29 @@ async function fetchOrder(orderId: string) {
 }
 ```
 
+Additionally, you're able to set the `maxRetries` of a step function, for example with the step above:
+
+```ts {16}
+async function fetchOrder(orderId: string) {
+  "use step";
+  
+  // Full Node.js access - use any npm package
+  const stripe = new Stripe(process.env.STRIPE_KEY);
+  
+  const payment = await stripe.charges.create({
+    amount: order.total,
+    currency: 'usd',
+    source: order.paymentToken
+  });
+  
+  return { paymentId: payment.id, status: 'paid' };
+}
+
+fetchOrder.maxRetries = 10
+```
+
+_`maxRetries` is 3 by default._
+
 Steps have:
 
 * **Full Node.js access**: Use any API or npm package
