@@ -17,4 +17,5 @@ export {
   RetryableError,
   type RetryableErrorOptions,
 } from './global.js';
+export { createWorkflowOutputStream } from './output-stream.js';
 export { sleep } from './sleep.js';

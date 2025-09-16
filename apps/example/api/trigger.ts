@@ -1,4 +1,8 @@
-import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
+import {
+  getWorkflowOutputStream,
+  getWorkflowReturnValue,
+  start,
+} from '@vercel/workflow-core/runtime';
 import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
 
 export async function POST(req: Request) {
@@ -41,6 +45,26 @@ export async function GET(req: Request) {
   if (!runId) {
     return new Response('No runId provided', { status: 400 });
   }
+
+  if (url.searchParams.get('output-stream') === '1') {
+    const stream = getWorkflowOutputStream(runId);
+    // Add JSON framing to the stream, wrapping binary data in base64
+    const streamWithFraming = new TransformStream({
+      transform(chunk, controller) {
+        const data =
+          chunk instanceof Uint8Array
+            ? { data: Buffer.from(chunk).toString('base64') }
+            : chunk;
+        controller.enqueue(`${JSON.stringify(data)}\n`);
+      },
+    });
+    return new Response(stream.pipeThrough(streamWithFraming), {
+      headers: {
+        'Content-Type': 'application/octet-stream',
+      },
+    });
+  }
+
   try {
     const returnValue = await getWorkflowReturnValue(runId);
     console.log('Return value:', returnValue);

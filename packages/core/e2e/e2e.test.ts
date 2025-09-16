@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'vitest';
+import { assert, describe, expect, test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;
@@ -189,5 +189,32 @@ describe.concurrent('e2e', () => {
 
     // stepStartedAt should be a Date
     expect(typeof returnValue.stepCtx.stepStartedAt).toBe('string');
+  });
+
+  test('outputStreamWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('outputStreamWorkflow', []);
+    const stream = await fetch(
+      `${deploymentUrl}/api/trigger?runId=${run.runId}&output-stream=1`
+    );
+    const textDecoderStream = new TextDecoderStream();
+    stream.body?.pipeThrough(textDecoderStream);
+    const reader = textDecoderStream.readable.getReader();
+
+    const r1 = await reader.read();
+    assert(r1.value);
+    const chunk1 = JSON.parse(r1.value);
+    const binaryData = Buffer.from(chunk1.data, 'base64');
+    expect(binaryData.toString()).toEqual('Hello, world!');
+
+    const r2 = await reader.read();
+    assert(r2.value);
+    const chunk2 = JSON.parse(r2.value);
+    expect(chunk2).toEqual({ foo: 'test' });
+
+    const r3 = await reader.read();
+    expect(r3.done).toBe(true);
+
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue).toEqual('done');
   });
 });

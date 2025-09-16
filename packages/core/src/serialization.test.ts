@@ -5,8 +5,8 @@ import {
   dehydrateWorkflowArguments,
   getStreamType,
   hydrateWorkflowArguments,
-  STREAM_NAME_SYMBOL,
 } from './serialization.js';
+import { STREAM_NAME_SYMBOL } from './symbols.js';
 
 describe('getStreamType', () => {
   it('should return `undefined` for a regular stream', () => {

@@ -67,6 +67,46 @@ export default getWebhook;
   })}
 />
 
+#### `createWorkflowOutputStream`
+
+Retrieves the output writable stream associated with the current workflow run.
+
+Call this inside a workflow function to obtain a `WritableStream` you can pass into steps but it can't be called inside a step.
+
+```ts
+import { createWorkflowOutputStream } from '@vercel/workflow-core';
+```
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { createWorkflowOutputStream } from "@vercel/workflow-core"
+export default createWorkflowOutputStream
+    `
+  })}
+/>
+
+### Runtime Functions
+
+These functions are used outside of workflow and step functions and are accessed from the runtime entrypoint e.g. where `start(workflowFn)` is called.
+
+#### `getWorkflowOutputStream`
+
+Retrieves the implicit readable stream for a workflow run. Use this in your application or API routes to consume streaming output by `runId`.
+
+```ts
+import { getWorkflowOutputStream } from '@vercel/workflow-core/runtime';
+```
+
+<TSDoc
+  definition={generateDefinition({
+    code: `
+import { getWorkflowOutputStream } from "@vercel/workflow-core/runtime"
+export default getWorkflowOutputStream
+    `
+  })}
+/>
+
 ### Types
 
 #### `WorkflowContext`

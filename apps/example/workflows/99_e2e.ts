@@ -1,4 +1,5 @@
 import {
+  createWorkflowOutputStream,
   FatalError,
   getContext,
   getWebhook,
@@ -169,4 +170,39 @@ export async function getContextWorkflow() {
     },
     stepCtx,
   };
+}
+
+//////////////////////////////////////////////////////////
+
+async function stepWithOutputStreamBinary(writable: WritableStream) {
+  'use step';
+  const writer = writable.getWriter();
+  // binary data
+  await writer.write(new TextEncoder().encode('Hello, world!'));
+  writer.releaseLock();
+}
+
+async function stepWithOutputStreamObject(writable: WritableStream) {
+  'use step';
+  const writer = writable.getWriter();
+  // object data
+  await writer.write({ foo: 'test' });
+  writer.releaseLock();
+}
+
+async function stepCloseOutputStream(writable: WritableStream) {
+  'use step';
+  await writable.close();
+}
+
+export async function outputStreamWorkflow() {
+  'use workflow';
+  const writable = createWorkflowOutputStream();
+  await sleep('1s');
+  await stepWithOutputStreamBinary(writable);
+  await sleep('1s');
+  await stepWithOutputStreamObject(writable);
+  await sleep('1s');
+  await stepCloseOutputStream(writable);
+  return 'done';
 }

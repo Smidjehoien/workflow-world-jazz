@@ -1,7 +1,8 @@
 import * as devalue from 'devalue';
 import { DEFAULT_CONFIG } from './backend/index.js';
+import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
 
-const WRITABLE_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
+const WORKFLOW_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
 
 /**
  * Detect if a readable stream is a byte stream.
@@ -19,7 +20,7 @@ export function getStreamType(stream: ReadableStream) {
   }
 }
 
-function getSerializeStream(
+export function getSerializeStream(
   reducers: Reducers
 ): TransformStream<any, Uint8Array> {
   const encoder = new TextEncoder();
@@ -32,7 +33,7 @@ function getSerializeStream(
   return stream;
 }
 
-function getDeserializeStream(
+export function getDeserializeStream(
   revivers: Revivers
 ): TransformStream<Uint8Array, any> {
   const decoder = new TextDecoder();
@@ -65,7 +66,10 @@ function getDeserializeStream(
   return stream;
 }
 
-class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
+const getStreamUrl = (name: string) =>
+  `${WORKFLOW_STREAM_BASE_URL}/api/stream/${encodeURIComponent(name)}`;
+
+export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
   #reader?: ReadableStreamDefaultReader<Uint8Array>;
 
   constructor(name: string) {
@@ -76,9 +80,8 @@ class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
       pull: async (controller) => {
         let reader = this.#reader;
         if (!reader) {
-          const res = await fetch(
-            `${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`
-          );
+          const url = getStreamUrl(name);
+          const res = await fetch(url);
           if (!res.ok) {
             controller.error(
               new Error(`Failed to fetch stream: ${res.status}`)
@@ -105,30 +108,37 @@ class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
   }
 }
 
-class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
+export class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
     super({
       write: async (chunk: string | Uint8Array | Buffer) => {
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+        const res = await fetch(getStreamUrl(name), {
           method: 'PUT',
           body: chunk,
           duplex: 'half',
         });
+        if (!res.ok) {
+          throw new Error(
+            `Failed to write to stream: ${res.status} ${await res.text()}`
+          );
+        }
       },
       close: async () => {
-        await fetch(`${WRITABLE_STREAM_BASE_URL}/api/stream/${name}`, {
+        const res = await fetch(getStreamUrl(name), {
           method: 'PUT',
           headers: {
             'X-Stream-Done': 'true',
           },
         });
+        if (!res.ok) {
+          throw new Error(
+            `Failed to close stream: ${res.status} ${await res.text()}`
+          );
+        }
       },
     });
   }
 }
-
-export const STREAM_NAME_SYMBOL = Symbol.for('WORKFLOW_STREAM_NAME');
-export const STREAM_TYPE_SYMBOL = Symbol.for('WORKFLOW_STREAM_TYPE');
 
 // Types that need specialized handling when serialized/deserialized
 // ⚠️ If a type is added here, it MUST also be added to the `Serializable` type in `schemas.ts`
@@ -278,7 +288,7 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
  * @param ops
  * @returns
  */
-function getExternalReducers(
+export function getExternalReducers(
   global: Record<string, any> = globalThis,
   ops: Promise<any>[]
 ): Reducers {
@@ -332,7 +342,7 @@ function getExternalReducers(
  * @param global
  * @returns
  */
-function getWorkflowReducers(
+export function getWorkflowReducers(
   global: Record<string, any> = globalThis
 ): Reducers {
   return {
@@ -507,7 +517,7 @@ function getCommonRevivers(global: Record<string, any> = globalThis) {
  * @param global
  * @param ops
  */
-function getExternalRevivers(
+export function getExternalRevivers(
   global: Record<string, any> = globalThis,
   ops: Promise<any>[]
 ): Revivers {
@@ -562,7 +572,7 @@ function getExternalRevivers(
  * @param global
  * @returns
  */
-function getWorkflowRevivers(
+export function getWorkflowRevivers(
   global: Record<string, any> = globalThis
 ): Revivers {
   return {
