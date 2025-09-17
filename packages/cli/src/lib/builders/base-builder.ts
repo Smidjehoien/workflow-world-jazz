@@ -195,7 +195,7 @@ export abstract class BaseBuilder {
     outfile: string;
     format?: 'cjs' | 'esm';
     externalizeNonSteps?: boolean;
-  }): Promise<void> {
+  }): Promise<void | esbuild.BuildContext> {
     // These need to handle watching for dev to scan for
     // new entries and changes to existing ones
     const { discoveredSteps: stepFiles } = await this.discoverEntries(
@@ -225,7 +225,7 @@ export abstract class BaseBuilder {
     export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
-    const stepsResult = await esbuild.build({
+    const esbuildCtx = await esbuild.context({
       banner: {
         js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
       },
@@ -267,10 +267,17 @@ export abstract class BaseBuilder {
       external: this.config.externalPackages || [],
     });
 
+    const stepsResult = await esbuildCtx.rebuild();
+
     this.logEsbuildMessages(stepsResult, 'steps bundle creation');
 
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();
+
+    if (this.config.watch) {
+      return esbuildCtx;
+    }
+    await esbuildCtx.dispose();
   }
 
   protected async createWorkflowsBundle({
@@ -287,7 +294,10 @@ export abstract class BaseBuilder {
     outfile: string;
     format?: 'cjs' | 'esm';
     bundleFinalOutput?: boolean;
-  }): Promise<void> {
+  }): Promise<void | {
+    interimBundleCtx: esbuild.BuildContext;
+    bundleFinal: (interimBundleResult: string) => Promise<void>;
+  }> {
     const { discoveredWorkflows: workflowFiles } = await this.discoverEntries(
       inputFiles,
       dirname(outfile)
@@ -305,7 +315,7 @@ export abstract class BaseBuilder {
 
     // Bundle with esbuild and our custom SWC plugin in workflow mode.
     // this bundle will be run inside a vm isolate
-    const interimBundle = await esbuild.build({
+    const interimBundleCtx = await esbuild.context({
       stdin: {
         contents: imports,
         resolveDir: this.config.workingDir,
@@ -328,6 +338,8 @@ export abstract class BaseBuilder {
       plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
 
+    const interimBundle = await interimBundleCtx.rebuild();
+
     this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');
 
     // Create .gitignore in .swc directory
@@ -337,61 +349,73 @@ export abstract class BaseBuilder {
       throw new Error('No output files generated from esbuild');
     }
 
-    const workflowBundleCode = interimBundle.outputFiles[0].text;
+    const bundleFinal = async (interimBundle: string) => {
+      const workflowBundleCode = interimBundle;
 
-    // Create the workflow function handler with proper linter suppressions
-    const workflowFunctionCode = `// biome-ignore-all lint: generated file
+      // Create the workflow function handler with proper linter suppressions
+      const workflowFunctionCode = `// biome-ignore-all lint: generated file
 /* eslint-disable */
 import { vercelAPIWorkflowsEntrypoint } from '${
-      // The runtime import path is configurable so that the Next.js loader
-      // runtime path can be resolved. This is to avoid the user needing to
-      // add @vercel/workflow-core as a dependency to their Next.js project.
-      this.config.runtimeImportPath || '@vercel/workflow-core/runtime'
-    }';
+        // The runtime import path is configurable so that the Next.js loader
+        // runtime path can be resolved. This is to avoid the user needing to
+        // add @vercel/workflow-core as a dependency to their Next.js project.
+        this.config.runtimeImportPath || '@vercel/workflow-core/runtime'
+      }';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
 
 export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
 
-    // we skip the final bundling step for Next.js so it can bundle itself
-    if (!bundleFinalOutput) {
-      if (!outfile) {
-        throw new Error(`Invariant: missing outfile for workflow bundle`);
+      // we skip the final bundling step for Next.js so it can bundle itself
+      if (!bundleFinalOutput) {
+        if (!outfile) {
+          throw new Error(`Invariant: missing outfile for workflow bundle`);
+        }
+        // Ensure the output directory exists
+        const outputDir = dirname(outfile);
+        await mkdir(outputDir, { recursive: true });
+
+        await writeFile(outfile, workflowFunctionCode);
+        return;
       }
-      // Ensure the output directory exists
-      const outputDir = dirname(outfile);
-      await mkdir(outputDir, { recursive: true });
 
-      await writeFile(outfile, workflowFunctionCode);
-      return;
-    }
+      // Now bundle this so we can resolve the @vercel/workflow-core dependency
+      const finalWorkflowResult = await esbuild.build({
+        banner: {
+          js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
+        },
+        stdin: {
+          contents: workflowFunctionCode,
+          resolveDir: this.config.workingDir,
+          sourcefile: 'virtual-entry.js',
+          loader: 'js',
+        },
+        outfile,
+        sourcemap: 'inline',
+        absWorkingDir: this.config.workingDir,
+        bundle: true,
+        format,
+        platform: 'node',
+        target: 'es2022',
+        write: true,
+        keepNames: true,
+        minify: false,
+        external: ['@aws-sdk/credential-provider-web-identity'],
+      });
+
+      this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
+    };
+
     console.log('Creating final workflow bundle');
+    await bundleFinal(interimBundle.outputFiles[0].text);
 
-    // Now bundle this so we can resolve the @vercel/workflow-core dependency
-    const finalWorkflowResult = await esbuild.build({
-      banner: {
-        js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
-      },
-      stdin: {
-        contents: workflowFunctionCode,
-        resolveDir: this.config.workingDir,
-        sourcefile: 'virtual-entry.js',
-        loader: 'js',
-      },
-      outfile,
-      sourcemap: 'inline',
-      absWorkingDir: this.config.workingDir,
-      bundle: true,
-      format,
-      platform: 'node',
-      target: 'es2022',
-      write: true,
-      keepNames: true,
-      minify: false,
-      external: ['@aws-sdk/credential-provider-web-identity'],
-    });
-
-    this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
+    if (this.config.watch) {
+      return {
+        interimBundleCtx,
+        bundleFinal,
+      };
+    }
+    await interimBundleCtx.dispose();
   }
 
   protected async buildClientLibrary(): Promise<void> {

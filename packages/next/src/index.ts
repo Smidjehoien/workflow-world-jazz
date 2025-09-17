@@ -87,7 +87,9 @@ export function withWorkflow(
       typeof process.send !== 'function' &&
       phase !== 'phase-production-server'
     ) {
+      const shouldWatch = process.env.NODE_ENV === 'development';
       const workflowBuilder = new NextBuilder({
+        watch: shouldWatch,
         // discover workflows from pages/app entries
         dirs: ['pages', 'app', 'src/pages', 'src/app'],
         workingDir: process.cwd(),

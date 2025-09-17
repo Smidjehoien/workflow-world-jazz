@@ -6,6 +6,7 @@ export const validBuildTargets = [
 export type BuildTarget = (typeof validBuildTargets)[number];
 
 export interface WorkflowConfig {
+  watch?: boolean;
   dirs: string[];
   workingDir: string;
   runtimeImportPath?: string;
