@@ -6,16 +6,16 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
   async build(): Promise<void> {
     const outputDir = resolve(this.config.workingDir, '.vercel/output');
     const functionsDir = join(outputDir, 'functions');
-    const apiGeneratedDir = join(functionsDir, 'api/generated');
+    const workflowGeneratedDir = join(functionsDir, '.well-known/workflow/v1');
 
     // Ensure output directories exist
-    await mkdir(apiGeneratedDir, { recursive: true });
+    await mkdir(workflowGeneratedDir, { recursive: true });
 
     const inputFiles = await this.getInputFiles();
     const tsConfig = await this.getTsConfigOptions();
     const options = {
       inputFiles,
-      apiGeneratedDir,
+      workflowGeneratedDir,
       tsBaseUrl: tsConfig.baseUrl,
       tsPaths: tsConfig.paths,
     };
@@ -28,17 +28,17 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
 
   private async buildStepsFunction({
     inputFiles,
-    apiGeneratedDir,
+    workflowGeneratedDir,
     tsPaths,
     tsBaseUrl,
   }: {
     inputFiles: string[];
-    apiGeneratedDir: string;
+    workflowGeneratedDir: string;
     tsBaseUrl?: string;
     tsPaths?: Record<string, string[]>;
   }): Promise<void> {
     console.log('Creating Vercel Build Output API steps function');
-    const stepsFuncDir = join(apiGeneratedDir, 'steps.func');
+    const stepsFuncDir = join(workflowGeneratedDir, 'step.func');
     await mkdir(stepsFuncDir, { recursive: true });
 
     // Create steps bundle
@@ -86,17 +86,17 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
 
   private async buildWorkflowsFunction({
     inputFiles,
-    apiGeneratedDir,
+    workflowGeneratedDir,
     tsPaths,
     tsBaseUrl,
   }: {
     inputFiles: string[];
-    apiGeneratedDir: string;
+    workflowGeneratedDir: string;
     tsBaseUrl?: string;
     tsPaths?: Record<string, string[]>;
   }): Promise<void> {
     console.log('Creating Vercel Build Output API workflows function');
-    const workflowsFuncDir = join(apiGeneratedDir, 'workflows.func');
+    const workflowsFuncDir = join(workflowGeneratedDir, 'flow.func');
     await mkdir(workflowsFuncDir, { recursive: true });
 
     await this.createWorkflowsBundle({
@@ -152,7 +152,9 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     );
 
     console.log(`Build Output API created at ${outputDir}`);
-    console.log('Steps function available at /api/generated/steps');
-    console.log('Workflows function available at /api/generated/workflows');
+    console.log('Steps function available at /.well-known/workflow/v1/step');
+    console.log(
+      'Workflows function available at /.well-known/workflow/v1/flow'
+    );
   }
 }

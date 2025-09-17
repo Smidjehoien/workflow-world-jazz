@@ -61,8 +61,8 @@ export default class Build extends BaseCommand {
       dirs: ['./workflows'],
       workingDir: process.cwd(),
       buildTarget: buildTarget as BuildTarget,
-      stepsBundlePath: './api/generated/steps.js',
-      workflowsBundlePath: './api/generated/workflows.js',
+      stepsBundlePath: './.well-known/workflow/v1/step.js',
+      workflowsBundlePath: './.well-known/workflow/v1/flow.js',
 
       // WIP: generate a client library to easily execute workflows/steps
       // clientBundlePath: './lib/generated/workflows.js',

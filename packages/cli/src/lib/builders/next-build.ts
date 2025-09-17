@@ -7,20 +7,20 @@ import { BaseBuilder } from './base-builder.js';
 export class NextBuilder extends BaseBuilder {
   async build() {
     const outputDir = await this.findAppDirectory();
-    const apiGeneratedDir = join(outputDir, 'api/generated');
+    const workflowGeneratedDir = join(outputDir, '.well-known/workflow/v1');
 
     // Ensure output directories exist
-    await mkdir(apiGeneratedDir, { recursive: true });
+    await mkdir(workflowGeneratedDir, { recursive: true });
     // ignore the generated assets
 
-    await writeFile(join(apiGeneratedDir, '.gitignore'), '*');
+    await writeFile(join(workflowGeneratedDir, '.gitignore'), '*');
 
     const inputFiles = await this.getInputFiles();
     const tsConfig = await this.getTsConfigOptions();
 
     const options = {
       inputFiles,
-      apiGeneratedDir,
+      workflowGeneratedDir,
       tsBaseUrl: tsConfig.baseUrl,
       tsPaths: tsConfig.paths,
     };
@@ -73,7 +73,7 @@ export class NextBuilder extends BaseBuilder {
         '/.parcel-cache/',
         'api/generated/',
       ];
-      const normalizedGeneratedDir = apiGeneratedDir.replace(/\\/g, '/');
+      const normalizedGeneratedDir = workflowGeneratedDir.replace(/\\/g, '/');
       ignoredPathFragments.push(normalizedGeneratedDir);
 
       // There is a node.js bug on MacOS which causes closing file watchers to be really slow.
@@ -343,25 +343,25 @@ export class NextBuilder extends BaseBuilder {
     // We write this file to the generated directory for
     // the Next.js builder to consume
     await writeFile(
-      join(outputDir, 'api/generated/config.json'),
+      join(outputDir, '.well-known/workflow/v1/config.json'),
       JSON.stringify(generatedConfig, null, 2)
     );
   }
 
   private async buildStepsFunction({
     inputFiles,
-    apiGeneratedDir,
+    workflowGeneratedDir,
     tsPaths,
     tsBaseUrl,
   }: {
     inputFiles: string[];
-    apiGeneratedDir: string;
+    workflowGeneratedDir: string;
     tsBaseUrl?: string;
     tsPaths?: Record<string, string[]>;
   }) {
     console.log('Creating steps function');
     // Create steps bundle
-    const stepsRouteDir = join(apiGeneratedDir, 'steps');
+    const stepsRouteDir = join(workflowGeneratedDir, 'step');
     await mkdir(stepsRouteDir, { recursive: true });
     return await this.createStepsBundle({
       // If any dynamic requires are used when bundling with ESM
@@ -380,12 +380,12 @@ export class NextBuilder extends BaseBuilder {
 
   private async buildWorkflowsFunction({
     inputFiles,
-    apiGeneratedDir,
+    workflowGeneratedDir,
     tsPaths,
     tsBaseUrl,
   }: {
     inputFiles: string[];
-    apiGeneratedDir: string;
+    workflowGeneratedDir: string;
     tsBaseUrl?: string;
     tsPaths?: Record<string, string[]>;
   }): Promise<void | {
@@ -393,7 +393,7 @@ export class NextBuilder extends BaseBuilder {
     bundleFinal: (interimBundleResult: string) => Promise<void>;
   }> {
     console.log('Creating Next JS workflows route');
-    const workflowsRouteDir = join(apiGeneratedDir, 'workflows');
+    const workflowsRouteDir = join(workflowGeneratedDir, 'flow');
     await mkdir(workflowsRouteDir, { recursive: true });
     return await this.createWorkflowsBundle({
       format: 'esm',

@@ -66,9 +66,9 @@ export function createEmbedded(): World {
     const body = transport.serialize(x);
     let pathname: string;
     if (queueName.startsWith('__wkf_step_')) {
-      pathname = `steps`;
+      pathname = `step`;
     } else if (queueName.startsWith('__wkf_workflow_')) {
-      pathname = `workflows`;
+      pathname = `flow`;
     } else {
       throw new Error('Unknown queue name prefix');
     }
@@ -79,7 +79,7 @@ export function createEmbedded(): World {
       for (let attempt = 0; defaultRetriesLeft > 0; attempt++) {
         defaultRetriesLeft--;
         const response = await fetch(
-          `http://localhost:${await serverPort}/api/generated/${pathname}`,
+          `http://localhost:${await serverPort}/.well-known/workflow/v1/${pathname}`,
           {
             method: 'POST',
             duplex: 'half',

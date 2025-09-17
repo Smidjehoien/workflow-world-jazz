@@ -13,7 +13,7 @@ This repository contains the client side SDK code for workflows, along example a
 ### Core Components
 
 - **packages/core**: Core workflow runtime and primitives (`@vercel/workflow-core`)
-- **packages/next**: Next.js integration (`@vercel/workflow-next`) 
+- **packages/next**: Next.js integration (`@vercel/workflow-next`)
 - **packages/cli**: Command-line interface (`@vercel/workflow-cli`)
 - **packages/vm**: Sandboxed execution environment (`@vercel/workflow-vm`)
 - **packages/swc-plugin-workflow**: SWC compiler plugin for workflow transformations
@@ -32,6 +32,7 @@ The framework uses compiler transformations to split workflow files into separat
 ## Development Commands
 
 ### Workspace-level Commands
+
 ```bash
 # Build all packages
 pnpm build
@@ -53,6 +54,7 @@ pnpm clean
 ```
 
 ### Core Package Testing
+
 ```bash
 # Test core functionality
 cd packages/core && pnpm test
@@ -65,6 +67,7 @@ cd packages/core && pnpm test:e2e
 ```
 
 ### Example App Development
+
 ```bash
 # Build workflow bundles for example app
 cd apps/example && pnpm build
@@ -75,6 +78,7 @@ cd apps/example && pnpm wf [command]  # shorthand
 ```
 
 ### Next.js App Development
+
 ```bash
 # Start Next.js dev server with workflow support
 cd apps/nextjs-turbopack && pnpm dev
@@ -101,7 +105,7 @@ cd apps/nextjs-turbopack && pnpm start
 **These are only relevant when writing code using the workflow SDK/framework**
 
 - Workflow files go in `workflows/` directory (or `src/workflows/` if using src)
-- Generated API routes appear in `app/api/generated/` (Next.js integration)
+- Generated API routes appear in `app/.well-known/workflow/v1/` (Next.js integration)
 - Workflow files must contain `"use workflow"` or `"use step"` directives to be processed
 - Add `.swc` directory to `.gitignore` for SWC plugin cache artifacts
 

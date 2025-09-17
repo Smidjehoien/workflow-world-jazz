@@ -29,9 +29,11 @@ workflow validate     # Validate workflow files
 Build workflow bundles for deployment.
 
 **Options:**
+
 - `--target, -t` - Build target (`vercel-static` | `vercel-build-output-api`)
 
 **Examples:**
+
 ```bash
 workflow build
 workflow build --target vercel-build-output-api
@@ -52,15 +54,17 @@ Validate workflow files with syntax checking, type validation, and best practice
 ## Build Targets
 
 ### `vercel-static` (default)
-- Creates bundles at `api/generated/steps.js` and `api/generated/workflows.js`
+
+- Creates bundles at `.well-known/workflow/v1/step.js` and `.well-known/workflow/v1/flow.js`
 - Uses standard Vercel deployment process
-- Functions available at `/api/generated/steps` and `/api/generated/workflows`
+- Functions available at `.well-known/workflow/v1/step` and `.well-known/workflow/v1/flow`
 
 ### `vercel-build-output-api`
+
 - Creates `.vercel/output` directory structure
 - Generates serverless functions at:
-  - `/api/generated/steps.func/`
-  - `/api/generated/workflows.func/`
+  - `.well-known/workflow/v1/step.func`
+  - `.well-known/workflow/v1/flow.func`
 - Compatible with Vercel Build Output API v3
 
 ## Configuration

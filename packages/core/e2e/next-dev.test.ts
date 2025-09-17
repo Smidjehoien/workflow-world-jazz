@@ -12,13 +12,13 @@ describe('dev e2e', () => {
   const generatedStep = path.join(
     appPath,
     'app',
-    'api/generated/steps',
+    '.well-known/workflow/v1/step',
     'route.js'
   );
   const generatedWorkflow = path.join(
     appPath,
     'app',
-    'api/generated/workflows',
+    '.well-known/workflow/v1/flow',
     'route.js'
   );
 

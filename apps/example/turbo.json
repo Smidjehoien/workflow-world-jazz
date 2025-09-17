@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": ["api/generated/**", "generated/**", ".vercel/output/**"]
+      "outputs": [".well-known/workflow/**", ".vercel/output/**"]
     }
   }
 }

@@ -14,7 +14,7 @@
       "!**/.vercel/**",
       "!**/.changeset/**",
       "!**/.cursor/**",
-      "!**/api/generated/**",
+      "!**/.well-known/workflow/**",
       "!**/.prebuilt/**",
       "!**/.turbo/**",
       "!**/.next/**",
