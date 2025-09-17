@@ -175,7 +175,7 @@ export interface SerializableSpecial {
   };
   Set: any[];
   URL: string;
-  URLSearchParams: [string, string][];
+  URLSearchParams: string;
   Uint8Array: string; // base64 string
   Uint8ClampedArray: string; // base64 string
   Uint16Array: string; // base64 string
@@ -268,7 +268,7 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
     Set: (value) => value instanceof global.Set && Array.from(value),
     URL: (value) => value instanceof global.URL && value.href,
     URLSearchParams: (value) =>
-      value instanceof global.URLSearchParams && Array.from(value),
+      value instanceof global.URLSearchParams && String(value),
     Uint8Array: (value) =>
       value instanceof global.Uint8Array && viewToBase64(value),
     Uint8ClampedArray: (value) =>

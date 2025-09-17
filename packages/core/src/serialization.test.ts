@@ -325,6 +325,33 @@ describe('workflow arguments', () => {
     expect(hydrated.body).toBeInstanceOf(OurReadableStream);
   });
 
+  it('should work with URLSearchParams', () => {
+    const params = new URLSearchParams('a=1&b=2&a=3');
+
+    const serialized = dehydrateWorkflowArguments(params, []);
+    expect(serialized).toMatchInlineSnapshot(`
+      [
+        [
+          "URLSearchParams",
+          1,
+        ],
+        "a=1&b=2&a=3",
+      ]
+    `);
+
+    const hydrated = hydrateWorkflowArguments(serialized, vmGlobalThis);
+    vmGlobalThis.val = hydrated;
+    expect(runInContext('val instanceof URLSearchParams', context)).toBe(true);
+    expect(hydrated.getAll('a')).toEqual(['1', '3']);
+    expect(hydrated.getAll('b')).toEqual(['2']);
+    expect(hydrated.toString()).toEqual('a=1&b=2&a=3');
+    expect(Array.from(hydrated.entries())).toEqual([
+      ['a', '1'],
+      ['b', '2'],
+      ['a', '3'],
+    ]);
+  });
+
   it('should throw error for an unsupported type', () => {
     class Foo {}
     let err: Error | undefined;
