@@ -1,5 +1,22 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.29
+
+### Patch Changes
+
+- beb8848: Fix build showing port error and workflow rebuilding with next start
+- 5014b6d: Implement dev watcher for Next.js builder
+- cf2979d: Add MIT License
+- Updated dependencies [c78c8fa]
+- Updated dependencies [b152b35]
+- Updated dependencies [ec41c3c]
+- Updated dependencies [5014b6d]
+- Updated dependencies [cf2979d]
+- Updated dependencies [0a10773]
+  - @vercel/workflow-core@0.0.1-alpha.19
+  - @vercel/workflow-cli@0.0.1-alpha.28
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.4
+
 ## 0.0.1-alpha.28
 
 ### Patch Changes

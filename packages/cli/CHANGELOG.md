@@ -1,5 +1,20 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.28
+
+### Patch Changes
+
+- 5014b6d: Implement dev watcher for Next.js builder
+- cf2979d: Add MIT License
+- 0a10773: Changed workflow API routes from /api/generated to /.well-known/workflow/v1
+- Updated dependencies [c78c8fa]
+- Updated dependencies [b152b35]
+- Updated dependencies [ec41c3c]
+- Updated dependencies [cf2979d]
+- Updated dependencies [0a10773]
+  - @vercel/workflow-core@0.0.1-alpha.19
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.4
+
 ## 0.0.1-alpha.27
 
 ### Patch Changes

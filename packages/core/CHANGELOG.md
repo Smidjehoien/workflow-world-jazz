@@ -1,5 +1,17 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.19
+
+### Patch Changes
+
+- c78c8fa: Improve workflow logging
+- b152b35: Optimize `URLSearchParams` serialization
+- ec41c3c: Enable implicitly associated output stream to workflow runs (added `createWorkflowOutputStream()` and `getWorkflowOutputStream()`)
+- cf2979d: Add MIT License
+- 0a10773: Changed workflow API routes from /api/generated to /.well-known/workflow/v1
+- Updated dependencies [cf2979d]
+  - @vercel/workflow-vm@0.0.1-alpha.4
+
 ## 0.0.1-alpha.18
 
 ### Patch Changes

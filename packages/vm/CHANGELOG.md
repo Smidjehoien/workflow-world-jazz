@@ -1,5 +1,11 @@
 # @vercel/workflow-vm
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- cf2979d: Add MIT License
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes
