@@ -13,7 +13,10 @@ export function withWorkflow(
   const embeddedWorldConfig = JSON.stringify(
     nextConfig.workflows?.embedded ?? {}
   );
-  if (!process.env.VERCEL_DEPLOYMENT_ID) {
+  if (
+    // don't use embedded if deploying on Vercel
+    !process.env.VERCEL_DEPLOYMENT_ID
+  ) {
     process.env.WORKFLOWS_USE_EMBEDDED_WORLD = '1';
     process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG = embeddedWorldConfig;
   }
@@ -77,10 +80,13 @@ export function withWorkflow(
       : webpackConfig;
   };
 
-  return async function buildConfig() {
+  return async function buildConfig(phase: string) {
     // only run this in the main process so it only runs once
     // as Next.js uses child processes for different builds
-    if (typeof process.send !== 'function') {
+    if (
+      typeof process.send !== 'function' &&
+      phase !== 'phase-production-server'
+    ) {
       const workflowBuilder = new NextBuilder({
         // discover workflows from pages/app entries
         dirs: ['pages', 'app', 'src/pages', 'src/app'],
@@ -96,6 +102,14 @@ export function withWorkflow(
       });
 
       await workflowBuilder.build();
+    }
+
+    // If we are doing a production build unset the embedded env
+    // since we don't want to trigger port detection which will fail
+    // during a build since no server is running
+    if (phase === 'phase-production-build') {
+      delete process.env.WORKFLOWS_USE_EMBEDDED_WORLD;
+      delete process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG;
     }
     return nextConfig;
   };
