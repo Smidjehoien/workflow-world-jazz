@@ -10,6 +10,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@vercel/edge-config": "^1.4.0",
     "next": "15.5.3",
     "nextra": "^4.4.0",
     "nextra-theme-docs": "^4.4.0",
@@ -21,10 +22,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vercel/swc-plugin-workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
     "@vercel/workflow-vm": "workspace:*",
-    "@vercel/swc-plugin-workflow": "workspace:*",
     "pagefind": "^1.4.0",
     "tailwindcss": "^4",
     "typescript": "^5"

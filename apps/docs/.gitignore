@@ -45,3 +45,4 @@ _pagefind/
 
 # tarballs
 *.tgz
+.env*.local

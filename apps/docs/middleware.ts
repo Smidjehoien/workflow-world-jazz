@@ -2,19 +2,7 @@ import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { checkTeamMembership } from './lib/check-membership';
-
-// Add teams we want to allow here
-const ALLOWED_TEAM_IDS = [
-  'team_nLlpyC6REAqxydlFKbrMDlud', // Vercel
-  'team_nO2mCG4W8IxPIeKoSsqwAxxB', // Vercel Labs
-  'team_xiRKInFi7lBd1gTqyAGuzmkC', // Garden Computer (jazz tools, for workflow)
-  'team_rS1hfVQpiVcXq9ZTnAUAh6ym', // Interfere
-  'team_HNGfD0SVayaivBJpSGH6VqAM', // Midpage AI
-  'team_druD8aGMg4cYS4zzJ2Pb6c3r', // Comfy Deploy
-  'team_bMVoi9ApQgPhcZaoXuutyicf', // Mandolin
-  'team_AioNfdM08STmdc9hiUS7Taj3', // Garrett team
-  'team_S5XzLRwjjgoSIu8i1giOZOXS', // SE Team
-];
+import { get } from '@vercel/edge-config';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -38,9 +26,10 @@ export async function middleware(request: NextRequest) {
   try {
     const teamIds = await checkTeamMembership(accessToken.value);
 
-    const isAllowed = ALLOWED_TEAM_IDS.some((teamId) =>
-      teamIds.includes(teamId)
-    );
+    const allowedTeams = (await get('allowedTeams')) as { id: string }[] | null;
+    const allowedTeamIds = allowedTeams?.map((team) => team.id) ?? [];
+
+    const isAllowed = allowedTeamIds.some((teamId) => teamIds.includes(teamId));
 
     if (!isAllowed) {
       return NextResponse.redirect(new URL('/coming-soon', request.url));
