@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Event } from './backend/index.js';
+import type { Event } from './world/index.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 
 // Helper function to create mock events

@@ -1,68 +1,14 @@
 import { setTimeout } from 'node:timers/promises';
 import { JsonTransport } from '@vercel/queue';
-import { pidToPorts } from 'pid-port';
 import z from 'zod/v4';
-import { once } from '../util.js';
-import { MessageId, ValidQueueName, type World } from '../world.js';
+import { MessageId, type Queue, ValidQueueName } from '../world/queue.js';
+import { config } from './config.js';
 
-export const configSchema = z.object({
-  port: z.coerce.number().optional().catch(undefined),
-});
-
-function getConfigFromEnv() {
-  const provided = process.env.WORKFLOWS_EMBEDDED_WORLD_CONFIG || '{}';
-  let json: unknown;
-  try {
-    json = JSON.parse(provided);
-  } catch (error) {
-    throw new Error(
-      `Invalid JSON in WORKFLOWS_EMBEDDED_WORLD_CONFIG environment variable: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-  const parsed = configSchema.parse(json);
-  return parsed;
-}
-
-/**
- * Infers the port number from the current process by examining open ports.
- *
- * This function retrieves all ports associated with the current process ID and
- * returns the smallest port number found. If no ports are detected, it throws
- * an error suggesting explicit port configuration.
- *
- * @returns A promise that resolves to the smallest port number associated with the current process
- * @throws {Error} When no ports are detected for the current process
- */
-async function inferPortFromProcess() {
-  const ports = await pidToPorts(process.pid);
-  if (ports.size === 0) {
-    throw new Error(
-      'No ports detected for current process. Please configure a port explicitly using nextConfig.workflows.embedded.port'
-    );
-  }
-  const smallest = Math.min(...ports);
-  return smallest;
-}
-
-const config = once(async () => {
-  const parsed = getConfigFromEnv();
-
-  return {
-    port:
-      // We prioritize the explicitly configured port.
-      // Then, we check for a PORT environment variable (Next.js configures that env var).
-      // Then, we fall back to inferring the port from the current process which is the most
-      // flakey.
-      parsed.port ??
-      (Number(process.env.PORT) || (await inferPortFromProcess())),
-  };
-});
-
-export function createEmbedded(): World {
+export function createQueue(): Queue {
   const transport = new JsonTransport();
-  const serverPort = config.value.then((x) => x.port);
+  const serverPort = config.value.port;
 
-  const queue: World['queue'] = async (queueName, x) => {
+  const queue: Queue['queue'] = async (queueName, x) => {
     const body = transport.serialize(x);
     let pathname: string;
     if (queueName.startsWith('__wkf_step_')) {
@@ -112,6 +58,7 @@ export function createEmbedded(): World {
           text,
           status: response.status,
           headers: Object.fromEntries(response.headers.entries()),
+          body: body.toString(),
         });
       }
 
@@ -127,7 +74,7 @@ export function createEmbedded(): World {
     'x-vqs-message-attempt': z.coerce.number(),
   });
 
-  const createQueueHandler: World['createQueueHandler'] = (prefix, handler) => {
+  const createQueueHandler: Queue['createQueueHandler'] = (prefix, handler) => {
     return async (req) => {
       const headers = HeaderParser.safeParse(Object.fromEntries(req.headers));
 
@@ -163,7 +110,7 @@ export function createEmbedded(): World {
     };
   };
 
-  const getDeploymentId: World['getDeploymentId'] = async () => {
+  const getDeploymentId: Queue['getDeploymentId'] = async () => {
     return 'dpl_embedded';
   };
 

@@ -1,11 +1,5 @@
 import { z } from 'zod';
-import type {
-  APIConfig,
-  PaginatedResponse,
-  PaginationOptions,
-} from './shared.js';
-import { PaginatedResponseSchema } from './shared.js';
-import { dateToStringReplacer, makeRequest } from './utils.js';
+import type { PaginationOptions } from './shared.js';
 
 // Event type enum
 export const EventTypeSchema = z.enum([
@@ -130,43 +124,4 @@ export type WebhookRequestEvent = z.infer<typeof WebhookRequestEventSchema>;
 export interface ListEventsParams {
   runId: string;
   pagination?: PaginationOptions;
-}
-
-// Functions
-export async function getWorkflowRunEvents(
-  params: ListEventsParams,
-  config?: APIConfig
-): Promise<PaginatedResponse<Event>> {
-  const searchParams = new URLSearchParams();
-
-  const { runId, pagination } = params;
-
-  if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
-  if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
-
-  const queryString = searchParams.toString();
-  const endpoint = `/api/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
-
-  return makeRequest<PaginatedResponse<Event>>({
-    endpoint,
-    options: { method: 'GET' },
-    config,
-    schema: PaginatedResponseSchema(EventSchema),
-  });
-}
-
-export async function createWorkflowRunEvent(
-  id: string,
-  data: CreateEventRequest,
-  config?: APIConfig
-): Promise<Event> {
-  return makeRequest<Event>({
-    endpoint: `/api/runs/${id}/events`,
-    options: {
-      method: 'POST',
-      body: JSON.stringify(data, dateToStringReplacer),
-    },
-    config,
-    schema: EventSchema,
-  });
 }

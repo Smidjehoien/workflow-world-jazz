@@ -1,68 +1,14 @@
-import { z } from 'zod';
-import type { Serializable } from '../schemas.js';
-import type {
-  APIConfig,
-  PaginatedResponse,
-  PaginationOptions,
-} from './shared.js';
-import { PaginatedResponseSchema } from './shared.js';
+import type { PaginatedResponse } from '../world/shared.js';
+import type { APIConfig } from './utils.js';
+import { PaginatedResponseSchema } from '../world/shared.js';
+import {
+  WorkflowRunSchema,
+  type CreateWorkflowRunRequest,
+  type ListWorkflowRunsParams,
+  type UpdateWorkflowRunRequest,
+  type WorkflowRun,
+} from '../world/runs.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
-
-// Workflow run schemas
-export const WorkflowRunStatusSchema = z.enum([
-  'pending',
-  'running',
-  'completed',
-  'failed',
-  'paused',
-  'cancelled',
-]);
-
-export const WorkflowRunSchema = z.object({
-  runId: z.string(),
-  ownerId: z.string(),
-  projectId: z.string(),
-  environment: z.string(),
-  deploymentId: z.string(),
-  userId: z.string().optional(),
-  status: WorkflowRunStatusSchema,
-  workflowName: z.string(),
-  executionContext: z.record(z.string(), z.any()).optional(),
-  input: z.array(z.any()),
-  output: z.any().optional(),
-  error: z.string().optional(),
-  errorCode: z.string().optional(),
-  startedAt: z.coerce.date().optional(),
-  completedAt: z.coerce.date().optional(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-});
-
-// Inferred types
-export type WorkflowRunStatus = z.infer<typeof WorkflowRunStatusSchema>;
-export type WorkflowRun = z.infer<typeof WorkflowRunSchema>;
-
-// Request types
-export interface CreateWorkflowRunRequest {
-  deploymentId: string;
-  workflowName: string;
-  input: Serializable[];
-  executionContext?: Serializable;
-}
-
-export interface UpdateWorkflowRunRequest {
-  status?: WorkflowRunStatus;
-  output?: Serializable;
-  error?: string;
-  errorCode?: string;
-  executionContext?: Record<string, any>;
-}
-
-export interface ListWorkflowRunsParams {
-  workflowName?: string;
-  status?: WorkflowRunStatus;
-  pagination?: PaginationOptions;
-}
 
 // Functions
 
@@ -86,7 +32,7 @@ export async function listWorkflowRuns(
   const queryString = searchParams.toString();
   const endpoint = `/api/runs${queryString ? `?${queryString}` : ''}`;
 
-  return makeRequest<PaginatedResponse<WorkflowRun>>({
+  return makeRequest({
     endpoint,
     options: { method: 'GET' },
     config,
@@ -98,7 +44,7 @@ export async function createWorkflowRun(
   data: CreateWorkflowRunRequest,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: '/api/runs/create',
     options: {
       method: 'POST',
@@ -113,7 +59,7 @@ export async function getWorkflowRun(
   id: string,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: `/api/runs/${id}`,
     options: { method: 'GET' },
     config,
@@ -126,7 +72,7 @@ export async function updateWorkflowRun(
   data: UpdateWorkflowRunRequest,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: `/api/runs/${id}`,
     options: {
       method: 'PUT',
@@ -141,7 +87,7 @@ export async function cancelWorkflowRun(
   id: string,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: `/api/runs/${id}/cancel`,
     options: { method: 'PUT' },
     config,
@@ -153,7 +99,7 @@ export async function pauseWorkflowRun(
   id: string,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: `/api/runs/${id}/pause`,
     options: { method: 'PUT' },
     config,
@@ -165,7 +111,7 @@ export async function resumeWorkflowRun(
   id: string,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest<WorkflowRun>({
+  return makeRequest({
     endpoint: `/api/runs/${id}/resume`,
     options: { method: 'PUT' },
     config,

@@ -1,6 +1,6 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
-import type { Event, WorkflowRun } from './backend/index.js';
+import type { Event, WorkflowRun } from './world/index.js';
 import type { StepsNotRunError } from './global.js';
 import {
   dehydrateStepReturnValue,

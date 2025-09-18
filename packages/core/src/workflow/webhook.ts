@@ -1,9 +1,10 @@
 import type { JSONSchema7 } from 'json-schema';
 import z from 'zod';
-import type { WebhookRequestEvent } from '../backend/events.js';
+import type { WebhookRequestEvent } from '../world/events.js';
 import { EventConsumerResult } from '../events-consumer.js';
 import type { Webhook, WebhookOptions, WebhookSchema } from '../get-webhook.js';
 import { StepsNotRunError } from '../global.js';
+import { webhookLogger } from '../logger.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
 import { hydrateStepReturnValue } from '../serialization.js';
 import { type PromiseWithResolvers, withResolvers } from '../util.js';
@@ -87,8 +88,7 @@ export function createGetWebhook(ctx: WorkflowOrchestratorContext) {
 
     let eventLogEmpty = false;
 
-    // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
-    // console.log(`WEBHOOK CONSUMER SETUP ${correlationId}\n`);
+    webhookLogger.debug('Webhook consumer setup', { correlationId });
     ctx.eventsConsumer.subscribe((event) => {
       // If there are no events and there are promises waiting,
       // it means the webhook has been awaited, but an incoming request has not yet been received on the webhook URL.

@@ -1,60 +1,14 @@
-import { z } from 'zod';
-import type { Serializable } from '../schemas.js';
-import type {
-  APIConfig,
-  PaginatedResponse,
-  PaginationOptions,
-} from './shared.js';
-import { PaginatedResponseSchema } from './shared.js';
+import type { PaginatedResponse } from '../world/shared.js';
+import type { APIConfig } from './utils.js';
+import { PaginatedResponseSchema } from '../world/shared.js';
+import {
+  StepSchema,
+  type CreateStepRequest,
+  type ListWorkflowRunStepsParams,
+  type Step,
+  type UpdateStepRequest,
+} from '../world/steps.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
-
-// Step schemas
-export const StepStatusSchema = z.enum([
-  'pending',
-  'running',
-  'completed',
-  'failed',
-  'cancelled',
-]);
-
-export const StepSchema = z.object({
-  runId: z.string(),
-  stepId: z.string(),
-  stepName: z.string(),
-  status: StepStatusSchema,
-  input: z.array(z.any()),
-  output: z.any().optional(),
-  error: z.string().optional(),
-  errorCode: z.string().optional(),
-  attempt: z.number(),
-  startedAt: z.coerce.date().optional(),
-  completedAt: z.coerce.date().optional(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-});
-
-// Inferred types
-export type StepStatus = z.infer<typeof StepStatusSchema>;
-export type Step = z.infer<typeof StepSchema>;
-
-// Request types
-export interface CreateStepRequest {
-  stepId: string;
-  stepName: string;
-  input: Serializable[];
-}
-
-export interface UpdateStepRequest {
-  status?: StepStatus;
-  output?: Serializable;
-  error?: string;
-  errorCode?: string;
-}
-
-export interface ListWorkflowRunStepsParams {
-  runId: string;
-  pagination?: PaginationOptions;
-}
 
 // Functions
 export async function listWorkflowRunSteps(
@@ -70,7 +24,7 @@ export async function listWorkflowRunSteps(
   const queryString = searchParams.toString();
   const endpoint = `/api/runs/${params.runId}/steps${queryString ? `?${queryString}` : ''}`;
 
-  return makeRequest<PaginatedResponse<Step>>({
+  return makeRequest({
     endpoint,
     options: { method: 'GET' },
     config,
@@ -83,7 +37,7 @@ export async function createStep(
   data: CreateStepRequest,
   config?: APIConfig
 ): Promise<Step> {
-  return makeRequest<Step>({
+  return makeRequest({
     endpoint: `/api/runs/${runId}/steps`,
     options: {
       method: 'POST',
@@ -100,7 +54,7 @@ export async function updateStep(
   data: UpdateStepRequest,
   config?: APIConfig
 ): Promise<Step> {
-  return makeRequest<Step>({
+  return makeRequest({
     endpoint: `/api/runs/${runId}/steps/${stepId}`,
     options: {
       method: 'PUT',
@@ -116,7 +70,7 @@ export async function getStep(
   stepId: string,
   config?: APIConfig
 ): Promise<Step> {
-  return makeRequest<Step>({
+  return makeRequest({
     endpoint: `/api/runs/${runId}/steps/${stepId}`,
     options: { method: 'GET' },
     config,

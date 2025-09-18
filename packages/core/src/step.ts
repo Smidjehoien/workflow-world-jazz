@@ -1,6 +1,7 @@
 import { WorkflowRuntimeError } from './errors.js';
 import { EventConsumerResult } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
+import { stepLogger } from './logger.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import type { Serializable } from './schemas.js';
 import { hydrateStepReturnValue } from './serialization.js';
@@ -21,10 +22,11 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
         args,
       });
 
-      // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
-      // console.log(
-      //   `STEP CONSUMER SETUP ${correlationId} -> ${stepName}(${args.join(', ')})\n`
-      // );
+      stepLogger.debug('Step consumer setup', {
+        correlationId,
+        stepName,
+        args,
+      });
       ctx.eventsConsumer.subscribe((event) => {
         if (!event) {
           // We've reached the end of the events, so this step has either not been run or is currently running.
@@ -39,12 +41,14 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
           return EventConsumerResult.NotConsumed;
         }
 
-        // TODO: enable debug mode logging - this line is quite helpful for debugging the runtime
-        // console.log(
-        //   `STEP CONSUMER ${correlationId} -> ${stepName}(${args.join(', ')})\n`,
-        //   `->  incoming ${event.correlationId} ${correlationId === event.correlationId ? ' (match)' : ''}\n`,
-        //   `->  eventType: ${event.eventType}\n`
-        // );
+        stepLogger.debug('Step consumer event processing', {
+          correlationId,
+          stepName,
+          args: args.join(', '),
+          incomingCorrelationId: event.correlationId,
+          isMatch: correlationId === event.correlationId,
+          eventType: event.eventType,
+        });
 
         if (event.correlationId !== correlationId) {
           // We're not interested in this event - the correlationId belongs to a different step

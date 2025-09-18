@@ -1,16 +1,6 @@
 import { waitUntil } from '@vercel/functions';
-import { world } from './adapters/index.js';
-import type { Event } from './backend/events.js';
-import {
-  createStep,
-  createWebhook,
-  createWorkflowRunEvent,
-  getStep,
-  getWorkflowRunEvents,
-  getWorkflowRun as getWorkflowRunFromDB,
-  updateStep,
-  updateWorkflowRun,
-} from './backend/index.js';
+import { world } from './world/index.js';
+import type { Event } from './world/index.js';
 import {
   WorkflowAPIError,
   WorkflowRunFailedError,
@@ -19,6 +9,7 @@ import {
 } from './errors.js';
 import type { WorkflowContext } from './get-context.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
+import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import {
   type Serializable,
@@ -51,7 +42,7 @@ export async function getWorkflowRun(runId: string) {
   if (!deploymentId) {
     throw new Error('A `deploymentId` must be provided to get a workflow run');
   }
-  return getWorkflowRunFromDB(runId);
+  return world.runs.get(runId);
 }
 
 export async function getWorkflowReturnValue(
@@ -98,7 +89,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
   let hasMore = true;
 
   while (hasMore) {
-    const response = await getWorkflowRunEvents({
+    const response = await world.events.list({
       runId,
       pagination: cursor ? { cursor } : undefined,
     });
@@ -149,7 +140,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
             let workflowRun = await getWorkflowRun(runId);
 
             if (workflowRun.status === 'pending') {
-              workflowRun = await updateWorkflowRun(runId, {
+              workflowRun = await world.runs.update(runId, {
                 // This sets the `startedAt` timestamp at the database level
                 status: 'running',
               });
@@ -183,7 +174,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
             const result = await runWorkflow(workflowCode, workflowRun, events);
 
             // Update the workflow run with the result
-            await updateWorkflowRun(runId, {
+            await world.runs.update(runId, {
               status: 'completed',
               output: result as Serializable,
             });
@@ -200,7 +191,8 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                 err.webhookCount
               );
               if (suspensionMessage) {
-                console.log(suspensionMessage);
+                // Note: suspensionMessage logged only in debug mode to avoid production noise
+                // console.debug(suspensionMessage);
               }
               // Process each operation in the queue (steps and webhooks)
               for (const queueItem of err.steps) {
@@ -213,7 +205,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                   );
 
                   try {
-                    const step = await createStep(runId, {
+                    const step = await world.steps.create(runId, {
                       stepId: queueItem.correlationId,
                       stepName: queueItem.stepName,
                       input: dehydratedArgs as Serializable[],
@@ -251,7 +243,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                   // Handle webhook operations
                   try {
                     // Create webhook in database
-                    await createWebhook(runId, {
+                    await world.webhooks.create(runId, {
                       webhookId: queueItem.correlationId,
                       url: queueItem.url,
                       allowedMethods: queueItem.allowedMethods,
@@ -261,7 +253,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                     });
 
                     // Create webhook_created event in event log
-                    await createWorkflowRunEvent(runId, {
+                    await world.events.create(runId, {
                       eventType: 'webhook_created',
                       correlationId: queueItem.correlationId,
                     });
@@ -295,7 +287,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               console.error(
                 `${errorName} while running "${runId}" workflow:\n\n${errorStack}`
               );
-              await updateWorkflowRun(runId, {
+              await world.runs.update(runId, {
                 status: 'failed',
                 error: String(err),
                 // TODO: include error codes when we define them
@@ -360,9 +352,14 @@ export const vercelAPIStepsEntrypoint =
             ...Attribute.StepTracePropagated(!!traceContext),
           });
 
-          let step = await getStep(workflowRunId, stepId);
+          let step = await world.steps.get(workflowRunId, stepId);
 
-          // console.log(`STEP ${stepName}`, { step });
+          runtimeLogger.debug('Step execution details', {
+            stepName,
+            stepId: step.stepId,
+            status: step.status,
+            attempt: step.attempt,
+          });
 
           span?.setAttributes({
             ...Attribute.StepStatus(step.status),
@@ -372,10 +369,10 @@ export const vercelAPIStepsEntrypoint =
           let result: unknown;
           try {
             if (step.status === 'pending') {
-              step = await updateStep(workflowRunId, stepId, {
+              step = await world.steps.update(workflowRunId, stepId, {
                 status: 'running',
               });
-              await createWorkflowRunEvent(workflowRunId, {
+              await world.events.create(workflowRunId, {
                 eventType: 'step_started',
                 correlationId: stepId,
               });
@@ -421,7 +418,7 @@ export const vercelAPIStepsEntrypoint =
             waitUntil(Promise.all(ops));
 
             // Update the event log with the step result
-            await createWorkflowRunEvent(workflowRunId, {
+            await world.events.create(workflowRunId, {
               eventType: 'step_completed',
               correlationId: stepId,
               eventData: {
@@ -429,7 +426,7 @@ export const vercelAPIStepsEntrypoint =
               },
             });
 
-            await updateStep(workflowRunId, stepId, {
+            await world.steps.update(workflowRunId, stepId, {
               status: 'completed',
               output: result as Serializable,
             });
@@ -460,7 +457,7 @@ export const vercelAPIStepsEntrypoint =
                 `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step:\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
               );
               // Fatal error - store the error in the event log and re-invoke the workflow
-              await createWorkflowRunEvent(workflowRunId, {
+              await world.events.create(workflowRunId, {
                 eventType: 'step_failed',
                 correlationId: stepId,
                 eventData: {
@@ -469,7 +466,7 @@ export const vercelAPIStepsEntrypoint =
                   fatal: true,
                 },
               });
-              await updateStep(workflowRunId, stepId, {
+              await world.steps.update(workflowRunId, stepId, {
                 status: 'failed',
                 error: String(err),
                 // TODO: include error codes when we define them
@@ -496,7 +493,7 @@ export const vercelAPIStepsEntrypoint =
                   `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
                 );
                 const errorMessage = `Max retries reached: ${String(err)}`;
-                await createWorkflowRunEvent(workflowRunId, {
+                await world.events.create(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
                   eventData: {
@@ -505,7 +502,7 @@ export const vercelAPIStepsEntrypoint =
                     fatal: true,
                   },
                 });
-                await updateStep(workflowRunId, stepId, {
+                await world.steps.update(workflowRunId, stepId, {
                   status: 'failed',
                   error: errorMessage,
                 });
@@ -526,7 +523,7 @@ export const vercelAPIStepsEntrypoint =
                     `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Request will return 503 to trigger retry`
                   );
                 }
-                await createWorkflowRunEvent(workflowRunId, {
+                await world.events.create(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
                   eventData: {

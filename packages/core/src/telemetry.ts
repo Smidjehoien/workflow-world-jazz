@@ -116,3 +116,24 @@ export async function getSpanContextForTraceCarrier(
   if (!deserialized || !otel) return;
   return otel.trace.getSpanContext(deserialized);
 }
+
+export async function getActiveSpan() {
+  const otel = await OtelApi.value;
+  if (!otel) return null;
+  return otel.trace.getActiveSpan();
+}
+
+export function instrumentObject<T extends object>(prefix: string, o: T): T {
+  const handlers = {} as T;
+  for (const key of Object.keys(o) as (keyof T)[]) {
+    if (typeof o[key] !== 'function') {
+      handlers[key] = o[key];
+    } else {
+      const f = o[key];
+      // @ts-expect-error
+      handlers[key] = async (...args: any[]) =>
+        trace(`${prefix}.${String(key)}`, {}, () => f(...args));
+    }
+  }
+  return handlers;
+}

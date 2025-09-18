@@ -1,11 +1,5 @@
 import { z } from 'zod';
 
-export interface APIConfig {
-  baseUrl?: string;
-  token?: string;
-  headers?: RequestInit['headers'];
-}
-
 /**
  * Options for paginated queries.
  * Provides control over page size and cursor-based navigation.

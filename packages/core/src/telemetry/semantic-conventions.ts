@@ -37,7 +37,8 @@
  * @packageDocumentation
  */
 
-import type { Step, WorkflowRun } from '../backend/index.js';
+import type { WorkflowRun } from '../world/runs.js';
+import type { Step } from '../world/steps.js';
 
 /**
  * Creates a semantic convention function that returns an attribute object.
@@ -180,3 +181,10 @@ export const QueueName = SemanticConvention<string>('queue.name');
 
 /** Unique identifier for the deployment environment */
 export const DeploymentId = SemanticConvention<string>('deployment.id');
+
+// Webhook attributes
+
+/** Number of webhook handlers triggered */
+export const WebhookHandlersTriggered = SemanticConvention<number>(
+  'webhook.handlers.triggered'
+);

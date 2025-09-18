@@ -1,7 +1,12 @@
 import { getVercelOidcToken } from '@vercel/oidc';
 import type { z } from 'zod';
 import { WorkflowAPIError } from '../errors.js';
-import type { APIConfig } from './shared.js';
+
+export interface APIConfig {
+  baseUrl?: string;
+  token?: string;
+  headers?: RequestInit['headers'];
+}
 
 export function dateToStringReplacer(_key: string, value: unknown): unknown {
   if (value instanceof Date) {

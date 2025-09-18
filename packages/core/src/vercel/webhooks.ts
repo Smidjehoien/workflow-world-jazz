@@ -1,42 +1,13 @@
-import type { JSONSchema7 } from 'json-schema';
-import { z } from 'zod';
-import type { APIConfig, PaginatedResponse } from './shared.js';
-import { PaginatedResponseSchema } from './shared.js';
+import type { PaginatedResponse } from '../world/shared.js';
+import type { APIConfig } from './utils.js';
+import { PaginatedResponseSchema } from '../world/shared.js';
+import {
+  WebhookSchema,
+  type CreateWebhookRequest,
+  type ListWebhooksByUrlParams,
+  type Webhook,
+} from '../world/webhooks.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
-
-// Webhook schemas
-export const WebhookSchema = z.object({
-  runId: z.string(),
-  webhookId: z.string(),
-  ownerId: z.string(),
-  projectId: z.string(),
-  environment: z.string(),
-  url: z.string().optional(),
-  allowedMethods: z.array(z.string()),
-  searchParamsSchema: z.record(z.string(), z.custom<JSONSchema7>()).optional(),
-  headersSchema: z.record(z.string(), z.custom<JSONSchema7>()).optional(),
-  bodySchema: z.custom<JSONSchema7>().optional(),
-  createdAt: z.coerce.date(),
-  updatedAt: z.coerce.date(),
-});
-
-// Inferred types
-export type Webhook = z.infer<typeof WebhookSchema>;
-
-// Request types
-export interface CreateWebhookRequest {
-  webhookId: string;
-  url?: string;
-  allowedMethods?: string[];
-  searchParamsSchema?: Record<string, JSONSchema7>;
-  headersSchema?: Record<string, JSONSchema7>;
-  bodySchema?: JSONSchema7;
-}
-
-export interface ListWebhooksByUrlParams {
-  page?: number;
-  limit?: number;
-}
 
 // Functions
 export async function createWebhook(
@@ -44,7 +15,7 @@ export async function createWebhook(
   data: CreateWebhookRequest,
   config?: APIConfig
 ): Promise<Webhook> {
-  return makeRequest<Webhook>({
+  return makeRequest({
     endpoint: '/api/webhooks/create',
     options: {
       method: 'POST',
@@ -60,7 +31,7 @@ export async function getWebhook(
   deploymentId: string,
   config?: APIConfig
 ): Promise<Webhook> {
-  return makeRequest<Webhook>({
+  return makeRequest({
     endpoint: `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
     options: { method: 'GET' },
     config,
@@ -73,7 +44,7 @@ export async function disposeWebhook(
   deploymentId: string,
   config?: APIConfig
 ): Promise<Webhook> {
-  return makeRequest<Webhook>({
+  return makeRequest({
     endpoint: `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
     options: { method: 'DELETE' },
     config,
@@ -97,7 +68,7 @@ export async function getWebhooksByUrl(
   const queryString = searchParams.toString();
   const endpoint = `/api/webhooks/by-url?${queryString}`;
 
-  return makeRequest<PaginatedResponse<Webhook>>({
+  return makeRequest({
     endpoint,
     options: { method: 'GET' },
     config,

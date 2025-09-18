@@ -1,7 +1,7 @@
 import { createContext } from '@vercel/workflow-vm';
 import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
-import type { Event } from './backend/index.js';
+import type { Event } from './world/index.js';
 import { EventsConsumer } from './events-consumer.js';
 import { FatalError, StepsNotRunError } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';

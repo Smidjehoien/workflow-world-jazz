@@ -2,7 +2,7 @@ import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import { monotonicFactory } from 'ulid';
 
-import type { Event, WorkflowRun } from './backend/index.js';
+import type { Event, WorkflowRun } from './world/index.js';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import type { WorkflowContext } from './get-context.js';
 import { ENOTSUP } from './global.js';

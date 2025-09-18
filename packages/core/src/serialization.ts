@@ -1,8 +1,6 @@
 import * as devalue from 'devalue';
-import { DEFAULT_CONFIG } from './backend/index.js';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
-
-const WORKFLOW_STREAM_BASE_URL = DEFAULT_CONFIG.baseUrl;
+import { world } from './world/index.js';
 
 /**
  * Detect if a readable stream is a byte stream.
@@ -66,9 +64,6 @@ export function getDeserializeStream(
   return stream;
 }
 
-const getStreamUrl = (name: string) =>
-  `${WORKFLOW_STREAM_BASE_URL}/api/stream/${encodeURIComponent(name)}`;
-
 export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
   #reader?: ReadableStreamDefaultReader<Uint8Array>;
 
@@ -80,18 +75,10 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
       pull: async (controller) => {
         let reader = this.#reader;
         if (!reader) {
-          const url = getStreamUrl(name);
-          const res = await fetch(url);
-          if (!res.ok) {
-            controller.error(
-              new Error(`Failed to fetch stream: ${res.status}`)
-            );
-            return;
-          }
-          reader = this.#reader = res.body?.getReader();
+          const stream = await world.readFromStream(name);
+          reader = this.#reader = stream.getReader();
         }
         if (!reader) {
-          // This shouldn't really happen, but just in case
           controller.error(new Error('Failed to get reader'));
           return;
         }
@@ -112,36 +99,17 @@ export class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
     super({
       write: async (chunk: string | Uint8Array | Buffer) => {
-        const res = await fetch(getStreamUrl(name), {
-          method: 'PUT',
-          body: chunk,
-          duplex: 'half',
-        });
-        if (!res.ok) {
-          throw new Error(
-            `Failed to write to stream: ${res.status} ${await res.text()}`
-          );
-        }
+        await world.writeToStream(name, chunk);
       },
       close: async () => {
-        const res = await fetch(getStreamUrl(name), {
-          method: 'PUT',
-          headers: {
-            'X-Stream-Done': 'true',
-          },
-        });
-        if (!res.ok) {
-          throw new Error(
-            `Failed to close stream: ${res.status} ${await res.text()}`
-          );
-        }
+        await world.closeStream(name);
       },
     });
   }
 }
 
 // Types that need specialized handling when serialized/deserialized
-// ⚠️ If a type is added here, it MUST also be added to the `Serializable` type in `schemas.ts`
+// ! If a type is added here, it MUST also be added to the `Serializable` type in `schemas.ts`
 export interface SerializableSpecial {
   ArrayBuffer: string; // base64 string
   BigInt64Array: string; // base64 string

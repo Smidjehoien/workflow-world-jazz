@@ -1,16 +1,15 @@
 import { waitUntil } from '@vercel/functions';
 import { Ajv2020, type ValidateFunction } from 'ajv/dist/2020.js';
-import { world } from '../adapters/index.js';
-import {
-  createWorkflowRunEvent,
-  getWebhook,
-  getWebhooksByUrl,
-  getWorkflowRun,
-  type Webhook,
-} from '../backend/index.js';
+import { world } from '../world/index.js';
+import type { Webhook } from '../world/index.js';
 import type { WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateStepReturnValue } from '../serialization.js';
-import { getSpanContextForTraceCarrier, trace } from '../telemetry.js';
+import { WebhookHandlersTriggered } from '../telemetry/semantic-conventions.js';
+import {
+  getActiveSpan,
+  getSpanContextForTraceCarrier,
+  trace,
+} from '../telemetry.js';
 
 const ajv = new Ajv2020({ strict: false });
 
@@ -21,11 +20,14 @@ async function* webhooksIterator(
   const url = new URL(request.url);
   const webhookId = url.searchParams.get('webhookId');
   if (webhookId) {
-    const webhook = await getWebhook(`wbhk_${webhookId}`, deploymentId);
+    const webhook = await world.webhooks.get(`wbhk_${webhookId}`, deploymentId);
     yield webhook;
   } else {
     // TODO: Handle pagination
-    const webhooksResponse = await getWebhooksByUrl(url.pathname, deploymentId);
+    const webhooksResponse = await world.webhooks.getByUrl(
+      url.pathname,
+      deploymentId
+    );
     yield* webhooksResponse.data;
   }
 }
@@ -128,7 +130,7 @@ async function processWebhook(
     try {
       // Create a workflow run event
       const ops: Promise<any>[] = [];
-      await createWorkflowRunEvent(webhook.runId, {
+      await world.events.create(webhook.runId, {
         eventType: 'webhook_request',
         correlationId: webhook.webhookId,
         eventData: {
@@ -137,7 +139,7 @@ async function processWebhook(
       });
       waitUntil(Promise.all(ops));
 
-      const workflowRun = await getWorkflowRun(webhook.runId);
+      const workflowRun = await world.runs.get(webhook.runId);
 
       const traceCarrier = workflowRun.executionContext?.traceCarrier;
 
@@ -160,10 +162,6 @@ async function processWebhook(
         {
           deploymentId: workflowRun.deploymentId,
         }
-      );
-
-      console.log(
-        `Dispatched workflow "${workflowRun.workflowName}" for webhook ID "${webhook.webhookId}" (workflow run ID: ${workflowRun.runId})`
       );
     } catch (err) {
       console.error(
@@ -204,7 +202,7 @@ export async function processWebhooks(
 
   let handledCount = 0;
   for await (const webhook of webhooksIterator(deploymentId, request)) {
-    const handled = await trace('WEBHOOK.process', () =>
+    const handled = await trace('WEBHOOK.process', {}, () =>
       processWebhook(webhook, request, getBody)
     );
     if (handled) {
@@ -212,7 +210,8 @@ export async function processWebhooks(
     }
   }
 
-  console.log(`Handled ${handledCount} webhooks`);
+  const span = await getActiveSpan();
+  span?.setAttributes(WebhookHandlersTriggered(handledCount));
 }
 
 /**

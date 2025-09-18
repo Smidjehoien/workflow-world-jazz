@@ -1,6 +1,6 @@
 import { waitUntil } from '@vercel/functions';
-import { world } from '../adapters/index.js';
-import { createWorkflowRun, type WorkflowRun } from '../backend/index.js';
+import { world } from '../world/index.js';
+import type { WorkflowRun } from '../world/index.js';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
@@ -56,7 +56,7 @@ export async function start(
     // Serialize current trace context to propagate across queue boundary
     const traceCarrier = await serializeTraceCarrier();
 
-    const run = await createWorkflowRun({
+    const run = await world.runs.create({
       deploymentId: deploymentId,
       workflowName: workflowName,
       input: workflowArguments,

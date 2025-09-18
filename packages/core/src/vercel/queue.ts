@@ -1,13 +1,13 @@
 import { handleCallback, send } from '@vercel/queue';
-import { MessageId, ValidQueueName, type World } from '../world.js';
+import { MessageId, type Queue, ValidQueueName } from '../world/queue.js';
 
-export function createVqs(): World {
-  const queue: World['queue'] = async (queueName, x, opts) => {
+export function createQueue(): Queue {
+  const queue: Queue['queue'] = async (queueName, x, opts) => {
     const { messageId } = await send(queueName, x, opts);
     return { messageId: MessageId.parse(messageId) };
   };
 
-  const createQueueHandler: World['createQueueHandler'] = (prefix, handler) => {
+  const createQueueHandler: Queue['createQueueHandler'] = (prefix, handler) => {
     return handleCallback({
       [`${prefix}*`]: {
         default: (body, meta) => {
@@ -21,7 +21,7 @@ export function createVqs(): World {
     });
   };
 
-  const getDeploymentId: World['getDeploymentId'] = async () => {
+  const getDeploymentId: Queue['getDeploymentId'] = async () => {
     const deploymentId = process.env.VERCEL_DEPLOYMENT_ID;
     if (!deploymentId) {
       throw new Error('VERCEL_DEPLOYMENT_ID environment variable is not set');
