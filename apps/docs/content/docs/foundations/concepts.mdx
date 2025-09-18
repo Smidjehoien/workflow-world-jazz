@@ -1,0 +1,205 @@
+---
+title: Concepts
+---
+
+import { File, Folder, Files } from 'fumadocs-ui/components/files';
+
+# Concepts
+
+In this section, you'll learn more about what workflows are, their core components, and the basic structure of writing workflows.
+
+---
+
+## What are Workflows?
+
+Workflows (i.e. *durable functions*) are a programming model for building long-running, stateful application logic that can maintain their execution state across restarts, failures, and scale events. Unlike traditional serverless functions that lose all state when they terminate, workflows persist their progress and can resume exactly where they left off.
+
+This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (ex. via webhooks).
+
+The result is resilient function execution that can span minutes to months (or even longer) with strong operational guarantees.
+
+Workflows consist of two types functions that work together:
+
+1. **Workflow Functions**: Orchestrates steps
+2. **Step Functions**: Carries out work
+
+### Workflow Functions
+
+*Directive: `"use workflow"`*
+
+The workflow function orchestrates your application logic. It coordinates the sequence and execution of steps.
+
+```typescript lineNumbers
+export async function processOrderWorkflow(orderId: string) {
+  "use workflow"; // [!code highlight]
+  
+  // Orchestrate multiple steps
+  const order = await fetchOrder(orderId);
+  const payment = await chargePayment(order);
+  
+  return { orderId, status: 'completed' };
+}
+```
+
+**Key Characteristics:**
+
+- Runs in a sandboxed environment without full Node.js access
+- All step results are persisted to the event log
+- Must be deterministic to allow resuming after failures
+
+Making workflows deterministic is required in order to persist state after suspensions. This allows the workflow to continue execution exactly where it left off using the event log.
+
+#### Suspending Execution
+
+Workflow functions have the ability to automatically suspend while they wait on asynchronous work. While suspended, the workflow's state is stored via the event log and no compute resources are used until the workflow resumes execution. You'll see this behavior when:
+
+- Waiting on a step function: the workflow yields while the step runs in the step runtime.
+- Using `sleep()` to pause for some fixed duration.
+- Awaiting on a promise returned by [`getWebhook()`](/docs/workflow-sdk-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
+
+```typescript
+import { sleep, getWebhook } from '@vercel/workflow-core'; // [!code highlight]
+
+export async function onboardingWorkflow(userId: string) {
+  "use workflow";
+
+  // Create webhook with URL
+  const webhook = getWebhook({
+    url: "/api/webhook"
+  });
+  
+  await webhook;             // Suspends workflow until a request hits /api/webhook
+  await sendGreetingEmail(); // Suspends workflow until step function finishes
+  await sleep("1y");         // Suspends workflow for a year
+  
+}
+
+async function sendGreetingEmail() {
+  "use step"
+  // ...
+}
+```
+
+You can learn more about the runtime of workflow functions in the [How It Works](/docs/how-it-works/workflow-functions) section.
+
+### Step Functions
+
+*Directive: `"use step"`*
+
+Step functions perform the actual work in a workflow and have full runtime access.
+
+<Callout type="warn">
+Step functions can only be called inside workflow functions.
+</Callout>
+
+```typescript
+async function chargePayment(order: Order) {
+  "use step";
+  
+  // Full Node.js access - use any npm package
+  const stripe = new Stripe(process.env.STRIPE_KEY);
+  
+  const charge = await stripe.charges.create({
+    amount: order.total,
+    currency: 'usd',
+    source: order.paymentToken
+  });
+  
+  return { chargeId: charge.id };
+}
+```
+
+**Key Characteristics:**
+
+- Full Node.js runtime and npm package access
+- Automatic retry on errors
+- Results persisted for replay
+
+By default, steps have a maximum of 3 retry attempts before the workflow marks it as failed. See how to customize max retries in [How It Works: Step Functions](/docs/how-it-works/step-functions).
+
+A step's behavior on erroring can also be customized, take a look at [Errors & Retries](/docs/foundations/errors-and-retries#retrying-step-functions) to learn more.
+
+---
+
+## Writing Workflows
+
+### Basic Structure
+
+A workflow consists of a workflow function and one or more step functions.
+
+```typescript
+// Workflow function (orchestrates the steps)
+export async function greetingWorkflow(name: string) {
+  "use workflow";
+  
+  const message = await greet(name);
+  return { message };
+}
+
+// Step function (does the actual work)
+async function greet(name: string) {
+  "use step";
+  
+  // Access Node.js APIs
+  const message = `Hello ${name} at ${new Date().toISOString()}`;
+  console.log(message);
+  return message;
+}
+```
+
+### Project structure
+
+Organize your workflow code for maintainability, we recommend the following structure:
+
+<Files>
+  <Folder name="app" defaultOpen disabled>
+    <Folder name="workflows" defaultOpen disabled>
+      <File name="user-signin-workflow.ts" />
+      <File name="user-signup-workflow.ts" />
+      <Folder name="steps" defaultOpen disabled>
+        <File name="api.ts" />
+        <File name="database.ts" />
+        <File name="email.ts" />
+      </Folder>
+    </Folder>
+  </Folder>
+</Files>
+
+---
+
+## Error Handling
+
+Workflow SDK extends `Error` classes for more customizable retry behaviors.
+
+```typescript
+import { FatalError, RetryableError } from '@vercel/workflow-core';
+
+async function callAPI(endpoint: string) {
+  "use step";
+  
+  const response = await fetch(endpoint);
+
+  if (response.status === 429) {
+    // Retry with optional backoff
+    throw new RetryableError('Rate limited');
+  }
+  
+  if (response.status === 404) {
+    // Never retry, marks step as failed
+    throw new FatalError('Resource not found');
+  }
+
+  if (!response.ok) {
+    // Default retry behavior
+    throw new Error(`HTTP ${response.status}`);
+  }
+  
+  return response.json();
+}
+```
+
+- By default, an `Error` thrown in a step automatically re-enqueues it for a retry.
+- Throwing a `RetryableError` also automatically re-enqueues a step but with an optional `retryAfter` argument.
+- `FatalError` marks a step as failed, and does **not** re-enqueue a step.
+
+To learn more about errors in workflows, take a look at [Error Handling](/docs/workflow-sdk-core/error-handling).

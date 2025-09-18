@@ -1,0 +1,55 @@
+---
+title: Overview [remove?]
+---
+
+# Overview
+
+The Workflow SDK simplifies building reliable, and long-running application logic. This allows developers to focus on building great applications, not waste time managing infra for handling failures, retries, or state management.
+
+Using the directives: `"use workflow"` and `"use step"`, we can define workflows and steps easily. For example, here's how you can create a workflow to ensure sending an email is *durable*:
+
+```typescript
+export async function emailWorkflow(email: string) {
+  "use workflow"
+
+  await sendEmail(email) // If the step errors, it'll automatically be retried
+}
+
+async function sendEmail(email: string) {
+  "use step"
+
+  // Send email here
+}
+```
+
+<Callout>
+You'll learn more about workflow and step functions in the next section, [Concepts](/docs/foundations/concepts).
+</Callout>
+
+---
+
+## What are Workflows?
+
+Workflows (i.e. *durable functions*) are a programming model for building long-running, stateful application logic that can maintain their execution state across restarts, failures, and scale events. Unlike traditional serverless functions that lose all state when they terminate, workflows persist their progress and can resume exactly where they left off.
+
+This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (ex. via webhooks).
+
+The result is resilient function execution that can span minutes to months (or even longer) with strong operational guarantees.
+
+---
+
+## Key Features
+
+* **Automatic Retries**: Steps automatically retry on failure with optional configurable delays.
+
+* **Long-Running Operations**: Built-in `sleep()` function allows delays from seconds to years without consuming resources.
+
+* **State Persistence**: Every step execution is automatically saved, ensuring no progress is lost.
+
+* **Simple Async/Await**: Write workflows with familiar JavaScript patterns - no special syntax or complex state machines.
+
+* **Built-in Fetch**: HTTP requests are automatically converted to reliable, retryable steps
+
+* **Streaming Support**: Handle `ReadableStreams` and real-time data processing
+
+In the next section, you'll learn more about the [Concepts](/docs/foundations/concepts) that make up Workflows and how to [Get Started](/docs/get-started-nextjs) building your first durable application.

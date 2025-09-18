@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.redirect(authorizationUrl);
 }
 
-export function generateSecureRandomString(length: number) {
+function generateSecureRandomString(length: number) {
   return crypto
     .randomBytes(Math.ceil(length / 2))
     .toString('hex')

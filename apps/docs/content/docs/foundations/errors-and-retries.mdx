@@ -1,0 +1,118 @@
+---
+title: Errors & Retries [WIP]
+---
+
+# Errors & Retries
+
+In addition to the default `Error` you can throw in step functions, Workflow SDK provides two new types of errors you can use to further customize the error exit strategy when a step errors. These include [`FatalError`](/docs/api-reference/fatal-error) and [`RetryableError`](/docs/api-reference/retryable-error).
+
+## Retrying Step Functions
+
+When an `Error` or a `RetryableError` is thrown inside a step function, the step is automatically re-enqueued to be executed at a later time. This allows step functions to be *durable*.
+
+It may not seem entirely obvious what the difference between `Error` and `RetryableError` is since they both retry a step function. The difference is that throwing an `Error` automatically retries a step after 1 second, while `RetryableError` has an additional parameter `retryAfter` to specify when the step function should be retried.
+
+```ts lineNumbers
+import { RetryableError } from '@vercel/workflow-core'; // [!code highlight]
+
+async function callAPI(endpoint: string) {
+  "use step";
+  
+  const response = await fetch(endpoint);
+
+  if (response.status === 429) {
+    // Retries step, optional retryAfter
+    throw new RetryableError('Rate limited', { // [!code highlight]
+        retryAfter: "10m" // [!code highlight]
+    }); // [!code highlight]
+  }
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`); // Retries step, no optional retryAfter [!code highlight]
+  }
+  
+  return response.json();
+}
+```
+
+To learn more about `RetryableError`, refer to [API Reference: `RetryableError`](/docs/api-reference/retryable-error).
+
+## Failing Step Functions
+
+Step functions can also be marked as failed and won't be re-enqueue to be retried when a `FatalError` is thrown.
+
+```ts lineNumbers
+import { FatalError } from '@vercel/workflow-core'; // [!code highlight] 
+
+async function callAPI(endpoint: string) {
+  "use step";
+  
+  const response = await fetch(endpoint);
+
+  if (response.status === 404) {
+    throw new FatalError("Resource not found") // Step will not retry [!code highlight]
+  }
+
+  return response.json();
+}
+```
+
+To learn more about `FatalError`, refer to [API Reference: `FatalError`](/docs/api-reference/failable-error).
+
+---
+
+## Differences Between Errors
+
+Here's a quick summary between the different types of errors you can throw in a workflow:
+
+| Error Class | Retryable | Configurable `retryAfter` Parameter |
+| --- | --- | --- |
+| `Error` | <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.5607 3.99999L15.0303 4.53032L6.23744 13.3232C5.55403 14.0066 4.44599 14.0066 3.76257 13.3232L4.2929 12.7929L3.76257 13.3232L0.969676 10.5303L0.439346 9.99999L1.50001 8.93933L2.03034 9.46966L4.82323 12.2626C4.92086 12.3602 5.07915 12.3602 5.17678 12.2626L13.9697 3.46966L14.5 2.93933L15.5607 3.99999Z" fill="currentColor"></path></svg> | |
+| `RetryableError` | <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.5607 3.99999L15.0303 4.53032L6.23744 13.3232C5.55403 14.0066 4.44599 14.0066 3.76257 13.3232L4.2929 12.7929L3.76257 13.3232L0.969676 10.5303L0.439346 9.99999L1.50001 8.93933L2.03034 9.46966L4.82323 12.2626C4.92086 12.3602 5.07915 12.3602 5.17678 12.2626L13.9697 3.46966L14.5 2.93933L15.5607 3.99999Z" fill="currentColor"></path></svg> | <svg data-testid="geist-icon" height="16" stroke-linejoin="round" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" clip-rule="evenodd" d="M15.5607 3.99999L15.0303 4.53032L6.23744 13.3232C5.55403 14.0066 4.44599 14.0066 3.76257 13.3232L4.2929 12.7929L3.76257 13.3232L0.969676 10.5303L0.439346 9.99999L1.50001 8.93933L2.03034 9.46966L4.82323 12.2626C4.92086 12.3602 5.07915 12.3602 5.17678 12.2626L13.9697 3.46966L14.5 2.93933L15.5607 3.99999Z" fill="currentColor"></path></svg> |
+| `FatalError` | |
+
+Here's some examples of when you would use each:
+
+- `Error`: Temporary step failures (network issues, rate limits, etc.).
+- `FatalError`: Permanent failures (invalid data, missing resources, etc.).
+- `RetryableError`: When you know the retry timing/backoff (API rate limit headers, etc.).
+
+---
+
+## Context-Aware Retries
+
+Workflow SDK provides a function `getContext`, which can be used to retrieve the current workflow metadata. This function is execution-dependent (whether it's called within a workflow function or a step function). You can learn more about retrieving workflow metadata in the [API Reference: `getContext`](/docs/api-reference/get-context) section.
+
+When calling `getContext` inside a step function, there are a couple useful properties available to you:
+
+- `stepId`: Unique identifier for current executing step
+- `stepStartedAt`: Timestamp when step started
+- `attempt`: Number of times current step has been executed
+
+These properties can be combined to give you more control over step retries.
+
+```ts lineNumbers
+import { FatalError, RetryableError, getContext } from '@vercel/workflow-core';
+
+async function callAPI(endpoint: string) {
+  "use step"
+
+  const { attempt, stepStartedAt, stepId } = getContext(); // Access step metadata [!code highlight]
+  const response = await fetch(endpoint);
+
+  if (response.status === 429) {
+    // todo w attempt
+  }
+
+  if (response.status === 404 && attempt >= 3) {
+    throw new FatalError(`[${stepId}] Resource still missing as of ${stepStartedAt.toISOString()}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+myStep.maxRetries = 10
+```

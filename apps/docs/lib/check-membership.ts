@@ -1,7 +1,6 @@
 export async function checkTeamMembership(
   accessToken: string
 ): Promise<string[]> {
-  // Make API call and cache result
   const teamsResponse = await fetch('https://vercel.com/api/v2/teams', {
     headers: {
       Authorization: `Bearer ${accessToken}`,

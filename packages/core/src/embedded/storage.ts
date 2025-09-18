@@ -215,8 +215,10 @@ export function createStorage(basedir: string): Storage {
             // Since runId is a ULID and doesn't contain dashes, we can split and take everything after first dash
             const dashIndex = filename.indexOf('-');
             if (dashIndex === -1) return null;
-            
-            const stepId = filename.substring(dashIndex + 1).replace(/\.json$/, '');
+
+            const stepId = filename
+              .substring(dashIndex + 1)
+              .replace(/\.json$/, '');
             // Remove step_ prefix to get the ULID portion
             const ulid = stepId.replace(/^step_/, '');
             return ulidToDate(ulid);

@@ -1,44 +1,30 @@
-import { compileMdx } from 'nextra/compile';
-import { Tabs } from 'nextra/components';
-import { MDXRemote } from 'nextra/mdx-remote';
+import { Tabs, Tab } from '@/components/ui/tabs';
+import { CodeBlock } from './ui/code-block';
 
-export default async function InstallCommandTabs() {
+export default function InstallCommandTabs() {
   const baseUrl = process.env.VERCEL_URL;
 
   // Package names with tarball extensions
   const corePackage = `https://${baseUrl}/vercel-workflow-core.tgz`;
   const nextPackage = `https://${baseUrl}/vercel-workflow-next.tgz`;
 
-  const mdxSource = `
-  <Tabs items={['pnpm', 'npm', 'yarn']}>
-  <Tabs.Tab>
-
-  \`\`\`bash copy
-  pnpm i ${nextPackage} \\
-    ${corePackage}
-  \`\`\`
-
-  </Tabs.Tab>
-  <Tabs.Tab>
-
-  \`\`\`bash copy
-  npm i ${nextPackage} \\
-    ${corePackage}
-  \`\`\`
-
-  </Tabs.Tab>
-  <Tabs.Tab>
-
-  \`\`\`bash copy
-  yarn add ${nextPackage} \\
-    ${corePackage}
-  \`\`\`
-
-  </Tabs.Tab>
-  </Tabs>
-  `;
-
-  const compiled = await compileMdx(mdxSource);
-
-  return <MDXRemote compiledSource={compiled} components={{ Tabs }} />;
+  return (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+          pnpm i {nextPackage} \{'\n'} {corePackage}
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+          npm i {nextPackage} \{'\n'} {corePackage}
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+          yarn add {nextPackage} \{'\n'} {corePackage}
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  );
 }

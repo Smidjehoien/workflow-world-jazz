@@ -1,0 +1,61 @@
+---
+title: Workflow SDK by Vercel
+---
+
+# Workflow SDK
+
+The Workflow SDK is a TypeScript framework for building durable, reliable, and observable applications that keep running through failures and random restarts.
+
+It can power anything from AI agents to data pipelines, media processing, billing, and CI/CD flows. You can check out some of these applications in [Examples](/docs/examples).
+
+---
+
+## Why use the Workflow SDK?
+
+Building reliable long-running processes is hard. You'll need to handle failures, manage retries, persist state, coordinate distributed operations, and deal with timeouts. Traditional approaches require complex infrastructure and careful state management.
+
+The Workflow SDK eliminates these complexities by providing durable functions that automatically persist progress and replay on failures. This allows developers to write resilient workflows using familiar async/await patterns, without worrying about infrastructure details.
+
+For example, here's how you can build a simple order processing workflow that survives errors:
+
+```typescript
+import { sleep, getWebhook } from "workflow"
+
+export async function fulfillOrder(orderId: string) {
+  "use workflow";
+  
+  // In a workflow, steps are queued in the background while 
+  // the workflow function suspends
+  const order = await deliverOrder(orderId);
+
+  await sleep("2 days") // Workflows can suspend for a long time between steps
+
+  const webhook = getWebhook() // They can even react to external events!
+  await sendEmail(`
+    Dear ${order.buyer}, please confirm your order was received: ${webhook.url}
+  `)
+  await webhook; // Workflow suspends until the email link is clicked
+  
+  console.log("Delivery complete!")
+}
+
+async function deliverOrder(orderId: string) {
+  "use step";
+
+  // Steps are run on separate serverless functions and
+  // represents a single unit of work
+
+  // Uncaught errors (ex. network errors) are automatically retried
+  if (Math.random() < 0.5) {
+    throw new Error("Error starting delivery. Retrying...");
+  }
+
+  console.log("Delivering order", orderId);
+
+  return { buyer: "Evil Rabbit" };
+}
+```
+
+The key takeaway is that we can easily define workflows through workflow functions and step functions with both `"use workflow"` and `"use step"` directives. You can learn more about both in [Concepts](/docs/foundations/concepts).
+
+In the next section, you'll create a simple project that shows how easy it is for you to get started with the Workflow SDK.

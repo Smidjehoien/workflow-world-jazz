@@ -1,0 +1,5 @@
+{
+  "title": "How it Works",
+  "pages": ["workflow-functions", "step-functions"],
+  "defaultOpen": true
+}

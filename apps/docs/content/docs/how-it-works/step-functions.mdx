@@ -1,0 +1,71 @@
+---
+title: Step Functions
+---
+
+# Step Functions
+
+Step functions are the "unit of work", they execute the actual work in workflows. This type of function has access to the Node.js runtime, can access environment variables, and `npm` dependencies.
+
+## Defining a Step Function
+
+A step function is defined by the `"use step"` directive.
+
+```ts lineNumbers
+async function myStep() { 
+    "use step" // [!code highlight]
+    // Full Node.js access - use any npm package
+    // ...
+}
+```
+
+<Callout type="warn">
+Step functions can only be called inside workflow functions.
+</Callout>
+
+## Controlling Step Retry Behavior
+
+### Max Retries
+
+By default, when a step is retried, it has a maximum of 3 retry attempts before being marked as failed. You can also customize the number of maximum retries before failing using the `maxRetries` property.
+
+```ts lineNumbers
+async function chargePayment(order: Order) {
+  "use step";
+  
+  const stripe = new Stripe(process.env.STRIPE_KEY);
+  
+  const charge = await stripe.charges.create({
+    amount: order.total,
+    currency: 'usd',
+    source: order.paymentToken
+  });
+  
+  return { chargeId: charge.id };
+}
+
+chargePayment.maxRetries = 10 // This step will retry a max of 10 times [!code highlight]
+```
+
+### Error Exit Strategies
+
+A step's error exit strategy (whether to fail or retry) can also be customized depending on the type of error thrown for more specific use cases.
+
+Steps are automatically retried on transient errors (throwing an `Error`).
+
+```ts lineNumbers
+async function chargePayment(order: Order) {
+  "use step";
+  
+  const stripe = new Stripe(process.env.STRIPE_KEY);
+  
+  const charge = await stripe.charges.create({
+    amount: order.total,
+    currency: 'usd',
+    source: order.paymentToken
+  });
+  
+  return { chargeId: charge.id };
+}
+```
+
+To learn more about the types of errors you can throw in a step function, check out [Errors & Retries](/docs/foundations/errors-and-retries).
