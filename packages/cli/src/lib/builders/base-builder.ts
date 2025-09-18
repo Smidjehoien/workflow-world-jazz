@@ -118,6 +118,9 @@ export abstract class BaseBuilder {
       discoveredWorkflows: [],
     };
 
+    const discoverLabel = 'Discovering workflow directives';
+    console.time(discoverLabel);
+
     try {
       await esbuild.build({
         treeShaking: true,
@@ -127,10 +130,13 @@ export abstract class BaseBuilder {
         write: false,
         outdir,
         bundle: true,
+        sourcemap: false,
         absWorkingDir: this.config.workingDir,
         logLevel: 'silent',
       });
     } catch (_) {}
+
+    console.timeEnd(discoverLabel);
 
     this.discoveredEntries.set(inputs, state);
     return state;
@@ -206,6 +212,7 @@ export abstract class BaseBuilder {
     // log the step files for debugging
     await this.writeDebugFile(outfile, { stepFiles });
 
+    console.time('Created steps bundle');
     const builtInSteps = '@vercel/workflow-core/builtins';
 
     const resolvedBuiltInSteps = await enhancedResolve(
@@ -247,7 +254,8 @@ export abstract class BaseBuilder {
       keepNames: true,
       minify: false,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
-      sourcemap: true,
+      // TODO: investigate proper source map support
+      sourcemap: false,
       plugins: [
         createSwcPlugin({
           mode: 'step',
@@ -270,6 +278,7 @@ export abstract class BaseBuilder {
     const stepsResult = await esbuildCtx.rebuild();
 
     this.logEsbuildMessages(stepsResult, 'steps bundle creation');
+    console.timeEnd('Created steps bundle');
 
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();
@@ -311,7 +320,7 @@ export abstract class BaseBuilder {
       .map((file) => `export * from '${file}';`)
       .join('\n');
 
-    console.log('Creating intermediate workflow bundle');
+    console.time('Created intermediate workflow bundle');
 
     // Bundle with esbuild and our custom SWC plugin in workflow mode.
     // this bundle will be run inside a vm isolate
@@ -333,7 +342,8 @@ export abstract class BaseBuilder {
       treeShaking: true,
       keepNames: true,
       minify: false,
-      sourcemap: 'inline',
+      // TODO: investigate proper source map support
+      sourcemap: false,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [createSwcPlugin({ mode: 'workflow', tsBaseUrl, tsPaths })],
     });
@@ -341,6 +351,7 @@ export abstract class BaseBuilder {
     const interimBundle = await interimBundleCtx.rebuild();
 
     this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');
+    console.timeEnd('Created intermediate workflow bundle');
 
     // Create .gitignore in .swc directory
     await this.createSwcGitignore();
@@ -379,7 +390,10 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
         return;
       }
 
+      console.time('Created final workflow bundle');
+
       // Now bundle this so we can resolve the @vercel/workflow-core dependency
+      // we could remove this if we do nft tracing or similar instead
       const finalWorkflowResult = await esbuild.build({
         banner: {
           js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
@@ -391,7 +405,8 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
           loader: 'js',
         },
         outfile,
-        sourcemap: 'inline',
+        // TODO: investigate proper source map support
+        sourcemap: false,
         absWorkingDir: this.config.workingDir,
         bundle: true,
         format,
@@ -404,9 +419,8 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
       });
 
       this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
+      console.timeEnd('Created final workflow bundle');
     };
-
-    console.log('Creating final workflow bundle');
     await bundleFinal(interimBundle.outputFiles[0].text);
 
     if (this.config.watch) {

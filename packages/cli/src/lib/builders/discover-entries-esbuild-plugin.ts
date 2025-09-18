@@ -8,6 +8,10 @@ const enhancedResolve = promisify(enhancedResolveOriginal);
 
 export const jsTsRegex = /\.(ts|tsx|js|jsx|mjs|cjs)$/;
 
+// Matches: 'use workflow'; "use workflow"; 'use step'; "use step"; at line start with optional whitespace
+export const useWorkflowPattern = /^\s*(['"])use workflow\1;?\s*$/m;
+export const useStepPattern = /^\s*(['"])use step\1;?\s*$/m;
+
 // parent -> child relationship
 export const importParents = new Map<string, string>();
 
@@ -67,18 +71,17 @@ export function createDiscoverEntriesPlugin(state: {
             loader = 'jsx';
           }
           const source = await readFile(args.path, 'utf8');
+          const hasUseWorkflow = useWorkflowPattern.test(source);
+          const hasUseStep = useStepPattern.test(source);
 
-          // Matches: 'use workflow'; "use workflow"; 'use step'; "use step"; at line start with optional whitespace
-          const useWorkflowPattern = /^\s*(['"])use workflow\1;?\s*$/m;
-          const useStepPattern = /^\s*(['"])use step\1;?\s*$/m;
-
-          if (useWorkflowPattern.test(source)) {
+          if (hasUseWorkflow) {
             state.discoveredWorkflows.push(args.path);
           }
 
-          if (useStepPattern.test(source)) {
+          if (hasUseStep) {
             state.discoveredSteps.push(args.path);
           }
+
           const transformedCode = await applySwcTransform(
             args.path,
             source,

@@ -24,6 +24,7 @@ export class NextBuilder extends BaseBuilder {
       tsBaseUrl: tsConfig.baseUrl,
       tsPaths: tsConfig.paths,
     };
+
     const stepsBuildContext = await this.buildStepsFunction(options);
     const workflowsBundle = await this.buildWorkflowsFunction(options);
     await this.writeFunctionsConfig(outputDir);
@@ -125,7 +126,6 @@ export class NextBuilder extends BaseBuilder {
       };
 
       const fullRebuild = async () => {
-        console.time('Rebuilt workflow bundles');
         const newInputFiles = await this.getInputFiles();
         options.inputFiles = newInputFiles;
 
@@ -146,7 +146,6 @@ export class NextBuilder extends BaseBuilder {
           );
         }
         workflowsCtx = newWorkflowsCtx;
-        console.timeEnd('Rebuilt workflow bundles');
       };
 
       const logBuildMessages = (
@@ -175,10 +174,12 @@ export class NextBuilder extends BaseBuilder {
       };
 
       const rebuildExistingFiles = async () => {
-        console.time('Rebuilt workflow bundles');
+        console.time('Rebuilt steps bundle');
         const stepsResult = await stepsCtx.rebuild();
         logBuildMessages(stepsResult, 'steps bundle');
+        console.timeEnd('Rebuilt steps bundle');
 
+        console.time('Rebuilt workflow bundle');
         const workflowResult = await workflowsCtx.interimBundleCtx.rebuild();
         logBuildMessages(workflowResult, 'workflows bundle');
 
@@ -192,7 +193,7 @@ export class NextBuilder extends BaseBuilder {
           return;
         }
         await workflowsCtx.bundleFinal(workflowResult.outputFiles[0].text);
-        console.timeEnd('Rebuilt workflow bundles');
+        console.timeEnd('Rebuilt workflow bundle');
       };
 
       const isWatchableFile = (path: string) =>
@@ -359,7 +360,6 @@ export class NextBuilder extends BaseBuilder {
     tsBaseUrl?: string;
     tsPaths?: Record<string, string[]>;
   }) {
-    console.log('Creating steps function');
     // Create steps bundle
     const stepsRouteDir = join(workflowGeneratedDir, 'step');
     await mkdir(stepsRouteDir, { recursive: true });
@@ -392,7 +392,6 @@ export class NextBuilder extends BaseBuilder {
     interimBundleCtx: import('esbuild').BuildContext;
     bundleFinal: (interimBundleResult: string) => Promise<void>;
   }> {
-    console.log('Creating Next JS workflows route');
     const workflowsRouteDir = join(workflowGeneratedDir, 'flow');
     await mkdir(workflowsRouteDir, { recursive: true });
     return await this.createWorkflowsBundle({
