@@ -71,7 +71,7 @@ export class NextBuilder extends BaseBuilder {
         '/.yarn/',
         '/.pnpm-store/',
         '/.parcel-cache/',
-        'api/generated/',
+        '/.well-known/workflow/',
       ];
       const normalizedGeneratedDir = workflowGeneratedDir.replace(/\\/g, '/');
       ignoredPathFragments.push(normalizedGeneratedDir);

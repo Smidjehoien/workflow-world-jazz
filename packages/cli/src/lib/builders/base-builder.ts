@@ -81,8 +81,8 @@ export abstract class BaseBuilder {
           '**/.git/**',
           '**/.next/**',
           '**/.vercel/**',
-          '**/.workflow/**',
-          '**/generated/**',
+          '**/.workflow-data/**',
+          '**/.well-known/workflow/**',
         ],
         absolute: true,
       }
