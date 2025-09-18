@@ -88,7 +88,7 @@ export function withWorkflow({
     // only run this in the main process so it only runs once
     // as Next.js uses child processes for different builds
     if (
-      typeof process.send !== 'function' &&
+      !process.env.WORKFLOW_NEXT_PRIVATE_BUILT &&
       phase !== 'phase-production-server'
     ) {
       const shouldWatch = process.env.NODE_ENV === 'development';
@@ -108,6 +108,7 @@ export function withWorkflow({
       });
 
       await workflowBuilder.build();
+      process.env.WORKFLOW_NEXT_PRIVATE_BUILT = '1';
     }
 
     // If we are doing a production build unset the embedded env

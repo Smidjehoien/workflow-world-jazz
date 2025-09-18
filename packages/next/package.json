@@ -23,7 +23,7 @@
     "@vercel/swc-plugin-workflow": "workspace:*"
   },
   "devDependencies": {
-    "next": "15.5.3",
+    "next": "15.6.0-canary.13",
     "@vercel/workflow-tsconfig": "workspace:*"
   },
   "peerDependencies": {
