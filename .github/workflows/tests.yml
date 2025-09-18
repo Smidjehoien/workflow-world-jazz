@@ -8,6 +8,11 @@ on:
       - "!*"
   pull_request:
 
+concurrency:
+   # Unique group for this workflow and branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit:
     name: Unit Tests
@@ -86,20 +91,42 @@ jobs:
         env:
           DEPLOYMENT_URL: ${{ steps.waitForDeployment.outputs.deployment-url }}
 
-  e2e-dev:
-    name: E2E Dev Tests (${{ matrix.app.name }})
+  getTestMatrix:
+    name: Get Test Matrix
     runs-on: ubuntu-latest
+    outputs: 
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    
+    steps: 
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 10.14.0
+
+      - name: Setup Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: "pnpm"
+          
+      - id: set-matrix
+        run: echo "matrix=$(node ./scripts/create-test-matrix.mjs)" >> $GITHUB_OUTPUT
+
+  e2e-dev:
+    name: E2E Dev Tests (${{ matrix.app.name }} - ${{ matrix.app.canary && 'canary' || 'stable' }})
+    runs-on: ubuntu-latest
+    needs: getTestMatrix
     strategy:
       fail-fast: false
-      matrix:
-        app:
-          - name: "nextjs-turbopack"
-            project: "example-nextjs-workflow-turbopack"
-          - name: "nextjs-webpack"
-            project: "example-nextjs-workflow-webpack"
+      matrix: ${{fromJson(needs.getTestMatrix.outputs.matrix)}}
+
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -114,6 +141,13 @@ jobs:
         with:
           node-version: 22.x
           cache: "pnpm"
+      
+      - name: Setup canary
+        if: ${{ matrix.app.canary }}
+        run: |
+          cat packages/next/package.json | jq '.dependencies.next|="canary"' > packages/next/package.json.new && mv packages/next/package.json.new packages/next/package.json
+          cat apps/${{ matrix.app.name }}/package.json | jq '.dependencies.next|="canary"' > apps/${{ matrix.app.name }}/package.json.new && mv apps/${{ matrix.app.name }}/package.json.new apps/${{ matrix.app.name }}/package.json
+          pnpm install --no-frozen-lockfile
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile
@@ -130,19 +164,17 @@ jobs:
           DEPLOYMENT_URL: "http://localhost:3000"
 
   e2e-next-local-prod:
-    name: E2E Next.js Local Prod Tests (${{ matrix.app.name }})
+    name: E2E Next.js Local Prod Tests (${{ matrix.app.name }} - ${{ matrix.app.canary && 'canary' || 'stable' }})
     runs-on: ubuntu-latest
+    needs: getTestMatrix
     strategy:
       fail-fast: false
-      matrix:
-        app:
-          - name: "nextjs-turbopack"
-            project: "example-nextjs-workflow-turbopack"
-          - name: "nextjs-webpack"
-            project: "example-nextjs-workflow-webpack"
+      matrix: ${{fromJson(needs.getTestMatrix.outputs.matrix)}}
+          
     env:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -157,6 +189,13 @@ jobs:
         with:
           node-version: 22.x
           cache: "pnpm"
+          
+      - name: Setup canary
+        if: ${{ matrix.app.canary }}
+        run: |
+          cat packages/next/package.json | jq '.dependencies.next|="canary"' > packages/next/package.json.new && mv packages/next/package.json.new packages/next/package.json
+          cat apps/${{ matrix.app.name }}/package.json | jq '.dependencies.next|="canary"' > apps/${{ matrix.app.name }}/package.json.new && mv apps/${{ matrix.app.name }}/package.json.new apps/${{ matrix.app.name }}/package.json
+          pnpm install --no-frozen-lockfile
 
       - name: Install Dependencies
         run: pnpm install --frozen-lockfile

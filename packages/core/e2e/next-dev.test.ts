@@ -25,13 +25,15 @@ describe('dev e2e', () => {
   const restoreFiles: Array<{ path: string; content: string }> = [];
 
   afterEach(async () => {
-    for (const item of restoreFiles) {
-      if (item.content === '') {
-        await fs.unlink(item.path);
-      } else {
-        await fs.writeFile(item.path, item.content);
-      }
-    }
+    await Promise.all(
+      restoreFiles.map(async (item) => {
+        if (item.content === '') {
+          await fs.unlink(item.path);
+        } else {
+          await fs.writeFile(item.path, item.content);
+        }
+      })
+    );
     restoreFiles.length = 0;
   });
 
