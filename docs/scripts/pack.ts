@@ -24,7 +24,7 @@ interface Task {
   dependents: Array<string>;
 }
 
-const rootDir = fileURLToPath(new URL('../../../', import.meta.url));
+const rootDir = fileURLToPath(new URL('../../', import.meta.url));
 const outDir = fileURLToPath(new URL('../public', import.meta.url));
 
 async function main() {
