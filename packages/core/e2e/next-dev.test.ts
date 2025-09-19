@@ -8,7 +8,7 @@ describe('dev e2e', () => {
   if (!appName) {
     throw new Error(`Missing "APP_NAME" env variable`);
   }
-  const appPath = path.join(process.cwd(), 'apps', appName);
+  const appPath = path.join(process.cwd(), 'workbench', appName);
   const generatedStep = path.join(
     appPath,
     'app',

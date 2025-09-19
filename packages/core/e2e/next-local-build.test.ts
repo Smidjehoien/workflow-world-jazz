@@ -13,7 +13,7 @@ describe.each(['nextjs-webpack', 'nextjs-turbopack'])('e2e', (project) => {
     }
 
     const result = await exec('pnpm build', {
-      cwd: path.join(process.cwd(), 'apps', project),
+      cwd: path.join(process.cwd(), 'workbench', project),
     });
 
     expect(result.stderr).not.toContain('Error:');
