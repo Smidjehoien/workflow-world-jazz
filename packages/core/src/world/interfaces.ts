@@ -26,7 +26,10 @@ export interface Streamer {
     chunk: string | Uint8Array | Buffer
   ): Promise<void>;
   closeStream(name: string): Promise<void>;
-  readFromStream(name: string): Promise<ReadableStream<Uint8Array>>;
+  readFromStream(
+    name: string,
+    startIndex?: number
+  ): Promise<ReadableStream<Uint8Array>>;
 }
 
 export interface AuthProvider {

@@ -1,24 +1,49 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import type { MyUIMessage } from '@/util/chat-schema';
+import { transport } from '@/util/transport';
 import ChatInput from './chat-input';
 import Message from './message';
 
 export default function ChatComponent() {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const { status, sendMessage, messages, regenerate, addToolResult } =
-    useChat<MyUIMessage>({
-      onFinish() {
-        requestAnimationFrame(() => {
-          inputRef.current?.focus();
-        });
-      },
-    });
+  const activeWorkflowRunId = useMemo(() => {
+    if (typeof window === 'undefined') return;
+    return localStorage.getItem('active-workflow-run-id') ?? undefined;
+  }, []);
 
-  // activate the input field
+  const chat = useChat<MyUIMessage>({
+    resume: !!activeWorkflowRunId,
+    onError(error) {
+      console.error('onError', error);
+    },
+    onFinish(data) {
+      console.log('onFinish', data);
+
+      console.log('Saving chat history to localStorage', data.messages);
+      localStorage.setItem('chat-history', JSON.stringify(data.messages));
+
+      requestAnimationFrame(() => {
+        inputRef.current?.focus();
+      });
+    },
+
+    transport,
+  });
+
+  // Load chat history from `localStorage`. In a real-world application,
+  // this would likely be done on the server side and loaded from a database,
+  // but for the purposes of this demo, we'll load it from `localStorage`.
+  useEffect(() => {
+    const chatHistory = localStorage.getItem('chat-history');
+    if (!chatHistory) return;
+    chat.setMessages(JSON.parse(chatHistory) as MyUIMessage[]);
+  }, [chat.setMessages]);
+
+  // Activate the input field
   useEffect(() => {
     inputRef.current?.focus();
   }, []);
@@ -30,7 +55,7 @@ export default function ChatComponent() {
         <p className="text-gray-600">Book a flight using workflows</p>
       </div>
 
-      {messages.length === 0 && (
+      {chat.messages.length === 0 && (
         <div className="mb-8 p-6 bg-blue-50 rounded-lg">
           <h2 className="text-lg font-semibold mb-3">
             How can I help you today?
@@ -50,25 +75,26 @@ export default function ChatComponent() {
         </div>
       )}
 
-      {messages.map((message) => (
+      {chat.messages.map((message) => (
         <Message
           key={message.id}
           message={message}
-          regenerate={regenerate}
-          sendMessage={sendMessage}
-          addToolResult={addToolResult}
-          status={status}
+          regenerate={chat.regenerate}
+          sendMessage={chat.sendMessage}
+          addToolResult={chat.addToolResult}
+          status={chat.status}
         />
       ))}
       <ChatInput
-        status={status}
+        status={chat.status}
         onSubmit={(text: string) => {
-          // sendMessage({ text });
-          sendMessage({ text, metadata: { createdAt: Date.now() } });
-
-          // if (isNewChat) {
-          //   window.history.pushState(null, '', `/chat/${chatData.id}`);
-          // }
+          chat.sendMessage({ text, metadata: { createdAt: Date.now() } });
+        }}
+        onNewChat={async () => {
+          await chat.stop();
+          localStorage.removeItem('active-workflow-run-id');
+          localStorage.removeItem('chat-history');
+          chat.setMessages([]);
         }}
         inputRef={inputRef}
       />

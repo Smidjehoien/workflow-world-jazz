@@ -8,10 +8,3 @@ export const myMessageMetadataSchema = z.object({
 export type MyMessageMetadata = z.infer<typeof myMessageMetadataSchema>;
 
 export type MyUIMessage = UIMessage<MyMessageMetadata, UIDataTypes>;
-
-export type ChatData = {
-  id: string;
-  messages: MyUIMessage[];
-  createdAt: number;
-  activeStreamId: string | null;
-};

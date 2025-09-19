@@ -67,7 +67,7 @@ export function getDeserializeStream(
 export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
   #reader?: ReadableStreamDefaultReader<Uint8Array>;
 
-  constructor(name: string) {
+  constructor(name: string, startIndex?: number) {
     super({
       // @ts-expect-error Not sure why TypeScript is complaining about this
       type: 'bytes',
@@ -75,7 +75,7 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
       pull: async (controller) => {
         let reader = this.#reader;
         if (!reader) {
-          const stream = await world.readFromStream(name);
+          const stream = await world.readFromStream(name, startIndex);
           reader = this.#reader = stream.getReader();
         }
         if (!reader) {
@@ -123,7 +123,7 @@ export interface SerializableSpecial {
   Int16Array: string; // base64 string
   Int32Array: string; // base64 string
   Map: [any, any][];
-  ReadableStream: { name: string; type?: 'bytes' };
+  ReadableStream: { name: string; type?: 'bytes'; startIndex?: number };
   RegExp: { source: string; flags: string };
   Request: {
     method: string;
@@ -511,7 +511,10 @@ export function getExternalRevivers(
       });
     },
     ReadableStream: (value) => {
-      const readable = new WorkflowServerReadableStream(value.name);
+      const readable = new WorkflowServerReadableStream(
+        value.name,
+        value.startIndex
+      );
       if (value.type === 'bytes') {
         return readable;
       } else {

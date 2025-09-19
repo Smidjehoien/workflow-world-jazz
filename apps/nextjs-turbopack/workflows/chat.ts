@@ -1,6 +1,8 @@
+import { createWorkflowOutputStream } from '@vercel/workflow-core';
 import {
   convertToModelMessages,
   type FinishReason,
+  generateId,
   type ModelMessage,
   stepCountIs,
   streamText,
@@ -15,13 +17,14 @@ const MAX_STEPS = 10;
 export async function streamTextStep(
   step: number,
   messages: ModelMessage[],
-  writeable: WritableStream<UIMessageChunk>
+  writable: WritableStream<UIMessageChunk>
 ) {
   'use step';
 
   // Send start data message
-  const writer = writeable.getWriter();
+  const writer = writable.getWriter();
   writer.write({
+    id: generateId(),
     type: 'data-workflow',
     data: {
       message: `Workflow step "streamTextStep" started (#${step})`,
@@ -32,6 +35,7 @@ export async function streamTextStep(
   if (Math.random() < 0.3) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
     writer.write({
+      id: generateId(),
       type: 'data-workflow',
       data: {
         message: `Workflow step "streamTextStep" errored (#${step})`,
@@ -73,6 +77,7 @@ export async function streamTextStep(
     }
   } finally {
     writer.write({
+      id: generateId(),
       type: 'data-workflow',
       data: {
         message: `Workflow step "streamTextStep" completed (#${step})`,
@@ -88,6 +93,7 @@ export async function streamTextStep(
   // Workflow will retry errors
   if (finishReason === 'error') {
     writer.write({
+      id: generateId(),
       type: 'data-workflow',
       data: {
         message: `Workflow step "streamTextStep" errored (#${step})`,
@@ -103,13 +109,34 @@ export async function streamTextStep(
   };
 }
 
-export async function endStream(writeable: WritableStream<UIMessageChunk>) {
+export async function startStream(writable: WritableStream<UIMessageChunk>) {
   'use step';
-  const writer = writeable.getWriter();
+  const writer = writable.getWriter();
+
+  writer.write({
+    type: 'start',
+    messageMetadata: {
+      createdAt: Date.now(),
+    },
+  });
+
+  writer.write({
+    id: generateId(),
+    type: 'data-workflow',
+    data: { message: 'Starting workflow stream' },
+  });
+
+  writer.releaseLock();
+}
+
+export async function endStream(writable: WritableStream<UIMessageChunk>) {
+  'use step';
+  const writer = writable.getWriter();
 
   console.log('Closing workflow stream');
 
   writer.write({
+    id: generateId(),
     type: 'data-workflow',
     data: {
       message: 'Closing workflow stream',
@@ -127,22 +154,24 @@ export async function endStream(writeable: WritableStream<UIMessageChunk>) {
 /**
  * The main chat workflow
  */
-export async function chat(
-  messages: UIMessage[],
-  writeable: WritableStream<UIMessageChunk>
-) {
+export async function chat(messages: UIMessage[]) {
   'use workflow';
+
+  console.log('Starting workflow');
+
+  const writable = createWorkflowOutputStream<UIMessageChunk>();
+
+  // Write the "start" message to the client
+  await startStream(writable);
 
   const currMessages: ModelMessage[] = convertToModelMessages(messages);
   let finishReason: FinishReason = 'unknown';
 
-  console.log('Starting workflow');
-
-  // Run streamText in a loop while we have tool calls
+  // Run `streamText` in a loop while we have tool calls
   for (let i = 0; i < MAX_STEPS; i++) {
     console.log(`Running step ${i + 1}`);
 
-    const result = await streamTextStep(i, currMessages, writeable);
+    const result = await streamTextStep(i, currMessages, writable);
 
     currMessages.push(...result.messages);
     finishReason = result.finishReason;
@@ -152,10 +181,8 @@ export async function chat(
     }
   }
 
-  // Send an end message to the client
-  await endStream(writeable);
+  // Write the "finish" message to the client
+  await endStream(writable);
 
   console.log('Finished workflow');
-
-  return currMessages.slice(-1)[0];
 }

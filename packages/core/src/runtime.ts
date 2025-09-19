@@ -21,7 +21,6 @@ import {
 import {
   dehydrateStepArguments,
   dehydrateStepReturnValue,
-  getExternalRevivers,
   hydrateStepArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
@@ -63,21 +62,10 @@ export async function getWorkflowReturnValue(
   throw new WorkflowRunNotCompletedError(runId, run.status);
 }
 
-/**
- * Retrieves the implicit readable stream for a workflow run for external consumers.
- *
- * @param runId - The workflow run ID.
- * @returns The `ReadableStream` for the workflow run.
- */
-export function getWorkflowOutputStream<W = any>(
-  runId: string,
-  ops: Promise<any>[] = [],
-  global: Record<string, any> = globalThis
-) {
-  return getExternalRevivers(global, ops).ReadableStream({
-    name: runId,
-  }) as ReadableStream<W>;
-}
+export {
+  getWorkflowOutputStream,
+  type WorkflowOutputStreamOptions,
+} from './runtime/ouput-stream.js';
 
 /**
  * Loads all workflow run events by iterating through all pages of paginated results.

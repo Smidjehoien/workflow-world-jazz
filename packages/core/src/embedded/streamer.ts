@@ -94,7 +94,7 @@ export function createStreamer(basedir: string): Streamer {
       streamEmitter.emit(`close:${name}` as const, { streamName: name });
     },
 
-    async readFromStream(name: string) {
+    async readFromStream(name: string, startIndex: number = 0) {
       // Load all existing chunks
       const chunksDir = path.join(basedir, 'streams', 'chunks');
       const files = await listJSONFiles(chunksDir);
@@ -117,7 +117,8 @@ export function createStreamer(basedir: string): Streamer {
       return new ReadableStream<Uint8Array>({
         async start(controller) {
           let isComplete = false;
-          for (const file of chunkFiles) {
+          for (let i = startIndex; i < chunkFiles.length; i++) {
+            const file = chunkFiles[i];
             const chunk = deserializeChunk(
               await readBuffer(path.join(chunksDir, `${file}.json`))
             );

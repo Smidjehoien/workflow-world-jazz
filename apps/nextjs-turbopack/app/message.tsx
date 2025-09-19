@@ -21,8 +21,10 @@ export default function Message({
   }) => void;
   addToolResult: ({
     toolCallId,
+    tool,
     output,
   }: {
+    tool: string;
     toolCallId: string;
     output: string;
   }) => void;
@@ -482,6 +484,7 @@ export default function Message({
               const data = part.data as any;
               return (
                 <div
+                  key={part.id}
                   className={`text-xs ${data.type === 'error' ? 'text-red-400' : 'text-blue-400'}`}
                 >
                   <i>[{data.message}]</i>

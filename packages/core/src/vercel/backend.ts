@@ -1,7 +1,7 @@
 import type { WorkflowBackend } from '../world/interfaces.js';
-import type { APIConfig } from './utils.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
+import type { APIConfig } from './utils.js';
 
 export function createVercel(config?: APIConfig): WorkflowBackend {
   const storage = createStorage(config);
