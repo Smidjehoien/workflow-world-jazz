@@ -1,5 +1,23 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.20
+
+### Patch Changes
+
+- 9dbb1c9: create an embedded backend for the embedded world
+
+  a `World` now consists of the following sub-interfaces:
+
+  - Queue (how do we queue jobs?)
+  - Storage (how do we store data?)
+  - Streamer (how do we stream data?)
+  - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
+
+  There are two `World` implementations provided in `core`:
+
+  - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
+  - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
+
 ## 0.0.1-alpha.19
 
 ### Patch Changes

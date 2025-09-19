@@ -1,5 +1,30 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.30
+
+### Patch Changes
+
+- 94567d1: Fix initial workflow bundles build with latest canary
+- 9dbb1c9: create an embedded backend for the embedded world
+
+  a `World` now consists of the following sub-interfaces:
+
+  - Queue (how do we queue jobs?)
+  - Storage (how do we store data?)
+  - Streamer (how do we stream data?)
+  - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
+
+  There are two `World` implementations provided in `core`:
+
+  - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
+  - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
+
+- Updated dependencies [779989f]
+- Updated dependencies [45671a4]
+- Updated dependencies [9dbb1c9]
+  - @vercel/workflow-cli@0.0.1-alpha.29
+  - @vercel/workflow-core@0.0.1-alpha.20
+
 ## 0.0.1-alpha.29
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.29
+
+### Patch Changes
+
+- 779989f: bug: ignore generated .well-known directories
+- 45671a4: Disable un-used sourcemap handling and tweak logs with timings'
+- Updated dependencies [9dbb1c9]
+  - @vercel/workflow-core@0.0.1-alpha.20
+
 ## 0.0.1-alpha.28
 
 ### Patch Changes
