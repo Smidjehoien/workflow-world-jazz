@@ -20,6 +20,7 @@ export async function applySwcTransform(
   // Transform with SWC to support syntax esbuild doesn't
   const result = await transform(source, {
     filename,
+    swcrc: false,
     jsc: {
       parser: {
         syntax: isTypeScript ? 'typescript' : 'ecmascript',
