@@ -1,5 +1,15 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.30
+
+### Patch Changes
+
+- 757e454: Disable custom swcrc configs for our transform
+- Updated dependencies [d4914d7]
+- Updated dependencies [8ed4fb6]
+- Updated dependencies [705e63c]
+  - @vercel/workflow-core@0.0.1-alpha.21
+
 ## 0.0.1-alpha.29
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.21
+
+### Patch Changes
+
+- d4914d7: Split getContext into getWorkflowContext and getStepContext
+- 8ed4fb6: Add support for `startIndex` option in `getWorkflowOutputStream()`
+- 705e63c: extend sleep to use an end date
+
 ## 0.0.1-alpha.20
 
 ### Patch Changes
