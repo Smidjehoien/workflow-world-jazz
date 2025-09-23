@@ -4,9 +4,9 @@ title: sleep
 
 # `sleep()`
 
-Suspends a workflow for a specified duration without consuming any resources. Once the duration has passed, the workflow will resume execution.
+Suspends a workflow for a specified duration or until an end date without consuming any resources. Once the duration or end date has passed, the workflow will resume execution.
 
-This is useful when you want to resume a workflow after some duration.
+This is useful when you want to resume a workflow after some duration or date.
 
 <Callout>
 `sleep` is a *special* type of step function provided and should be called directly inside workflow functions.
@@ -24,10 +24,10 @@ import { sleep } from "@vercel/workflow-core"
 
 <TypeTable
   type={{
-    duration: {
-      type: "StringValue",
+    param: {
+      type: "StringValue | Date",
       required: true,
-      description: 'The duration to sleep for. This is a string in the format of "1000ms", "1s", "1m", "1h", or "1d".'
+      description: 'The duration or date to sleep until. This is a string in the format of "1000ms", "1s", "1m", "1h", or "1d" or Date object.'
     }
   }}
 />
@@ -46,8 +46,13 @@ import { sleep } from "@vercel/workflow-core" // [!code highlight]
 async function testWorkflow() {
     "use workflow"
 
+    // Sleeping with a duration
     await sleep("1d") // [!code highlight]
     // Workflow resumes after a day
+
+    // Sleeping until an end date
+    await sleep(new Date(Date.now() + 10_000)) // [!code highlight]
+    // Workflow resumes after 10 seconds
 }
 ```
 

@@ -137,6 +137,14 @@ export async function sleepingWorkflow() {
   return { startTime, endTime };
 }
 
+export async function sleepingDateWorkflow(endDate: Date) {
+  'use workflow';
+  const startTime = Date.now();
+  await sleep(endDate);
+  const endTime = Date.now();
+  return { startTime, endTime };
+}
+
 //////////////////////////////////////////////////////////
 
 async function nullByteStep() {
