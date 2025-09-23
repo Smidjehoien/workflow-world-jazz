@@ -1,13 +1,11 @@
 import { waitUntil } from '@vercel/functions';
-import { world } from './world/index.js';
-import type { Event } from './world/index.js';
 import {
   WorkflowAPIError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from './errors.js';
-import type { WorkflowContext } from './get-context.js';
+import type { StepContext } from './get-context.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
@@ -25,12 +23,14 @@ import {
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 // TODO: move step handler out to a separate file
-import { contextStorage } from './step/get-context.js';
+import { contextStorage } from './step/get-step-context.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { buildWorkflowSuspensionMessage } from './util.js';
 import { runWorkflow } from './workflow.js';
+import type { Event } from './world/index.js';
+import { world } from './world/index.js';
 
 export { StepsNotRunError } from './global.js';
 export { type StartOptions, start } from './runtime/start.js';
@@ -391,7 +391,7 @@ export const vercelAPIStepsEntrypoint =
               ...Attribute.StepArgumentsCount(args.length),
             });
 
-            const ctx: WorkflowContext = {
+            const ctx: StepContext = {
               workflowRunId,
               workflowStartedAt: new Date(workflowStartedAt),
               stepId,

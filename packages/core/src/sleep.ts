@@ -1,6 +1,6 @@
 import ms, { type StringValue } from 'ms';
 import { RetryableError } from './global.js';
-import { getContext } from './step/get-context.js';
+import { getStepContext } from './step/get-step-context.js';
 
 // vqs has a max message visibility lifespan, the workflow sleep function
 // will retry repeatedly until the user requested duration is reached.
@@ -28,7 +28,7 @@ export async function sleep(date: Date): Promise<void>;
 
 export async function sleep(param: StringValue | Date): Promise<void> {
   'use step';
-  const { stepStartedAt } = getContext();
+  const { stepStartedAt } = getStepContext();
   const durationMs =
     typeof param === 'string'
       ? ms(param)

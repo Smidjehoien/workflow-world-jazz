@@ -80,23 +80,21 @@ Here's some examples of when you would use each:
 
 ## Context-Aware Retries
 
-Workflow SDK provides a function `getContext`, which can be used to retrieve the current workflow metadata. This function is execution-dependent (whether it's called within a workflow function or a step function). You can learn more about retrieving workflow metadata in the [API Reference: `getContext`](/docs/api-reference/get-context) section.
+Workflow SDK provides a function [`getStepContext`](/docs/api-reference/get-step-context), which can be used to retrieve the current step function metadata.
 
-When calling `getContext` inside a step function, there are a couple useful properties available to you:
+This function provides a couple of useful properties to give you more control over step retries:
 
 - `stepId`: Unique identifier for current executing step
 - `stepStartedAt`: Timestamp when step started
 - `attempt`: Number of times current step has been executed
 
-These properties can be combined to give you more control over step retries.
-
 ```ts lineNumbers
-import { FatalError, RetryableError, getContext } from '@vercel/workflow-core';
+import { FatalError, RetryableError, getStepContext } from '@vercel/workflow-core';
 
 async function callAPI(endpoint: string) {
   "use step"
 
-  const { attempt, stepStartedAt, stepId } = getContext(); // Access step metadata [!code highlight]
+  const { attempt, stepStartedAt, stepId } = getStepContext(); // Access step metadata [!code highlight]
   const response = await fetch(endpoint);
 
   if (response.status === 429) {

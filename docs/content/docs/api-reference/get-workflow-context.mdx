@@ -1,0 +1,65 @@
+---
+title: getWorkflowContext
+---
+
+# `getWorkflowContext`
+
+Returns additional metadata available in the current workflow function.
+
+You may want to use this function when you need to:
+
+* Log workflow run IDs
+* Access timing information of a workflow
+
+<Callout>
+If you need to access step context, take a look at [`getStepContext`](/docs/api-reference/get-step-context).
+</Callout>
+
+## Import
+
+```typescript
+import { getWorkflowContext } from "@vercel/workflow-core"
+```
+
+## API Signature
+
+### Parameters
+
+The `getWorkflowContext` function takes no parameters.
+
+### Returns
+
+<TypeTable
+  type={{
+    workflowRunId: {
+      type: "string",
+      required: true,
+      description: 'Unique identifier for the workflow run.',
+    },
+    workflowStartedAt: {
+      type: "Date",
+      required: true,
+      description: 'Timestamp when the workflow run started.',
+    },
+    url: {
+      type: "string",
+      required: true,
+      description: 'The URL where the workflow can be triggered.',
+    }
+  }}
+/>
+
+## Examples
+
+Here's a simple example of how you can access the `workflowRunId` in a workflow.
+
+```typescript lineNumbers
+import { getWorkflowContext } from "@vercel/workflow-core" // [!code highlight]
+
+async function testWorkflow() {
+    "use workflow"
+
+    const ctx = getWorkflowContext() // [!code highlight]
+    console.log(ctx.workflowRunId) // [!code highlight]
+}
+```

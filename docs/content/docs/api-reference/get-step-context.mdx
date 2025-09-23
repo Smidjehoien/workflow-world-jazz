@@ -1,10 +1,10 @@
 ---
-title: getContext
+title: getStepContext
 ---
 
-# `getContext`
+# `getStepContext`
 
-Returns additional metadata available in the current workflow function or step function. This function's outputs are execution dependent (i.e. whether it's called inside a workflow function or step function).
+Returns additional metadata available in the current workflow function and step function.
 
 You may want to use this function when you need to:
 
@@ -12,23 +12,27 @@ You may want to use this function when you need to:
 * Track retry attempts in error handling
 * Access timing information of a step and execution metadata
 
+<Callout type="warn">
+This function can only be called inside a step function.
+</Callout>
+
 ## Import
 
 ```typescript
-import { getContext } from "@vercel/workflow-core"
+import { getStepContext } from "@vercel/workflow-core"
 ```
 
 ## API Signature
 
 ### Parameters
 
-The `getContext` function takes no parameters.
+The `getStepContext` function takes no parameters.
 
 ### Returns
 
 <TypeTable
   type={{
-    workflowRunId: {
+      workflowRunId: {
       type: "string",
       required: true,
       description: 'Unique identifier for the workflow run.',
@@ -37,6 +41,11 @@ The `getContext` function takes no parameters.
       type: "Date",
       required: true,
       description: 'Timestamp when the workflow run started.',
+    },
+    url: {
+      type: "string",
+      required: true,
+      description: 'The URL where the workflow can be triggered.',
     },
     stepId: {
       type: "string",
@@ -53,30 +62,22 @@ The `getContext` function takes no parameters.
       required: true,
       description: 'The number of times the current step has been executed. This value will increase with each retry. Only available inside a step function',
     },
-    url: {
-      type: "string",
-      required: true,
-      description: 'The URL where the workflow can be triggered.',
-    }
   }}
 />
 
-<Callout type="warn">
-`stepId`, `stepStartedAt`, and `attempt` are properties that are only available inside step functions.
+<Callout>
+`getStepContext` extends [`getWorkflowContext`](/docs/api-reference/get-workflow-context) to add additional metadata of the current step run execution.
 </Callout>
 
 ## Examples
 
-Here's a simple example of how you can access the `workflowRunId` in a workflow, and the `stepId` inside a step function.
+Here's a simple example of how you can access the `workflowRunId`, and `stepId` inside a step function.
 
 ```typescript lineNumbers
-import { getContext } from "@vercel/workflow-core" // [!code highlight]
+import { getStepContext } from "@vercel/workflow-core" // [!code highlight]
 
 async function testWorkflow() {
     "use workflow"
-
-    const ctx = getContext() // [!code highlight]
-    console.log(ctx.workflowRunId)
 
     await logStepId()
 }
@@ -84,7 +85,8 @@ async function testWorkflow() {
 async function logStepId() {
     "use step"
 
-    const ctx = getContext() // [!code highlight]
-    console.log(ctx.stepId)
+    const ctx = getStepContext() // [!code highlight]
+    console.log(ctx.workflowRunId) // [!code highlight]
+    console.log(ctx.stepId) // [!code highlight]
 }
 ```

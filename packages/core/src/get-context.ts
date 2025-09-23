@@ -10,6 +10,13 @@ export interface WorkflowContext {
   workflowStartedAt: Date;
 
   /**
+   * The URL where the workflow can be triggered.
+   */
+  url: string;
+}
+
+export interface StepContext extends WorkflowContext {
+  /**
    * Unique identifier for the currently executing step.
    * Useful to use as part of an idempotency key for critical
    * operations that must only be executed once (such as charging a customer).
@@ -35,15 +42,16 @@ export interface WorkflowContext {
    * Accessing this property in a workflow function will throw an error.
    */
   attempt: number;
-
-  /**
-   * The URL where the workflow can be triggered.
-   */
-  url: string;
 }
 
-export function getContext(): WorkflowContext {
+export function getWorkflowContext(): WorkflowContext {
   throw new Error(
-    '`getContext()` can only be called inside a workflow or step function'
+    '`getWorkflowContext()` can only be called inside a workflow or step function'
+  );
+}
+
+export function getStepContext(): StepContext {
+  throw new Error(
+    '`getStepContext()` can only be called inside a step function'
   );
 }

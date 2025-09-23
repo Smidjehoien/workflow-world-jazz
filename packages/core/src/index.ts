@@ -6,7 +6,12 @@
  * `workflow` and `workflow/runtime`?
  */
 
-export { getContext, type WorkflowContext } from './get-context.js';
+export {
+  getStepContext,
+  getWorkflowContext,
+  type StepContext,
+  type WorkflowContext,
+} from './get-context.js';
 export {
   getWebhook,
   type Webhook,

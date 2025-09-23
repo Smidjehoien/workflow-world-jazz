@@ -8,35 +8,39 @@ Troubleshoot common problems in development when executing workflows.
 
 ## Context Function Errors
 
-Functions like `getContext`, and `sleep` from the [Workflow SDK Core](/docs/workflow-sdk-core) package depend on the execution context (i.e. *where* the function is executed). This means that their uses are limited depending on if they are called inside a workflow function or a step function.
+Functions like `getStepContext`, and `sleep` from the Workflow SDK Core package depend on the execution context (i.e. *where* the function is executed).
 
 ### Accessing Context
 
-Workflow SDK Core provides the function `getContext`. This function can be used to return the metadata of a workflow or a step depending on where it's executed.
+Workflow SDK Core provides the following functions for accessing context:
 
-Some fields of `getContext` will not be available when called in a workflow function if it doesn't exist. For example, accessing the `stepId` or `stepStartedId` fields inside a workflow function isn't possible since no step is currently being executed.
+* [`getWorkflowContext`](/docs/api-reference/get-workflow-context)
+* [`getStepContext`](/docs/api-reference/get-step-context).
+
+Trying to call `getStepContext` inside a workflow function isn't possible since no current executing step exists.
 
 ```ts
-// getContext() - available in workflow and step functions
+import { getWorkflowContext, getStepContext } from "@vercel/workflow-core"
+
+// getWorkflowContext() - available in workflow and step functions
 export async function myWorkflow() {
     "use workflow";
 
-    const ctx = getContext();
+    const ctx = getWorkflowContext();
     console.log(ctx.workflowRunId) // Valid
 
     await testStep();
-    console.log(ctx.stepId)        // Invalid, outside execution context
+
+    const stepCtx = getStepContext() // Invalid, outside execution context
 }
 
 async function testStep() {
     "use step"
 
-    const ctx = getContext()
+    const ctx = getStepContext()
     console.log(ctx.stepId)        // Valid, within scope of a step function
 }
 ```
-
-You can learn more about accessing context in the [`getContext`](/docs/workflow-sdk-core/get-context) section.
 
 ### Sleeping a Workflow
 

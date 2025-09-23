@@ -1,8 +1,9 @@
 import {
   createWorkflowOutputStream,
   FatalError,
-  getContext,
+  getStepContext,
   getWebhook,
+  getWorkflowContext,
   sleep,
 } from '@vercel/workflow-core';
 
@@ -162,13 +163,13 @@ export async function nullByteWorkflow() {
 
 async function stepWithContext() {
   'use step';
-  const ctx = getContext();
+  const ctx = getStepContext();
   return ctx;
 }
 
-export async function getContextWorkflow() {
+export async function workflowAndStepContextWorkflow() {
   'use workflow';
-  const workflowCtx = getContext();
+  const workflowCtx = getWorkflowContext();
   const stepCtx = await stepWithContext();
   return {
     workflowCtx: {

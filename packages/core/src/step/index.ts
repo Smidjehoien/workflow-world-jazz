@@ -1,2 +1,2 @@
 export * from '../index.js';
-export { getContext } from './get-context.js';
+export { getStepContext } from './get-step-context.js';

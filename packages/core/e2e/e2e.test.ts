@@ -165,8 +165,8 @@ describe.concurrent('e2e', () => {
     expect(returnValue).toBe('null byte \0');
   });
 
-  test('getContextWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('getContextWorkflow', []);
+  test('workflowAndStepContextWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('workflowAndStepContextWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
 
     expect(returnValue).toHaveProperty('workflowCtx');
@@ -189,6 +189,11 @@ describe.concurrent('e2e', () => {
     expect(typeof returnValue.workflowCtx.url).toBe('string');
     expect(typeof returnValue.stepCtx.url).toBe('string');
     expect(returnValue.workflowCtx.url).toBe(returnValue.stepCtx.url);
+
+    // Workflow context shouldn't have stepId, stepStartedAt, or attempt
+    expect(returnValue.workflowCtx.stepId).toBeUndefined();
+    expect(returnValue.workflowCtx.stepStartedAt).toBeUndefined();
+    expect(returnValue.workflowCtx.attempt).toBeUndefined();
 
     // step context
 

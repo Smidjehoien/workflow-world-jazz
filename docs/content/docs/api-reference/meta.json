@@ -2,7 +2,8 @@
   "title": "API Reference",
   "pages": [
     "api-reference",
-    "get-context",
+    "get-workflow-context",
+    "get-step-context",
     "get-webhook",
     "sleep",
     "create-workflow-output-stream",
