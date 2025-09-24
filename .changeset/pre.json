@@ -12,7 +12,8 @@
     "docs": "1.0.0",
     "@workflow/example-app": "0.0.2-alpha.18",
     "nextjs-turbopack": "0.0.2-alpha.5",
-    "nextjs-webpack": "0.0.2-alpha.5"
+    "nextjs-webpack": "0.0.2-alpha.5",
+    "ai-sdk-workflow-patterns": "0.1.0"
   },
   "changesets": [
     "breezy-parents-fall",
@@ -112,6 +113,8 @@
     "weak-pandas-drop",
     "weak-wombats-battle",
     "wet-baths-search",
+    "wide-apples-repeat",
+    "wild-bats-mix",
     "wild-clubs-dress",
     "yellow-cycles-show",
     "young-lamps-deny"

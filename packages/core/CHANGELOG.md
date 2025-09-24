@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.22
+
+### Patch Changes
+
+- a5197f7: Added inspect commands to cli
+
 ## 0.0.1-alpha.21
 
 ### Patch Changes
