@@ -25,6 +25,7 @@ async function failingStep(): Promise<string> {
 async function retryableStep(): Promise<string> {
   'use step';
   const { attempt } = getStepContext();
+  console.log('retryableStep attempt:', attempt);
   if (attempt === 1) {
     console.log(
       'Throwing retryable error - this will be retried after 5 seconds'
@@ -34,6 +35,7 @@ async function retryableStep(): Promise<string> {
       retryAfter: '5s',
     });
   }
+  console.log('Completing successfully');
   return 'Success';
 }
 
