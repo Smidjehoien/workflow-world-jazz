@@ -2,3 +2,4 @@ packages:
   - workbench/*
   - packages/*
   - docs
+  - examples/*
