@@ -4,7 +4,7 @@ title: Workflow Functions [WIP]
 
 # Workflow Functions
 
-Workflow functions define the entrypoint of a workflow and organize how step functions are called. This type of function does not have access to the Node.js runtime, nor can it use `npm` packages.
+Workflow functions define the entrypoint of a workflow and organize how step functions are called. This type of function does not have access to the Node.js runtime, and usable `npm` packages are limited (cannot import Node.js core modules).
 
 Although this may seem limiting initially, you'll come to learn that this is crucial for suspending and accurately resuming execution of workflows.
 

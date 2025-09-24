@@ -14,14 +14,14 @@ In this section, you'll learn more about what workflows are, their core componen
 
 Workflows (i.e. *durable functions*) are a programming model for building long-running, stateful application logic that can maintain their execution state across restarts, failures, and scale events. Unlike traditional serverless functions that lose all state when they terminate, workflows persist their progress and can resume exactly where they left off.
 
-This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (ex. via webhooks).
+This lets you write ordinary asynchronous code (awaits, loops, error handling) while the platform provides reliable timers, retries, idempotency, and external resumption (for example, webhooks).
 
 The result is resilient function execution that can span minutes to months (or even longer) with strong operational guarantees.
 
 Workflows consist of two types functions that work together:
 
-1. **Workflow Functions**: Orchestrates steps
-2. **Step Functions**: Carries out work
+1. **Workflow Functions**: Functions that orchestrate/organize steps
+2. **Step Functions**: Functions that carry out the actual work
 
 ### Workflow Functions
 
