@@ -13,7 +13,7 @@
   "scripts": {
     "build": "tsc && chmod +x bin/run.js",
     "clean": "tsc --build --clean",
-    "watch": "tsc --watch"
+    "dev": "tsc --watch"
   },
   "oclif": {
     "bin": "workflow",
@@ -32,15 +32,17 @@
     "@oclif/core": "^4.0.0",
     "@oclif/plugin-help": "^6.0.0",
     "@swc/core": "1.11.24",
+    "@types/watchpack": "2.4.4",
     "@vercel/swc-plugin-workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
-    "@types/watchpack": "2.4.4",
+    "chalk": "^5.6.2",
     "chokidar": "^4.0.3",
     "comment-json": "4.2.5",
+    "easy-table": "^1.2.0",
+    "enhanced-resolve": "5.18.2",
     "esbuild": "^0.25.6",
     "find-up": "7.0.0",
     "mixpart": "^0.0.4",
-    "enhanced-resolve": "5.18.2",
     "tinyglobby": "^0.2.14",
     "watchpack": "2.4.4"
   }

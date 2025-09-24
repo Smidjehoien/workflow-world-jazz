@@ -10,6 +10,7 @@ export const configSchema = z.object({
     .describe('The port the app server is running on'),
   dataDir: z
     .string()
+    // TODO: Might be moved to .workflow-data by default in the future. This is already supported by the CLI.
     .catch('workflow-data')
     .describe('The directory to store workflow data'),
 });
@@ -41,9 +42,8 @@ function getConfigFromEnv() {
 async function inferPortFromProcess() {
   const ports = await pidToPorts(process.pid);
   if (ports.size === 0) {
-    throw new Error(
-      'No ports detected for current process. Please configure a port explicitly using nextConfig.workflows.embedded.port'
-    );
+    // We allow the downstream consumer to determine whether missing a port is an error.
+    return undefined;
   }
   const smallest = Math.min(...ports);
   return smallest;

@@ -20,6 +20,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch",
     "clean": "tsc --build --clean",
     "test": "vitest run src",
     "test:e2e": "vitest run e2e",

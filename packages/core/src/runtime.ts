@@ -32,9 +32,12 @@ import { runWorkflow } from './workflow.js';
 import type { Event } from './world/index.js';
 import { world } from './world/index.js';
 
+export { createEmbeddedWorld } from './embedded/world.js';
 export { StepsNotRunError } from './global.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
+export { createVercelWorld } from './vercel/index.js';
+export type { Event, Step, WorkflowRun, World } from './world/index.js';
 
 export async function getWorkflowRun(runId: string) {
   const deploymentId = await world.getDeploymentId();

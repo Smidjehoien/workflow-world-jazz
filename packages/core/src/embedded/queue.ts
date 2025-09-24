@@ -1,5 +1,5 @@
-import { setTimeout } from 'node:timers/promises';
 import { JsonTransport } from '@vercel/queue';
+import { setTimeout } from 'node:timers/promises';
 import z from 'zod/v4';
 import { MessageId, type Queue, ValidQueueName } from '../world/queue.js';
 import { config } from './config.js';
@@ -7,6 +7,11 @@ import { config } from './config.js';
 export function createQueue(): Queue {
   const transport = new JsonTransport();
   const serverPort = config.value.port;
+  if (!serverPort) {
+    throw new Error(
+      'No ports detected for current process. Please configure a port explicitly using nextConfig.workflows.embedded.port'
+    );
+  }
 
   const queue: Queue['queue'] = async (queueName, x) => {
     const body = transport.serialize(x);
