@@ -117,6 +117,7 @@ export async function startStream(writable: WritableStream<UIMessageChunk>) {
     type: 'start',
     messageMetadata: {
       createdAt: Date.now(),
+      messageId: generateId(),
     },
   });
 

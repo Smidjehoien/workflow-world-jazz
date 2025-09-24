@@ -5,10 +5,9 @@
  * @returns A ReadableStream that yields the same values as the iterator
  */
 export function iteratorToStream<T>(
-  fn: () => AsyncGenerator<T>,
+  iterator: AsyncGenerator<T>,
   { signal }: { signal?: AbortSignal } = {}
 ): ReadableStream<T> {
-  const iterator = fn();
   let abortHandler: (() => void) | undefined;
 
   return new ReadableStream<T>({

@@ -1,6 +1,9 @@
 import { getWorkflowOutputStream } from '@vercel/workflow-core/runtime';
-import { createUIMessageStream, type UIMessage, type UIMessageChunk } from 'ai';
-import * as ndjson from '@/util/ndjson';
+import {
+  createUIMessageStreamResponse,
+  type UIMessage,
+  type UIMessageChunk,
+} from 'ai';
 import { chat } from '@/workflows/chat';
 
 // TODO: remove these once example app is updated to import
@@ -21,29 +24,12 @@ export async function POST(req: Request) {
   // calling the `chat()` function directly?
   const workflowRunId = (workflowHandle as any).runId;
 
-  const readable = getWorkflowOutputStream<UIMessageChunk>(workflowRunId);
-
-  const uiMessageStream = createUIMessageStream({
-    execute: async ({ writer }) => {
-      writer.merge(readable);
+  return createUIMessageStreamResponse({
+    stream: getWorkflowOutputStream<UIMessageChunk>(workflowRunId),
+    headers: {
+      // The workflow run ID is stored into `localStorage` on the client side,
+      // which influences the `resume` flag in the `useChat` hook.
+      'x-workflow-run-id': workflowRunId,
     },
-    originalMessages: messages,
   });
-
-  const response = new Response(
-    uiMessageStream
-      .pipeThrough(ndjson.stringify())
-      .pipeThrough(new TextEncoderStream()),
-    {
-      headers: {
-        'Content-Type': 'application/x-ndjson',
-
-        // The workflow run ID is stored into `localStorage` on the client side,
-        // which influences the `resume` flag in the `useChat` hook.
-        'x-active-workflow-run-id': workflowRunId,
-      },
-    }
-  );
-
-  return response;
 }
