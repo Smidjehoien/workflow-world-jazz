@@ -24,7 +24,7 @@ export interface WorkflowReadableStreamOptions {
 
 /**
  * Retrieves the workflow run's default readable stream, which reads chunks
- * written to the corresponding writeable stream {@link getWorkflowWritableStream}.
+ * written to the corresponding writable stream {@link getWorkflowWritableStream}.
  *
  * @param runId - The workflow run ID.
  * @param options - The options for the readable stream.
