@@ -1,5 +1,16 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.32
+
+### Patch Changes
+
+- a85227c: Fix getStepContext and getWorkflowContext exports
+- Updated dependencies [37e6ee8]
+- Updated dependencies [d412985]
+- Updated dependencies [f56e1e6]
+- Updated dependencies [a85227c]
+  - @vercel/workflow-core@0.0.1-alpha.23
+
 ## 0.0.1-alpha.31
 
 ### Patch Changes

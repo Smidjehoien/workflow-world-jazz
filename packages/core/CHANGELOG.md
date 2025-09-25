@@ -1,5 +1,14 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.23
+
+### Patch Changes
+
+- 37e6ee8: Rename `createWorkflowOutputStream` to `getWorkflowWritableStream`, and `getWorkflowOutputStream` to `getWorkflowReadableStream`
+- d412985: remove http status code from step retry
+- f56e1e6: Fully use export condition for workflow versus step
+- a85227c: Fix getStepContext and getWorkflowContext exports
+
 ## 0.0.1-alpha.22
 
 ### Patch Changes
