@@ -36,7 +36,7 @@ export function createStorage(basedir: string): Storage {
   return {
     runs: {
       async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
-        const runId = generateLexiProcessTime();
+        const runId = `wrun_${generateLexiProcessTime()}`;
         const now = new Date();
 
         const result: WorkflowRun = {
@@ -230,7 +230,7 @@ export function createStorage(basedir: string): Storage {
     // Events - filesystem-backed storage
     events: {
       async create(runId: string, data: CreateEventRequest): Promise<Event> {
-        const eventId = generateLexiProcessTime();
+        const eventId = `evnt_${generateLexiProcessTime()}`;
         const now = new Date();
 
         const result: Event = {
@@ -256,8 +256,11 @@ export function createStorage(basedir: string): Storage {
           sortOrder: 'asc', // Events in chronological order (oldest first)
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
-          getCreatedAt: (filename) =>
-            ulidToDate(filename.split('-')[1]?.split('.')[0]),
+          getCreatedAt: (filename) => {
+            const eventId = filename.split('-')[1]?.split('.')[0];
+            const ulid = eventId?.replace(/^evnt_/, '');
+            return ulidToDate(ulid);
+          },
         });
       },
     },

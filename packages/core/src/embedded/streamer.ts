@@ -44,7 +44,7 @@ export function createStreamer(basedir: string): Streamer {
 
   return {
     async writeToStream(name: string, chunk: string | Uint8Array | Buffer) {
-      const chunkId = generateLexiProcessTime();
+      const chunkId = `strm_${generateLexiProcessTime()}`;
 
       if (typeof chunk === 'string') {
         chunk = new TextEncoder().encode(chunk);
@@ -78,7 +78,7 @@ export function createStreamer(basedir: string): Streamer {
     },
 
     async closeStream(name: string) {
-      const chunkId = generateLexiProcessTime();
+      const chunkId = `strm_${generateLexiProcessTime()}`;
       const chunkPath = path.join(
         basedir,
         'streams',
