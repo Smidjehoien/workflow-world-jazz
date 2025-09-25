@@ -1,0 +1,153 @@
+---
+title: getWorkflowReturnValue
+---
+
+# `getWorkflowReturnValue()`
+
+Retrieves the final return value of a completed workflow run. This function returns immediately and it does not wait. If the workflow is still running, it throws a `WorkflowRunNotCompletedError`. If the workflow has failed, it throws a `WorkflowRunFailedError`.
+
+Use this function to check if a workflow has completed and get its result, typically in polling patterns or API endpoints that need to return workflow results.
+
+## Import
+
+```typescript
+import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+```
+
+## API Signature
+
+```typescript
+function getWorkflowReturnValue(
+  runId: string,
+  ops?: Promise<unknown>[],
+  global?: Record<string, unknown>
+): Promise<unknown>
+```
+
+### Parameters
+
+- `runId` (string, required): The workflow run ID obtained from [`start()`](/docs/api-reference/vercel-workflow-core/start)
+- `ops` (Promise\<unknown\>[], optional): Internal parameter for cleanup operations
+- `global` (Record\<string, unknown\>, optional): Internal parameter for type hydration scope
+
+### Returns
+
+Returns a `Promise` that resolves to the workflow's return value when the workflow completes successfully.
+
+### Throws
+
+- `WorkflowRunNotCompletedError`: When the workflow is still running or pending
+- `WorkflowRunFailedError`: When the workflow has failed
+
+## Important Notes
+
+- The function returns immediately and it does **not** wait for workflow completion
+- Throws `WorkflowRunNotCompletedError` if the workflow is still running (status 202)
+- Throws `WorkflowRunFailedError` if the workflow has failed (status 400)
+- For streaming real-time output, use [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) instead
+- The return value is automatically hydrated from its serialized form
+
+## Examples
+
+### Basic Usage
+
+Get the result of a workflow (if completed):
+
+```typescript lineNumbers
+import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+
+  try {
+    const returnValue = await getWorkflowReturnValue(runId); // [!code highlight]
+    console.log('Return value:', returnValue);
+
+    // Handle different return types
+    return returnValue instanceof ReadableStream
+      ? new Response(returnValue, {
+          headers: { 'Content-Type': 'application/octet-stream' }
+        })
+      : Response.json(returnValue);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'WorkflowRunNotCompletedError') {
+        return Response.json(
+          { error: 'Workflow not completed', status: 'pending' },
+          { status: 202 }
+        );
+      }
+
+      if (error.name === 'WorkflowRunFailedError') {
+        return Response.json(
+          { error: 'Workflow failed', message: error.message },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.error('Unexpected error:', error);
+    return Response.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+```
+
+### Polling Implementation
+
+Example of implementing polling to wait for workflow completion:
+
+```typescript lineNumbers
+import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+
+async function pollForWorkflowCompletion(runId: string, maxAttempts: number = 60) {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      const result = await getWorkflowReturnValue(runId); // [!code highlight]
+      return { success: true, result };
+    } catch (error) {
+      if (error.name === 'WorkflowRunNotCompletedError') {
+        // Still running, wait and retry
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        continue;
+      }
+
+      if (error.name === 'WorkflowRunFailedError') {
+        return { success: false, error: `Workflow failed: ${error.message}` };
+      }
+
+      // Unknown error
+      return { success: false, error: `Unexpected error: ${error.message}` };
+    }
+  }
+
+  return { success: false, error: 'Timeout waiting for completion' };
+}
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+
+  if (!runId) {
+    return Response.json({ error: 'No runId provided' }, { status: 400 });
+  }
+
+  const result = await pollForWorkflowCompletion(runId);
+
+  if (result.success) {
+    return Response.json({ runId, result: result.result });
+  } else {
+    return Response.json({ runId, error: result.error }, { status: 400 });
+  }
+}
+```
+
+## Related Functions
+
+- **[`start()`](/docs/api-reference/vercel-workflow-core/start)** - Start a new workflow and get its run ID
+- **[`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run)** - Get workflow run status without waiting for completion
+- **[`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream)** - Stream real-time output instead of waiting for final result
