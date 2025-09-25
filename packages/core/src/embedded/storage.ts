@@ -115,7 +115,11 @@ export function createStorage(basedir: string): Storage {
           sortOrder: 'desc',
           limit: params?.pagination?.limit,
           cursor: params?.pagination?.cursor,
-          getCreatedAt: (file) => ulidToDate(file.split('.')[0]),
+          getCreatedAt: (file) => {
+            const runId = file.split('.')[0];
+            const ulid = runId?.replace(/^wrun_/, '');
+            return ulidToDate(ulid);
+          },
         });
       },
 
