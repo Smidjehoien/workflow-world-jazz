@@ -25,6 +25,9 @@ Workflow SDK Core contains the following core functions you can use inside your 
     <Card href="/docs/api-reference/get-webhook" title="getWebhook()">
         Registers a webhook URL that can be used to invoke a workflow.
     </Card>
+    <Card href="/docs/api-reference/get-workflow-writable-stream" title="getWorkflowWritableStream()">
+        Access the current workflow run's default stream.
+    </Card>
 </Cards>
 
 ---
@@ -34,8 +37,11 @@ Workflow SDK Core contains the following core functions you can use inside your 
 Workflow SDK Core also provides runtime functions that are used outside of workflow and step functions. These are accessed from the runtime entrypoint (e.g. where `start(workflowFn)` is called):
 
 <Cards>
-    <Card href="/docs/api-reference/create-workflow-output-stream" title="getWorkflowOutputStream()">
-        Retrieves the implicit readable stream for a workflow run.
+    <Card href="/docs/api-reference/start" title="start()">
+        Start/enqueue a new workflow run.
+    </Card>
+    <Card href="/docs/api-reference/get-workflow-readable-stream" title="getWorkflowReadableStream()">
+        Access a given workflow run's default stream.
     </Card>
 </Cards>
 

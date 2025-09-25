@@ -1,4 +1,4 @@
-import { getWorkflowOutputStream } from '@vercel/workflow-core/runtime';
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
 import {
   createUIMessageStreamResponse,
   type UIMessage,
@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   const workflowRunId = (workflowHandle as any).runId;
 
   return createUIMessageStreamResponse({
-    stream: getWorkflowOutputStream<UIMessageChunk>(workflowRunId),
+    stream: getWorkflowReadableStream<UIMessageChunk>(workflowRunId),
     headers: {
       // The workflow run ID is stored into `localStorage` on the client side,
       // which influences the `resume` flag in the `useChat` hook.

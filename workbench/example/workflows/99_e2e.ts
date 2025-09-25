@@ -1,9 +1,9 @@
 import {
-  createWorkflowOutputStream,
   FatalError,
   getStepContext,
   getWebhook,
   getWorkflowContext,
+  getWorkflowWritableStream,
   sleep,
 } from '@vercel/workflow-core';
 
@@ -206,7 +206,7 @@ async function stepCloseOutputStream(writable: WritableStream) {
 
 export async function outputStreamWorkflow() {
   'use workflow';
-  const writable = createWorkflowOutputStream();
+  const writable = getWorkflowWritableStream();
   await sleep('1s');
   await stepWithOutputStreamBinary(writable);
   await sleep('1s');

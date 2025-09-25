@@ -1,9 +1,9 @@
 import { getExternalRevivers } from '../serialization.js';
 
 /**
- * The options for {@link getWorkflowOutputStream}.
+ * The options for {@link getWorkflowReadableStream}.
  */
-export interface WorkflowOutputStreamOptions {
+export interface WorkflowReadableStreamOptions {
   /**
    * The index number of the starting chunk to beging reading the stream from.
    */
@@ -23,20 +23,21 @@ export interface WorkflowOutputStreamOptions {
 }
 
 /**
- * Retrieves the output readable stream for a workflow run for external consumers.
+ * Retrieves the workflow run's default readable stream, which reads chunks
+ * written to the corresponding writeable stream {@link getWorkflowWritableStream}.
  *
  * @param runId - The workflow run ID.
- * @param options - The options for the output stream.
+ * @param options - The options for the readable stream.
  * @returns The `ReadableStream` for the workflow run.
  */
-export function getWorkflowOutputStream<R = any>(
+export function getWorkflowReadableStream<R = any>(
   runId: string,
   {
     ops = [],
     global = globalThis,
     startIndex,
-  }: WorkflowOutputStreamOptions = {}
-) {
+  }: WorkflowReadableStreamOptions = {}
+): ReadableStream<R> {
   return getExternalRevivers(global, ops).ReadableStream({
     name: runId,
     startIndex,

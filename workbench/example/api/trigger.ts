@@ -1,5 +1,5 @@
 import {
-  getWorkflowOutputStream,
+  getWorkflowReadableStream,
   getWorkflowReturnValue,
   start,
 } from '@vercel/workflow-core/runtime';
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
   }
 
   if (url.searchParams.get('output-stream') === '1') {
-    const stream = getWorkflowOutputStream(runId);
+    const stream = getWorkflowReadableStream(runId);
     // Add JSON framing to the stream, wrapping binary data in base64
     const streamWithFraming = new TransformStream({
       transform(chunk, controller) {

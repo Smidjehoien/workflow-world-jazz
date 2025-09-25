@@ -34,6 +34,10 @@ import { world } from './world/index.js';
 
 export { createEmbeddedWorld } from './embedded/world.js';
 export { StepsNotRunError } from './global.js';
+export {
+  getWorkflowReadableStream,
+  type WorkflowReadableStreamOptions,
+} from './runtime/readable-stream.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 export { createVercelWorld } from './vercel/index.js';
@@ -64,11 +68,6 @@ export async function getWorkflowReturnValue(
 
   throw new WorkflowRunNotCompletedError(runId, run.status);
 }
-
-export {
-  getWorkflowOutputStream,
-  type WorkflowOutputStreamOptions,
-} from './runtime/ouput-stream.js';
 
 /**
  * Loads all workflow run events by iterating through all pages of paginated results.

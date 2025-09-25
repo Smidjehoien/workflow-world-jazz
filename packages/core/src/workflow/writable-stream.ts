@@ -1,7 +1,7 @@
 import { STREAM_NAME_SYMBOL } from '../symbols.js';
 import { getWorkflowContext } from './get-workflow-context.js';
 
-export function createWorkflowOutputStream<W = any>(): WritableStream<W> {
+export function getWorkflowWritableStream<W = any>(): WritableStream<W> {
   const ctx = getWorkflowContext();
   return Object.create(globalThis.WritableStream.prototype, {
     [STREAM_NAME_SYMBOL]: {

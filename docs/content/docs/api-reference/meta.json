@@ -6,7 +6,8 @@
     "get-step-context",
     "get-webhook",
     "sleep",
-    "create-workflow-output-stream",
+    "get-workflow-writable-stream",
+    "get-workflow-readable-stream",
     "fatal-error",
     "retryable-error"
   ]
