@@ -52,8 +52,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #f0f7ff;
+  --primary-foreground: #006bff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -193,7 +193,7 @@ h4 {
   @apply !text-xl;
 }
 
-p, li {
+li {
   @apply text-muted-foreground;
 }
 
@@ -246,9 +246,6 @@ table th {
 
 table td {
   @apply !bg-background border-none px-4.5 py-3;
-}
-
-#radix-_R_6lb_ {
 }
 
 div[role="dialog"] {
