@@ -44,14 +44,5 @@ export interface StepContext extends WorkflowContext {
   attempt: number;
 }
 
-export function getWorkflowContext(): WorkflowContext {
-  throw new Error(
-    '`getWorkflowContext()` can only be called inside a workflow or step function'
-  );
-}
-
-export function getStepContext(): StepContext {
-  throw new Error(
-    '`getStepContext()` can only be called inside a step function'
-  );
-}
+export { getStepContext } from './step/get-step-context.js';
+export { getWorkflowContext } from './workflow/get-workflow-context.js';
