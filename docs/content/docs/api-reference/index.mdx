@@ -13,16 +13,16 @@ All the functions and primitives that come with the Workflow SDK.
 Workflow SDK Core contains the following core functions you can use inside your workflow functions:
 
 <Cards>
-    <Card href="/docs/workflow-sdk-core/get-workflow-context" title="getWorkflowContext()">
+    <Card href="/docs/api-reference/get-workflow-context" title="getWorkflowContext()">
         A function that returns context about the current workflow execution.
     </Card>
-    <Card href="/docs/workflow-sdk-core/get-step-context" title="getStepContext()">
+    <Card href="/docs/api-reference/get-step-context" title="getStepContext()">
         A function that returns context about the current step execution.
     </Card>
-    <Card href="/docs/workflow-sdk-core/sleep" title="sleep()">
+    <Card href="/docs/api-reference/sleep" title="sleep()">
         Sleeping workflows for a specified duration. Deterministic and replay-safe.
     </Card>
-    <Card href="/docs/workflow-sdk-core/get-webhook" title="getWebhook()">
+    <Card href="/docs/api-reference/get-webhook" title="getWebhook()">
         Registers a webhook URL that can be used to invoke a workflow.
     </Card>
 </Cards>
@@ -34,7 +34,7 @@ Workflow SDK Core contains the following core functions you can use inside your 
 Workflow SDK Core also provides runtime functions that are used outside of workflow and step functions. These are accessed from the runtime entrypoint (e.g. where `start(workflowFn)` is called):
 
 <Cards>
-    <Card href="/docs/workflow-sdk-core/create-workflow-output-stream" title="getWorkflowOutputStream()">
+    <Card href="/docs/api-reference/create-workflow-output-stream" title="getWorkflowOutputStream()">
         Retrieves the implicit readable stream for a workflow run.
     </Card>
 </Cards>
@@ -46,10 +46,10 @@ Workflow SDK Core also provides runtime functions that are used outside of workf
 Workflow SDK Core includes error classes that can be thrown in a workflow or step to change the error exit strategy of a workflow.
 
 <Cards>
-    <Card href="/docs/workflow-sdk-core/error-handling#fatal-error" title="FatalError()">
+    <Card href="/docs/api-reference/fatal-error" title="FatalError()">
         When thrown, marks a step as failed and the step is not retried.
     </Card>
-    <Card href="/docs/workflow-sdk-core/error-handling#retryable-error" title="RetryableError()">
+    <Card href="/docs/api-reference/retryable-error" title="RetryableError()">
         When thrown, marks a step as retryable with an optional parameter.
     </Card>
 </Cards>
