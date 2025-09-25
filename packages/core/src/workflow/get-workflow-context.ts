@@ -1,4 +1,19 @@
-import type { WorkflowContext } from '../get-context.js';
+export interface WorkflowContext {
+  /**
+   * Unique identifier for the workflow run.
+   */
+  workflowRunId: string;
+
+  /**
+   * Timestamp when the workflow run started.
+   */
+  workflowStartedAt: Date;
+
+  /**
+   * The URL where the workflow can be triggered.
+   */
+  url: string;
+}
 
 export const WORKFLOW_CONTEXT_SYMBOL =
   /* @__PURE__ */ Symbol.for('WORKFLOW_CONTEXT');

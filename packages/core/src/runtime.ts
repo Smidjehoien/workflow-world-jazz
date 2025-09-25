@@ -5,7 +5,6 @@ import {
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from './errors.js';
-import type { StepContext } from './get-context.js';
 import { FatalError, RetryableError, StepsNotRunError } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
@@ -22,6 +21,7 @@ import {
   hydrateStepArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
+import type { StepContext } from './step/get-step-context.js';
 // TODO: move step handler out to a separate file
 import { contextStorage } from './step/get-step-context.js';
 import * as Attribute from './telemetry/semantic-conventions.js';

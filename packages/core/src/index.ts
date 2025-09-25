@@ -7,12 +7,6 @@
  */
 
 export {
-  getStepContext,
-  getWorkflowContext,
-  type StepContext,
-  type WorkflowContext,
-} from './get-context.js';
-export {
   getWebhook,
   type Webhook,
   type WebhookOptions,
@@ -23,4 +17,9 @@ export {
   type RetryableErrorOptions,
 } from './global.js';
 export { sleep } from './sleep.js';
+export { getStepContext, type StepContext } from './step/get-step-context.js';
+export {
+  getWorkflowContext,
+  type WorkflowContext,
+} from './workflow/get-workflow-context.js';
 export { getWorkflowWritableStream } from './writable-stream.js';

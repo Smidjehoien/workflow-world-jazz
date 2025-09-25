@@ -120,21 +120,6 @@ export function createSwcPlugin(options: SwcPluginOptions): Plugin {
         const isTypeScript =
           args.path.endsWith('.ts') || args.path.endsWith('.tsx');
 
-        // no-op so that workflows don't attempt to import `async_hooks`
-        // this allows sharing import namespace for getStepContext and
-        // getWorkflowContext without separate import paths
-        if (
-          options.mode === 'workflow' &&
-          args.path.endsWith('get-step-context.js')
-        ) {
-          return {
-            loader: 'js',
-            contents: `
-              export const getStepContext = () => {}
-            `,
-          };
-        }
-
         try {
           // Determine the loader based on the output
           let loader: 'js' | 'jsx' = 'js';

@@ -2,7 +2,6 @@ import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import { monotonicFactory } from 'ulid';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
-import type { WorkflowContext } from './get-context.js';
 import { ENOTSUP } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import {
@@ -13,6 +12,7 @@ import { createUseStep } from './step.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
+import type { WorkflowContext } from './workflow/get-workflow-context.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-context.js';
 import { createGetWebhook } from './workflow/webhook.js';
 import type { Event, WorkflowRun } from './world/index.js';
