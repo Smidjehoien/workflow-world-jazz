@@ -1,6 +1,6 @@
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
-import InstallCommandTabs from '@/components/install-command-tabs';
+import BaseUrl from '@/components/base-url';
 import * as CalloutComponents from '@/components/ui/callout';
 import * as CardComponents from '@/components/ui/card';
 import { CodeBlock } from '@/components/ui/code-block';
@@ -10,8 +10,9 @@ import { TypeTable } from '@/components/ui/type-table';
 // use this function to get MDX components, you will need it for rendering MDX
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
+    BaseUrl,
     TypeTable,
-    InstallCommandTabs,
+    CodeBlock,
     ...TabsComponents,
     ...CardComponents,
     ...CalloutComponents,

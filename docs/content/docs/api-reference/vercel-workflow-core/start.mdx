@@ -1,0 +1,71 @@
+---
+title: start
+---
+
+# `start()`
+
+Start/enqueue a new workflow run.
+
+## Signature
+
+```typescript
+start(workflowName: string, args?: Serializable[], options?: StartOptions): Promise<WorkflowRun>
+start(workflowName: string, options?: StartOptions): Promise<WorkflowRun>
+```
+
+## Parameters
+
+- `workflowName` (string): The name of the workflow to start.
+- `args` ([Serializable](/docs/how-it-works/workflow-functions#serialization)[], optional): The arguments to pass to the workflow.
+- `options` (StartOptions, optional): The options for the workflow run.
+
+## StartOptions
+
+```typescript
+interface StartOptions {
+  deploymentId?: string;
+}
+```
+
+- `deploymentId` (string, optional): The deployment ID to use for the workflow run.
+
+## Return Value
+
+Returns a Promise that resolves to a `WorkflowRun` object containing:
+
+- `runId`: The unique run ID for the newly started workflow invocation
+- `status`: The current status of the workflow run
+- Other workflow run metadata
+
+## Usage
+
+### Basic Usage
+
+```typescript
+import { start } from '@vercel/workflow-core';
+
+// Start a workflow without arguments
+const run = await start('myWorkflow');
+
+// Start a workflow with arguments
+const run = await start('userSignup', ['user@example.com']);
+```
+
+### With Options
+
+```typescript
+import { start } from '@vercel/workflow-core';
+
+const run = await start('myWorkflow', ['arg1', 'arg2'], {
+  deploymentId: 'custom-deployment-id'
+});
+
+console.log(`Started workflow with run ID: ${run.runId}`);
+```
+
+## Notes
+
+- The `start()` function is used in runtime/non-workflow contexts to programmatically trigger workflow executions
+- This is different from calling workflow functions directly, which is the typical pattern in Next.js applications
+- The function returns immediately after enqueuing the workflow - it doesn't wait for the workflow to complete
+- All arguments must be [serializable](/docs/how-it-works/workflow-functions#serialization)

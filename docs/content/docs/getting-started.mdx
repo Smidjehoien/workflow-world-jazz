@@ -30,7 +30,30 @@ cd my-workflow-app
 
 Install `@vercel/workflow-core`, and `@vercel/workflow-next`, which are the packages needed to get started with the Workflow SDK.
 
-<InstallCommandTabs />
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add {baseUrl}/vercel-workflow-core.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-next.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
 
 ### Configure Next.js
 
@@ -154,5 +177,5 @@ Watch the Next.js development server logs to see your workflow execute as well a
 ## Next Steps
 
 * Learn more about the [Workflow SDK Concepts](/docs/foundations/concepts).
-* Explore [Workflow SDK Core](/docs/workflow-sdk-core).
+* Explore [Workflow SDK Core](/docs/api-reference/vercel-workflow-core).
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.

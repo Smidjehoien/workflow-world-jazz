@@ -55,7 +55,7 @@ Workflow functions have the ability to automatically suspend while they wait on 
 
 - Waiting on a step function: the workflow yields while the step runs in the step runtime.
 - Using `sleep()` to pause for some fixed duration.
-- Awaiting on a promise returned by [`getWebhook()`](/docs/workflow-sdk-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
+- Awaiting on a promise returned by [`getWebhook()`](/docs/api-reference/vercel-workflow-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
 
 ```typescript
 import { sleep, getWebhook } from '@vercel/workflow-core'; // [!code highlight]
@@ -202,4 +202,4 @@ async function callAPI(endpoint: string) {
 - Throwing a `RetryableError` also automatically re-enqueues a step but with an optional `retryAfter` argument.
 - `FatalError` marks a step as failed, and does **not** re-enqueue a step.
 
-To learn more about errors in workflows, take a look at [Error Handling](/docs/workflow-sdk-core/error-handling).
+To learn more about errors and retries in workflows, take a look at [Errors & Retries](/docs/foundations/errors-and-retries).
