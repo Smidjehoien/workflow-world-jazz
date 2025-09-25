@@ -505,12 +505,12 @@ export const vercelAPIStepsEntrypoint =
                 // Not at max retries yet - log as a retryable error
                 if (isInstanceOf(err, RetryableError)) {
                   console.warn(
-                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step (attempt ${attempt}):\n  > ${String(err.message)}\n\n  Request will return 503 to trigger retry`
+                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step (attempt ${attempt}):\n  > ${String(err.message)}\n\n  This step has failed but will be retried`
                   );
                 } else {
                   const stackLines = getErrorStack(err).split('\n').slice(0, 4);
                   console.error(
-                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Request will return 503 to trigger retry`
+                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  This step has failed but will be retried`
                   );
                 }
                 await world.events.create(workflowRunId, {
