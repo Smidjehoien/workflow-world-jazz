@@ -10,16 +10,27 @@ Make functions from workflow/core "world" API available to the CLI package for s
 
 ## PR 2 - Allow access to vercel worlds
 
-- [ ] Add explicit `--target [vercel/embedded]` (defaults to `embedded`) to set the world
-- [ ] Support `--env [production/preview]` (defaults to `production`) 
-- [ ] When using vercel world, scan and grab API token created by `vercel/vercel` CLI
+- [x] Add explicit `--target [vercel/embedded]` (defaults to `embedded`) to set the world
+- [x] Support `--env production` flag (defaults to `production`) 
+  - [ ] Support non-production environments (where to grab the token from?)
+- [x] When using vercel world, scan and grab API token created by `vercel/vercel` CLI
+  - Copied logic from `@vercel/sandbox-sdk`
 - [ ] On `workflow-server:lib/auth` accept Vercel-CLI style token
-  - Verify that separately to extract owner/project/env IDs
-- [ ] Ensure the vercel world CLI works against my example app
+  - Verify that separately to extract owner IDs
+  - Accept HTTP headers for specifying project and team
+- [x] Ensure the vercel world CLI works against a deployed version of the nextjs-turbopack example app
+- [ ] Allow passing team/project scopes for vercel backend, send as headers
+  - Later on, vercel queues should support the same auth, so CLI can directly interface with queues
+    - Actually, do we? TBD
+- [ ] Infer team/project scopes by scanning the `.vercel` folder if available
 
 ## PR 3 - Improve CLI
 
+- [ ] Add `wrun_` prefix to run IDs in embedded world, same as `step_` prefix exists for steps
+- [ ] Add flag to live-tail stream outputs
+- [ ] Add flag to show live table of steps/workflows
 - [ ] Add command to pause/resume/cancel/complete runs
+  - [ ] Requires improving PORT inference for embedded world
 - [ ] Allowing listing steps/events/streams without needing a runId
 - [ ] Improve inspect outputs
 - [ ] Polish loop until this works well for Vade
