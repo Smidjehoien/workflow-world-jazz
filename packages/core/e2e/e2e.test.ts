@@ -67,7 +67,9 @@ describe.concurrent('e2e', () => {
       // workflow CLI, we're assuming this will error.
       // TODO: This should be a 403 response - we're not finding .vercel
       // folder correctly.
-      expect(cliResult.stdout).toContain('"error": {}');
+      expect(cliResult.stderr).toContain(
+        `WorkflowAPIError: GET /api/runs/${run.runId} -> HTTP 404: Not Found`
+      );
       return;
     }
 

@@ -13,10 +13,30 @@ import {
   hydrateWorkflowArguments,
   hydrateWorkflowReturnValue,
 } from '@vercel/workflow-core/serialization';
+import chalk from 'chalk';
 import Table from 'easy-table';
-import { logInfo, logPlain } from '../config/log.js';
+import {
+  logDebug,
+  logError,
+  logInfo,
+  logPlain,
+  logWarn,
+} from '../config/log.js';
+import type { InspectCLIOptions } from '../config/types.js';
+import { streamToConsole } from './stream.js';
 
-type JsonFlag = { json?: boolean };
+class StreamID {
+  constructor(public name: string | null) {}
+  toString() {
+    if (this.name === null) {
+      return `strm_null`;
+    }
+    return chalk.green(this.name);
+  }
+  toJSON() {
+    return this.name;
+  }
+}
 
 const WORKFLOW_RUN_LISTED_PROPS: (keyof WorkflowRun)[] = [
   'runId',
@@ -24,6 +44,8 @@ const WORKFLOW_RUN_LISTED_PROPS: (keyof WorkflowRun)[] = [
   'status',
   'startedAt',
   'completedAt',
+  'input',
+  'output',
 ];
 
 const STEP_LISTED_PROPS: (keyof Step)[] = [
@@ -33,32 +55,66 @@ const STEP_LISTED_PROPS: (keyof Step)[] = [
   'status',
   'startedAt',
   'completedAt',
+  'input',
+  'output',
 ];
 
-const EVENT_LISTED_PROPS: (keyof Event)[] = [
+const EVENT_LISTED_PROPS: (keyof Event | 'eventData')[] = [
   'eventId',
   'eventType',
   'correlationId',
   'createdAt',
+  'eventData',
 ];
 
+const STATUS_COLORS: Record<
+  WorkflowRun['status'] | Step['status'],
+  (value: string) => string
+> = {
+  running: chalk.blue,
+  completed: chalk.green,
+  failed: chalk.red,
+  cancelled: chalk.strikethrough.yellow,
+  pending: chalk.blue,
+  paused: chalk.yellow,
+};
+
 const showTable = (data: Record<string, unknown>[], props: string[]) => {
+  // Add a blank line before any table
   const table = new Table();
+  if (data && data.length === 0) {
+    logWarn('No data found for this query and resource.\n');
+    for (const prop of props) {
+      table.cell(prop, 'N/A');
+    }
+    table.newRow();
+    return table.toString();
+  } else if (!data) {
+    logWarn('Expecting an array of data, but got null.\n');
+  }
+  logPlain('');
   for (const item of data) {
     for (const prop of props) {
       const value = item[prop];
-      if (value instanceof Date) {
+      if (value instanceof StreamID) {
+        table.cell(prop, value.toString());
+      } else if (prop === 'streamId') {
+        table.cell(prop, chalk.green(value));
+      } else if (prop === 'output' || prop === 'input') {
+        table.cell(prop, inlineFormatIO(value));
+      } else if (prop === 'status') {
+        const status = value as WorkflowRun['status'] | Step['status'];
+        const colorFunc = STATUS_COLORS[status];
+        table.cell(prop, colorFunc(status));
+      } else if (prop === 'eventData') {
+        table.cell(prop, truncateString(JSON.stringify(value)));
+      } else if (value instanceof Date) {
         table.cell(`${prop} (UTC)`, formatTableTimestamp(value));
       } else {
         table.cell(prop, value);
       }
     }
     table.newRow();
-  }
-  if (data.length === 0) {
-    for (const prop of props) {
-      table.cell(prop, 'N/A');
-    }
   }
   return table.toString();
 };
@@ -68,18 +124,7 @@ const showJson = (data: unknown) => {
   process.stdout.write(`${json}\n`);
 };
 
-const showCursorInfo = ({
-  cursor,
-  hasMore,
-}: {
-  cursor: string | null;
-  hasMore: boolean;
-}) => {
-  if (cursor) {
-    // TODO: Once we add pagination, we should show human-readable
-    // information
-    // logInfo(`Cursor: ${cursor}`);
-  }
+const showCursorInfo = ({ hasMore }: { hasMore: boolean }) => {
   if (hasMore) {
     logInfo(`(showing partial list, pagination is coming soon)`);
   }
@@ -93,126 +138,366 @@ const formatTableTimestamp = (value: Date) => {
   return `${isoValue.split('T')[0]} ${isoValue.split('T')[1].split('.')[0]}`;
 };
 
-export const listRuns = async (world: World, opts: JsonFlag = {}) => {
+/**
+ * This is an extra reviver for devalue that takes any streams that would be converted,
+ * into actual streams, and instead formats them as string links for printing in CLI output.
+ *
+ * This is mainly because we don't want to open any streams that we aren't going to read from,
+ * and so we can get the string ID/name, which the serializer stream doesn't provide.
+ */
+const streamPrintRevivers: Record<string, (value: any) => any> = {
+  ReadableStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+  WritableStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+  TransformStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+};
+
+const hydrateWorkflowRunIO = (run: WorkflowRun): WorkflowRun => {
+  return {
+    ...run,
+    input: run.input
+      ? hydrateWorkflowArguments(run.input, globalThis, streamPrintRevivers)
+      : run.input,
+    output: run.output
+      ? hydrateWorkflowReturnValue(
+          run.output,
+          [],
+          globalThis,
+          streamPrintRevivers
+        )
+      : run.output,
+  };
+};
+
+const hydrateStepIO = (step: Step): Step => {
+  return {
+    ...step,
+    input: step.input
+      ? hydrateStepArguments(step.input, [], globalThis, streamPrintRevivers)
+      : step.input,
+    output: step.output
+      ? hydrateStepReturnValue(step.output, globalThis, streamPrintRevivers)
+      : step.output,
+  };
+};
+
+const truncateString = (str: string, maxLength: number = 20) => {
+  return str && str.length > maxLength
+    ? `${str.substring(0, maxLength)}...`
+    : str;
+};
+
+/**
+ * Takes hydrated step/workflow input/output and serializes it for inline display.
+ */
+const inlineFormatIO = <T>(io: T): string => {
+  const type = typeof io;
+  let value = '';
+  if (io === undefined) {
+    value = '<empty>';
+  } else if (io === null) {
+    value = '<null>';
+  } else if (io && Array.isArray(io)) {
+    if (io.length === 0) {
+      value = '<empty>';
+    } else {
+      value = io.map((item) => inlineFormatIO(item)).join(',');
+    }
+  } else if (type === 'object') {
+    if (io instanceof StreamID) {
+      value = io.toString();
+    } else if (io instanceof Date) {
+      value = `${formatTableTimestamp(io)}`;
+    } else {
+      value = truncateString(JSON.stringify(io));
+    }
+  } else if (['string', 'number', 'boolean'].includes(type)) {
+    if (type === 'string' && (io as string).includes('strm_')) {
+      value = io as string;
+    }
+    value = truncateString(String(io));
+  } else {
+    value = `<${type}>`;
+  }
+  return value;
+};
+
+export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   const runs = await world.runs.list({});
+  if (opts.stepId || opts.runId) {
+    logWarn(
+      'Filtering by step-id or run-id is not supported in list calls, ignoring filter.'
+    );
+  }
   if (opts.json) {
     showJson(runs);
     return;
   }
-  logPlain(showTable(runs.data, WORKFLOW_RUN_LISTED_PROPS));
-  showCursorInfo({ cursor: runs.cursor, hasMore: runs.hasMore });
+  const runsWithHydratedIO = runs.data.map((run) => hydrateWorkflowRunIO(run));
+  logPlain(showTable(runsWithHydratedIO, WORKFLOW_RUN_LISTED_PROPS));
+  showCursorInfo(runs);
+  logInfo('To view the input/output of a run, use `wf i run <run-id>`');
+  logInfo('To view the content of any stream, use `wf i stream <stream-id>`');
+};
+
+export const getRecentRunIds = async (world: World, limit: number = 10) => {
+  logDebug(`No runId provided, fetching data for last ${limit} runs`);
+  const runs = await world.runs.list({ pagination: { limit } });
+  return runs.data.map((run) => run.runId);
 };
 
 export const showRun = async (
   world: World,
   runId: string,
-  opts: JsonFlag = {}
+  opts: InspectCLIOptions = {}
 ) => {
   const run = await world.runs.get(runId);
-  if (run.input) {
-    const input = hydrateWorkflowArguments(run.input, []);
-    run.input = input;
-  }
-  if (run.output) {
-    const output = hydrateWorkflowReturnValue(run.output, []);
-    run.output = output;
-  }
+  const runWithHydratedIO = hydrateWorkflowRunIO(run);
   if (opts.json) {
-    showJson(run);
+    showJson(runWithHydratedIO);
     return;
   } else {
-    logPlain(run);
+    logPlain(runWithHydratedIO);
   }
 };
 
 export const listSteps = async (
   world: World,
-  runId: string,
-  opts: JsonFlag = {}
+  opts: InspectCLIOptions = {
+    runId: undefined,
+  }
 ) => {
-  const steps = await world.steps.list({ runId });
+  if (opts.stepId) {
+    logWarn(
+      'Filtering by step-id is not supported in list calls, ignoring filter.'
+    );
+  }
+  const runsIds = opts.runId ? [opts.runId] : await getRecentRunIds(world);
+
+  logDebug(`Fetching steps for runs: ${runsIds.join(', ')}`);
+  const stepChunks = await Promise.all(
+    runsIds.map((runId) => world.steps.list({ runId }))
+  );
+  const steps = stepChunks.flatMap((step) => step.data);
   if (opts.json) {
     showJson(steps);
     return;
   }
-  showCursorInfo({ cursor: steps.cursor, hasMore: steps.hasMore });
-  logPlain(showTable(steps.data, STEP_LISTED_PROPS));
+  const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
+  logPlain(showTable(stepsWithHydratedIO, STEP_LISTED_PROPS));
+  // showCursorInfo({ cursor: steps.cursor, hasMore: steps.hasMore });
+};
+
+/**
+ * TODO: Finding a runId by stepId is currently a linear scan of all runs.
+ * the World interface should either be updated to support finding a runId by stepId,
+ * or fetching a step by stepId without needing a runId argument.
+ * Once either of these is supported, this function can be removed.
+ */
+const findRunIdForStep = async (world: World, stepId: string) => {
+  const limit = 10;
+  logDebug(
+    `No runId provided, trying to find runId for step ${stepId} in last ${limit} runs`
+  );
+  // TODO: Pagination offset is not supported yet so this doesn't even work yet.
+  let cursor: string | undefined;
+  while (true) {
+    const runs = await world.runs.list({ pagination: { limit, cursor } });
+    const stepLists = await Promise.all(
+      runs.data.map((run) =>
+        world.steps.list({ runId: run.runId, pagination: { limit } })
+      )
+    );
+    for (let i = 0; i < stepLists.length; i++) {
+      const steps = stepLists[i];
+      const run = runs.data[i];
+      if (steps.hasMore) {
+        logWarn(`Unable to find runId for step ${stepId}, too much data.`);
+        break;
+      }
+      if (steps.data.some((step) => step.stepId === stepId)) {
+        return run.runId;
+      }
+    }
+    cursor = runs.cursor || undefined;
+    if (!runs.hasMore) break;
+  }
+  throw new Error(`Step ${stepId} not found`);
 };
 
 export const showStep = async (
   world: World,
-  runId: string,
   stepId: string,
-  opts: JsonFlag = {}
+  opts: InspectCLIOptions = {}
 ) => {
+  const runId = opts.runId || (await findRunIdForStep(world, stepId));
+  if (!runId) {
+    logError(
+      `Step ${stepId} not found in any recent run. Provide a runId with --run=<run-id>.`
+    );
+    return;
+  }
   const step = await world.steps.get(runId, stepId);
-  if (step.input) {
-    const input = hydrateStepArguments(step.input, []);
-    step.input = input;
-  }
-  if (step.output) {
-    const output = hydrateStepReturnValue(step.output, []);
-    step.output = output;
-  }
+  const stepWithHydratedIO = hydrateStepIO(step);
   if (opts.json) {
-    showJson(step);
+    showJson(stepWithHydratedIO);
     return;
   } else {
-    logPlain(step);
+    logPlain(stepWithHydratedIO);
   }
 };
 
-export const printStream = async (
+export const showStream = async (
   world: World,
-  runId: string,
-  opts: JsonFlag = {}
+  streamId: string,
+  opts: InspectCLIOptions = {}
 ) => {
-  // There is a single implicit output stream per workflow run,
-  // whose stream name is the runId itself.
-  const stream = await world.readFromStream(runId, 0);
-  const reader = stream.getReader();
-  try {
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
+  if (opts.runId || opts.stepId) {
+    logWarn(
+      'Filtering by run-id or step-id is not supported in get calls, ignoring filter.'
+    );
+  }
+  const stream = await world.readFromStream(streamId);
+  logInfo('Streaming to stdout, press CTRL+C to abort.');
+  logInfo(
+    'Use --json to output the stream as newline-delimited JSON without info logs.\n'
+  );
+  await streamToConsole(stream, streamId, opts);
+};
+
+/**
+ * Listing streams only lists available stream IDs based on run/step passed,
+ * and doesn't read any data from the streams.
+ */
+export const listStreams = async (
+  world: World,
+  opts: InspectCLIOptions = {}
+) => {
+  const steps: Step[] = [];
+  const runs: WorkflowRun[] = [];
+  if (opts.stepId) {
+    // TODO: Can only implement this once the World interface and backends are
+    // updated to allow fetching a step directly (https://github.com/vercel/workflow-server/pull/31/)
+    // const step = await world.steps.get(opts.stepId);
+    // steps.push(step);
+    logWarn('Listing streams by step-id is not supported yet. Coming soon.');
+    return;
+  } else if (opts.runId) {
+    const run = await world.runs.get(opts.runId);
+    runs.push(run);
+    const runsSteps = await world.steps.list({ runId: opts.runId });
+    runsSteps.data.forEach((step: Step) => steps.push(step));
+  } else {
+    logError(
+      'No run-id or step-id provided. At least one filter is required to list streams.'
+    );
+    return;
+  }
+
+  const runIds = runs.map((item) => item.runId);
+  const stepIds = steps.map((item) => item.stepId);
+  logDebug(`Found IO for runs/steps: ${runIds.concat(stepIds).join(', ')}`);
+
+  // We need to hydrate IO for all the runs and steps to find stream IDs
+  const runsWithHydratedIO = runs.map((run) => hydrateWorkflowRunIO(run));
+  const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
+
+  // Now we need to find all stubbed stream IDs for the runs and steps
+  const matchingStreams: {
+    runId?: string;
+    stepId?: string;
+    streamId: string;
+  }[] = [];
+  for (const key of ['input', 'output'] as (keyof Step)[]) {
+    for (const run of runsWithHydratedIO) {
+      const value = run[key as keyof WorkflowRun];
       if (!value) continue;
-      if (opts.json) {
-        const text = Buffer.from(value).toString('utf8');
-        const json = JSON.stringify({ chunk: text });
-        process.stdout.write(`${json}\n`);
-      } else {
-        process.stdout.write(Buffer.from(value));
+      const streamIds = getStreamIdsFromHydratedObject(value);
+      for (const streamId of streamIds) {
+        matchingStreams.push({
+          runId: run.runId,
+          stepId: '/',
+          streamId,
+        });
       }
     }
-  } catch (err) {
-    if (opts.json) {
-      const json = JSON.stringify({
-        error: `Failed to read stream for run ${runId}`,
-        details: String(err),
-      });
-      process.stderr.write(`${json}\n`);
-    } else {
-      console.error(`Failed to read stream for run ${runId}:`, err);
-    }
-  } finally {
-    try {
-      reader.cancel();
-    } catch {
-      // Ignore cancellation errors during cleanup
+    for (const step of stepsWithHydratedIO) {
+      const value = step[key as keyof Step];
+      if (!value) continue;
+      const streamIds = getStreamIdsFromHydratedObject(value);
+      for (const streamId of streamIds) {
+        matchingStreams.push({
+          stepId: step.stepId,
+          runId: step.runId,
+          streamId,
+        });
+      }
     }
   }
+
+  if (opts.json) {
+    showJson(matchingStreams);
+    return;
+  }
+  logPlain(showTable(matchingStreams, ['runId', 'stepId', 'streamId']));
+};
+
+const getStreamIdsFromHydratedObject = (io: any): string[] => {
+  const streamIds: string[] = [];
+  const traverse = (obj: any): void => {
+    if (!obj || typeof obj !== 'object') return;
+    if (obj instanceof StreamID) {
+      streamIds.push(obj.toString());
+    } else if (Array.isArray(obj)) {
+      obj.forEach(traverse);
+    } else {
+      Object.values(obj).forEach(traverse);
+    }
+  };
+
+  traverse(io);
+  return streamIds;
 };
 
 export const listEvents = async (
   world: World,
-  runId: string,
-  opts: JsonFlag = {}
+  opts: InspectCLIOptions = {}
 ) => {
-  const events = await world.events.list({ runId });
+  if (opts.stepId) {
+    // TODO: Once we can fetch a run ID from a step ID, we can then query
+    // by run and filter back down to step here.
+    logWarn(
+      'Filtering by step-id is not supported in list calls yet, ignoring filter.'
+    );
+  }
+  const runsIds = opts.runId ? [opts.runId] : await getRecentRunIds(world);
+  logDebug(`Fetching events for runs: ${runsIds.join(', ')}`);
+  // TODO: For some reason, listing events for just a single runId is not working,
+  // the call to world.events.list() returns an empty array.
+  const events = await Promise.all(
+    runsIds.map((runId) => world.events.list({ runId }))
+  );
+  const allEvents = events.flatMap((event) => event.data);
   if (opts.json) {
-    showJson(events.data);
+    showJson(allEvents);
     return;
   }
-  showCursorInfo({ cursor: events.cursor, hasMore: events.hasMore });
-  logPlain(showTable(events.data, EVENT_LISTED_PROPS));
+  logPlain(showTable(allEvents, EVENT_LISTED_PROPS));
+  if (events[0]) {
+    showCursorInfo(events[0]);
+  }
 };

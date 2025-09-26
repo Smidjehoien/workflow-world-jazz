@@ -30,7 +30,7 @@ function getCliArgs(): string {
     return '';
   }
 
-  return `--backend vercel --hostUrl ${deploymentUrl}`;
+  return `--backend vercel --verbose --team ${process.env.VERCEL_TEAM} --project ${process.env.VERCEL_PROJECT}`;
 }
 
 const invocationOptions = ['wf i', 'workflow inspect'];
@@ -45,6 +45,10 @@ const awaitCommand = async (command: string, args: string[], cwd: string) => {
         timeout: 5_000,
         cwd,
         stdio: ['ignore', 'pipe', 'pipe'],
+        env: {
+          ...process.env,
+          DEBUG: '1',
+        },
       } as any);
 
       let stdout = '';

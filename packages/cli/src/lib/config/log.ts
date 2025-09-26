@@ -1,23 +1,39 @@
 import chalk from 'chalk';
 
-let JSON_MODE = false;
-
-export const setJsonMode = (value: boolean) => {
-  JSON_MODE = Boolean(value);
+export const LOGGING_CONFIG = {
+  JSON_MODE: false,
+  VERBOSE_MODE: false,
 };
 
-export const isJsonMode = () => JSON_MODE;
+export const setJsonMode = (value: boolean) => {
+  LOGGING_CONFIG.JSON_MODE = Boolean(value);
+};
+
+export const setVerboseMode = (value: boolean) => {
+  LOGGING_CONFIG.VERBOSE_MODE = Boolean(value);
+};
 
 const log = (...args: any[]) => {
-  if (JSON_MODE) return; // suppress logs in JSON mode
+  const skipForJsonModeUnlessVerboseMode =
+    LOGGING_CONFIG.JSON_MODE && !LOGGING_CONFIG.VERBOSE_MODE;
+  if (skipForJsonModeUnlessVerboseMode) {
+    return;
+  }
   console.log(...args);
 };
 const debug = (...args: any[]) => {
-  if (JSON_MODE) return; // suppress debug logs in JSON mode
+  const skipUnlessVerboseMode = !LOGGING_CONFIG.VERBOSE_MODE;
+  if (skipUnlessVerboseMode) {
+    return;
+  }
   console.debug(...args);
 };
 const warn = (...args: any[]) => {
-  if (JSON_MODE) return; // suppress warnings in JSON mode
+  const skipForJsonModeUnlessVerboseMode =
+    LOGGING_CONFIG.JSON_MODE && !LOGGING_CONFIG.VERBOSE_MODE;
+  if (skipForJsonModeUnlessVerboseMode) {
+    return;
+  }
   console.warn(...args);
 };
 

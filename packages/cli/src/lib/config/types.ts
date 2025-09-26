@@ -5,6 +5,13 @@ export const validBuildTargets = [
 ] as const;
 export type BuildTarget = (typeof validBuildTargets)[number];
 
+export type InspectCLIOptions = {
+  json?: boolean;
+  watch?: boolean;
+  runId?: string;
+  stepId?: string;
+};
+
 export interface WorkflowConfig {
   watch?: boolean;
   dirs: string[];

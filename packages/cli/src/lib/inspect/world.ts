@@ -84,7 +84,7 @@ export const inferVercelConfig = async ({
   hostUrl?: string;
 }) => {
   const headers: Record<string, string> = {
-    'x-vercel-env': env,
+    'x-vercel-environment': env,
   };
   if (hostUrl) {
     logDebug('Using vercel backend URL from CLI argument or ENV');
@@ -96,7 +96,7 @@ export const inferVercelConfig = async ({
   };
   if (projectId && teamId) {
     logDebug('Using vercel project and team from CLI argument or ENV');
-    headers['x-vercel-project'] = projectId;
+    headers['x-vercel-project-id'] = projectId;
     headers['x-vercel-team'] = teamId;
   } else {
     logDebug('Inferring vercel project and team from .vercel folder');
@@ -104,7 +104,7 @@ export const inferVercelConfig = async ({
     if (inferredProject) {
       const { projectId: inferredProjectId, teamId: inferredTeamId } =
         inferredProject;
-      ret.headers['x-vercel-project'] = inferredProjectId;
+      ret.headers['x-vercel-project-id'] = inferredProjectId;
       ret.headers['x-vercel-team'] = inferredTeamId;
     } else {
       logWarn(

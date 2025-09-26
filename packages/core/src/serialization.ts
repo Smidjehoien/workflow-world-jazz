@@ -661,9 +661,13 @@ export function dehydrateWorkflowArguments(
  */
 export function hydrateWorkflowArguments(
   value: Parameters<typeof devalue.unflatten>[0],
-  global: Record<string, any>
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
+  const obj = devalue.unflatten(value, {
+    ...getWorkflowRevivers(global),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -677,7 +681,7 @@ export function hydrateWorkflowArguments(
  */
 export function dehydrateWorkflowReturnValue(
   value: unknown,
-  global: Record<string, any>
+  global: Record<string, any> = globalThis
 ) {
   const str = devalue.stringify(value, getWorkflowReducers(global));
   return revive(str);
@@ -695,9 +699,13 @@ export function dehydrateWorkflowReturnValue(
 export function hydrateWorkflowReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
   ops: Promise<any>[],
-  global: Record<string, any> = globalThis
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getExternalRevivers(global, ops));
+  const obj = devalue.unflatten(value, {
+    ...getExternalRevivers(global, ops),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -729,9 +737,13 @@ export function dehydrateStepArguments(
 export function hydrateStepArguments(
   value: Parameters<typeof devalue.unflatten>[0],
   ops: Promise<any>[],
-  global: Record<string, any> = globalThis
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getStepRevivers(global, ops));
+  const obj = devalue.unflatten(value, {
+    ...getStepRevivers(global, ops),
+    ...extraRevivers,
+  });
   return obj;
 }
 
@@ -763,8 +775,12 @@ export function dehydrateStepReturnValue(
  */
 export function hydrateStepReturnValue(
   value: Parameters<typeof devalue.unflatten>[0],
-  global: Record<string, any>
+  global: Record<string, any> = globalThis,
+  extraRevivers: Record<string, (value: any) => any> = {}
 ) {
-  const obj = devalue.unflatten(value, getWorkflowRevivers(global));
+  const obj = devalue.unflatten(value, {
+    ...getWorkflowRevivers(global),
+    ...extraRevivers,
+  });
   return obj;
 }
