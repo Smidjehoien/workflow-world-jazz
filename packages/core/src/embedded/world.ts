@@ -21,7 +21,7 @@ export function createEmbeddedWorld(
   const dir = dataDir ?? config.value.dataDir;
   if (readOnly) {
     console.warn(
-      '[Debug] Creating embedded world in read only mode. Queue is disabled.'
+      '[Debug] Using embedded backend in read only mode. Queue is disabled.'
     );
   }
   const queue = readOnly

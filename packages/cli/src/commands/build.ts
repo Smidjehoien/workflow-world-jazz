@@ -2,11 +2,8 @@ import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
 import { VercelBuildOutputAPIBuilder } from '../lib/builders/vercel-build-output-api.js';
 import { VercelStaticBuilder } from '../lib/builders/vercel-static.js';
-import {
-  type BuildTarget,
-  isValidBuildTarget,
-  type WorkflowConfig,
-} from '../lib/config/types.js';
+import { type BuildTarget, isValidBuildTarget } from '../lib/config/types.js';
+import { getWorkflowConfig } from '../lib/config/workflow-config.js';
 
 export default class Build extends BaseCommand {
   static description = 'Build workflow bundles for deployment';
@@ -57,16 +54,9 @@ export default class Build extends BaseCommand {
     this.logInfo(`Using target: ${buildTarget}`);
 
     // Create configuration
-    const config: WorkflowConfig = {
-      dirs: ['./workflows'],
-      workingDir: process.cwd(),
+    const config = getWorkflowConfig({
       buildTarget: buildTarget as BuildTarget,
-      stepsBundlePath: './.well-known/workflow/v1/step.js',
-      workflowsBundlePath: './.well-known/workflow/v1/flow.js',
-
-      // WIP: generate a client library to easily execute workflows/steps
-      // clientBundlePath: './lib/generated/workflows.js',
-    };
+    });
 
     try {
       // Build using appropriate builder

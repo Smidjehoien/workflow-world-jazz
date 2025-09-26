@@ -4,7 +4,13 @@ import {
   createVercelWorld,
 } from '@vercel/workflow-core/runtime';
 import { logDebug, logError, logPlain, logWarn } from '../config/log.js';
+import { getWorkflowConfig } from '../config/workflow-config.js';
 import { getAuth } from './auth.js';
+import {
+  getProjectLink,
+  isOneOfErrNoExceptions,
+  type ProjectLink,
+} from './vercel-link.js';
 
 export const inferWorkflowDataDir = async () => {
   const envConfig = process.env.WORKFLOW_EMBEDDED_WORLD_CONFIG;
@@ -43,6 +49,27 @@ export const inferWorkflowDataDir = async () => {
   throw new Error('No workflow data directory found');
 };
 
+export const inferVercelProjectAndTeam = async () => {
+  const cwd = getWorkflowConfig().workingDir;
+  let project: ProjectLink | null = null;
+  try {
+    project = await getProjectLink(cwd);
+  } catch (error) {
+    if (!isOneOfErrNoExceptions(error, ['ENOENT'])) {
+      throw error;
+    }
+  }
+  if (!project) {
+    logDebug('Could not find project link folder');
+    return;
+  }
+  logDebug(`Found project ${project.projectId} and team ${project.orgId}`);
+  return {
+    projectId: project.projectId,
+    teamId: project.orgId,
+  };
+};
+
 export const inferVercelConfig = async ({
   env,
   authToken,
@@ -73,9 +100,17 @@ export const inferVercelConfig = async ({
     headers['x-vercel-team'] = teamId;
   } else {
     logDebug('Inferring vercel project and team from .vercel folder');
-    logWarn(
-      'Could not infer vercel project and team from .vercel folder, server authentication might fail.'
-    );
+    const inferredProject = await inferVercelProjectAndTeam();
+    if (inferredProject) {
+      const { projectId: inferredProjectId, teamId: inferredTeamId } =
+        inferredProject;
+      ret.headers['x-vercel-project'] = inferredProjectId;
+      ret.headers['x-vercel-team'] = inferredTeamId;
+    } else {
+      logWarn(
+        'Could not infer vercel project and team from .vercel folder, server authentication might fail.'
+      );
+    }
   }
   if (authToken) {
     logDebug('Using vercel auth token from CLI argument or ENV');
