@@ -53,7 +53,6 @@ export default class Build extends BaseCommand {
 
     this.logInfo(`Using target: ${buildTarget}`);
 
-    // Create configuration
     const config = getWorkflowConfig({
       buildTarget: buildTarget as BuildTarget,
     });

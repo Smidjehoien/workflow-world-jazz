@@ -13,7 +13,8 @@
   "scripts": {
     "build": "tsc && chmod +x bin/run.js",
     "clean": "tsc --build --clean",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "test:e2e": "vitest run e2e"
   },
   "oclif": {
     "bin": "workflow",

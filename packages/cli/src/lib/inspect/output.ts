@@ -99,8 +99,8 @@ export const listRuns = async (world: World, opts: JsonFlag = {}) => {
     showJson(runs);
     return;
   }
+  logPlain(showTable(runs.data, WORKFLOW_RUN_LISTED_PROPS));
   showCursorInfo({ cursor: runs.cursor, hasMore: runs.hasMore });
-  console.log(showTable(runs.data, WORKFLOW_RUN_LISTED_PROPS));
 };
 
 export const showRun = async (

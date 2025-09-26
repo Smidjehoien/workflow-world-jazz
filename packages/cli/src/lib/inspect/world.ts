@@ -3,7 +3,7 @@ import {
   createEmbeddedWorld,
   createVercelWorld,
 } from '@vercel/workflow-core/runtime';
-import { logDebug, logError, logPlain, logWarn } from '../config/log.js';
+import { logDebug, logError, logWarn } from '../config/log.js';
 import { getWorkflowConfig } from '../config/workflow-config.js';
 import { getAuth } from './auth.js';
 import {
@@ -145,7 +145,6 @@ export const getWorld = async ({
   if (world === 'embedded') {
     logDebug('Using embedded backend with dir:', dataDir);
     const world = createEmbeddedWorld(dataDir, true);
-    logPlain('\n');
     return world;
   } else if (world === 'vercel') {
     const config = await inferVercelConfig({
@@ -156,7 +155,6 @@ export const getWorld = async ({
       hostUrl,
     });
     const world = createVercelWorld(config);
-    logPlain('\n');
     return world;
   }
   throw new Error('Invalid world type');

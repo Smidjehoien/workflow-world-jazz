@@ -6,6 +6,10 @@ import { createQueue } from './queue.js';
 import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
 
+const stub = (name: string) => () => {
+  throw new Error(`${name} is disabled in read only mode`);
+};
+
 /**
  * Creates an embedded world instance that combines queue, storage, streamer, and authentication functionalities.
  *
@@ -26,15 +30,9 @@ export function createEmbeddedWorld(
   }
   const queue = readOnly
     ? {
-        queue: () => {
-          throw new Error('Queue is disabled in read only mode');
-        },
-        createQueueHandler: () => {
-          throw new Error('Queue is disabled in read only mode');
-        },
-        getDeploymentId: () => {
-          throw new Error('Queue is disabled in read only mode');
-        },
+        queue: stub('Queue'),
+        createQueueHandler: stub('QueueHandler'),
+        getDeploymentId: stub('DeploymentId'),
       }
     : createQueue();
 

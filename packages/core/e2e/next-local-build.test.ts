@@ -1,7 +1,7 @@
 import { exec as execOriginal } from 'child_process';
-import path from 'path';
 import { promisify } from 'util';
 import { describe, expect, test } from 'vitest';
+import { getWorkbenchAppPath } from './utils';
 
 const exec = promisify(execOriginal);
 
@@ -13,7 +13,7 @@ describe.each(['nextjs-webpack', 'nextjs-turbopack'])('e2e', (project) => {
     }
 
     const result = await exec('pnpm build', {
-      cwd: path.join(process.cwd(), 'workbench', project),
+      cwd: getWorkbenchAppPath(project),
     });
 
     expect(result.stderr).not.toContain('Error:');

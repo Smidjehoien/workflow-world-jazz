@@ -1,5 +1,6 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
+import { logWarn, setJsonMode } from '../lib/config/log.js';
 import {
   listEvents,
   listRuns,
@@ -50,6 +51,12 @@ export default class Inspect extends BaseCommand {
   } as const;
 
   static flags = {
+    json: Flags.boolean({
+      description: 'output JSON instead of human-readable tables/streams',
+      required: false,
+      char: 'j',
+      default: false,
+    }),
     backend: Flags.string({
       description: 'backend to inspect',
       required: false,
@@ -89,10 +96,22 @@ export default class Inspect extends BaseCommand {
       dependsOn: ['backend'],
       env: 'VERCEL_TEAM',
     }),
+    hostUrl: Flags.string({
+      description: 'The host URL that the target backend is running on',
+      required: false,
+      dependsOn: ['backend'],
+      env: 'WORKFLOW_HOST_URL',
+      char: 'h',
+    }),
   } as const;
 
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Inspect);
+    setJsonMode(Boolean(flags.json));
+
+    logWarn('=================================================');
+    logWarn('Workflow CLI is in alpha, expect things to break!');
+    logWarn('=================================================');
 
     if (flags.env !== 'production') {
       throw new Error('Preview environments are not supported yet');
@@ -104,6 +123,7 @@ export default class Inspect extends BaseCommand {
       authToken: flags.authToken,
       projectId: flags.project,
       teamId: flags.team,
+      hostUrl: flags.hostUrl,
     });
 
     const normalizeResource = (
@@ -112,9 +132,9 @@ export default class Inspect extends BaseCommand {
       if (!value) return undefined;
       const v = value.toLowerCase();
       if (v.startsWith('r')) return 'run';
-      if (v.startsWith('s')) return 'step';
       if (v.startsWith('e')) return 'event';
-      if (v.startsWith('st')) return 'stream';
+      if (v.startsWith('ste')) return 'step';
+      if (v.startsWith('str')) return 'stream';
       return undefined;
     };
 
@@ -137,13 +157,13 @@ export default class Inspect extends BaseCommand {
     const id = args.id;
     const subId = args.subId;
 
-    this.logInfo('');
+    if (!flags.json) this.logInfo('');
 
     if (resource === 'run') {
       if (id) {
-        await showRun(world, id);
+        await showRun(world, id, { json: flags.json });
       } else {
-        await listRuns(world);
+        await listRuns(world, { json: flags.json });
       }
       return;
     }
@@ -156,9 +176,9 @@ export default class Inspect extends BaseCommand {
         return;
       }
       if (subId) {
-        await showStep(world, id, subId);
+        await showStep(world, id, subId, { json: flags.json });
       } else {
-        await listSteps(world, id);
+        await listSteps(world, id, { json: flags.json });
       }
       return;
     }
@@ -170,7 +190,7 @@ export default class Inspect extends BaseCommand {
         );
         return;
       }
-      await printStream(world, id);
+      await printStream(world, id, { json: flags.json });
       return;
     }
 
@@ -187,7 +207,7 @@ export default class Inspect extends BaseCommand {
         );
         return;
       }
-      await listEvents(world, id);
+      await listEvents(world, id, { json: flags.json });
       return;
     }
   }

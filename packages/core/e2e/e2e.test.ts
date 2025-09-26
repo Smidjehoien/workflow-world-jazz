@@ -1,5 +1,6 @@
 import { assert, describe, expect, test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
+import { cliInspect, isLocalDeployment } from './utils';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;
 if (!deploymentUrl) {
@@ -58,6 +59,26 @@ describe.concurrent('e2e', () => {
     const run = await triggerWorkflow('addTenWorkflow', [123]);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
+
+    const cliResult = await cliInspect(`runs ${run.runId} --json`);
+
+    if (!isLocalDeployment()) {
+      // While we're waiting to be unblocked on Vercel Prod API auth for
+      // workflow CLI, we're assuming this will error.
+      // TODO: This should be a 403 response - we're not finding .vercel
+      // folder correctly.
+      expect(cliResult.stdout).toContain('"error": {}');
+      return;
+    }
+
+    const json = JSON.parse(cliResult.stdout);
+    expect(json).toMatchObject({
+      runId: run.runId,
+      workflowName: 'addTenWorkflow',
+      status: 'completed',
+      input: [123],
+      output: 133,
+    });
   });
 
   test('promiseAllWorkflow', { timeout: 60_000 }, async () => {

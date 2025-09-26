@@ -16,6 +16,10 @@ const debug = (...args: any[]) => {
   if (JSON_MODE) return; // suppress debug logs in JSON mode
   console.debug(...args);
 };
+const warn = (...args: any[]) => {
+  if (JSON_MODE) return; // suppress warnings in JSON mode
+  console.warn(...args);
+};
 
 export const logInfo = (...args: any[]) => {
   log(chalk.white(`[Info]`, ...args));
@@ -35,7 +39,7 @@ export const logDebug = (...args: any[]) => {
 
 export const logWarn = (...args: any[]) => {
   // warnings should always go to stderr
-  console.warn(chalk.yellow(`[Warn]`, ...args));
+  warn(chalk.yellow(`[Warn]`, ...args));
 };
 
 export const logError = (...args: any[]) => {
