@@ -152,18 +152,27 @@ async function greet(name: string) {
 Organize your workflow code for maintainability, we recommend the following structure:
 
 <Files>
-  <Folder name="app" defaultOpen disabled>
-    <Folder name="workflows" defaultOpen disabled>
-      <File name="user-signin-workflow.ts" />
-      <File name="user-signup-workflow.ts" />
+  <Folder name="workflows" defaultOpen disabled>
+    <Folder name="userOnboarding" defaultOpen disabled>
+      <File name="index.ts" />
+      <File name="steps.ts" />
+    </Folder>
+    <Folder name="aiVideoGeneration" defaultOpen disabled>
+      <File name="index.ts" />
       <Folder name="steps" defaultOpen disabled>
-        <File name="api.ts" />
-        <File name="database.ts" />
-        <File name="email.ts" />
+        <File name="transcribeUpload.ts" />
+        <File name="generateVideo.ts" />
+        <File name="notifyUser.ts" />
       </Folder>
+    </Folder>
+    <Folder name="shared" defaultOpen disabled>
+      <File name="validateInput.ts" />
+      <File name="logActivity.ts" />
     </Folder>
   </Folder>
 </Files>
+
+You can choose to organize your steps into a single `steps.ts` file or separate files within a `steps` folder. The `shared` folder is a good place to put common steps that are used by multiple workflows.
 
 ---
 
