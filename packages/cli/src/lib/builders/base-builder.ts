@@ -247,7 +247,7 @@ export abstract class BaseBuilder {
       bundle: true,
       format,
       platform: 'node',
-      conditions: ['workflow:step', 'node'],
+      conditions: ['node'],
       target: 'es2022',
       write: true,
       treeShaking: true,

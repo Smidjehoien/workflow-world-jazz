@@ -10,7 +10,6 @@
     ".": {
       "types": "./dist/index.d.ts",
       "workflow": "./dist/workflow/index.js",
-      "workflow:step": "./dist/step/index.js",
       "default": "./dist/index.js"
     },
     "./runtime": "./dist/runtime.js",
