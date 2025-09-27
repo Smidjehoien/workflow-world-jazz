@@ -14,24 +14,19 @@ export const setVerboseMode = (value: boolean) => {
 };
 
 const log = (...args: any[]) => {
-  const skipForJsonModeUnlessVerboseMode =
-    LOGGING_CONFIG.JSON_MODE && !LOGGING_CONFIG.VERBOSE_MODE;
-  if (skipForJsonModeUnlessVerboseMode) {
+  if (LOGGING_CONFIG.JSON_MODE) {
     return;
   }
   console.log(...args);
 };
 const debug = (...args: any[]) => {
-  const skipUnlessVerboseMode = !LOGGING_CONFIG.VERBOSE_MODE;
-  if (skipUnlessVerboseMode) {
+  if (!LOGGING_CONFIG.VERBOSE_MODE || LOGGING_CONFIG.JSON_MODE) {
     return;
   }
   console.debug(...args);
 };
 const warn = (...args: any[]) => {
-  const skipForJsonModeUnlessVerboseMode =
-    LOGGING_CONFIG.JSON_MODE && !LOGGING_CONFIG.VERBOSE_MODE;
-  if (skipForJsonModeUnlessVerboseMode) {
+  if (LOGGING_CONFIG.JSON_MODE) {
     return;
   }
   console.warn(...args);
