@@ -194,26 +194,34 @@ describe.concurrent('e2e', () => {
 
     expect(returnValue).toHaveProperty('workflowCtx');
     expect(returnValue).toHaveProperty('stepCtx');
+    expect(returnValue).toHaveProperty('innerWorkflowCtx');
 
     // workflow and context
 
-    // Both contexts should have the same runId
+    expect(returnValue.workflowCtx).toStrictEqual(returnValue.innerWorkflowCtx);
+
+    // workflow context should have workflowRunId and stepCtx shouldn't
     expect(returnValue.workflowCtx.workflowRunId).toBe(run.runId);
-    expect(returnValue.stepCtx.workflowRunId).toBe(run.runId);
+    expect(returnValue.innerWorkflowCtx.workflowRunId).toBe(run.runId);
+    expect(returnValue.stepCtx.workflowRunId).toBeUndefined();
 
-    // Both contexts should have matching workflowStartedAt timestamp
+    // workflow context should have workflowStartedAt and stepCtx shouldn't
     expect(typeof returnValue.workflowCtx.workflowStartedAt).toBe('string');
-    expect(typeof returnValue.stepCtx.workflowStartedAt).toBe('string');
-    expect(returnValue.workflowCtx.workflowStartedAt).toBe(
-      returnValue.stepCtx.workflowStartedAt
+    expect(typeof returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
+      'string'
     );
+    expect(returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
+      returnValue.workflowCtx.workflowStartedAt
+    );
+    expect(returnValue.stepCtx.workflowStartedAt).toBeUndefined();
 
-    // Both contexts should have matching url
+    // workflow context should have url and stepCtx shouldn't
     expect(typeof returnValue.workflowCtx.url).toBe('string');
-    expect(typeof returnValue.stepCtx.url).toBe('string');
-    expect(returnValue.workflowCtx.url).toBe(returnValue.stepCtx.url);
+    expect(typeof returnValue.innerWorkflowCtx.url).toBe('string');
+    expect(returnValue.innerWorkflowCtx.url).toBe(returnValue.workflowCtx.url);
+    expect(returnValue.stepCtx.url).toBeUndefined();
 
-    // Workflow context shouldn't have stepId, stepStartedAt, or attempt
+    // workflow context shouldn't have stepId, stepStartedAt, or attempt
     expect(returnValue.workflowCtx.stepId).toBeUndefined();
     expect(returnValue.workflowCtx.stepStartedAt).toBeUndefined();
     expect(returnValue.workflowCtx.attempt).toBeUndefined();

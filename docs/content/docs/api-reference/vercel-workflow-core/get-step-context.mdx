@@ -4,11 +4,10 @@ title: getStepContext
 
 # `getStepContext`
 
-Returns additional metadata available in the current workflow function and step function.
+Returns metadata available in the current step function.
 
 You may want to use this function when you need to:
 
-* Log workflow run IDs
 * Track retry attempts in error handling
 * Access timing information of a step and execution metadata
 
@@ -32,21 +31,6 @@ The `getStepContext` function takes no parameters.
 
 <TypeTable
   type={{
-      workflowRunId: {
-      type: "string",
-      required: true,
-      description: 'Unique identifier for the workflow run.',
-    },
-    workflowStartedAt: {
-      type: "Date",
-      required: true,
-      description: 'Timestamp when the workflow run started.',
-    },
-    url: {
-      type: "string",
-      required: true,
-      description: 'The URL where the workflow can be triggered.',
-    },
     stepId: {
       type: "string",
       required: true,
@@ -65,20 +49,15 @@ The `getStepContext` function takes no parameters.
   }}
 />
 
-<Callout>
-`getStepContext` extends [`getWorkflowContext`](/docs/api-reference/vercel-workflow-core/get-workflow-context) to add additional metadata of the current step run execution.
-</Callout>
-
 ## Examples
 
-Here's a simple example of how you can access the `workflowRunId`, and `stepId` inside a step function.
+Here's a simple example of how you can access the `stepId` inside a step function.
 
 ```typescript lineNumbers
 import { getStepContext } from "@vercel/workflow-core" // [!code highlight]
 
 async function testWorkflow() {
     "use workflow"
-
     await logStepId()
 }
 
@@ -86,7 +65,6 @@ async function logStepId() {
     "use step"
 
     const ctx = getStepContext() // [!code highlight]
-    console.log(ctx.workflowRunId) // [!code highlight]
-    console.log(ctx.stepId) // [!code highlight]
+    console.log(ctx.stepId) // Grab the current step ID // [!code highlight]
 }
 ```

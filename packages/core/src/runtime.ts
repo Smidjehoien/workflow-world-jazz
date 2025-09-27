@@ -21,9 +21,8 @@ import {
   hydrateStepArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
-import type { StepContext } from './step/get-step-context.js';
 // TODO: move step handler out to a separate file
-import { contextStorage } from './step/get-step-context.js';
+import { contextStorage } from './step/context-storage.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
@@ -207,8 +206,8 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                       `__wkf_step_${queueItem.stepName}`,
                       {
                         workflowName,
-                        workflowStartedAt,
                         workflowRunId: runId,
+                        workflowStartedAt,
                         stepId: step.stepId,
                         traceCarrier: await serializeTraceCarrier(),
                       } satisfies StepInvokePayload,
@@ -308,8 +307,8 @@ export const vercelAPIStepsEntrypoint =
       const {
         workflowName,
         workflowRunId,
-        stepId,
         workflowStartedAt,
+        stepId,
         traceCarrier: traceContext,
       } = StepInvokePayloadSchema.parse(message_);
       // Execute step within the propagated trace context
@@ -393,15 +392,21 @@ export const vercelAPIStepsEntrypoint =
               ...Attribute.StepArgumentsCount(args.length),
             });
 
-            const ctx: StepContext = {
-              workflowRunId,
-              workflowStartedAt: new Date(workflowStartedAt),
-              stepId,
-              stepStartedAt: new Date(+step.startedAt),
-              attempt: metadata.attempt,
-              url: `https://${process.env.VERCEL_URL}`,
-            };
-            result = await contextStorage.run(ctx, () => stepFn(...args));
+            result = await contextStorage.run(
+              {
+                stepContext: {
+                  stepId,
+                  stepStartedAt: new Date(+step.startedAt),
+                  attempt: metadata.attempt,
+                },
+                workflowContext: {
+                  workflowRunId,
+                  workflowStartedAt: new Date(+workflowStartedAt),
+                  url: `https://${process.env.VERCEL_URL}`,
+                },
+              },
+              () => stepFn(...args)
+            );
 
             result = dehydrateStepReturnValue(result, ops);
 

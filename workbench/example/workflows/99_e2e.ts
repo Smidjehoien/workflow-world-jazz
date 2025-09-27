@@ -163,14 +163,15 @@ export async function nullByteWorkflow() {
 
 async function stepWithContext() {
   'use step';
-  const ctx = getStepContext();
-  return ctx;
+  const stepCtx = getStepContext();
+  const workflowCtx = getWorkflowContext();
+  return { stepCtx, workflowCtx };
 }
 
 export async function workflowAndStepContextWorkflow() {
   'use workflow';
   const workflowCtx = getWorkflowContext();
-  const stepCtx = await stepWithContext();
+  const { stepCtx, workflowCtx: innerWorkflowCtx } = await stepWithContext();
   return {
     workflowCtx: {
       workflowRunId: workflowCtx.workflowRunId,
@@ -178,6 +179,7 @@ export async function workflowAndStepContextWorkflow() {
       url: workflowCtx.url,
     },
     stepCtx,
+    innerWorkflowCtx,
   };
 }
 

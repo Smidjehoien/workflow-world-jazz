@@ -21,5 +21,5 @@ export { getStepContext, type StepContext } from './step/get-step-context.js';
 export {
   getWorkflowContext,
   type WorkflowContext,
-} from './workflow/get-workflow-context.js';
+} from './step/get-workflow-context.js';
 export { getWorkflowWritableStream } from './writable-stream.js';

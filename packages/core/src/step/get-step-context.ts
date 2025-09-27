@@ -1,7 +1,6 @@
-import { AsyncLocalStorage } from 'node:async_hooks';
-import type { WorkflowContext } from '../workflow/get-workflow-context.js';
+import { contextStorage } from './context-storage.js';
 
-export interface StepContext extends WorkflowContext {
+export interface StepContext {
   /**
    * Unique identifier for the currently executing step.
    * Useful to use as part of an idempotency key for critical
@@ -30,11 +29,8 @@ export interface StepContext extends WorkflowContext {
   attempt: number;
 }
 
-export const contextStorage =
-  /* @__PURE__ */ new AsyncLocalStorage<StepContext>();
-
 /**
- * Returns additional metadata available in the current step function.
+ * Returns metadata available in the current step function.
  * It uses `AsyncLocalStorage` to store the context and
  * retrieve it in the step function.
  */
@@ -45,5 +41,5 @@ export function getStepContext(): StepContext {
       '`getStepContext()` can only be called inside a step function'
     );
   }
-  return ctx;
+  return ctx.stepContext;
 }
