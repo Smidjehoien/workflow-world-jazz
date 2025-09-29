@@ -109,8 +109,8 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   // Start the workflow
-  const workflowHandle = await chat(messages);
-  const workflowRunId = (workflowHandle as any).runId;
+  const workflowHandle = await start(chat, [messages]);
+  const workflowRunId = workflowHandle.runId;
 
   return createUIMessageStreamResponse({
     stream: getWorkflowReadableStream<UIMessageChunk>(workflowRunId), // [!code highlight]
