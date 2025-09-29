@@ -1,5 +1,5 @@
 import { waitUntil } from '@vercel/functions';
-import type { Event } from '@vercel/workflow-world';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import { WorkflowAPIError } from '@vercel/workflow-world-vercel';
 import {
   WorkflowRunFailedError,
@@ -31,6 +31,7 @@ import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { buildWorkflowSuspensionMessage } from './util.js';
 import { runWorkflow } from './workflow.js';
 
+export type { Event, WorkflowRun };
 export { WorkflowSuspension } from './global.js';
 export {
   getWorkflowReadableStream,
