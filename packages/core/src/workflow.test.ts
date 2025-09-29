@@ -1,4 +1,5 @@
 import { types } from 'node:util';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import { assert, describe, expect, it } from 'vitest';
 import type { WorkflowSuspension } from './global.js';
 import {
@@ -7,7 +8,6 @@ import {
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 import { runWorkflow } from './workflow.js';
-import type { Event, WorkflowRun } from './world/index.js';
 
 describe('runWorkflow', () => {
   const getWorkflowTransformCode = (workflowName?: string) =>

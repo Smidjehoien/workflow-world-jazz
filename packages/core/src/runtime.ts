@@ -1,6 +1,7 @@
 import { waitUntil } from '@vercel/functions';
+import type { Event } from '@vercel/workflow-world';
+import { WorkflowAPIError } from '@vercel/workflow-world-vercel';
 import {
-  WorkflowAPIError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
@@ -8,6 +9,7 @@ import {
 import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
+import { world } from './runtime/world.js';
 import {
   type Serializable,
   type StepInvokePayload,
@@ -28,10 +30,7 @@ import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
 import { buildWorkflowSuspensionMessage } from './util.js';
 import { runWorkflow } from './workflow.js';
-import type { Event } from './world/index.js';
-import { world } from './world/index.js';
 
-export { createEmbeddedWorld } from './embedded/world.js';
 export { WorkflowSuspension } from './global.js';
 export {
   getWorkflowReadableStream,
@@ -39,8 +38,6 @@ export {
 } from './runtime/readable-stream.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
-export { createVercelWorld } from './vercel/index.js';
-export type { Event, Step, WorkflowRun, World } from './world/index.js';
 
 export async function getWorkflowRun(runId: string) {
   const deploymentId = await world.getDeploymentId();

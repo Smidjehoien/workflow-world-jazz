@@ -1,10 +1,10 @@
 import { waitUntil } from '@vercel/functions';
+import { world } from './world.js';
+import type { WorkflowRun } from '@vercel/workflow-world';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace } from '../telemetry.js';
-import type { WorkflowRun } from '../world/index.js';
-import { world } from '../world/index.js';
 
 export interface StartOptions {
   deploymentId?: string;

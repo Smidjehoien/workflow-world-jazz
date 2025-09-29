@@ -1,11 +1,11 @@
 import { createContext } from '@vercel/workflow-vm';
+import type { Event } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
 import { EventsConsumer } from './events-consumer.js';
 import { FatalError, WorkflowSuspension } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import { createUseStep } from './step.js';
-import type { Event } from './world/index.js';
 
 // Helper to setup context to simulate a workflow run
 function setupWorkflowContext(events: Event[]): WorkflowOrchestratorContext {

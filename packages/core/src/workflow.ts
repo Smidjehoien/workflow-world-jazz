@@ -1,5 +1,6 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
+import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import { ENOTSUP } from './global.js';
@@ -15,7 +16,6 @@ import { withResolvers } from './util.js';
 import type { WorkflowContext } from './workflow/get-workflow-context.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-context.js';
 import { createGetWebhook } from './workflow/webhook.js';
-import type { Event, WorkflowRun } from './world/index.js';
 
 export async function runWorkflow(
   workflowCode: string,

@@ -1,8 +1,6 @@
 import { access } from 'node:fs/promises';
-import {
-  createEmbeddedWorld,
-  createVercelWorld,
-} from '@vercel/workflow-core/runtime';
+import { createEmbeddedWorld } from '@vercel/workflow-world-embedded';
+import { createVercelWorld } from '@vercel/workflow-world-vercel';
 import { logDebug, logError, logWarn } from '../config/log.js';
 import { getWorkflowConfig } from '../config/workflow-config.js';
 import { getAuth } from './auth.js';

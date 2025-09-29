@@ -4,6 +4,18 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@types/json-schema':
+      specifier: ^7.0.15
+      version: 7.0.15
+    '@types/node':
+      specifier: ^24.0.3
+      version: 24.3.1
+    zod:
+      specifier: ^4.0.0
+      version: 4.1.11
+
 importers:
 
   .:
@@ -254,6 +266,15 @@ importers:
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../core
+      '@vercel/workflow-world':
+        specifier: workspace:*
+        version: link:../world
+      '@vercel/workflow-world-embedded':
+        specifier: workspace:*
+        version: link:../world-embedded
+      '@vercel/workflow-world-vercel':
+        specifier: workspace:*
+        version: link:../world-vercel
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -313,7 +334,7 @@ importers:
         specifier: 3.609.0
         version: 3.609.0(@aws-sdk/client-sts@3.844.0)
       '@types/json-schema':
-        specifier: ^7.0.15
+        specifier: 'catalog:'
         version: 7.0.15
       '@types/ms':
         specifier: ^2.1.0
@@ -321,15 +342,18 @@ importers:
       '@vercel/functions':
         specifier: ^2.2.12
         version: 2.2.12(@aws-sdk/credential-provider-web-identity@3.609.0(@aws-sdk/client-sts@3.844.0))
-      '@vercel/oidc':
-        specifier: ^2.0.2
-        version: 2.0.2
-      '@vercel/queue':
-        specifier: 0.0.0-alpha.23
-        version: 0.0.0-alpha.23
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../vm
+      '@vercel/workflow-world':
+        specifier: workspace:*
+        version: link:../world
+      '@vercel/workflow-world-embedded':
+        specifier: workspace:*
+        version: link:../world-embedded
+      '@vercel/workflow-world-vercel':
+        specifier: workspace:*
+        version: link:../world-vercel
       ajv:
         specifier: ^8.17.1
         version: 8.17.1
@@ -352,8 +376,8 @@ importers:
         specifier: ^3.0.1
         version: 3.0.1
       zod:
-        specifier: ^4.0.0
-        version: 4.0.5
+        specifier: 'catalog:'
+        version: 4.1.11
     devDependencies:
       '@opentelemetry/api':
         specifier: ^1.9.0
@@ -365,8 +389,8 @@ importers:
         specifier: ^9.0.10
         version: 9.0.10
       '@types/node':
-        specifier: ^24.0.3
-        version: 24.0.13
+        specifier: 'catalog:'
+        version: 24.3.1
       '@types/seedrandom':
         specifier: ^3.0.8
         version: 3.0.8
@@ -419,6 +443,80 @@ importers:
       '@types/seedrandom':
         specifier: ^3.0.8
         version: 3.0.8
+      '@vercel/workflow-tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+
+  packages/world:
+    devDependencies:
+      '@types/json-schema':
+        specifier: 'catalog:'
+        version: 7.0.15
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.3.1
+      '@vercel/workflow-tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.11
+
+  packages/world-embedded:
+    dependencies:
+      '@vercel/queue':
+        specifier: 0.0.0-alpha.23
+        version: 0.0.0-alpha.23
+      '@vercel/workflow-world':
+        specifier: workspace:*
+        version: link:../world
+      pid-port:
+        specifier: ^1.0.2
+        version: 1.0.2
+      ulid:
+        specifier: ^3.0.1
+        version: 3.0.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.11
+    devDependencies:
+      '@opentelemetry/api':
+        specifier: ^1.9.0
+        version: 1.9.0
+      '@types/ms':
+        specifier: ^0.7.34
+        version: 0.7.34
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.3.1
+      '@vercel/workflow-tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      ms:
+        specifier: 2.1.3
+        version: 2.1.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.3.1)(jiti@2.5.1)(lightningcss@1.30.1)(yaml@2.8.0)
+
+  packages/world-vercel:
+    dependencies:
+      '@vercel/oidc':
+        specifier: ^2.0.2
+        version: 2.0.2
+      '@vercel/queue':
+        specifier: 0.0.0-alpha.23
+        version: 0.0.0-alpha.23
+      '@vercel/workflow-world':
+        specifier: workspace:*
+        version: link:../world
+      zod:
+        specifier: 'catalog:'
+        version: 4.1.11
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.3.1
       '@vercel/workflow-tsconfig':
         specifier: workspace:*
         version: link:../tsconfig
@@ -2767,6 +2865,9 @@ packages:
   '@types/mdx@2.0.13':
     resolution: {integrity: sha512-+OWZQfAYyio6YkJb3HLxDrvnx6SWWDbC0zVPfBRzUk0/nqoDyf6dNxQi3eArPe8rJ473nobTMQ/8Zk+LxJ+Yuw==}
 
+  '@types/ms@0.7.34':
+    resolution: {integrity: sha512-nG96G3Wp6acyAgJqGasjODb+acrI7KltPiRxzHPXnP3NgI28bpQDRv53olbqGXbfcgF5aiiHmO3xpwEpS5Ld9g==}
+
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
@@ -5092,9 +5193,6 @@ packages:
 
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
-  zod@4.0.5:
-    resolution: {integrity: sha512-/5UuuRPStvHXu7RS+gmvRf4NXrNxpSllGwDnCBcJZtQsKrviYXm54yDGV2KYNLT5kq0lHGcl7lqWJLgSaG+tgA==}
 
   zod@4.1.11:
     resolution: {integrity: sha512-WPsqwxITS2tzx1bzhIKsEs19ABD5vmCVa4xBo2tq/SrV4RNZtfws1EnCWQXM6yh8bD08a1idvkB5MZSBiZsjwg==}
@@ -7641,6 +7739,8 @@ snapshots:
       '@types/unist': 3.0.3
 
   '@types/mdx@2.0.13': {}
+
+  '@types/ms@0.7.34': {}
 
   '@types/ms@2.1.0': {}
 
@@ -10402,8 +10502,6 @@ snapshots:
       zod: 3.25.76
 
   zod@3.25.76: {}
-
-  zod@4.0.5: {}
 
   zod@4.1.11: {}
 

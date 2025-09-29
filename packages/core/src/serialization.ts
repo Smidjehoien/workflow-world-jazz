@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
-import { world } from './world/index.js';
+import { world } from './runtime/world.js';
 
 /**
  * Detect if a readable stream is a byte stream.

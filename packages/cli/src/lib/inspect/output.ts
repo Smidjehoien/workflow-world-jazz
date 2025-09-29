@@ -1,18 +1,13 @@
 // This file contains methods to fetch information about workflows and steps,
 // by using the "world" API from the core package.
 
-import type {
-  Event,
-  Step,
-  WorkflowRun,
-  World,
-} from '@vercel/workflow-core/runtime';
 import {
   hydrateStepArguments,
   hydrateStepReturnValue,
   hydrateWorkflowArguments,
   hydrateWorkflowReturnValue,
 } from '@vercel/workflow-core/serialization';
+import type { Event, Step, WorkflowRun, World } from '@vercel/workflow-world';
 import chalk from 'chalk';
 import Table from 'easy-table';
 import {

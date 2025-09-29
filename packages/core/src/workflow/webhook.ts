@@ -1,3 +1,4 @@
+import type { WebhookRequestEvent } from '@vercel/workflow-world';
 import type { JSONSchema7 } from 'json-schema';
 import z from 'zod';
 import { EventConsumerResult } from '../events-consumer.js';
@@ -7,7 +8,6 @@ import { webhookLogger } from '../logger.js';
 import type { WorkflowOrchestratorContext } from '../private.js';
 import { hydrateStepReturnValue } from '../serialization.js';
 import { type PromiseWithResolvers, withResolvers } from '../util.js';
-import type { WebhookRequestEvent } from '../world/events.js';
 
 function toJSONSchema(
   schema: WebhookSchema | undefined
