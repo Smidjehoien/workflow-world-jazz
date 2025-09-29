@@ -1,9 +1,8 @@
 import type { StepContext } from '../step/get-step-context.js';
 
-export {
-  getWebhook,
-  type Webhook,
-  type WebhookOptions,
+export type {
+  Webhook,
+  WebhookOptions,
 } from '../get-webhook.js';
 export {
   FatalError,
@@ -11,6 +10,7 @@ export {
   type RetryableErrorOptions,
 } from '../global.js';
 export { sleep } from '../sleep.js';
+export { getWebhook } from './get-webhook.js';
 export { getWorkflowContext } from './get-workflow-context.js';
 export { getWorkflowWritableStream } from './writable-stream.js';
 
