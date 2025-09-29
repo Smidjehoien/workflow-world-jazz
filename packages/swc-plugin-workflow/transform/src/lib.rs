@@ -260,18 +260,33 @@ impl StepTransform {
     // Create an identifier by combining filename and function name or line number
     // with appropriate prefix based on function type
     fn create_id(&self, fn_name: Option<&str>, span: swc_core::common::Span, is_workflow: bool) -> String {
-        // Replace non-alphanumeric characters in filename with dashes
-        // to follow queues naming rule
-        let sanitized_filename = self.filename
-            .chars()
-            .map(|c| if c.is_alphanumeric() { c } else { '-' })
-            .collect::<String>();
-        
-        let prefix = if is_workflow { "workflow" } else { "step" };
-        
         match fn_name {
-            Some(name) => format!("{}-{}-{}", prefix, sanitized_filename, name),
-            None => format!("{}-{}-{}", prefix, sanitized_filename, span.lo.0),
+            Some(name) if name.starts_with("__builtin") => {
+                // Special case for __builtin functions: use only the function name
+                name.to_string()
+            }
+            Some(name) => {
+                // Replace non-alphanumeric characters in filename with dashes
+                // to follow queues naming rule
+                let sanitized_filename = self.filename
+                    .chars()
+                    .map(|c| if c.is_alphanumeric() { c } else { '-' })
+                    .collect::<String>();
+                
+                let prefix = if is_workflow { "workflow" } else { "step" };
+                format!("{}-{}-{}", prefix, sanitized_filename, name)
+            }
+            None => {
+                // Replace non-alphanumeric characters in filename with dashes
+                // to follow queues naming rule
+                let sanitized_filename = self.filename
+                    .chars()
+                    .map(|c| if c.is_alphanumeric() { c } else { '-' })
+                    .collect::<String>();
+                
+                let prefix = if is_workflow { "workflow" } else { "step" };
+                format!("{}-{}-{}", prefix, sanitized_filename, span.lo.0)
+            }
         }
     }
 
