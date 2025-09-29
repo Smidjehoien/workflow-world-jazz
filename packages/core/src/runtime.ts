@@ -5,7 +5,7 @@ import {
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from './errors.js';
-import { FatalError, RetryableError, StepsNotRunError } from './global.js';
+import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import {
@@ -32,7 +32,7 @@ import type { Event } from './world/index.js';
 import { world } from './world/index.js';
 
 export { createEmbeddedWorld } from './embedded/world.js';
-export { StepsNotRunError } from './global.js';
+export { WorkflowSuspension } from './global.js';
 export {
   getWorkflowReadableStream,
   type WorkflowReadableStreamOptions,
@@ -173,7 +173,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               ...Attribute.WorkflowEventsCount(events.length),
             });
           } catch (err) {
-            if (isInstanceOf(err, StepsNotRunError)) {
+            if (isInstanceOf(err, WorkflowSuspension)) {
               const suspensionMessage = buildWorkflowSuspensionMessage(
                 runId,
                 err.stepCount,

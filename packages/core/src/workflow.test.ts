@@ -1,13 +1,13 @@
 import { types } from 'node:util';
 import { assert, describe, expect, it } from 'vitest';
-import type { Event, WorkflowRun } from './world/index.js';
-import type { StepsNotRunError } from './global.js';
+import type { WorkflowSuspension } from './global.js';
 import {
   dehydrateStepReturnValue,
   dehydrateWorkflowArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
 import { runWorkflow } from './workflow.js';
+import type { Event, WorkflowRun } from './world/index.js';
 
 describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
@@ -135,7 +135,7 @@ describe('runWorkflow', () => {
     const result = await runWorkflow(
       `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
           }`,
@@ -584,7 +584,7 @@ describe('runWorkflow', () => {
       expect(error.message).toEqual('test');
     });
 
-    it('should throw `StepsNotRunError` when a step does not have an event result entry', async () => {
+    it('should throw `WorkflowSuspension` when a step does not have an event result entry', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -607,7 +607,7 @@ describe('runWorkflow', () => {
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
           }`,
@@ -618,9 +618,9 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([
+      expect((error as WorkflowSuspension).steps).toEqual([
         {
           type: 'step',
           stepName: 'add',
@@ -630,7 +630,7 @@ describe('runWorkflow', () => {
       ]);
     });
 
-    it('should throw `StepsNotRunError` when a step has only a "step_started" event', async () => {
+    it('should throw `WorkflowSuspension` when a step has only a "step_started" event', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -661,7 +661,7 @@ describe('runWorkflow', () => {
         await runWorkflow(
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
-            // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+            // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
           }`,
@@ -672,12 +672,12 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('0 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([]);
+      expect((error as WorkflowSuspension).steps).toEqual([]);
     });
 
-    it('should throw `StepsNotRunError` for multiple steps with `Promise.all()`', async () => {
+    it('should throw `WorkflowSuspension` for multiple steps with `Promise.all()`', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -710,9 +710,9 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('2 steps have not been run yet');
-      expect((error as StepsNotRunError).steps).toEqual([
+      expect((error as WorkflowSuspension).steps).toEqual([
         {
           type: 'step',
           stepName: 'add',
@@ -728,7 +728,7 @@ describe('runWorkflow', () => {
       ]);
     });
 
-    it('`StepsNotRunError` should not be catchable by user code', async () => {
+    it('`WorkflowSuspension` should not be catchable by user code', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -752,7 +752,7 @@ describe('runWorkflow', () => {
           `const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
           async function workflow() {
             try {
-              // 'add()' will throw a 'StepsNotRunError' because it has not been run yet
+              // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
               const a = await add(1, 2);
               return a;
             } catch (err) {
@@ -766,13 +766,13 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 steps have not been run yet');
     });
   });
 
   describe('webhook', () => {
-    it('should throw `StepsNotRunError` when a webhook is awaiting without a "webhook_request" event', async () => {
+    it('should throw `WorkflowSuspension` when a webhook is awaiting without a "webhook_request" event', async () => {
       let error: Error | undefined;
       try {
         const ops: Promise<any>[] = [];
@@ -806,10 +806,10 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 webhooks have not been created yet');
-      expect((error as StepsNotRunError).steps).toHaveLength(1);
-      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
     });
 
     it('should resolve `getWebhook` await upon "webhook_request" event', async () => {
@@ -1145,7 +1145,7 @@ describe('runWorkflow', () => {
       });
     });
 
-    it('should throw `StepsNotRunError` when a webhook is awaited after the event log is empty', async () => {
+    it('should throw `WorkflowSuspension` when a webhook is awaited after the event log is empty', async () => {
       const ops: Promise<any>[] = [];
       const workflowRun: WorkflowRun = {
         runId: 'test-run-123',
@@ -1212,10 +1212,10 @@ describe('runWorkflow', () => {
         error = err;
       }
       assert(error);
-      expect(error.name).toEqual('StepsNotRunError');
+      expect(error.name).toEqual('WorkflowSuspension');
       expect(error.message).toEqual('1 webhooks have not been created yet');
-      expect((error as StepsNotRunError).steps).toHaveLength(1);
-      expect((error as StepsNotRunError).steps[0].type).toEqual('webhook');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
     });
   });
 });
