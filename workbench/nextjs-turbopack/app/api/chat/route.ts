@@ -6,10 +6,6 @@ import {
 } from 'ai';
 import { chat } from '@/workflows/chat';
 
-// TODO: remove these once example app is updated to import
-// workflows with start()
-import '../../../../example/workflows/99_e2e';
-
 // Uncomment to simulate a long running Vercel Function timing
 // out due to a long running agent. The client-side will
 // automatically reconnect to the stream.

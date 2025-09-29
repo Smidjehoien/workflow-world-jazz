@@ -4,10 +4,13 @@ import {
   start,
 } from '@vercel/workflow-core/runtime';
 import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
+import workflowManifest from '../manifest.js';
 
 export async function POST(req: Request) {
   const url = new URL(req.url);
-  const workflow = url.searchParams.get('workflow') || 'simple';
+  const workflowFile =
+    url.searchParams.get('workflowFile') || 'workflows/99_e2e.ts';
+  const workflowFn = url.searchParams.get('workflowFn') || 'simple';
 
   let args: any[] = [];
 
@@ -27,10 +30,17 @@ export async function POST(req: Request) {
       args = [42];
     }
   }
-  console.log(`Starting "${workflow}" workflow with args: ${args}`);
+  console.log(
+    `Starting "${workflowFile}/${workflowFn}" workflow with args: ${args}`
+  );
 
   try {
-    const run = await start(workflow, args);
+    const workflowFileItems =
+      workflowManifest[workflowFile as keyof typeof workflowManifest];
+    const run = await start(
+      workflowFileItems[workflowFn as keyof typeof workflowFileItems],
+      args
+    );
     console.log('Run:', run);
     return Response.json(run);
   } catch (err) {

@@ -27,6 +27,8 @@ export interface WorkflowConfig {
   clientBundlePath?: string;
 
   externalPackages?: string[];
+
+  workflowManifestPath?: string;
 }
 
 export function isValidBuildTarget(

@@ -134,13 +134,14 @@ We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs
 To invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
 
 ```typescript title="app/api/signup/route.ts"
+import { start } from "@vercel/workflow-core";
 import { userSignupWorkflow } from "@/workflows/user-signup";
 import { NextResponse } from "next/server";
  
 export async function POST(request: Request) {
  const { email } = await request.json();
  
- await userSignupWorkflow(email); // Executes asynchronously and doesn't block your app
+ await start(userSignupWorkflow, [email]); // Executes asynchronously and doesn't block your app
  
  return NextResponse.json({
   message: "User signup workflow started",

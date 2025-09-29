@@ -21,6 +21,11 @@ export default class Build extends BaseCommand {
       options: ['vercel-static', 'vercel-build-output-api'],
       default: 'vercel-static',
     }),
+    'workflow-manifest': Flags.string({
+      char: 'm',
+      description: 'output location for workflow manifest',
+      default: '',
+    }),
   };
 
   static args = {
@@ -42,6 +47,15 @@ export default class Build extends BaseCommand {
       );
     }
 
+    if (
+      flags['workflow-manifest'] &&
+      !flags['workflow-manifest'].match(/\.(json|js|cjs|mjs)$/)
+    ) {
+      throw new Error(
+        `Invalid --workflow-manifest provided, must end in .json or .js. Received: ${flags['workflow-manifest']}`
+      );
+    }
+
     // Validate build target
     if (!isValidBuildTarget(buildTarget)) {
       this.logWarn(
@@ -55,6 +69,7 @@ export default class Build extends BaseCommand {
 
     const config = getWorkflowConfig({
       buildTarget: buildTarget as BuildTarget,
+      workflowManifest: flags['workflow-manifest'],
     });
 
     try {
@@ -74,7 +89,9 @@ export default class Build extends BaseCommand {
       this.logInfo('Build completed successfully!');
     } catch (error) {
       this.error(
-        `Build failed: ${error instanceof Error ? error.message : String(error)}`
+        `Build failed: ${
+          error instanceof Error ? error.message : String(error)
+        }`
       );
     }
   }

@@ -10,10 +10,23 @@ import { runWorkflow } from './workflow.js';
 import type { Event, WorkflowRun } from './world/index.js';
 
 describe('runWorkflow', () => {
+  const getWorkflowTransformCode = (workflowName?: string) =>
+    `;globalThis.__private_workflows = new Map();
+    ${
+      workflowName
+        ? `
+      globalThis.__private_workflows.set(${JSON.stringify(workflowName)}, ${workflowName})
+    `
+        : ''
+    }
+    `;
+
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = 'function workflow() { return "success"; }';
+      const workflowCode =
+        'function workflow() { return "success"; }' +
+        getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -23,9 +36,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -37,7 +47,9 @@ describe('runWorkflow', () => {
 
     it('should execute workflow with arguments', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = 'function workflow(a, b) { return a + b; }';
+      const workflowCode =
+        'function workflow(a, b) { return a + b; }' +
+        getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -47,9 +59,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -61,13 +70,14 @@ describe('runWorkflow', () => {
 
     it('allow user code to handle user-defined errors', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode = `function workflow() {
+      const workflowCode =
+        `function workflow() {
         try {
           throw new TypeError("my workflow error");
         } catch (err) {
           return err;
         }
-      }`;
+      }` + getWorkflowTransformCode('workflow');
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -77,9 +87,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -106,9 +113,6 @@ describe('runWorkflow', () => {
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
       startedAt: new Date('2024-01-01T00:00:00.000Z'),
-      ownerId: 'test-owner',
-      projectId: 'test-project',
-      environment: 'test',
       deploymentId: 'test-deployment',
     };
 
@@ -138,7 +142,7 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
       workflowRun,
       events
     );
@@ -156,9 +160,6 @@ describe('runWorkflow', () => {
       createdAt: new Date('2024-01-01T00:00:00.000Z'),
       updatedAt: new Date('2024-01-01T00:00:00.000Z'),
       startedAt: new Date('2024-01-01T00:00:00.000Z'),
-      ownerId: 'test-owner',
-      projectId: 'test-project',
-      environment: 'test',
       deploymentId: 'test-deployment',
     };
 
@@ -228,7 +229,7 @@ describe('runWorkflow', () => {
             await add(5, 6);
             timestamps.push(new Date());
             return timestamps;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
       workflowRun,
       events
     );
@@ -254,9 +255,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -287,12 +285,13 @@ describe('runWorkflow', () => {
         },
       ];
 
-      const workflowCode = `
+      const workflowCode =
+        `
       const sleep = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("sleep");
       async function workflow() {
         await Promise.race([sleep(1), sleep(2)]);
         return Date.now();
-      }`;
+      }` + getWorkflowTransformCode('workflow');
 
       // Execute the workflow with only sleep(1) resolved
       const result1 = await runWorkflow(workflowCode, workflowRun, events);
@@ -331,9 +330,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -379,7 +375,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -397,9 +393,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -445,7 +438,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -463,9 +456,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -511,7 +501,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -532,22 +522,23 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
 
-        await runWorkflow('const value = "test"', workflowRun, events);
+        await runWorkflow(
+          'const value = "test"' + getWorkflowTransformCode(),
+          workflowRun,
+          events
+        );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('ReferenceError');
       expect(error.message).toEqual(
-        'Workflow "value" must be a function, but got "string" instead'
+        'Workflow "value" must be a function, but got "undefined" instead'
       );
     });
 
@@ -563,21 +554,19 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
         const events: Event[] = [];
 
         await runWorkflow(
-          'function workflow() { throw new Error("test"); }',
+          'function workflow() { throw new Error("test"); }' +
+            getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('Error');
@@ -596,9 +585,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -610,12 +596,12 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
@@ -642,9 +628,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -664,12 +647,12 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
@@ -689,9 +672,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -702,12 +682,12 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
@@ -740,9 +720,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -758,12 +735,12 @@ describe('runWorkflow', () => {
             } catch (err) {
               return err;
             }
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
@@ -784,9 +761,6 @@ describe('runWorkflow', () => {
           createdAt: new Date('2024-01-01T00:00:00.000Z'),
           updatedAt: new Date('2024-01-01T00:00:00.000Z'),
           startedAt: new Date('2024-01-01T00:00:00.000Z'),
-          ownerId: 'test-owner',
-          projectId: 'test-project',
-          environment: 'test',
           deploymentId: 'test-deployment',
         };
 
@@ -798,12 +772,12 @@ describe('runWorkflow', () => {
             const webhook = getWebhook();
             const req = await webhook;
             return req.url;
-          }`,
+          }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
@@ -822,9 +796,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -850,7 +821,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return req.url;
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -869,9 +840,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -911,7 +879,7 @@ describe('runWorkflow', () => {
         const req1 = await webhook;
         const req2 = await webhook;
         return [req1.url, req2.url];
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -931,9 +899,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -980,7 +945,7 @@ describe('runWorkflow', () => {
           }
         }
         return reqs;
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1000,9 +965,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1043,7 +1005,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return { url: req.url, method: req.method };
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1063,9 +1025,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1132,7 +1091,7 @@ describe('runWorkflow', () => {
           url2: req2.url,
           method2: req2.method,
         };
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
         workflowRun,
         events
       );
@@ -1155,9 +1114,6 @@ describe('runWorkflow', () => {
         createdAt: new Date('2024-01-01T00:00:00.000Z'),
         updatedAt: new Date('2024-01-01T00:00:00.000Z'),
         startedAt: new Date('2024-01-01T00:00:00.000Z'),
-        ownerId: 'test-owner',
-        projectId: 'test-project',
-        environment: 'test',
         deploymentId: 'test-deployment',
       };
 
@@ -1204,12 +1160,12 @@ describe('runWorkflow', () => {
         for await (const req of webhook) {
           await add(1, 2);
         }
-      }`,
+      }` + getWorkflowTransformCode('workflow'),
           workflowRun,
           events
         );
       } catch (err) {
-        error = err;
+        error = err as Error;
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');

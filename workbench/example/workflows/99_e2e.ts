@@ -9,7 +9,7 @@ import {
 
 //////////////////////////////////////////////////////////
 
-async function add(a: number, b: number) {
+export async function add(a: number, b: number) {
   'use step';
   return a + b;
 }

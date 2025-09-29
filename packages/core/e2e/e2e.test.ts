@@ -8,11 +8,19 @@ if (!deploymentUrl) {
 }
 
 async function triggerWorkflow(
-  workflow: string,
+  workflow: string | { workflowFile: string; workflowFn: string },
   args: any[]
 ): Promise<{ runId: string }> {
   const url = new URL('/api/trigger', deploymentUrl);
-  url.searchParams.set('workflow', workflow);
+  const workflowFn =
+    typeof workflow === 'string' ? workflow : workflow.workflowFn;
+  const workflowFile =
+    typeof workflow === 'string'
+      ? 'workflows/99_e2e.ts'
+      : workflow.workflowFile;
+
+  url.searchParams.set('workflowFile', workflowFile);
+  url.searchParams.set('workflowFn', workflowFn);
   const res = await fetch(url, {
     method: 'POST',
     body: JSON.stringify(dehydrateWorkflowArguments(args, [], globalThis)),
@@ -55,8 +63,17 @@ async function getWorkflowReturnValue(runId: string) {
 }
 
 describe.concurrent('e2e', () => {
-  test('addTenWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('addTenWorkflow', [123]);
+  test.each([
+    {
+      workflowFile: 'workflows/99_e2e.ts',
+      workflowFn: 'addTenWorkflow',
+    },
+    {
+      workflowFile: 'workflows/98_duplicate_case.ts',
+      workflowFn: 'addTenWorkflow',
+    },
+  ])('addTenWorkflow', { timeout: 60_000 }, async (workflow) => {
+    const run = await triggerWorkflow(workflow, [123]);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
 
@@ -73,10 +90,11 @@ describe.concurrent('e2e', () => {
       return;
     }
 
-    const json = JSON.parse(cliResult.stdout);
+    // remove [debug] lines
+    const json = JSON.parse(cliResult.stdout.replace(/\[[\w]{1,}\].*/g, ''));
     expect(json).toMatchObject({
       runId: run.runId,
-      workflowName: 'addTenWorkflow',
+      workflowName: `workflow-example-${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`,
       status: 'completed',
       input: [123],
       output: 133,
