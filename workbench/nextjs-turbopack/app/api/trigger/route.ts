@@ -13,6 +13,8 @@ export async function POST(req: Request) {
     url.searchParams.get('workflowFile') || 'workflows/99_e2e.ts';
   const workflowFn = url.searchParams.get('workflowFn') || 'simple';
 
+  console.log('calling workflow', { workflowFile, workflowFn });
+
   let args: any[] = [];
 
   // Args from query string
@@ -38,6 +40,8 @@ export async function POST(req: Request) {
   try {
     const workflows =
       workflowFile === 'workflows/99_e2e.ts' ? e2eWorkflows : duplicateE2e;
+
+    console.log('calling', workflows, (workflows as any)[workflowFn]);
     const run = await start((workflows as any)[workflowFn], args);
     console.log('Run:', run);
     return Response.json(run);

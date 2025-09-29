@@ -1,4 +1,7 @@
-import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+import {
+  getWorkflowReadableStream,
+  start,
+} from '@vercel/workflow-core/runtime';
 import {
   createUIMessageStreamResponse,
   type UIMessage,
@@ -14,7 +17,7 @@ import { chat } from '@/workflows/chat';
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const workflowHandle = await chat(messages);
+  const workflowHandle = await start(chat, [messages]);
 
   // TODO: To avoid the cast, use the `start()` function instead of
   // calling the `chat()` function directly?
