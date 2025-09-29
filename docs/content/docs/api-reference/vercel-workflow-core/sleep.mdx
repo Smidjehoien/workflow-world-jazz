@@ -2,6 +2,8 @@
 title: sleep
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `sleep()`
 
 Suspends a workflow for a specified duration or until an end date without consuming any resources. Once the duration or end date has passed, the workflow will resume execution.
@@ -22,19 +24,14 @@ import { sleep } from "@vercel/workflow-core"
 
 ### Parameters
 
-<TypeTable
-  type={{
-    param: {
-      type: "StringValue | Date",
-      required: true,
-      description: 'The duration or date to sleep until. This is a string in the format of "1000ms", "1s", "1m", "1h", or "1d" or Date object.'
-    }
-  }}
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { sleep } from "@vercel/workflow-core";
+export default sleep;`
+})}
+showSections={['parameters']}
 />
-
-### Returns
-
-The `sleep` function doesn't return anything.
 
 ## Examples
 

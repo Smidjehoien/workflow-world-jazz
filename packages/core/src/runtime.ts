@@ -39,6 +39,12 @@ export {
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 
+/**
+ * Retrieves the workflow run metadata and status information for a given run ID.
+ *
+ * @param runId - The workflow run ID obtained from {@link start}.
+ * @throws `Error` - When the workflow run is not found or `deploymentId` is missing.
+ */
 export async function getWorkflowRun(runId: string) {
   const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
@@ -47,6 +53,15 @@ export async function getWorkflowRun(runId: string) {
   return world.runs.get(runId);
 }
 
+/**
+ * Retrieves the final return value of a completed workflow run.
+ *
+ * @param runId - The workflow run ID obtained from {@link start}.
+ * @param ops - Internal parameter for cleanup operations.
+ * @param global - Internal parameter for type hydration scope.
+ * @throws `WorkflowRunNotCompletedError` - When the workflow is still running or pending.
+ * @throws `WorkflowRunFailedError` - When the workflow has failed.
+ */
 export async function getWorkflowReturnValue(
   runId: string,
   ops: Promise<any>[] = [],

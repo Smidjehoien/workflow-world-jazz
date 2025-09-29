@@ -241,11 +241,11 @@ table {
 }
 
 table th {
-  @apply !bg-background border-b border-x-0 px-4.5 py-2;
+  @apply !bg-background border-b border-x-0 p-2 px-4.5 [&:first-child]:pl-0 [&:last-child]:pr-0;
 }
 
 table td {
-  @apply !bg-background border-none px-4.5 py-3;
+  @apply !bg-background border-none px-4.5 py-3 [&:first-child]:pl-0 [&:last-child]:pr-0;
 }
 
 div[role="dialog"] {

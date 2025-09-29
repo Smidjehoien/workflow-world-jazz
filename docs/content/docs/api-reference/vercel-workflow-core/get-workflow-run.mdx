@@ -2,6 +2,8 @@
 title: getWorkflowRun
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getWorkflowRun()`
 
 Retrieves the workflow run metadata and status information for a given run ID. This function provides immediate access to workflow run details without waiting for completion, making it ideal for status checking and monitoring.
@@ -16,17 +18,29 @@ import { getWorkflowRun } from '@vercel/workflow-core/runtime';
 
 ## API Signature
 
-```typescript
-function getWorkflowRun(runId: string): Promise<WorkflowRun>
-```
-
 ### Parameters
 
-- `runId` (string, required): The workflow run ID obtained from [`start()`](/docs/api-reference/vercel-workflow-core/start)
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+export default getWorkflowRun;`
+})}
+showSections={['parameters']}
+/>
 
 ### Returns
 
-Returns a `Promise<WorkflowRun>` containing:
+Returns a `Promise<WorkflowRun>` that resolves to:
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowRun } from '@vercel/workflow-core/runtime';
+export default WorkflowRun;`
+})}
+showSections={['returns']}
+/>
 
 - `runId` (string): Unique identifier for the workflow run
 - `status` (string): Current status - 'pending', 'running', 'completed', 'failed', 'paused', or 'cancelled'
@@ -41,9 +55,16 @@ Returns a `Promise<WorkflowRun>` containing:
 
 ### Throws
 
-- `Error`: When the workflow run is not found or deploymentId is missing
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+export default getWorkflowRun;`
+})}
+showSections={['throws']}
+/>
 
-## Important Notes
+## Good to Know
 
 - Returns immediately without waiting for workflow completion
 - Requires a valid `deploymentId` to be available in the environment
@@ -88,6 +109,6 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- **[`start()`](/docs/api-reference/vercel-workflow-core/start)** - Start a new workflow and get its run ID
-- **[`getWorkflowReturnValue()`](/docs/api-reference/vercel-workflow-core/get-workflow-return-value)** - Wait for workflow completion and get the final result
-- **[`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream)** - Stream real-time output from the workflow
+- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID
+- [`getWorkflowReturnValue()`](/docs/api-reference/vercel-workflow-core/get-workflow-return-value) - Wait for workflow completion and get the final result
+- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output from the workflow

@@ -2,6 +2,8 @@
 title: getWorkflowContext
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getWorkflowContext`
 
 Returns additional metadata available in the current workflow function.
@@ -25,28 +27,23 @@ import { getWorkflowContext } from "@vercel/workflow-core"
 
 ### Parameters
 
-The `getWorkflowContext` function takes no parameters.
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowContext } from "@vercel/workflow-core";
+export default getWorkflowContext;`
+})}
+showSections={['parameters']}
+/>
 
 ### Returns
 
-<TypeTable
-  type={{
-    workflowRunId: {
-      type: "string",
-      required: true,
-      description: 'Unique identifier for the workflow run.',
-    },
-    workflowStartedAt: {
-      type: "Date",
-      required: true,
-      description: 'Timestamp when the workflow run started.',
-    },
-    url: {
-      type: "string",
-      required: true,
-      description: 'The URL where the workflow can be triggered.',
-    }
-  }}
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowContext } from "@vercel/workflow-core";
+export default WorkflowContext;`
+})}
 />
 
 ## Examples

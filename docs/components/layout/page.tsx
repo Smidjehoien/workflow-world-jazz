@@ -176,7 +176,7 @@ function Footer() {
   }, [flatten, pathname]);
 
   return (
-    <div className="flex flex-row justify-between gap-8 mt-16 pt-8 border-t border-border/40">
+    <div className="flex flex-row justify-between gap-8 mt-16 pt-8 border-t">
       {previous ? (
         <Link
           href={previous.url}

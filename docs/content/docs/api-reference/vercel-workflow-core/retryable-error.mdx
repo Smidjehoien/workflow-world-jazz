@@ -2,6 +2,8 @@
 title: RetryableError
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `RetryableError`
 
 When a `RetryableError` is thrown in a step, it indicates that the workflow should retry a step. Additionally, it contains a parameter `retryAfter` indicating when the step should be retried after.
@@ -18,31 +20,31 @@ The difference between `Error` and `RetryableError` may not be entirely obvious,
 import { RetryableError } from "@vercel/workflow-core"
 ```
 
-## Parameters
+## API Signature
 
-import { TypeTable } from '@/components/ui/type-table';
+### Parameters
 
-<TypeTable
-  type={{
-    message: {
-      type: "string",
-      required: true,
-      description: 'The error message.',
-    },
-    retryAfter: {
-      type: 'number | StringValue | Date',
-      required: false,
-      default: '1 second',
-      description: 'When the step should be retried after. Accepts duration strings.',
-      typeDescription: 'Duration string in formats like "5s", "10m", "1h", "30d"',
-      parameters: [
-        { name: 's', description: 'seconds (e.g., "30s")' },
-        { name: 'm', description: 'minutes (e.g., "5m")' },
-        { name: 'h', description: 'hours (e.g., "2h")' },
-        { name: 'd', description: 'days (e.g., "7d")' }
-      ]
-    }
-  }}
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { type RetryableErrorOptions } from "@vercel/workflow-core";
+interface RetryableError {
+    options?: RetryableErrorOptions;
+    message: string;
+}
+
+export default RetryableError;`
+})}
+/>
+
+#### RetryableErrorOptions
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { type RetryableErrorOptions } from "@vercel/workflow-core";
+export default RetryableErrorOptions;`
+})}
 />
 
 ## Examples

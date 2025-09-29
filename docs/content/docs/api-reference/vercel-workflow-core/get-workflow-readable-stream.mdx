@@ -2,6 +2,8 @@
 title: getWorkflowReadableStream
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getWorkflowReadableStream()`
 
 Retrieves the workflow run's default readable stream, which reads chunks written to the corresponding writable stream [`getWorkflowWritableStream`](/docs/api-reference/get-workflow-writable-stream). This function is used outside of the workflow context to consume streaming data from a running or completed workflow.
@@ -18,27 +20,42 @@ import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
 
 ### Parameters
 
-- `runId` (string, required): The workflow run ID
-- `options` (WorkflowReadableStreamOptions, optional): Configuration options for the readable stream
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+export default getWorkflowReadableStream;`
+})}
+showSections={['parameters']}
+/>
 
 #### WorkflowReadableStreamOptions
 
-<auto-type-table
-  type="WorkflowReadableStreamOptions"
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { WorkflowReadableStreamOptions } from '@vercel/workflow-core/runtime';
+export default WorkflowReadableStreamOptions;`
+})}
 />
 
 ### Returns
 
-Returns a `ReadableStream<R>` where `R` is the type of data written to the corresponding writable stream.
-
-<auto-type-table
-  type="ReadableStream"
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+export default getWorkflowReadableStream;`
+})}
+showSections={['returns']}
 />
 
-## Important Notes
+Returns a `ReadableStream<R>` where `R` is the type of data you plan to read from the stream.
+
+## Good to Know
 
 - This function can **only be called outside of workflow functions** (in runtime environments, API routes, etc.)
-- The `runId` must correspond to an active or completed workflow that uses [`getWorkflowWritableStream`](/docs/api-reference/get-workflow-writable-stream)
+- The `runId` must correspond to an active or completed workflow that uses [`getWorkflowWritableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-writable-stream)
 - Use `startIndex` to resume reading from a specific point in the stream
 
 ## Examples
@@ -157,4 +174,4 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- **[`getWorkflowWritableStream()`](/docs/api-reference/get-workflow-writable-stream)** - Used inside workflows to write data that this function reads
+- [`getWorkflowWritableStream()`](/docs/api-reference/get-workflow-writable-stream) - Used inside workflows to write data that this function reads

@@ -6,7 +6,9 @@ export interface StepContext {
    * Useful to use as part of an idempotency key for critical
    * operations that must only be executed once (such as charging a customer).
    *
-   * **Note:** Only available inside a step function.
+   * @remarks
+   *
+   * Only available inside a step function.
    * Accessing this property in a workflow function will throw an error.
    */
   stepId: string;
@@ -14,16 +16,19 @@ export interface StepContext {
   /**
    * Timestamp when the current step started.
    *
-   * **Note:** Only available inside a step function.
+   * @remarks
+   *
+   * Only available inside a step function.
    * Accessing this property in a workflow function will throw an error.
    */
   stepStartedAt: Date;
 
   /**
-   * The number of times the current step has been executed.
-   * Will increase with each retry.
+   * The number of times the current step has been executed. This will increase with each retry.
    *
-   * **Note:** Only available inside a step function.
+   * @remarks
+   *
+   * Only available inside a step function.
    * Accessing this property in a workflow function will throw an error.
    */
   attempt: number;

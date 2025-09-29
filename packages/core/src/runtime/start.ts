@@ -7,6 +7,9 @@ import * as Attribute from '../telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace } from '../telemetry.js';
 
 export interface StartOptions {
+  /**
+   * The deployment ID to use for the workflow run.
+   */
   deploymentId?: string;
 }
 

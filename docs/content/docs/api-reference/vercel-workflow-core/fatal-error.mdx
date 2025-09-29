@@ -2,6 +2,8 @@
 title: FatalError
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `FatalError`
 
 When a `FatalError` is thrown in a step, it indicates that the workflow should not retry a step, marking it as failure.
@@ -16,14 +18,19 @@ import { FatalError } from "@vercel/workflow-core"
 
 ## API Signature
 
-<TypeTable
-  type={{
-    message: {
-      type: "string",
-      required: true,
-      description: 'The error message.',
-    },
-  }}
+### Parameters
+
+<TSDoc
+definition={generateDefinition({
+  code: `
+interface Error {
+  /**
+* The error message.
+   */
+  message: string;
+}
+export default Error;`
+})}
 />
 
 ## Examples

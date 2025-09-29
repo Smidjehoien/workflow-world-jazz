@@ -131,6 +131,9 @@ importers:
       fumadocs-ui:
         specifier: 15.7.11
         version: 15.7.11(@types/react-dom@19.1.9(@types/react@19.1.13))(@types/react@19.1.13)(next@15.6.0-canary.13(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(tailwindcss@4.1.13)
+      github-slugger:
+        specifier: ^2.0.0
+        version: 2.0.0
       lucide-react:
         specifier: ^0.544.0
         version: 0.544.0(react@19.1.1)
@@ -156,6 +159,9 @@ importers:
       tailwindcss:
         specifier: ^4.1.13
         version: 4.1.13
+      ts-morph:
+        specifier: ^27.0.0
+        version: 27.0.0
       tw-animate-css:
         specifier: ^1.3.8
         version: 1.3.8
@@ -534,7 +540,7 @@ importers:
         version: link:../../packages/core
       ai:
         specifier: beta
-        version: 5.1.0-beta.4(zod@4.1.9)
+        version: 5.1.0-beta.14(zod@4.1.9)
       mixpart:
         specifier: ^0.0.4
         version: 0.0.4
@@ -700,17 +706,17 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
-  '@ai-sdk/gateway@1.1.0-beta.3':
-    resolution: {integrity: sha512-g9NAED+r2ZmZQZAwjyF3nAe3ywH5ndLPnHNvb5tWCycETODDQSw93ZOA6GOp188VhPIQbGC6wqZdqz3D2FXjhQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4
-
   '@ai-sdk/gateway@1.1.0-beta.5':
     resolution: {integrity: sha512-ojRXJ0JH6kxN1Cts1NuAi+TEsnGmrEsy5GcjnJw2tUyxTVgELnXDUvla0H2o6JDR/DnnKEiqbnTAoysfd4xLqQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
+
+  '@ai-sdk/gateway@1.1.0-beta.9':
+    resolution: {integrity: sha512-JUU0H+EF/ZVJmagnOb6j0xuSVeMN11UL1hWeYhmm9M931h992vHT1kOAa3hCbz59UnNNsLgiB50yjpIC5LT+Sw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/provider-utils@3.0.0-beta.3':
     resolution: {integrity: sha512-4gZ392GxjzMF7TnReF2eTKhOSyiSS3ydRVq4I7jxkeV5sdEuMoH3gzfItmlctsqGxlMU1/+zKPwl5yYz9O2dzg==}
@@ -724,17 +730,17 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
-  '@ai-sdk/provider-utils@3.1.0-beta.1':
-    resolution: {integrity: sha512-1M8khOMe5Ljay+EoiEHkv1gu9QCRc4qT9sbSkwsg2pTh97x70XpmhtWG/4D331xiWArFxZWn+tuqNhDj9t3+HQ==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4
-
   '@ai-sdk/provider-utils@3.1.0-beta.2':
     resolution: {integrity: sha512-l0+k/2HUQ+Z2b3YUKTOaZE/hrjMLu5N4ejYaq9tIQ84utJcQK+Z81NHcxwq6ZQZCVqWewqfG7TmnLwXlKQc5xg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
+
+  '@ai-sdk/provider-utils@3.1.0-beta.5':
+    resolution: {integrity: sha512-jspTXSdRZFuRXMltATeFFlYLox0HmQ1RhfzhJd8cXNxRUHYVKow9l05C9Ip4oE9O7ZwI6HfJDn7OdVVoyBrYVg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/provider@2.0.0':
     resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
@@ -744,12 +750,12 @@ packages:
     resolution: {integrity: sha512-Z8SPncMtS3RsoXITmT7NVwrAq6M44dmw0DoUOYJqNNtCu8iMWuxB8Nxsoqpa0uEEy9R1V1ZThJAXTYgjTUxl3w==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/provider@2.1.0-beta.0':
-    resolution: {integrity: sha512-QleoQVPoN02qpK2VXtKrDnpB59uNVIdB+5YMhKeJc4otlyVYFZLWeEax/zCe63VghuIZN9gV5KMxmF+yOUsWfw==}
-    engines: {node: '>=18'}
-
   '@ai-sdk/provider@2.1.0-beta.1':
     resolution: {integrity: sha512-UQqBC08w90t20hPECzkvQU1yHkBXKOqewerozBRU6YCnnS0OasUwYtos39ioTtxpS6LHLV2qCbfcO48GUqBPLA==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/provider@2.1.0-beta.3':
+    resolution: {integrity: sha512-+bmAJbd72CoDACPh5iYjDM+pU39V7S+WMx2k4dmp4JPmxkjELyOsukuQ3NuQncVnhcYBDaoVwDqWFVrlnh8EUQ==}
     engines: {node: '>=18'}
 
   '@ai-sdk/react@2.0.0-beta.19':
@@ -2829,6 +2835,9 @@ packages:
   '@ts-morph/common@0.27.0':
     resolution: {integrity: sha512-Wf29UqxWDpc+i61k3oIOzcUfQt79PIT9y/MWfAGlrkjg6lBC1hwDECLXPVJAhWjiGbfBCxZd65F/LIZF3+jeJQ==}
 
+  '@ts-morph/common@0.28.0':
+    resolution: {integrity: sha512-4w6X/oFmvXcwux6y6ExfM/xSqMHw20cYwFJH+BlYrtGa6nwY9qGq8GXnUs1sVYeF2o/KT3S8hAH6sKBI3VOkBg==}
+
   '@tybys/wasm-util@0.10.0':
     resolution: {integrity: sha512-VyyPYFlOMNylG45GoAe0xDoLwWuowvf92F9kySqzYh8vmYm7D2u4iUJKa1tOUpS70Ku13ASrOkS4ScXFsTaCNQ==}
 
@@ -3027,11 +3036,11 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4
 
-  ai@5.1.0-beta.4:
-    resolution: {integrity: sha512-vkqS2Fh6XmgehAiRhQK0fu3VGVbxRO03+/SXGY2tg33Ab9fZVbztooKOvvuwIp4BYagNfwXxuZCqFb5GJ9Z8Vw==}
+  ai@5.1.0-beta.14:
+    resolution: {integrity: sha512-NMTNtLUGEiYYpBqEQ1fi0LXI2XZ+IDqCV5gFaXxanBh+G7EOYBW8qn7fHjEntOWZ500NY/6tuaZ/JXtAuhgwLA==}
     engines: {node: '>=18'}
     peerDependencies:
-      zod: ^3.25.76 || ^4
+      zod: ^3.25.76 || ^4.1.8
 
   ai@5.1.0-beta.7:
     resolution: {integrity: sha512-FLXHE6qjSvrT2llCqP7NH4ymqGwrpm1+ozhQc5I7/39TZVe459mtTwy/cgrRi1QIB6eXn4OFMYVpyp1MjOpavg==}
@@ -4918,6 +4927,9 @@ packages:
   ts-morph@26.0.0:
     resolution: {integrity: sha512-ztMO++owQnz8c/gIENcM9XfCEzgoGphTv+nKpYNM1bgsdOVC/jRZuEBf6N+mLLDNg68Kl+GgUZfOySaRiG1/Ug==}
 
+  ts-morph@27.0.0:
+    resolution: {integrity: sha512-xcqelpTR5PCuZMs54qp9DE3t7tPgA2v/P1/qdW4ke5b3Y5liTGTYj6a/twT35EQW/H5okRqp1UOqwNlgg0K0eQ==}
+
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -5223,12 +5235,6 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.9(zod@4.1.9)
       zod: 4.1.9
 
-  '@ai-sdk/gateway@1.1.0-beta.3(zod@4.1.9)':
-    dependencies:
-      '@ai-sdk/provider': 2.1.0-beta.0
-      '@ai-sdk/provider-utils': 3.1.0-beta.1(zod@4.1.9)
-      zod: 4.1.9
-
   '@ai-sdk/gateway@1.1.0-beta.5(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.1.0-beta.1
@@ -5239,6 +5245,12 @@ snapshots:
     dependencies:
       '@ai-sdk/provider': 2.1.0-beta.1
       '@ai-sdk/provider-utils': 3.1.0-beta.2(zod@4.1.9)
+      zod: 4.1.9
+
+  '@ai-sdk/gateway@1.1.0-beta.9(zod@4.1.9)':
+    dependencies:
+      '@ai-sdk/provider': 2.1.0-beta.3
+      '@ai-sdk/provider-utils': 3.1.0-beta.5(zod@4.1.9)
       zod: 4.1.9
 
   '@ai-sdk/provider-utils@3.0.0-beta.3(zod@3.25.76)':
@@ -5263,13 +5275,6 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 4.1.9
 
-  '@ai-sdk/provider-utils@3.1.0-beta.1(zod@4.1.9)':
-    dependencies:
-      '@ai-sdk/provider': 2.1.0-beta.0
-      '@standard-schema/spec': 1.0.0
-      eventsource-parser: 3.0.6
-      zod: 4.1.9
-
   '@ai-sdk/provider-utils@3.1.0-beta.2(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.1.0-beta.1
@@ -5284,6 +5289,13 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 4.1.9
 
+  '@ai-sdk/provider-utils@3.1.0-beta.5(zod@4.1.9)':
+    dependencies:
+      '@ai-sdk/provider': 2.1.0-beta.3
+      '@standard-schema/spec': 1.0.0
+      eventsource-parser: 3.0.6
+      zod: 4.1.9
+
   '@ai-sdk/provider@2.0.0':
     dependencies:
       json-schema: 0.4.0
@@ -5292,11 +5304,11 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@2.1.0-beta.0':
+  '@ai-sdk/provider@2.1.0-beta.1':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/provider@2.1.0-beta.1':
+  '@ai-sdk/provider@2.1.0-beta.3':
     dependencies:
       json-schema: 0.4.0
 
@@ -7698,6 +7710,12 @@ snapshots:
       minimatch: 10.0.3
       path-browserify: 1.0.1
 
+  '@ts-morph/common@0.28.0':
+    dependencies:
+      minimatch: 10.0.3
+      path-browserify: 1.0.1
+      tinyglobby: 0.2.14
+
   '@tybys/wasm-util@0.10.0':
     dependencies:
       tslib: 2.8.1
@@ -7920,12 +7938,11 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 4.1.9
 
-  ai@5.1.0-beta.4(zod@4.1.9):
+  ai@5.1.0-beta.14(zod@4.1.9):
     dependencies:
-      '@ai-sdk/gateway': 1.1.0-beta.3(zod@4.1.9)
-      '@ai-sdk/provider': 2.1.0-beta.0
-      '@ai-sdk/provider-utils': 3.1.0-beta.1(zod@4.1.9)
-      '@ai-sdk/test-server': 1.0.0-beta.0
+      '@ai-sdk/gateway': 1.1.0-beta.9(zod@4.1.9)
+      '@ai-sdk/provider': 2.1.0-beta.3
+      '@ai-sdk/provider-utils': 3.1.0-beta.5(zod@4.1.9)
       '@opentelemetry/api': 1.9.0
       zod: 4.1.9
 
@@ -8143,6 +8160,10 @@ snapshots:
   csstype@3.1.3: {}
 
   debug@4.4.1:
+    dependencies:
+      ms: 2.1.3
+
+  debug@4.4.3:
     dependencies:
       ms: 2.1.3
 
@@ -8508,7 +8529,7 @@ snapshots:
       tinyglobby: 0.2.14
       unified: 11.0.5
       unist-util-visit: 5.0.0
-      zod: 4.1.9
+      zod: 4.1.11
     optionalDependencies:
       next: 15.6.0-canary.13(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
       react: 19.1.1
@@ -9416,7 +9437,7 @@ snapshots:
   micromark@4.0.2:
     dependencies:
       '@types/debug': 4.1.12
-      debug: 4.4.3(supports-color@8.1.1)
+      debug: 4.4.3
       decode-named-character-reference: 1.2.0
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
@@ -10221,6 +10242,11 @@ snapshots:
   ts-morph@26.0.0:
     dependencies:
       '@ts-morph/common': 0.27.0
+      code-block-writer: 13.0.3
+
+  ts-morph@27.0.0:
+    dependencies:
+      '@ts-morph/common': 0.28.0
       code-block-writer: 13.0.3
 
   tslib@2.8.1: {}

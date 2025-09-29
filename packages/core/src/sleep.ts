@@ -10,9 +10,9 @@ const MAX_SLEEP_DURATION_SECONDS = ms('23h') / 1000;
 /**
  * Sleep within a workflow for a given duration.
  *
- * @overload
- * @param duration - The duration to sleep for. This is a string in the format
+ * @param duration - The duration to sleep for, this is a string in the format
  * of `"1000ms"`, `"1s"`, `"1m"`, `"1h"`, or `"1d"`.
+ * @overload
  * @returns A promise that resolves when the sleep is complete.
  */
 export async function sleep(duration: StringValue): Promise<void>;
@@ -20,8 +20,8 @@ export async function sleep(duration: StringValue): Promise<void>;
 /**
  * Sleep within a workflow until a specific date.
  *
+ * @param date - The date to sleep until, this must be a future date.
  * @overload
- * @param date - The date to sleep until. This must be a future date.
  * @returns A promise that resolves when the sleep is complete.
  */
 export async function sleep(date: Date): Promise<void>;

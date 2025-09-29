@@ -2,6 +2,8 @@
 title: getWorkflowReturnValue
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getWorkflowReturnValue()`
 
 Retrieves the final return value of a completed workflow run. This function returns immediately and it does not wait. If the workflow is still running, it throws a `WorkflowRunNotCompletedError`. If the workflow has failed, it throws a `WorkflowRunFailedError`.
@@ -16,30 +18,36 @@ import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
 
 ## API Signature
 
-```typescript
-function getWorkflowReturnValue(
-  runId: string,
-  ops?: Promise<unknown>[],
-  global?: Record<string, unknown>
-): Promise<unknown>
-```
-
 ### Parameters
 
-- `runId` (string, required): The workflow run ID obtained from [`start()`](/docs/api-reference/vercel-workflow-core/start)
-- `ops` (Promise\<unknown\>[], optional): Internal parameter for cleanup operations
-- `global` (Record\<string, unknown\>, optional): Internal parameter for type hydration scope
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+export default getWorkflowReturnValue;`
+})}
+typeLinkMap={{
+  start: './start',
+}}
+showSections={['parameters']}
+/>
 
 ### Returns
 
-Returns a `Promise` that resolves to the workflow's return value when the workflow completes successfully.
+A `Promise` that resolves to the workflow's return value when the workflow completes successfully.
 
 ### Throws
 
-- `WorkflowRunNotCompletedError`: When the workflow is still running or pending
-- `WorkflowRunFailedError`: When the workflow has failed
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+export default getWorkflowReturnValue;`
+})}
+showSections={['throws']}
+/>
 
-## Important Notes
+## Good to Know
 
 - The function returns immediately and it does **not** wait for workflow completion
 - Throws `WorkflowRunNotCompletedError` if the workflow is still running (status 202)
@@ -148,6 +156,6 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- **[`start()`](/docs/api-reference/vercel-workflow-core/start)** - Start a new workflow and get its run ID
-- **[`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run)** - Get workflow run status without waiting for completion
-- **[`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream)** - Stream real-time output instead of waiting for final result
+- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID
+- [`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run) - Get workflow run status without waiting for completion
+- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output instead of waiting for final result

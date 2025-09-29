@@ -17,7 +17,7 @@ export interface WorkflowReadableStreamOptions {
   /**
    * The global object to use for hydrating types from the global scope.
    *
-   * Defaults to {@link https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/globalThis | `globalThis`}.
+   * Defaults to {@link [`globalThis`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/globalThis)}.
    */
   global?: Record<string, any>;
 }
@@ -32,12 +32,9 @@ export interface WorkflowReadableStreamOptions {
  */
 export function getWorkflowReadableStream<R = any>(
   runId: string,
-  {
-    ops = [],
-    global = globalThis,
-    startIndex,
-  }: WorkflowReadableStreamOptions = {}
+  options: WorkflowReadableStreamOptions = {}
 ): ReadableStream<R> {
+  const { ops = [], global = globalThis, startIndex } = options;
   return getExternalRevivers(global, ops).ReadableStream({
     name: runId,
     startIndex,

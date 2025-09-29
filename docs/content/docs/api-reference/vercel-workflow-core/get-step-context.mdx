@@ -2,6 +2,8 @@
 title: getStepContext
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getStepContext`
 
 Returns metadata available in the current step function.
@@ -25,28 +27,23 @@ import { getStepContext } from "@vercel/workflow-core"
 
 ### Parameters
 
-The `getStepContext` function takes no parameters.
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getStepContext } from "@vercel/workflow-core";
+export default getStepContext;`
+})}
+showSections={['parameters']}
+/>
 
 ### Returns
 
-<TypeTable
-  type={{
-    stepId: {
-      type: "string",
-      required: true,
-      description: 'Unique identifier for the currently executing step. Only available inside a step function.'
-    },
-    stepStartedAt: {
-      type: "Date",
-      required: true,
-      description: 'Timestamp when the current step started. Only available inside a step function.',
-    },
-    attempt: {
-      type: "number",
-      required: true,
-      description: 'The number of times the current step has been executed. This value will increase with each retry. Only available inside a step function',
-    },
-  }}
+<TSDoc
+definition={generateDefinition({
+  code: `
+import type { StepContext } from "@vercel/workflow-core";
+export default StepContext;`
+})}
 />
 
 ## Examples

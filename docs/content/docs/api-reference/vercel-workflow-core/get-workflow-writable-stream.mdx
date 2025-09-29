@@ -2,9 +2,11 @@
 title: getWorkflowWritableStream
 ---
 
+import { generateDefinition } from "@/lib/tsdoc"
+
 # `getWorkflowWritableStream()`
 
-Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using [`getWorkflowReadableStream`](/docs/api-reference/get-workflow-readable-stream).
+Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using [`getWorkflowReadableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream).
 
 You should use this in your workflows to produce streaming output that can be consumed by clients in real-time.
 
@@ -18,17 +20,29 @@ import { getWorkflowWritableStream } from '@vercel/workflow-core';
 
 ### Parameters
 
-The `getWorkflowWritableStream` function takes no parameters.
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowWritableStream } from '@vercel/workflow-core';
+export default getWorkflowWritableStream;`
+})}
+showSections={['parameters']}
+/>
 
 ### Returns
 
-Returns a `WritableStream<W>` where `W` is the type of data you plan to write to the stream.
-
-<auto-type-table
-  type="WritableStream"
+<TSDoc
+definition={generateDefinition({
+  code: `
+import { getWorkflowWritableStream } from '@vercel/workflow-core';
+export default getWorkflowWritableStream;`
+})}
+showSections={['returns']}
 />
 
-## Important Notes
+Returns a `WritableStream<W>` where `W` is the type of data you plan to write to the stream.
+
+## Good to Know
 
 - This function can **only be called inside a workflow function** (functions with `"use workflow"` directive)
 - The stream should typically be passed to step functions for writing
@@ -170,4 +184,4 @@ async function endStream(writable: WritableStream<UIMessageChunk>) {
 
 ## Reading the Stream
 
-To consume the data written to this stream from outside the workflow, use the corresponding [`getWorkflowReadableStream`](/docs/api-reference/get-workflow-readable-stream) function with the workflow run ID.
+To consume the data written to this stream from outside the workflow, use the corresponding [`getWorkflowReadableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) function with the workflow run ID.
