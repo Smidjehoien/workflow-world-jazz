@@ -9,6 +9,7 @@ import {
 import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
+import type { start } from './runtime/start.js';
 import { world } from './runtime/world.js';
 import {
   type Serializable,

@@ -1,4 +1,5 @@
 import { getExternalRevivers } from '../serialization.js';
+import type { getWorkflowWritableStream } from '../writable-stream.js';
 
 /**
  * The options for {@link getWorkflowReadableStream}.

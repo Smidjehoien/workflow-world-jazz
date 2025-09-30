@@ -1,3 +1,5 @@
+import type { getWorkflowReadableStream } from './runtime/readable-stream.js';
+
 /**
  * Retrieves the current workflow run's default writable stream.
  *
