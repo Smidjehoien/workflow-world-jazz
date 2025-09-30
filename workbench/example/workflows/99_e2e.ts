@@ -1,5 +1,6 @@
 import {
   FatalError,
+  fetch,
   getStepContext,
   getWebhook,
   getWorkflowContext,
@@ -216,4 +217,13 @@ export async function outputStreamWorkflow() {
   await sleep('1s');
   await stepCloseOutputStream(writable);
   return 'done';
+}
+
+//////////////////////////////////////////////////////////
+
+export async function fetchWorkflow() {
+  'use workflow';
+  const response = await fetch('https://jsonplaceholder.typicode.com/todos/1');
+  const data = await response.json();
+  return data;
 }

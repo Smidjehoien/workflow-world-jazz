@@ -273,4 +273,15 @@ describe.concurrent('e2e', () => {
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toEqual('done');
   });
+
+  test('fetchWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('fetchWorkflow', []);
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue).toMatchObject({
+      userId: 1,
+      id: 1,
+      title: 'delectus aut autem',
+      completed: false,
+    });
+  });
 });

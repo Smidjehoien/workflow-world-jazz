@@ -1,5 +1,6 @@
 import type { StepContext } from '../step/get-step-context.js';
 
+export { __builtin_fetch as fetch } from '../builtins.js';
 export type {
   Webhook,
   WebhookOptions,

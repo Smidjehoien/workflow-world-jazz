@@ -6,6 +6,7 @@
     "get-step-context",
     "get-webhook",
     "sleep",
+    "fetch",
     "get-workflow-writable-stream",
     "get-workflow-readable-stream",
     "start",

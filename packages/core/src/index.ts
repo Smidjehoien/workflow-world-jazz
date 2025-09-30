@@ -6,6 +6,7 @@
  * `workflow` and `workflow/runtime`?
  */
 
+export { __builtin_fetch as fetch } from './builtins.js';
 export {
   getWebhook,
   type Webhook,
