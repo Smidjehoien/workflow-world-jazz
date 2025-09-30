@@ -1,10 +1,10 @@
 import {
-  PaginatedResponseSchema,
-  WebhookSchema,
   type CreateWebhookRequest,
   type ListWebhooksByUrlParams,
   type PaginatedResponse,
+  PaginatedResponseSchema,
   type Webhook,
+  WebhookSchema,
 } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
@@ -16,7 +16,7 @@ export async function createWebhook(
   config?: APIConfig
 ): Promise<Webhook> {
   return makeRequest({
-    endpoint: '/api/webhooks/create',
+    endpoint: '/webhooks/create',
     options: {
       method: 'POST',
       body: JSON.stringify({ ...data, runId }, dateToStringReplacer),
@@ -32,7 +32,7 @@ export async function getWebhook(
   config?: APIConfig
 ): Promise<Webhook> {
   return makeRequest({
-    endpoint: `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
+    endpoint: `/webhooks/${webhookId}?deploymentId=${deploymentId}`,
     options: { method: 'GET' },
     config,
     schema: WebhookSchema,
@@ -45,7 +45,7 @@ export async function disposeWebhook(
   config?: APIConfig
 ): Promise<Webhook> {
   return makeRequest({
-    endpoint: `/api/webhooks/${webhookId}?deploymentId=${deploymentId}`,
+    endpoint: `/webhooks/${webhookId}?deploymentId=${deploymentId}`,
     options: { method: 'DELETE' },
     config,
     schema: WebhookSchema,
@@ -66,7 +66,7 @@ export async function getWebhooksByUrl(
   if (params.limit) searchParams.set('limit', params.limit.toString());
 
   const queryString = searchParams.toString();
-  const endpoint = `/api/webhooks/by-url?${queryString}`;
+  const endpoint = `/webhooks/by-url?${queryString}`;
 
   return makeRequest({
     endpoint,

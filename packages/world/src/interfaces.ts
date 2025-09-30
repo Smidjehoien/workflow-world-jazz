@@ -52,7 +52,7 @@ export interface Storage {
 
   steps: {
     create(runId: string, data: CreateStepRequest): Promise<Step>;
-    get(runId: string, stepId: string): Promise<Step>;
+    get(runId: string | undefined, stepId: string): Promise<Step>;
     update(
       runId: string,
       stepId: string,

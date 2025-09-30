@@ -73,29 +73,29 @@ export const inferVercelConfig = async ({
   authToken,
   projectId,
   teamId,
-  hostUrl,
+  baseUrlOverwrite,
 }: {
   env: 'production' | 'preview';
   authToken?: string;
   projectId?: string;
   teamId?: string;
-  hostUrl?: string;
+  baseUrlOverwrite?: string;
 }) => {
   const headers: Record<string, string> = {
     'x-vercel-environment': env,
   };
-  if (hostUrl) {
+  if (baseUrlOverwrite) {
     logDebug('Using vercel backend URL from CLI argument or ENV');
   }
   const ret = {
     token: authToken,
-    baseUrl: hostUrl || 'https://api.vercel.com',
+    baseUrl: baseUrlOverwrite || 'https://api.vercel.com/v1/workflow',
     headers,
   };
   if (projectId && teamId) {
     logDebug('Using vercel project and team from CLI argument or ENV');
     headers['x-vercel-project-id'] = projectId;
-    headers['x-vercel-team'] = teamId;
+    headers['x-vercel-team-id'] = teamId;
   } else {
     logDebug('Inferring vercel project and team from .vercel folder');
     const inferredProject = await inferVercelProjectAndTeam();
@@ -103,7 +103,7 @@ export const inferVercelConfig = async ({
       const { projectId: inferredProjectId, teamId: inferredTeamId } =
         inferredProject;
       ret.headers['x-vercel-project-id'] = inferredProjectId;
-      ret.headers['x-vercel-team'] = inferredTeamId;
+      ret.headers['x-vercel-team-id'] = inferredTeamId;
     } else {
       logWarn(
         'Could not infer vercel project and team from .vercel folder, server authentication might fail.'
@@ -129,14 +129,14 @@ export const getWorld = async ({
   authToken,
   projectId,
   teamId,
-  hostUrl,
+  baseUrlOverwrite,
 }: {
   world: 'embedded' | 'vercel';
   env: 'production' | 'preview';
   authToken?: string;
   projectId?: string;
   teamId?: string;
-  hostUrl?: string;
+  baseUrlOverwrite?: string;
 }) => {
   const dataDir =
     world === 'embedded' ? await inferWorkflowDataDir() : undefined;
@@ -150,7 +150,7 @@ export const getWorld = async ({
       authToken,
       projectId,
       teamId,
-      hostUrl,
+      baseUrlOverwrite,
     });
     const world = createVercelWorld(config);
     return world;

@@ -12,10 +12,10 @@ import chalk from 'chalk';
 import Table from 'easy-table';
 import {
   logDebug,
-  logError,
   logInfo,
   logPlain,
   logWarn,
+  showBox,
 } from '../config/log.js';
 import type { InspectCLIOptions } from '../config/types.js';
 import { streamToConsole } from './stream.js';
@@ -119,9 +119,15 @@ const showJson = (data: unknown) => {
   process.stdout.write(`${json}\n`);
 };
 
-const showCursorInfo = ({ hasMore }: { hasMore: boolean }) => {
-  if (hasMore) {
-    logInfo(`(showing partial list, pagination is coming soon)`);
+const getCursorHint = ({
+  hasMore,
+  cursor,
+}: {
+  hasMore: boolean;
+  cursor: string | null;
+}) => {
+  if (hasMore && cursor) {
+    return `More results available. Append\n--cursor ${cursor}\nto fetch the next page.`;
   }
 };
 
@@ -232,7 +238,9 @@ const inlineFormatIO = <T>(io: T): string => {
 };
 
 export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
-  const runs = await world.runs.list({});
+  const runs = await world.runs.list({
+    pagination: opts.cursor ? { cursor: opts.cursor } : undefined,
+  });
   if (opts.stepId || opts.runId) {
     logWarn(
       'Filtering by step-id or run-id is not supported in list calls, ignoring filter.'
@@ -243,10 +251,14 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
     return;
   }
   const runsWithHydratedIO = runs.data.map((run) => hydrateWorkflowRunIO(run));
+  showBox(
+    'white',
+    'INFO',
+    'To view the input/output of a run, use `wf i run <run-id>`',
+    'To view the content of any stream, use `wf i stream <stream-id>`',
+    getCursorHint(runs)
+  );
   logPlain(showTable(runsWithHydratedIO, WORKFLOW_RUN_LISTED_PROPS));
-  showCursorInfo(runs);
-  logInfo('To view the input/output of a run, use `wf i run <run-id>`');
-  logInfo('To view the content of any stream, use `wf i stream <stream-id>`');
 };
 
 export const getRecentRunIds = async (world: World, limit: number = 10) => {
@@ -281,12 +293,18 @@ export const listSteps = async (
       'Filtering by step-id is not supported in list calls, ignoring filter.'
     );
   }
+
   const runsIds = opts.runId ? [opts.runId] : await getRecentRunIds(world);
 
   logDebug(`Fetching steps for runs: ${runsIds.join(', ')}`);
   const stepChunks = await Promise.all(
     runsIds.map((runId) => world.steps.list({ runId }))
   );
+  if (stepChunks.some((step) => step.hasMore)) {
+    logInfo(
+      'Showing partial results. Pagination is not supported for this command yet.'
+    );
+  }
   const steps = stepChunks.flatMap((step) => step.data);
   if (opts.json) {
     showJson(steps);
@@ -294,44 +312,6 @@ export const listSteps = async (
   }
   const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
   logPlain(showTable(stepsWithHydratedIO, STEP_LISTED_PROPS));
-  // showCursorInfo({ cursor: steps.cursor, hasMore: steps.hasMore });
-};
-
-/**
- * TODO: Finding a runId by stepId is currently a linear scan of all runs.
- * the World interface should either be updated to support finding a runId by stepId,
- * or fetching a step by stepId without needing a runId argument.
- * Once either of these is supported, this function can be removed.
- */
-const findRunIdForStep = async (world: World, stepId: string) => {
-  const limit = 10;
-  logDebug(
-    `No runId provided, trying to find runId for step ${stepId} in last ${limit} runs`
-  );
-  // TODO: Pagination offset is not supported yet so this doesn't even work yet.
-  let cursor: string | undefined;
-  while (true) {
-    const runs = await world.runs.list({ pagination: { limit, cursor } });
-    const stepLists = await Promise.all(
-      runs.data.map((run) =>
-        world.steps.list({ runId: run.runId, pagination: { limit } })
-      )
-    );
-    for (let i = 0; i < stepLists.length; i++) {
-      const steps = stepLists[i];
-      const run = runs.data[i];
-      if (steps.hasMore) {
-        logWarn(`Unable to find runId for step ${stepId}, too much data.`);
-        break;
-      }
-      if (steps.data.some((step) => step.stepId === stepId)) {
-        return run.runId;
-      }
-    }
-    cursor = runs.cursor || undefined;
-    if (!runs.hasMore) break;
-  }
-  throw new Error(`Step ${stepId} not found`);
 };
 
 export const showStep = async (
@@ -339,14 +319,12 @@ export const showStep = async (
   stepId: string,
   opts: InspectCLIOptions = {}
 ) => {
-  const runId = opts.runId || (await findRunIdForStep(world, stepId));
-  if (!runId) {
-    logError(
-      `Step ${stepId} not found in any recent run. Provide a runId with --run=<run-id>.`
+  if (opts.stepId) {
+    logWarn(
+      'Filtering by step-id is not supported in get calls, ignoring filter.'
     );
-    return;
   }
-  const step = await world.steps.get(runId, stepId);
+  const step = await world.steps.get(opts.runId, stepId);
   const stepWithHydratedIO = hydrateStepIO(step);
   if (opts.json) {
     showJson(stepWithHydratedIO);
@@ -385,22 +363,34 @@ export const listStreams = async (
   const steps: Step[] = [];
   const runs: WorkflowRun[] = [];
   if (opts.stepId) {
-    // TODO: Can only implement this once the World interface and backends are
-    // updated to allow fetching a step directly (https://github.com/vercel/workflow-server/pull/31/)
-    // const step = await world.steps.get(opts.stepId);
-    // steps.push(step);
-    logWarn('Listing streams by step-id is not supported yet. Coming soon.');
-    return;
+    const step = await world.steps.get(undefined, opts.stepId);
+    steps.push(step);
   } else if (opts.runId) {
     const run = await world.runs.get(opts.runId);
     runs.push(run);
-    const runsSteps = await world.steps.list({ runId: opts.runId });
+    const runsSteps = await world.steps.list({
+      runId: opts.runId,
+      pagination: opts.cursor ? { cursor: opts.cursor } : undefined,
+    });
     runsSteps.data.forEach((step: Step) => steps.push(step));
+    logInfo(getCursorHint(runsSteps));
   } else {
-    logError(
-      'No run-id or step-id provided. At least one filter is required to list streams.'
+    logWarn(
+      'No run-id or step-id provided. Listing streams for latest run instead.',
+      'Use --run=<run-id> or --step=<step-id> to filter streams by run or step.'
     );
-    return;
+    const run = await world.runs.list({ pagination: { limit: 1 } });
+    if (!run.data.length) {
+      logWarn('No runs found.');
+      return;
+    }
+    runs.push(run.data[0]);
+    const runsSteps = await world.steps.list({
+      runId: runs[0].runId,
+      pagination: opts.cursor ? { cursor: opts.cursor } : undefined,
+    });
+    runsSteps.data.forEach((step: Step) => steps.push(step));
+    logInfo(getCursorHint(runsSteps));
   }
 
   const runIds = runs.map((item) => item.runId);
@@ -411,44 +401,56 @@ export const listStreams = async (
   const runsWithHydratedIO = runs.map((run) => hydrateWorkflowRunIO(run));
   const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
 
-  // Now we need to find all stubbed stream IDs for the runs and steps
-  const matchingStreams: {
-    runId?: string;
-    stepId?: string;
-    streamId: string;
-  }[] = [];
-  for (const key of ['input', 'output'] as (keyof Step)[]) {
-    for (const run of runsWithHydratedIO) {
-      const value = run[key as keyof WorkflowRun];
-      if (!value) continue;
-      const streamIds = getStreamIdsFromHydratedObject(value);
-      for (const streamId of streamIds) {
-        matchingStreams.push({
-          runId: run.runId,
-          stepId: '/',
-          streamId,
-        });
-      }
-    }
-    for (const step of stepsWithHydratedIO) {
-      const value = step[key as keyof Step];
-      if (!value) continue;
-      const streamIds = getStreamIdsFromHydratedObject(value);
-      for (const streamId of streamIds) {
-        matchingStreams.push({
-          stepId: step.stepId,
-          runId: step.runId,
-          streamId,
-        });
-      }
-    }
-  }
+  const matchingStreams = [
+    ...runsWithHydratedIO,
+    ...stepsWithHydratedIO,
+  ].flatMap((item) =>
+    findAllStreamIdsForObjectWithIO({
+      input: item.input,
+      output: item.output,
+      runId: item.runId,
+      stepId: 'stepId' in item ? item.stepId : undefined,
+    })
+  );
 
   if (opts.json) {
     showJson(matchingStreams);
     return;
   }
   logPlain(showTable(matchingStreams, ['runId', 'stepId', 'streamId']));
+};
+
+const findAllStreamIdsForObjectWithIO = (obj: {
+  input: any;
+  output: any;
+  runId?: string;
+  stepId?: string;
+}): {
+  runId?: string;
+  stepId?: string;
+  streamId: string;
+}[] => {
+  const matchingStreams: {
+    runId?: string;
+    stepId?: string;
+    streamId: string;
+  }[] = [];
+  const objectKeys = ['input', 'output'] as (keyof typeof obj)[];
+  for (const key of objectKeys) {
+    for (const item of obj[key]) {
+      const value = item[key];
+      if (!value) continue;
+      const streamIds = getStreamIdsFromHydratedObject(value);
+      for (const streamId of streamIds) {
+        matchingStreams.push({
+          runId: item.runId,
+          stepId: item.stepId || '/',
+          streamId,
+        });
+      }
+    }
+  }
+  return matchingStreams;
 };
 
 const getStreamIdsFromHydratedObject = (io: any): string[] => {
@@ -481,8 +483,6 @@ export const listEvents = async (
   }
   const runsIds = opts.runId ? [opts.runId] : await getRecentRunIds(world);
   logDebug(`Fetching events for runs: ${runsIds.join(', ')}`);
-  // TODO: For some reason, listing events for just a single runId is not working,
-  // the call to world.events.list() returns an empty array.
   const events = await Promise.all(
     runsIds.map((runId) => world.events.list({ runId }))
   );
@@ -492,7 +492,4 @@ export const listEvents = async (
     return;
   }
   logPlain(showTable(allEvents, EVENT_LISTED_PROPS));
-  if (events[0]) {
-    showCursorInfo(events[0]);
-  }
 };

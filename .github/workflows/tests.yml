@@ -95,8 +95,9 @@ jobs:
           DEPLOYMENT_URL: ${{ steps.waitForDeployment.outputs.deployment-url }}
           APP_NAME: ${{ matrix.app.name }}
           WORKFLOW_AUTH_TOKEN: ${{ secrets.VERCEL_LABS_TOKEN }}
-          TEAM_ID: "team_nO2mCG4W8IxPIeKoSsqwAxxB"
-          PROJECT_ID: ${{ matrix.app.project-id }}
+          VERCEL_TEAM: "team_nO2mCG4W8IxPIeKoSsqwAxxB"
+          VERCEL_PROJECT: ${{ matrix.app.project-id }}
+          VERCEL_ENV: ${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }}
 
   getTestMatrix:
     name: Get Test Matrix

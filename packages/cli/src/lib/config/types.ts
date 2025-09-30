@@ -10,6 +10,7 @@ export type InspectCLIOptions = {
   watch?: boolean;
   runId?: string;
   stepId?: string;
+  cursor?: string;
 };
 
 export interface WorkflowConfig {

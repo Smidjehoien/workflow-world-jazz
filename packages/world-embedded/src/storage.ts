@@ -12,12 +12,27 @@ import {
 } from '@vercel/workflow-world';
 import {
   deleteJSON,
+  listJSONFiles,
   paginatedFileSystemQuery,
   readJSON,
   ulidToDate,
   writeJSON,
 } from './fs.js';
 import { generateLexiProcessTime } from './lexi-process-time.js';
+
+const getObjectCreatedAt =
+  (idPrefix: string) =>
+  (filename: string): Date | null => {
+    const replaceRegex = new RegExp(`^${idPrefix}_`, 'g');
+    const dashIndex = filename.indexOf('-');
+    if (dashIndex === -1) {
+      const ulid = filename.replace(replaceRegex, '');
+      return ulidToDate(ulid);
+    }
+    const id = filename.substring(dashIndex + 1).replace(/\.json$/, '');
+    const ulid = id.replace(replaceRegex, '');
+    return ulidToDate(ulid);
+  };
 
 export function createStorage(basedir: string): Storage {
   return {
@@ -97,11 +112,7 @@ export function createStorage(basedir: string): Storage {
           sortOrder: 'desc',
           limit: params?.pagination?.limit,
           cursor: params?.pagination?.cursor,
-          getCreatedAt: (file) => {
-            const runId = file.split('.')[0];
-            const ulid = runId?.replace(/^wrun_/, '');
-            return ulidToDate(ulid);
-          },
+          getCreatedAt: getObjectCreatedAt('wrun'),
         });
       },
 
@@ -145,7 +156,17 @@ export function createStorage(basedir: string): Storage {
         return result;
       },
 
-      async get(runId, stepId) {
+      async get(runId: string | undefined, stepId: string): Promise<Step> {
+        if (!runId) {
+          const fileIds = await listJSONFiles(path.join(basedir, 'steps'));
+          const fileId = fileIds.find((fileId) =>
+            fileId.endsWith(`-${stepId}`)
+          );
+          if (!fileId) {
+            throw new Error(`Step ${stepId} not found`);
+          }
+          runId = fileId.split('-')[0];
+        }
         const compositeKey = `${runId}-${stepId}`;
         const stepPath = path.join(basedir, 'steps', `${compositeKey}.json`);
         const step = await readJSON(stepPath, StepSchema);
@@ -189,19 +210,7 @@ export function createStorage(basedir: string): Storage {
           sortOrder: 'desc',
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
-          getCreatedAt: (filename) => {
-            // Extract stepId from filename format: ${runId}-${stepId}.json
-            // Since runId is a ULID and doesn't contain dashes, we can split and take everything after first dash
-            const dashIndex = filename.indexOf('-');
-            if (dashIndex === -1) return null;
-
-            const stepId = filename
-              .substring(dashIndex + 1)
-              .replace(/\.json$/, '');
-            // Remove step_ prefix to get the ULID portion
-            const ulid = stepId.replace(/^step_/, '');
-            return ulidToDate(ulid);
-          },
+          getCreatedAt: getObjectCreatedAt('step'),
         });
       },
     },
@@ -235,11 +244,7 @@ export function createStorage(basedir: string): Storage {
           sortOrder: 'asc', // Events in chronological order (oldest first)
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
-          getCreatedAt: (filename) => {
-            const eventId = filename.split('-')[1]?.split('.')[0];
-            const ulid = eventId?.replace(/^evnt_/, '');
-            return ulidToDate(ulid);
-          },
+          getCreatedAt: getObjectCreatedAt('evnt'),
         });
       },
     },

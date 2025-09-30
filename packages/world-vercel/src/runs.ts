@@ -1,11 +1,11 @@
 import {
-  PaginatedResponseSchema,
-  WorkflowRunSchema,
   type CreateWorkflowRunRequest,
   type ListWorkflowRunsParams,
   type PaginatedResponse,
+  PaginatedResponseSchema,
   type UpdateWorkflowRunRequest,
   type WorkflowRun,
+  WorkflowRunSchema,
 } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
@@ -30,7 +30,7 @@ export async function listWorkflowRuns(
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
 
   const queryString = searchParams.toString();
-  const endpoint = `/api/runs${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/runs${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -45,7 +45,7 @@ export async function createWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: '/api/runs/create',
+    endpoint: '/runs/create',
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -60,7 +60,7 @@ export async function getWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/api/runs/${id}`,
+    endpoint: `/runs/${id}`,
     options: { method: 'GET' },
     config,
     schema: WorkflowRunSchema,
@@ -73,7 +73,7 @@ export async function updateWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/api/runs/${id}`,
+    endpoint: `/runs/${id}`,
     options: {
       method: 'PUT',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -88,7 +88,7 @@ export async function cancelWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/api/runs/${id}/cancel`,
+    endpoint: `/runs/${id}/cancel`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,
@@ -100,7 +100,7 @@ export async function pauseWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/api/runs/${id}/pause`,
+    endpoint: `/runs/${id}/pause`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,
@@ -112,7 +112,7 @@ export async function resumeWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/api/runs/${id}/resume`,
+    endpoint: `/runs/${id}/resume`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,

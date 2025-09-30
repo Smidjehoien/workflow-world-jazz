@@ -1,17 +1,17 @@
-import type { APIConfig } from './utils.js';
-import type { AuthProvider } from '@vercel/workflow-world';
 import {
-  AuthInfoSchema,
-  HealthCheckResponseSchema,
   type AuthInfo,
+  AuthInfoSchema,
+  type AuthProvider,
   type HealthCheckResponse,
+  HealthCheckResponseSchema,
 } from '@vercel/workflow-world';
+import type { APIConfig } from './utils.js';
 import { makeRequest } from './utils.js';
 
 // Functions
 export async function getAuthInfo(config?: APIConfig): Promise<AuthInfo> {
   return makeRequest({
-    endpoint: '/api',
+    endpoint: '',
     options: { method: 'GET' },
     config,
     schema: AuthInfoSchema,
@@ -22,7 +22,7 @@ export async function checkHealth(
   config?: APIConfig
 ): Promise<HealthCheckResponse> {
   return makeRequest({
-    endpoint: '/api/health',
+    endpoint: '/health',
     options: { method: 'GET' },
     config,
     schema: HealthCheckResponseSchema,

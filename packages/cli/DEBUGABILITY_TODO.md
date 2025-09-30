@@ -44,6 +44,9 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [ ] Add `--follow`/`-f` flags for run (event stream)
 - [ ] Ensure following a stream live streams to console until stream close
   - Should also work with JSON mode (JSONL / NDJSON)
+- [ ] More stream serialization code into
+- [ ] Detect environment (vercel hosted vs. vercel non-hosted) and set proxy URL accordingly
+- [ ] Add unit tests on workflow-server for checking `remoteRefBehavior: resolve` on /runs return data
 - [ ] Ensure JSON output has no other polluting output and works well with e.g. `jq`
 - [x] Ensure embedded world uses ID prefixes (https://github.com/vercel/workflow/pull/223) 
 - [ ] Add simple pagination support for inspect command

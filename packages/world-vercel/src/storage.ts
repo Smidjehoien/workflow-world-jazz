@@ -1,5 +1,4 @@
 import type { AuthProvider, Storage } from '@vercel/workflow-world';
-import type { APIConfig } from './utils.js';
 import { checkHealth, getAuthInfo } from './auth.js';
 import { createWorkflowRunEvent, getWorkflowRunEvents } from './events.js';
 import {
@@ -17,6 +16,7 @@ import {
   listWorkflowRunSteps,
   updateStep,
 } from './steps.js';
+import type { APIConfig } from './utils.js';
 import {
   createWebhook,
   disposeWebhook,

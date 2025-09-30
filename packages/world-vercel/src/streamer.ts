@@ -3,11 +3,10 @@ import type { APIConfig } from './utils.js';
 import { DEFAULT_CONFIG } from './utils.js';
 
 export function createStreamer(config?: APIConfig): Streamer {
-  const getStreamUrl = (name: string) =>
-    new URL(
-      `/api/stream/${encodeURIComponent(name)}`,
-      config?.baseUrl ?? DEFAULT_CONFIG.baseUrl
-    );
+  const getStreamUrl = (name: string) => {
+    const baseUrl = config?.baseUrl ?? DEFAULT_CONFIG.baseUrl;
+    return new URL(`${baseUrl}/stream/${encodeURIComponent(name)}`);
+  };
 
   return {
     async writeToStream(name, chunk) {

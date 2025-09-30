@@ -1,10 +1,10 @@
 import {
-  EventSchema,
-  PaginatedResponseSchema,
   type CreateEventRequest,
   type Event,
+  EventSchema,
   type ListEventsParams,
   type PaginatedResponse,
+  PaginatedResponseSchema,
 } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
 import { dateToStringReplacer, makeRequest } from './utils.js';
@@ -22,7 +22,7 @@ export async function getWorkflowRunEvents(
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
 
   const queryString = searchParams.toString();
-  const endpoint = `/api/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -38,7 +38,7 @@ export async function createWorkflowRunEvent(
   config?: APIConfig
 ): Promise<Event> {
   return makeRequest({
-    endpoint: `/api/runs/${id}/events`,
+    endpoint: `/runs/${id}/events`,
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),

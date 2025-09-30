@@ -78,27 +78,21 @@ describe.concurrent('e2e', () => {
     expect(returnValue).toBe(133);
 
     const cliResult = await cliInspect(`runs ${run.runId} --json`);
-
-    if (!isLocalDeployment()) {
-      // While we're waiting to be unblocked on Vercel Prod API auth for
-      // workflow CLI, we're assuming this will error.
-      // TODO: This should be a 403 response - we're not finding .vercel
-      // folder correctly.
-      expect(cliResult.stderr).toContain(
-        `WorkflowAPIError: GET /api/runs/${run.runId} -> HTTP 404: Not Found`
-      );
-      return;
-    }
-
-    // remove [debug] lines
     const json = JSON.parse(cliResult.stdout.replace(/\[[\w]{1,}\].*/g, ''));
+    const workflowName = `${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`;
     expect(json).toMatchObject({
       runId: run.runId,
-      workflowName: `workflow-example-${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`,
+      workflowName: expect.any(String),
       status: 'completed',
       input: [123],
       output: 133,
     });
+    // In local vs. vercel backends, the workflow name is different, so we check for either,
+    // since this test runs against both.
+    expect(json.workflowName).toBeOneOf([
+      `workflow-example-${workflowName}`,
+      `workflow-${workflowName}`,
+    ]);
   });
 
   test('promiseAllWorkflow', { timeout: 60_000 }, async () => {

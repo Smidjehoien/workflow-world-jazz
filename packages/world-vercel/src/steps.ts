@@ -1,10 +1,10 @@
 import {
-  PaginatedResponseSchema,
-  StepSchema,
   type CreateStepRequest,
   type ListWorkflowRunStepsParams,
   type PaginatedResponse,
+  PaginatedResponseSchema,
   type Step,
+  StepSchema,
   type UpdateStepRequest,
 } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
@@ -22,7 +22,7 @@ export async function listWorkflowRunSteps(
     searchParams.set('limit', params.pagination.limit.toString());
 
   const queryString = searchParams.toString();
-  const endpoint = `/api/runs/${params.runId}/steps${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/runs/${params.runId}/steps${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -38,7 +38,7 @@ export async function createStep(
   config?: APIConfig
 ): Promise<Step> {
   return makeRequest({
-    endpoint: `/api/runs/${runId}/steps`,
+    endpoint: `/runs/${runId}/steps`,
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -55,7 +55,7 @@ export async function updateStep(
   config?: APIConfig
 ): Promise<Step> {
   return makeRequest({
-    endpoint: `/api/runs/${runId}/steps/${stepId}`,
+    endpoint: `/runs/${runId}/steps/${stepId}`,
     options: {
       method: 'PUT',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -66,12 +66,15 @@ export async function updateStep(
 }
 
 export async function getStep(
-  runId: string,
+  runId: string | undefined,
   stepId: string,
   config?: APIConfig
 ): Promise<Step> {
+  const endpoint = runId
+    ? `/runs/${runId}/steps/${stepId}`
+    : `/steps/${stepId}`;
   return makeRequest({
-    endpoint: `/api/runs/${runId}/steps/${stepId}`,
+    endpoint,
     options: { method: 'GET' },
     config,
     schema: StepSchema,

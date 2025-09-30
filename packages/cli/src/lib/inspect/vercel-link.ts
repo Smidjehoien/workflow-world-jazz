@@ -69,7 +69,14 @@ export const VERCEL_DIR_FALLBACK = '.now';
 export const VERCEL_DIR_PROJECT = 'project.json';
 export const VERCEL_DIR_REPO = 'repo.json';
 
-const isDirectory = (dir: string) => statSync(dir).isDirectory();
+const isDirectory = (dir: string) => {
+  try {
+    return statSync(dir).isDirectory();
+  } catch (err) {
+    logDebug(`${dir} is not a directory: ${err}`);
+    return false;
+  }
+};
 
 /**
  * A type guard for `try...catch` errors.
@@ -339,17 +346,16 @@ export async function getRepoLink(cwd: string): Promise<RepoLink | undefined> {
   const rootPath = await findRepoRoot(cwd, './');
   if (!rootPath) return undefined;
 
-  // Read the `repo.json`, if this repo has already been linked
   const repoConfigPath = join(rootPath, VERCEL_DIR, VERCEL_DIR_REPO);
-  const file = await readFile(repoConfigPath, 'utf8');
-  let repoConfig: RepoProjectsConfig;
+
   try {
-    repoConfig = JSON.parse(file);
+    // Read the `repo.json`, if this repo has already been linked
+    const file = await readFile(repoConfigPath, 'utf8');
+    const repoConfig = JSON.parse(file);
+    return { rootPath, repoConfig, repoConfigPath };
   } catch (err) {
-    if (isOneOfErrNoExceptions(err, ['ENOENT'])) throw err;
+    // if (isOneOfErrNoExceptions(err, ['ENOENT'])) throw err;
     console.error(`Failed to parse ${repoConfigPath}: ${err}`);
     return undefined;
   }
-
-  return { rootPath, repoConfig, repoConfigPath };
 }

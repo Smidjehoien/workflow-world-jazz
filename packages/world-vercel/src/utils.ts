@@ -16,7 +16,7 @@ export function dateToStringReplacer(_key: string, value: unknown): unknown {
 }
 
 export const DEFAULT_CONFIG: APIConfig = {
-  baseUrl: process.env.WORKFLOW_API_URL || 'https://workflow-server.vercel.sh',
+  baseUrl: 'https://workflow-server.vercel.sh/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -53,6 +53,14 @@ export async function makeRequest<T>({
 
   if (!response.ok) {
     const errorData = (await response.json().catch(() => ({}))) as any;
+    if (process.env.DEBUG === '1') {
+      const stringifiedHeaders = Array.from(headers.entries())
+        .map(([key, value]: [string, string]) => `-H "${key}: ${value}"`)
+        .join(' ');
+      console.error(
+        `Failed to fetch, reproduce with:\ncurl -X ${options.method} ${stringifiedHeaders} "${url}"`
+      );
+    }
     throw new WorkflowAPIError(
       errorData.message ||
         `${options.method ?? 'GET'} ${endpoint} -> HTTP ${response.status}: ${response.statusText}`,

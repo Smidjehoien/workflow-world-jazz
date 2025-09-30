@@ -1,10 +1,11 @@
 import { Args, Flags } from '@oclif/core';
+import chalk from 'chalk';
 import { BaseCommand } from '../base.js';
 import {
   LOGGING_CONFIG,
-  logWarn,
   setJsonMode,
   setVerboseMode,
+  showBox,
 } from '../lib/config/log.js';
 import {
   listEvents,
@@ -96,6 +97,13 @@ export default class Inspect extends BaseCommand {
       helpGroup: 'Output',
       helpLabel: '-j, --json',
     }),
+    cursor: Flags.string({
+      description: 'pagination cursor for list commands',
+      required: false,
+      helpGroup: 'Filtering',
+      helpLabel: '--cursor',
+      helpValue: 'CURSOR',
+    }),
     backend: Flags.string({
       description: 'backend to inspect',
       required: false,
@@ -107,19 +115,6 @@ export default class Inspect extends BaseCommand {
       helpLabel: '-b, --backend',
       helpValue: ['vercel', 'embedded', 'custom'],
       defaultHelp: 'embedded',
-    }),
-    env: Flags.string({
-      description: 'environment to inspect',
-      required: false,
-      options: ['production', 'preview'],
-      default: 'production',
-      char: 'e',
-      dependsOn: ['backend'],
-      env: 'WORKFLOW_ENV',
-      helpGroup: 'Target',
-      helpLabel: '-e, --env',
-      helpValue: ['production', 'preview'],
-      defaultHelp: 'production',
     }),
     authToken: Flags.string({
       description:
@@ -152,15 +147,18 @@ export default class Inspect extends BaseCommand {
       helpLabel: '--team',
       helpValue: 'TEAM',
     }),
-    hostUrl: Flags.string({
-      description: 'The host URL that the target backend is running on',
+    env: Flags.string({
+      description: 'If backend is vercel, the vercel environment to use',
       required: false,
+      options: ['production', 'preview'],
+      default: 'production',
+      char: 'e',
       dependsOn: ['backend'],
-      env: 'WORKFLOW_HOST_URL',
-      char: 'h',
+      env: 'VERCEL_ENV',
       helpGroup: 'Target',
-      helpLabel: '-h, --hostUrl',
-      helpValue: 'URL',
+      helpLabel: '-e, --env',
+      helpValue: ['production', 'preview'],
+      defaultHelp: 'production',
     }),
   } as const;
 
@@ -169,13 +167,13 @@ export default class Inspect extends BaseCommand {
     setJsonMode(Boolean(flags.json));
     setVerboseMode(Boolean(flags.verbose));
 
-    logWarn('===================================================');
-    logWarn('Workflow CLI is experimental, commands might change');
-    logWarn('===================================================');
-
-    if (flags.env !== 'production') {
-      throw new Error('Preview environments are not supported yet');
-    }
+    const version = await this.config.version;
+    showBox(
+      'green',
+      `        Workflow CLI v${version}        `,
+      'Docs at https://workflow-docs.vercel.sh/',
+      chalk.yellow('This is an alpha release - commands might change')
+    );
 
     const world = await getWorld({
       world: flags.backend as 'embedded' | 'vercel',
@@ -183,33 +181,13 @@ export default class Inspect extends BaseCommand {
       authToken: flags.authToken,
       projectId: flags.project,
       teamId: flags.team,
-      hostUrl: flags.hostUrl,
     });
-
-    const normalizeResource = (
-      value?: string
-    ): 'run' | 'step' | 'stream' | 'event' | undefined => {
-      if (!value) return undefined;
-      const v = value.toLowerCase();
-      if (v.startsWith('r')) return 'run';
-      if (v.startsWith('e')) return 'event';
-      if (v.startsWith('str')) return 'stream';
-      if (v.startsWith('s')) return 'step';
-      return undefined;
-    };
+    process.env.DEBUG = flags.verbose ? '1' : '0';
 
     const resource = normalizeResource(args.resource);
     if (!resource) {
-      this.logInfo(
-        'You must specify what to inspect: runs(s), step(s), stream(s), or event(s).\n'
-      );
-      this.logInfo('Examples:');
-      for (const ex of Inspect.examples) this.logInfo(`  ${ex}`);
-      this.logInfo('');
-      this.logInfo('Aliases:');
-      this.logInfo("- Command: 'inspect' can be shortened to 'i'");
-      this.logInfo(
-        '- Resources: plural forms are accepted: runs, steps, streams'
+      this.logError(
+        `Unknown resource "${args.resource}": must be one of: run(s), step(s), stream(s), event(s)`
       );
       return;
     }
@@ -218,35 +196,49 @@ export default class Inspect extends BaseCommand {
 
     if (resource === 'run') {
       if (id) {
-        await showRun(world, id, flags);
-      } else {
-        await listRuns(world, flags);
+        return await showRun(world, id, flags);
       }
-    } else if (resource === 'step') {
+      return await listRuns(world, flags);
+    }
+
+    if (resource === 'step') {
       if (id) {
-        await showStep(world, id, flags);
-      } else {
-        await listSteps(world, flags);
+        return await showStep(world, id, flags);
       }
-    } else if (resource === 'stream') {
+      return await listSteps(world, flags);
+    }
+
+    if (resource === 'stream') {
       if (id) {
-        await showStream(world, id, flags);
-      } else {
-        await listStreams(world, flags);
+        return await showStream(world, id, flags);
       }
-    } else if (resource === 'event') {
+      return await listStreams(world, flags);
+    }
+
+    if (resource === 'event') {
       if (id) {
         this.logError(
           'Event-ID is not supported for events. Filter by run-id or step-id instead. Usage: `wf i events --runId=<id>`'
         );
         return;
       }
-      await listEvents(world, flags);
-    } else {
-      this.logError(
-        `Unknown resource: ${resource}. Usage: ${Inspect.examples.join('\n')}`
-      );
-      return;
+      return await listEvents(world, flags);
     }
+
+    this.logError(
+      `Unknown resource: ${resource}. Usage: ${Inspect.examples.join('\n')}`
+    );
   }
+}
+
+function normalizeResource(
+  value?: string
+): 'run' | 'step' | 'stream' | 'event' | undefined {
+  if (!value) return undefined;
+  const v = value.toLowerCase();
+  if (v.startsWith('r')) return 'run';
+  if (v.startsWith('e')) return 'event';
+  if (v.startsWith('str')) return 'stream';
+  if (v.startsWith('s')) return 'step';
+  return undefined;
 }
