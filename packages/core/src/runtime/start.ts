@@ -14,35 +14,43 @@ export interface StartOptions {
 }
 
 /**
+ * Represents an imported workflow function.
+ */
+export type WorkflowFunction<TArgs extends unknown[], TResult> = (
+  ...args: TArgs
+) => Promise<TResult>;
+
+/**
+ * Represents the generated metadata of a workflow function.
+ */
+export type WorkflowMetadata = { workflowId: string };
+
+/**
  * Starts a workflow run.
  *
- * @param workflowFunction - The imported workflow function to start.
+ * @param workflow - The imported workflow function to start.
  * @param args - The arguments to pass to the workflow (optional).
  * @param options - The options for the workflow run (optional).
  * @returns The unique run ID for the newly started workflow invocation.
  */
 export function start<TArgs extends unknown[], TResult>(
-  workflowFunction:
-    | ((...args: TArgs) => Promise<TResult>)
-    | { workflowId: string },
+  workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
   args: TArgs,
   options?: StartOptions
 ): Promise<WorkflowRun>;
+
 export function start<TArgs extends unknown[], TResult>(
-  workflowFunction:
-    | ((...args: TArgs) => Promise<TResult>)
-    | { workflowId: string },
+  workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
   options?: StartOptions
 ): Promise<WorkflowRun>;
+
 export async function start<TArgs extends unknown[], TResult>(
-  workflowFunction:
-    | ((...args: TArgs) => Promise<TResult>)
-    | { workflowId: string },
+  workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
   argsOrOptions?: TArgs | StartOptions,
   options?: StartOptions
 ) {
   // @ts-expect-error this field is added by our client transform
-  const workflowName = workflowFunction.workflowId;
+  const workflowName = workflow.workflowId;
 
   if (!workflowName) {
     throw new Error(
