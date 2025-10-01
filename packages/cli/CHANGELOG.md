@@ -1,5 +1,34 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.33
+
+### Patch Changes
+
+- a946b38: Remove "workflow:step" export condition
+- 72fb2c1: CLI: allow specifying team/project IDs for vercel bcakend, and infer them if not specified. Rename --target option to --backend.
+- 5fc83a5: CLI: support inspect commands against vercel backend, add login command
+- 7c0f71e: CLI: Add json mode
+- 345836a: Allow listing steps/streams/events without a run ID, improve table formatting, show serialized input/output
+- f2168a6: Fix vercel proxy paths, add pagination
+- Updated dependencies [a946b38]
+- Updated dependencies [3ee71fa]
+- Updated dependencies [a61eaad]
+- Updated dependencies [07b3283]
+- Updated dependencies [7c0f71e]
+- Updated dependencies [1688890]
+- Updated dependencies [d66070f]
+- Updated dependencies [d808404]
+- Updated dependencies [eb76cb3]
+- Updated dependencies [d338144]
+- Updated dependencies [345836a]
+- Updated dependencies [f2168a6]
+- Updated dependencies [cd4a41c]
+  - @vercel/workflow-core@0.0.1-alpha.24
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.5
+  - @vercel/workflow-world-embedded@0.0.1-alpha.2
+  - @vercel/workflow-world-vercel@0.0.1-alpha.2
+  - @vercel/workflow-world@0.0.1-alpha.2
+
 ## 0.0.1-alpha.32
 
 ### Patch Changes

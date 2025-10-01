@@ -1,5 +1,25 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.24
+
+### Patch Changes
+
+- a946b38: Remove "workflow:step" export condition
+- 3ee71fa: Export fetch directly from workflow packages
+- a61eaad: Fix `@link` docs imports
+- 07b3283: standardize prefixes in embedded world
+- 7c0f71e: CLI: Add json mode
+- d66070f: Rename `StepsNotRunError` to `WorkflowSuspension`
+- d808404: Fix export for get-webhook
+- eb76cb3: Remove workflow context properties from `getStepContext()` to use `getWorkflowContext()` instead
+- 345836a: Allow listing steps/streams/events without a run ID, improve table formatting, show serialized input/output
+- f2168a6: Fix vercel proxy paths, add pagination
+- cd4a41c: extract "world" interface packages
+- Updated dependencies [cd4a41c]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.2
+  - @vercel/workflow-world-vercel@0.0.1-alpha.2
+  - @vercel/workflow-world@0.0.1-alpha.2
+
 ## 0.0.1-alpha.23
 
 ### Patch Changes
