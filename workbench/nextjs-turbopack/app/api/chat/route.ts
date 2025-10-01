@@ -17,18 +17,14 @@ import { chat } from '@/workflows/chat';
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const workflowHandle = await start(chat, [messages]);
-
-  // TODO: To avoid the cast, use the `start()` function instead of
-  // calling the `chat()` function directly?
-  const workflowRunId = (workflowHandle as any).runId;
+  const run = await start(chat, [messages]);
 
   return createUIMessageStreamResponse({
-    stream: getWorkflowReadableStream<UIMessageChunk>(workflowRunId),
+    stream: getWorkflowReadableStream<UIMessageChunk>(run.runId),
     headers: {
       // The workflow run ID is stored into `localStorage` on the client side,
       // which influences the `resume` flag in the `useChat` hook.
-      'x-workflow-run-id': workflowRunId,
+      'x-workflow-run-id': run.runId,
     },
   });
 }
