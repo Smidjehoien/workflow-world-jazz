@@ -10,10 +10,22 @@ Retrieves the workflow run metadata and status information for a given run ID. T
 
 Use this function when you need to check workflow status, get timing information, or access workflow metadata without blocking on workflow completion.
 
-## Import
+```typescript lineNumbers
+import { NextResponse } from 'next/server';
+import { getWorkflowRun, start } from '@vercel/workflow-core/runtime';
+import { myWorkflow } from '@/workflows/my-workflow';
 
-```typescript
-import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+export async function GET(_: Request) {
+  const { runId } = await start(myWorkflow);
+
+  try {
+    const run = await getWorkflowRun(runId); // [!code highlight]
+    return NextResponse.json(run);
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 ```
 
 ## API Signature
@@ -66,9 +78,9 @@ showSections={['throws']}
 
 ## Good to Know
 
-- Returns immediately without waiting for workflow completion
-- Requires a valid `deploymentId` to be available in the environment
-- The `input` and `output` fields contain serialized/hydrated values
+- Returns immediately without waiting for workflow completion.
+- Requires a valid `deploymentId` to be available in the environment.
+- The `input` and `output` fields contain serialized/hydrated values.
 
 ## Examples
 
@@ -109,6 +121,6 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID
-- [`getWorkflowReturnValue()`](/docs/api-reference/vercel-workflow-core/get-workflow-return-value) - Wait for workflow completion and get the final result
-- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output from the workflow
+- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID.
+- [`getWorkflowReturnValue()`](/docs/api-reference/vercel-workflow-core/get-workflow-return-value) - Wait for workflow completion and get the final result.
+- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output from the workflow.

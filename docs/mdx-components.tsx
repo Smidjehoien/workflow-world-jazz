@@ -1,4 +1,3 @@
-import { ExternalLinkIcon } from 'lucide-react';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import BaseUrl from '@/components/base-url';
@@ -43,15 +42,14 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
           <Link
             {...props}
             className={cn(
-              'no-underline text-primary-foreground',
-              className,
-              isExternal && 'inline-flex items-center gap-1'
+              'no-underline text-primary-foreground font-normal',
+              className
             )}
           >
             {props.children}
             {isExternal && (
               <svg
-                className="size-3"
+                className="size-3 inline-block align-middle ml-1"
                 data-testid="geist-icon"
                 height="16"
                 strokeLinejoin="round"

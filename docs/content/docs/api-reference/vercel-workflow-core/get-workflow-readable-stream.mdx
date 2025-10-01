@@ -10,10 +10,27 @@ Retrieves the workflow run's default readable stream, which reads chunks written
 
 You should use this function to read real-time streaming output from workflows in your API routes, server components, or other runtime environments.
 
-## Import
+<Callout type="warn">
+This function can only be called outside of workflow functions (in runtime environments, API routes, etc.)
+</Callout>
 
-```typescript
+```typescript lineNumbers
 import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const runId = url.searchParams.get('runId');
+
+  if (!runId) {
+    return new Response('No runId provided', { status: 400 });
+  }
+
+  const stream = getWorkflowReadableStream(runId); // [!code highlight]
+
+  return new Response(stream, {
+      headers: { 'Content-Type': 'application/octet-stream' }
+  });
+}
 ```
 
 ## API Signature
@@ -54,9 +71,8 @@ Returns a `ReadableStream<R>` where `R` is the type of data you plan to read fro
 
 ## Good to Know
 
-- This function can **only be called outside of workflow functions** (in runtime environments, API routes, etc.)
-- The `runId` must correspond to an active or completed workflow that uses [`getWorkflowWritableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-writable-stream)
-- Use `startIndex` to resume reading from a specific point in the stream
+- The `runId` must correspond to an active or completed workflow that uses [`getWorkflowWritableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-writable-stream).
+- Use `startIndex` to resume reading from a specific point in the stream.
 
 ## Examples
 
@@ -133,7 +149,7 @@ export async function POST(req: Request) {
     stream: getWorkflowReadableStream<UIMessageChunk>(workflowRunId), // [!code highlight]
     headers: {
       // Return the run ID for client-side tracking
-      'x-workflow-run-id': workflowRunId, // [!code highlight]
+      'x-workflow-run-id': workflowRunId,
     },
   });
 }
@@ -174,4 +190,4 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- [`getWorkflowWritableStream()`](/docs/api-reference/get-workflow-writable-stream) - Used inside workflows to write data that this function reads
+- [`getWorkflowWritableStream()`](/docs/api-reference/get-workflow-writable-stream) - Used inside workflows to write data that this function reads.

@@ -14,10 +14,13 @@ This is useful when you want to resume a workflow after some duration or date.
 `sleep` is a *special* type of step function provided and should be called directly inside workflow functions.
 </Callout>
 
-## Import
-
-```typescript
+```typescript lineNumbers
 import { sleep } from "@vercel/workflow-core"
+
+async function testWorkflow() {
+    "use workflow"
+    await sleep("10s") // [!code highlight]
+}
 ```
 
 ## API Signature
@@ -35,22 +38,28 @@ showSections={['parameters']}
 
 ## Examples
 
-Here's a simple example of how you can use `sleep` inside your workflow.
+### Sleeping With a Duration
+
+You can specify a duration for `sleep` to suspend the workflow for a fixed amount of time.
 
 ```typescript lineNumbers
-import { sleep } from "@vercel/workflow-core" // [!code highlight]
+import { sleep } from "@vercel/workflow-core"
 
 async function testWorkflow() {
     "use workflow"
-
-    // Sleeping with a duration
     await sleep("1d") // [!code highlight]
-    // Workflow resumes after a day
-
-    // Sleeping until an end date
-    await sleep(new Date(Date.now() + 10_000)) // [!code highlight]
-    // Workflow resumes after 10 seconds
 }
 ```
 
-We call `sleep("1d")` which suspends the workflow for 1 day. While the workflow is suspended, it doesn't use any resources. After a day, the workflow will resume execution at exactly where it left off.
+### Sleeping Until an End Date
+
+You can specify a future `Date` object for `sleep` to suspend the workflow until a specific date.
+
+```typescript lineNumbers
+import { sleep } from "@vercel/workflow-core"
+
+async function testWorkflow() {
+    "use workflow"
+    await sleep(new Date(Date.now() + 10_000)) // [!code highlight]
+}
+```

@@ -17,10 +17,19 @@ You may want to use this function when you need to:
 This function can only be called inside a step function.
 </Callout>
 
-## Import
-
-```typescript
+```typescript lineNumbers
 import { getStepContext } from "@vercel/workflow-core"
+
+async function testWorkflow() {
+    "use workflow"
+    await logStepId()
+}
+
+async function logStepId() {
+    "use step"
+    const ctx = getStepContext() // [!code highlight]
+    console.log(ctx.stepId) // Grab the current step ID
+}
 ```
 
 ## API Signature
@@ -45,23 +54,3 @@ import type { StepContext } from "@vercel/workflow-core";
 export default StepContext;`
 })}
 />
-
-## Examples
-
-Here's a simple example of how you can access the `stepId` inside a step function.
-
-```typescript lineNumbers
-import { getStepContext } from "@vercel/workflow-core" // [!code highlight]
-
-async function testWorkflow() {
-    "use workflow"
-    await logStepId()
-}
-
-async function logStepId() {
-    "use step"
-
-    const ctx = getStepContext() // [!code highlight]
-    console.log(ctx.stepId) // Grab the current step ID // [!code highlight]
-}
-```

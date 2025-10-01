@@ -8,12 +8,24 @@ import { generateDefinition } from "@/lib/tsdoc"
 
 Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using [`getWorkflowReadableStream`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream).
 
-You should use this in your workflows to produce streaming output that can be consumed by clients in real-time.
+Use this function in your workflows to produce streaming output that can be consumed by clients in real-time.
 
-## Import
+<Callout type="warn">
+This function can only be called inside a workflow function (functions with `"use workflow"` directive)
+</Callout>
 
-```typescript
+```typescript lineNumbers
 import { getWorkflowWritableStream } from '@vercel/workflow-core';
+
+export async function myWorkflow() {
+  "use workflow";
+  
+  const writable = getWorkflowWritableStream(); // [!code highlight]
+  const writer = writable.getWriter();
+  
+  await writer.write(new TextEncoder().encode('Hello from workflow!'));
+  await writer.close();
+}
 ```
 
 ## API Signature
@@ -44,11 +56,10 @@ Returns a `WritableStream<W>` where `W` is the type of data you plan to write to
 
 ## Good to Know
 
-- This function can **only be called inside a workflow function** (functions with `"use workflow"` directive)
-- The stream should typically be passed to step functions for writing
-- Always release the writer lock after writing to prevent resource leaks
-- The stream can write binary data (using `TextEncoder`) or structured objects
-- Remember to close the stream when finished to signal completion
+- The stream should typically be passed to step functions for writing.
+- Always release the writer lock after writing to prevent resource leaks.
+- The stream can write binary data (using `TextEncoder`) or structured objects.
+- Remember to close the stream when finished to signal completion.
 
 ## Examples
 
@@ -77,7 +88,7 @@ async function stepWithOutputStream(writable: WritableStream) {
 
   const writer = writable.getWriter();
   // Write binary data using TextEncoder
-  await writer.write(new TextEncoder().encode('Hello, world!')); // [!code highlight]
+  await writer.write(new TextEncoder().encode('Hello, world!'));
   writer.releaseLock();
 }
 
@@ -85,7 +96,7 @@ async function stepCloseOutputStream(writable: WritableStream) {
   "use step";
 
   // Close the stream to signal completion
-  await writable.close(); // [!code highlight]
+  await writable.close();
 }
 ```
 
@@ -159,14 +170,14 @@ async function streamTextStep(writable: WritableStream<UIMessageChunk>) {
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
-    await writer.write(value); // [!code highlight]
+    await writer.write(value);
   }
 
   reader.releaseLock();
 
 
   // Close the stream
-  writer.close(); // [!code highlight]
+  writer.close();
   writer.releaseLock();
 }
 
@@ -176,7 +187,7 @@ async function endStream(writable: WritableStream<UIMessageChunk>) {
   const writer = writable.getWriter();
 
   // Close the stream
-  writer.close(); // [!code highlight]
+  writer.close();
   writer.releaseLock();
 }
 

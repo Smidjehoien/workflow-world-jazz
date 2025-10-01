@@ -10,10 +10,20 @@ Registers a webhook URL that external systems can call to provide data to a runn
 
 This is especially useful for human-in-the-loop scenarios with AI agents or waiting for external events.
 
-## Import
-
-```typescript
+```ts lineNumbers
 import { getWebhook } from "@vercel/workflow-core"
+
+export async function webhookWorkflow() {
+  "use workflow";
+  
+  const webhook = getWebhook();  // [!code highlight]
+
+  await someBackgroundTask({ callbackUrl: webhook.url });
+
+  const req = await webhook; // Wait for webhook to be called
+
+  // Do something with the request
+}
 ```
 
 ## API Signature
@@ -67,7 +77,7 @@ The returned `Webhook` object also implements `AsyncIterable<Request>`, which al
 Here's a simple example of how you can use `getWebhook` inside your workflow.
 
 ```typescript lineNumbers
-import { getWebhook } from "@vercel/workflow-core" // [!code highlight]
+import { getWebhook } from "@vercel/workflow-core"
 
 export async function webhookWorkflow() {
   "use workflow";

@@ -8,6 +8,12 @@ import { generateDefinition } from "@/lib/tsdoc"
 
 Start/enqueue a new workflow run.
 
+```typescript lineNumbers
+import { start } from '@vercel/workflow-core/runtime';
+
+const run = await start('myWorkflow'); // [!code highlight]
+```
+
 ## API Signature
 
 ### Parameters
@@ -57,26 +63,20 @@ showSections={['returns']}
 
 ## Examples
 
-### Basic Usage
+### With Arguments
 
 ```typescript
-import { start } from '@vercel/workflow-core';
+import { start } from '@vercel/workflow-core/runtime';
 
-// Start a workflow without arguments
-const run = await start('myWorkflow');
-
-// Start a workflow with arguments
-const run = await start('userSignup', ['user@example.com']);
+const run = await start('userSignup', ['user@example.com']); // [!code highlight]
 ```
 
 ### With `StartOptions`
 
 ```typescript
-import { start } from '@vercel/workflow-core';
+import { start } from '@vercel/workflow-core/runtime';
 
-const run = await start('myWorkflow', ['arg1', 'arg2'], {
-  deploymentId: 'custom-deployment-id'
-});
-
-console.log(`Started workflow with run ID: ${run.runId}`);
+const run = await start('myWorkflow', ['arg1', 'arg2'], { // [!code highlight]
+  deploymentId: 'custom-deployment-id' // [!code highlight]
+}); // [!code highlight]
 ```

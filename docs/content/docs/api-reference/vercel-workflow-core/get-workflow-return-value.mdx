@@ -10,10 +10,22 @@ Retrieves the final return value of a completed workflow run. This function retu
 
 Use this function to check if a workflow has completed and get its result, typically in polling patterns or API endpoints that need to return workflow results.
 
-## Import
+```typescript lineNumbers
+import { NextResponse } from 'next/server';
+import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
+import { myWorkflow } from '@/workflows/my-workflow';
 
-```typescript
-import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+export async function GET(_: Request) {
+  const { runId } = await start(myWorkflow);
+
+  try {
+    const returnValue = await getWorkflowReturnValue(runId); // [!code highlight]
+    return NextResponse.json(returnValue);
+  } catch (error) {
+    console.error('Unexpected error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 ```
 
 ## API Signature
@@ -49,11 +61,11 @@ showSections={['throws']}
 
 ## Good to Know
 
-- The function returns immediately and it does **not** wait for workflow completion
-- Throws `WorkflowRunNotCompletedError` if the workflow is still running (status 202)
-- Throws `WorkflowRunFailedError` if the workflow has failed (status 400)
-- For streaming real-time output, use [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) instead
-- The return value is automatically hydrated from its serialized form
+- The function returns immediately and it does **not** wait for workflow completion.
+- Throws `WorkflowRunNotCompletedError` if the workflow is still running (status 202).
+- Throws `WorkflowRunFailedError` if the workflow has failed (status 400).
+- For streaming real-time output, use [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) instead.
+- The return value is automatically hydrated from its serialized form.
 
 ## Examples
 
@@ -105,7 +117,7 @@ export async function GET(req: Request) {
 }
 ```
 
-### Polling Implementation
+### With Polling
 
 Example of implementing polling to wait for workflow completion:
 
@@ -156,6 +168,6 @@ export async function GET(req: Request) {
 
 ## Related Functions
 
-- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID
-- [`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run) - Get workflow run status without waiting for completion
-- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output instead of waiting for final result
+- [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID.
+- [`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run) - Get workflow run status without waiting for completion.
+- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output instead of waiting for final result.

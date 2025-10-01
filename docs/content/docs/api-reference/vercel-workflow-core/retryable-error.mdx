@@ -10,15 +10,23 @@ When a `RetryableError` is thrown in a step, it indicates that the workflow shou
 
 You should use this when you want to retry a step or retry after a certain duration.
 
+```typescript lineNumbers
+import { RetryableError } from "@vercel/workflow-core"
+
+async function retryableWorkflow() {
+    "use workflow"
+    await retryStep();
+}
+
+async function retryStep() {
+    "use step"
+    throw new RetryableError("Retryable!") // [!code highlight]
+}
+```
+
 <Callout>
 The difference between `Error` and `RetryableError` may not be entirely obvious, since when both are thrown, they both retry. The difference is that `RetryableError` has an additional configurable `retryAfter` parameter.
 </Callout>
-
-## Import
-
-```typescript
-import { RetryableError } from "@vercel/workflow-core"
-```
 
 ## API Signature
 
@@ -49,24 +57,22 @@ export default RetryableErrorOptions;`
 
 ## Examples
 
-Here's a simple example of how you can use `RetryableError` inside your workflow to mark steps as retryable to re-enqueue them on error.
+### Retrying after a duration
+
+`RetryableError` can be configured with a `retryAfter` parameter to specify when the step should be retried after.
 
 ```typescript lineNumbers
-import { RetryableError } from "@vercel/workflow-core" // [!code highlight]
+import { RetryableError } from "@vercel/workflow-core"
 
 async function retryableWorkflow() {
     "use workflow"
-
     await retryStep();
 }
 
 async function retryStep() {
     "use step"
-
     throw new RetryableError("Retryable!", {
-        retryAfter: "5m"
+        retryAfter: "5m" // [!code highlight]
     })
 }
 ```
-
-We throw `RetryableError` with `retryAfter` of 5 minutes. When the error is thrown, the workflow automatically suspends execution for 5 minutes without consuming any resources. After 5 minutes, the workflow resumes execution exactly where it left off.

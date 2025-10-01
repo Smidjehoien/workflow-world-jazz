@@ -10,10 +10,18 @@ When a `FatalError` is thrown in a step, it indicates that the workflow should n
 
 You should use this when you don't want a specific step to retry.
 
-## Import
-
-```typescript
+```typescript lineNumbers
 import { FatalError } from "@vercel/workflow-core"
+
+async function fallibleWorkflow() {
+    "use workflow"
+    await fallibleStep();
+}
+
+async function fallibleStep() {
+    "use step"
+    throw new FatalError("Fallible!") // [!code highlight]
+}
 ```
 
 ## API Signature
@@ -25,6 +33,7 @@ definition={generateDefinition({
   code: `
 interface Error {
   /**
+
 * The error message.
    */
   message: string;
@@ -32,23 +41,3 @@ interface Error {
 export default Error;`
 })}
 />
-
-## Examples
-
-Here's a simple example of how you can use `FatalError` inside your workflow to avoid retrying steps.
-
-```typescript lineNumbers
-import { FatalError } from "@vercel/workflow-core" // [!code highlight]
-
-async function failableWorkflow() {
-    "use workflow"
-
-    await failStep();
-}
-
-async function failStep() {
-    "use step"
-
-    throw new FatalError("Failable!")
-}
-```
