@@ -6,7 +6,7 @@ import {
   type UIMessage,
   type UIMessageChunk,
 } from 'ai';
-import { endStream, startStream, streamTextStep } from './steps';
+import { endStream, startStream, streamTextStep } from './stream';
 
 const MAX_STEPS = 10;
 

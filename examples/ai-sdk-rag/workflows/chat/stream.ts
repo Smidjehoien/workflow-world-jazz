@@ -7,8 +7,8 @@ import {
   tool,
 } from 'ai';
 import z from 'zod';
-import { createResourceWorkflow } from '../create-resource';
-import { findRelevant } from '../find-relevant';
+import { createResource } from './createResource';
+import { findRelevant } from './findRelevant';
 
 /** A Stream Text Step */
 export async function streamTextStep(
@@ -48,7 +48,7 @@ export async function streamTextStep(
         }),
         execute: async ({ content }) => {
           console.log('Executing addResource tool');
-          await createResourceWorkflow({ content });
+          await createResource({ content });
           return `Successfully added "${content}" to the knowledge base`;
         },
       }),

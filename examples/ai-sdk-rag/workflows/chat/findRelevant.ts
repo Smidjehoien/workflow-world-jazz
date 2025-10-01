@@ -1,7 +1,7 @@
 import { cosineDistance, desc, gt, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { embeddings } from '@/lib/db/schema/embeddings';
-import { generateEmbedding } from '../shared/embedding';
+import { generateEmbedding } from './shared/embedding';
 
 export async function findRelevant(userQuery: string) {
   'use step';
