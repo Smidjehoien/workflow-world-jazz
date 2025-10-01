@@ -467,7 +467,7 @@ export const vercelAPIStepsEntrypoint =
             if (isInstanceOf(err, FatalError)) {
               const stackLines = getErrorStack(err).split('\n').slice(0, 4);
               console.error(
-                `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step:\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
+                `[Workflows] "${workflowRunId}" - Encountered \`FatalError\` while executing step "${stepName}":\n  > ${stackLines.join('\n    > ')}\n\nBubbling up error to parent workflow`
               );
               // Fatal error - store the error in the event log and re-invoke the workflow
               await world.events.create(workflowRunId, {
@@ -503,9 +503,9 @@ export const vercelAPIStepsEntrypoint =
                 // Max retries reached
                 const stackLines = getErrorStack(err).split('\n').slice(0, 4);
                 console.error(
-                  `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
+                  `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  Max retries reached\n  Bubbling error to parent workflow`
                 );
-                const errorMessage = `Max retries reached: ${String(err)}`;
+                const errorMessage = `Step "${stepName}" failed after max retries: ${String(err)}`;
                 await world.events.create(workflowRunId, {
                   eventType: 'step_failed',
                   correlationId: stepId,
@@ -528,12 +528,12 @@ export const vercelAPIStepsEntrypoint =
                 // Not at max retries yet - log as a retryable error
                 if (isInstanceOf(err, RetryableError)) {
                   console.warn(
-                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step (attempt ${attempt}):\n  > ${String(err.message)}\n\n  This step has failed but will be retried`
+                    `[Workflows] "${workflowRunId}" - Encountered \`RetryableError\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${String(err.message)}\n\n  This step has failed but will be retried`
                   );
                 } else {
                   const stackLines = getErrorStack(err).split('\n').slice(0, 4);
                   console.error(
-                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  This step has failed but will be retried`
+                    `[Workflows] "${workflowRunId}" - Encountered \`Error\` while executing step "${stepName}" (attempt ${attempt}):\n  > ${stackLines.join('\n    > ')}\n\n  This step has failed but will be retried`
                   );
                 }
                 await world.events.create(workflowRunId, {

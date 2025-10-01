@@ -9,6 +9,7 @@ import { glob } from 'tinyglobby';
 import type { WorkflowConfig } from '../config/types.js';
 import type { WorkflowManifest } from './apply-swc-transform.js';
 import { createDiscoverEntriesPlugin } from './discover-entries-esbuild-plugin.js';
+import { createNodeModuleErrorPlugin } from './node-module-esbuild-plugin.js';
 import { createSwcPlugin } from './swc-esbuild-plugin.js';
 
 const enhancedResolve = promisify(enhancedResolveOriginal);
@@ -387,9 +388,11 @@ export abstract class BaseBuilder {
           tsPaths,
           workflowManifest,
         }),
+        // This plugin must run after the swc plugin to ensure dead code elimination
+        // happens first, preventing false positives on Node.js imports in unused code paths
+        createNodeModuleErrorPlugin(),
       ],
     });
-
     const interimBundle = await interimBundleCtx.rebuild();
 
     this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');

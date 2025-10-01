@@ -14,6 +14,7 @@
     "build": "tsc && chmod +x bin/run.js",
     "clean": "tsc --build --clean",
     "dev": "tsc --watch",
+    "test": "vitest run src",
     "test:e2e": "vitest run e2e"
   },
   "oclif": {
@@ -39,6 +40,7 @@
     "@vercel/workflow-world": "workspace:*",
     "@vercel/workflow-world-embedded": "workspace:*",
     "@vercel/workflow-world-vercel": "workspace:*",
+    "builtin-modules": "^5.0.0",
     "chalk": "^5.6.2",
     "chokidar": "^4.0.3",
     "comment-json": "4.2.5",
