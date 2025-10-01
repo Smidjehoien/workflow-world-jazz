@@ -1,5 +1,11 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes

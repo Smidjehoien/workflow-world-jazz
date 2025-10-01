@@ -1,5 +1,14 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.35
+
+### Patch Changes
+
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- Updated dependencies [e275561]
+  - @vercel/workflow-core@0.0.1-alpha.25
+  - @vercel/workflow-cli@0.0.1-alpha.34
+
 ## 0.0.1-alpha.34
 
 ### Patch Changes
