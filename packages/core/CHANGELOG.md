@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.26
+
+### Patch Changes
+
+- 544055f: Add pid-port dependency for embedded world
+
 ## 0.0.1-alpha.25
 
 ### Patch Changes

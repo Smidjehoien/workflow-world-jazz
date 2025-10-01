@@ -1,5 +1,13 @@
 # workflow-ai-sdk-rag-agent
 
+## 0.1.1-alpha.2
+
+### Patch Changes
+
+- Updated dependencies [544055f]
+  - @vercel/workflow-core@0.0.1-alpha.26
+  - @vercel/workflow-next@0.0.1-alpha.36
+
 ## 0.1.1-alpha.1
 
 ### Patch Changes
