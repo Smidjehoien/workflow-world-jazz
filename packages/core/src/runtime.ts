@@ -10,7 +10,7 @@ import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import type { start } from './runtime/start.js';
-import { world } from './runtime/world.js';
+import { getWorld, getWorldHandlers } from './runtime/world.js';
 import {
   type Serializable,
   type StepInvokePayload,
@@ -48,6 +48,7 @@ export { handleWebhook, processWebhooks } from './runtime/webhook.js';
  * @throws `Error` - When the workflow run is not found or `deploymentId` is missing.
  */
 export async function getWorkflowRun(runId: string) {
+  const world = getWorld();
   const deploymentId = await world.getDeploymentId();
   if (!deploymentId) {
     throw new Error('A `deploymentId` must be provided to get a workflow run');
@@ -91,6 +92,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
   let cursor: string | null = null;
   let hasMore = true;
 
+  const world = getWorld();
   while (hasMore) {
     const response = await world.events.list({
       runId,
@@ -114,7 +116,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
  * @returns A function that can be used as a Vercel API route.
  */
 export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
-  return world.createQueueHandler(
+  return getWorldHandlers().createQueueHandler(
     '__wkf_workflow_',
     async (message_, metadata) => {
       const { runId, traceCarrier: traceContext } =
@@ -124,6 +126,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
       // Invoke user workflow within the propagated trace context
       return await withTraceContext(traceContext, async () => {
+        const world = getWorld();
         return trace(`WORKFLOW ${workflowName}`, async (span) => {
           span?.setAttributes({
             ...Attribute.WorkflowName(workflowName),
@@ -315,7 +318,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
  * for each step, this is temporary.
  */
 export const vercelAPIStepsEntrypoint =
-  /* @__PURE__ */ world.createQueueHandler(
+  /* @__PURE__ */ getWorldHandlers().createQueueHandler(
     '__wkf_step_',
     async (message_, metadata) => {
       const {
@@ -329,6 +332,7 @@ export const vercelAPIStepsEntrypoint =
       return await withTraceContext(traceContext, async () => {
         // Extract the step name from the topic name
         const stepName = metadata.queueName.slice('__wkf_step_'.length);
+        const world = getWorld();
 
         return trace(`STEP ${stepName}`, async (span) => {
           span?.setAttributes({

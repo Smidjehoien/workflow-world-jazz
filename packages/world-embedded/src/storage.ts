@@ -26,7 +26,7 @@ const getObjectCreatedAt =
     const replaceRegex = new RegExp(`^${idPrefix}_`, 'g');
     const dashIndex = filename.indexOf('-');
     if (dashIndex === -1) {
-      const ulid = filename.replace(replaceRegex, '');
+      const ulid = filename.replace(/\.json$/, '').replace(replaceRegex, '');
       return ulidToDate(ulid);
     }
     const id = filename.substring(dashIndex + 1).replace(/\.json$/, '');

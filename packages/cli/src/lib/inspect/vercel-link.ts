@@ -15,7 +15,7 @@ import { homedir } from 'node:os';
 import { join, normalize, posix, relative } from 'node:path';
 import util from 'node:util';
 import { promisify } from 'util';
-import { logDebug } from '../config/log.js';
+import { logger } from '../config/log.js';
 
 const home = homedir();
 
@@ -73,7 +73,7 @@ const isDirectory = (dir: string) => {
   try {
     return statSync(dir).isDirectory();
   } catch (err) {
-    logDebug(`${dir} is not a directory: ${err}`);
+    logger.debug(`${dir} is not a directory: ${err}`);
     return false;
   }
 };
@@ -108,8 +108,9 @@ export const isOneOfErrNoExceptions = (error: unknown, codes: string[]) => {
  * Throws an error if *both* `.vercel` and `.now` directories exist.
  */
 export function getVercelDirectory(cwd: string): string {
-  logDebug(`Getting vercel directory for ${cwd}`);
+  logger.debug(`Getting vercel directory for ${cwd}`);
   const possibleDirs = [join(cwd, VERCEL_DIR), join(cwd, VERCEL_DIR_FALLBACK)];
+  logger.debug(`Possible vercel directories: ${possibleDirs.join(', ')}`);
   const existingDirs = possibleDirs.filter((d) => isDirectory(d));
   if (existingDirs.length > 1) {
     throw new Error(
@@ -154,7 +155,9 @@ export function findProjectsFromPath(
   projects: RepoProjectConfig[],
   path: string
 ): RepoProjectConfig[] {
-  logDebug(`Finding projects ${JSON.stringify(projects)} from path ${path}`);
+  logger.debug(
+    `Finding projects ${JSON.stringify(projects)} from path ${path}`
+  );
   const normalizedPath = normalizeOsPath(path);
   const matches = projects
     .slice()
@@ -181,13 +184,15 @@ async function getProjectLinkFromRepoLink(
 ): Promise<ProjectLink | null> {
   const repoLink = await getRepoLink(path);
   if (!repoLink?.repoConfig) {
+    logger.debug('No repo link found');
     return null;
   }
+  logger.debug('Repo link', JSON.stringify(repoLink));
   const projects = findProjectsFromPath(
     repoLink.repoConfig.projects,
     relative(repoLink.rootPath, path)
   );
-  logDebug(`Found matching repo projects: ${JSON.stringify(projects)}`);
+  logger.debug(`Found matching repo projects: ${JSON.stringify(projects)}`);
   if (projects.length === 1) {
     const project = projects[0];
     return {
@@ -205,7 +210,7 @@ async function getProjectLinkFromRepoLink(
 export async function getLinkFromDir(
   vercelDir: string
 ): Promise<ProjectLink | null> {
-  logDebug(`Getting link from dir ${vercelDir}`);
+  logger.debug(`Getting link from dir ${vercelDir}`);
   try {
     const json = await readFile(join(vercelDir, VERCEL_DIR_PROJECT), 'utf8');
     const link: ProjectLink = JSON.parse(json);
@@ -275,7 +280,7 @@ export async function findRepoRoot(
       // Sometimes the $HOME directory is set up as a Git repo
       // (for dotfiles, etc.). In this case it's safe to say that
       // this isn't the repo we're looking for. Bail.
-      logDebug('Arrived at home directory');
+      logger.debug('Arrived at home directory');
       break;
     }
 
@@ -286,8 +291,8 @@ export async function findRepoRoot(
       if (err.code !== 'ENOENT') throw err;
     });
     if (stat) {
-      logDebug(
-        `Found "${REPO_JSON_PATH}" - detected "${current}" as repo root`
+      logger.debug(
+        `Found repo config "${REPO_JSON_PATH}" - detected "${current}" as repo root`
       );
       return current;
     }
@@ -299,12 +304,14 @@ export async function findRepoRoot(
       if (err.code !== 'ENOENT') throw err;
     });
     if (stat) {
-      logDebug(`Found "${GIT_PATH}" - detected "${current}" as repo root`);
+      logger.debug(
+        `Found git config "${GIT_PATH}" - detected "${current}" as repo root`
+      );
       return current;
     }
   }
 
-  logDebug('Aborting search for repo root');
+  logger.debug('Aborting search for repo root');
 }
 
 function getGitDirectory(cwd: string): string | null {
@@ -342,20 +349,22 @@ export function isGitWorktreeOrSubmodule(cwd: string): boolean {
  */
 export async function getRepoLink(cwd: string): Promise<RepoLink | undefined> {
   // Determine where the root of the repo is
-  logDebug(`Getting repo link for ${cwd}`);
+  logger.debug(`Getting repo link for ${cwd}`);
   const rootPath = await findRepoRoot(cwd, './');
-  if (!rootPath) return undefined;
+  if (!rootPath) {
+    logger.debug('getRepoLink: No repo root found');
+    return undefined;
+  }
 
+  // Read the `repo.json`, if this repo has already been linked
   const repoConfigPath = join(rootPath, VERCEL_DIR, VERCEL_DIR_REPO);
-
+  logger.debug(`getRepoLink: Reading repo config path "${repoConfigPath}"`);
   try {
-    // Read the `repo.json`, if this repo has already been linked
     const file = await readFile(repoConfigPath, 'utf8');
-    const repoConfig = JSON.parse(file);
+    const repoConfig: RepoProjectsConfig = JSON.parse(file);
     return { rootPath, repoConfig, repoConfigPath };
   } catch (err) {
-    // if (isOneOfErrNoExceptions(err, ['ENOENT'])) throw err;
-    console.error(`Failed to parse ${repoConfigPath}: ${err}`);
+    logger.debug(`Failed to parse ${repoConfigPath}: ${err}`);
     return undefined;
   }
 }

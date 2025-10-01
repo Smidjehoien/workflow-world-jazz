@@ -17,6 +17,7 @@ export {
   RetryableError,
   type RetryableErrorOptions,
 } from './global.js';
+export { getWorld } from './runtime/world.js';
 export { sleep } from './sleep.js';
 export { getStepContext, type StepContext } from './step/get-step-context.js';
 export {

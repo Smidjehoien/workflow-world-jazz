@@ -1,10 +1,10 @@
 import { waitUntil } from '@vercel/functions';
-import { world } from './world.js';
 import type { WorkflowRun } from '@vercel/workflow-world';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace } from '../telemetry.js';
+import { getWorld } from './world.js';
 
 export interface StartOptions {
   /**
@@ -68,6 +68,7 @@ export async function start<TArgs extends unknown[], TResult>(
       ...Attribute.WorkflowArgumentsCount(args.length),
     });
 
+    const world = getWorld();
     const deploymentId = opts.deploymentId ?? (await world.getDeploymentId());
     const ops: Promise<void>[] = [];
     const workflowArguments = dehydrateWorkflowArguments(args, ops);

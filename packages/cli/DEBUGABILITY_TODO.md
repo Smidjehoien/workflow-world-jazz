@@ -41,34 +41,33 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [x] Ensure list/show calls for all resources are nicely formatted
 - [x] Serialize I/O for runs/steps correctly
 - [x] Ensure streams are stubbed and separately accessible
-- [ ] Add `--follow`/`-f` flags for run (event stream)
-- [ ] Ensure following a stream live streams to console until stream close
+- [x] Ensure following a stream live streams to console until stream close
   - Should also work with JSON mode (JSONL / NDJSON)
-- [ ] More stream serialization code into
-- [ ] Detect environment (vercel hosted vs. vercel non-hosted) and set proxy URL accordingly
-- [ ] Add unit tests on workflow-server for checking `remoteRefBehavior: resolve` on /runs return data
-- [ ] Ensure JSON output has no other polluting output and works well with e.g. `jq`
+- [x] Detect environment (vercel hosted vs. vercel non-hosted) and set proxy URL accordingly
+- [x] Ensure JSON output has no other polluting output and works well with e.g. `jq`
+- [x] Print timestamps relative to user time unless in JSON mode
 - [x] Ensure embedded world uses ID prefixes (https://github.com/vercel/workflow/pull/223) 
-- [ ] Add simple pagination support for inspect command
-- [ ] Add infobox for pagination/stream/inspect help, after a table gets printed
+- [x] Add simple pagination support for inspect command
+- [x] Add infobox for pagination/stream/inspect help, after a table gets printed
 
 ## PR 6 - Allowing listing steps/events/streams without needing a runId
 - [x] First, locally support this by doing a wide search (inefficient, don't use!)
-- [ ] Make PR for workflow-server to support secondary index queries and update API
+- [x] Make PR for workflow-server to support secondary index queries and update API
   - See [branch](https://github.com/vercel/workflow-server/tree/%40pranaygp/step-get-put-without-run-id-dependency)
-- [ ] Extend world interface, and embedded/vercel worlds to use new rules
-- [ ] Update CLI code to use new API where applicable, with some performance safeguards
+- [x] Extend world interface, and embedded/vercel worlds to use new rules
+- [x] Update CLI code to use new API where applicable, with some performance safeguards
 
-## PR 6 - Support `start` command and manifest
+## PR 7 - Support `start` command and manifest
   
-- [ ] Improve PORT inference for embedded world
-- [ ] Remove "read-only" mode
+- [x] Improve PORT inference for embedded world
+- [x] Remove "read-only" mode
 - [ ] Scan workflow build manifest (maybe infer PORT, dataDir, etc. from that if available) and provide workflow definition lookup
-- [ ] Add start command with basic JSON input parsing (no streams)
+- [x] Add start command with basic JSON input parsing (no streams)
   - Ensure there's some docs about this in the info box, easy to get wrong
+- [ ] Add a getManifest method or similar to the world interface in order to retrieve valid workflow names
 - [ ] Add infobox after running start for how to follow run stream / event stream / wait for output
 
-# PR 7 - Web UI
+# PR 8 - Web UI
 
 - [ ] Add a web package that's a NextJS project depending on `workflow/core`, able to show data by accessing the world interface directly
 - [ ] Take all of the args/envs that the CLI takes as query params
@@ -77,14 +76,18 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [ ] CLI web call should seed web UI with CLI-given variables so ensure it's accessing the same world in the same way
 
 ## TBD - not assigned a priority yet
+- [ ] Add unit tests on workflow-server for checking `remoteRefBehavior: resolve` on /runs return data
+- [ ] Move all the logging code to `core` and re-use in `core`
 - [ ] Support `pause`/`unpause`/`cancel` commands
   - This is TBD given we don't have implementations or a complete spec for these yet
+- [ ] Detect interactive mode to allow cursor capture for pagination. Reduce hints in non-interactive mode.
+- [ ] Better error handling/messages for when world calls fail
 - [ ] Support `wf i webhooks` to list/show webhooks
 - [ ] Allow passing IDs without a resource, and infer resource type by ID
 - [ ] Validate IDs passed against prefixes to show helpful warnings when the wrong IDs are being used
 - [ ] Use `@vercel/auth-cli` package instead of our copied auth code, once package is released, after checking it serves our purpose.
 - [ ] Allow pagination with back/forward commands
-- [ ] Use chalk / log levels correctly, add `--verbose` flag, manage `DEBUG=1` env correctly, unify log implementations
+- [ ] Unify logging implementation between CLI logger and 
 - [ ] Support `workflow.config.ts`
   - (Basebuilder code has a config type WorkflowConfig, which should become the workflow.config.ts, with zod schema validation, possibly copying next.js code for config parsing/setup. Next has embedded stuff, which should be part of this type)
 - [ ] `wf init` command to initialize config files

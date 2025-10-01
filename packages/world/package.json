@@ -9,7 +9,8 @@
     "./*": "./dist/*"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc --watch"
   },
   "peerDependencies": {
     "@types/node": "catalog:",

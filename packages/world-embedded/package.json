@@ -22,7 +22,6 @@
   "dependencies": {
     "@vercel/queue": "0.0.0-alpha.23",
     "@vercel/workflow-world": "workspace:*",
-    "pid-port": "^1.0.2",
     "ulid": "^3.0.1",
     "zod": "catalog:"
   },

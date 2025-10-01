@@ -1,6 +1,6 @@
 import { assert, describe, expect, test } from 'vitest';
 import { dehydrateWorkflowArguments } from '../src/serialization';
-import { cliInspect, isLocalDeployment } from './utils';
+import { cliInspectJson } from './utils';
 
 const deploymentUrl = process.env.DEPLOYMENT_URL;
 if (!deploymentUrl) {
@@ -77,8 +77,7 @@ describe.concurrent('e2e', () => {
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
 
-    const cliResult = await cliInspect(`runs ${run.runId} --json`);
-    const json = JSON.parse(cliResult.stdout.replace(/\[[\w]{1,}\].*/g, ''));
+    const { json } = await cliInspectJson(`runs ${run.runId}`);
     const workflowName = `${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`;
     expect(json).toMatchObject({
       runId: run.runId,

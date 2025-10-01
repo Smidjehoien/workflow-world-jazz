@@ -30,7 +30,7 @@ function getCliArgs(): string {
     return '';
   }
 
-  return `--backend vercel --verbose --team ${process.env.VERCEL_TEAM} --project ${process.env.VERCEL_PROJECT}`;
+  return `--backend vercel --verbose`;
 }
 
 const invocationOptions = ['wf i', 'workflow inspect'];
@@ -44,7 +44,6 @@ const awaitCommand = async (command: string, args: string[], cwd: string) => {
         shell: true,
         timeout: 5_000,
         cwd,
-        stdio: ['ignore', 'pipe', 'pipe'],
         env: {
           ...process.env,
           DEBUG: '1',
@@ -82,14 +81,25 @@ const awaitCommand = async (command: string, args: string[], cwd: string) => {
   );
 };
 
-export const cliInspect = async (
-  args: string
-): Promise<{ stdout: string; stderr: string }> => {
+export const cliInspectJson = async (args: string) => {
   const cliAppPath = getWorkbenchAppPath();
   const cliArgs = getCliArgs();
 
   const invocation = invocationOptions[0];
   const command = `./node_modules/.bin/${invocation}`;
-  const result = await awaitCommand(command, [args, cliArgs], cliAppPath);
-  return result;
+  const result = await awaitCommand(
+    command,
+    ['--json', args, cliArgs],
+    cliAppPath
+  );
+  try {
+    console.log('Result:', result.stdout);
+    const json = JSON.parse(result.stdout || '{}');
+    return { json, stdout: result.stdout, stderr: result.stderr };
+  } catch (err) {
+    console.error('Stdout:', result.stdout);
+    console.error('Stderr:', result.stderr);
+    err.message = `Error parsing JSON result from CLI: ${err.message}`;
+    throw err;
+  }
 };

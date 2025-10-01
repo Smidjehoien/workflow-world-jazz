@@ -2,16 +2,9 @@ import { JsonTransport } from '@vercel/queue';
 import { setTimeout } from 'node:timers/promises';
 import z from 'zod';
 import { MessageId, type Queue, ValidQueueName } from '@vercel/workflow-world';
-import { config } from './config.js';
 
-export function createQueue(): Queue {
+export function createQueue(port?: number): Queue {
   const transport = new JsonTransport();
-  const serverPort = config.value.port;
-  if (!serverPort) {
-    throw new Error(
-      'No ports detected for current process. Please configure a port explicitly using nextConfig.workflows.embedded.port'
-    );
-  }
 
   const queue: Queue['queue'] = async (queueName, x) => {
     const body = transport.serialize(x);
@@ -30,7 +23,7 @@ export function createQueue(): Queue {
       for (let attempt = 0; defaultRetriesLeft > 0; attempt++) {
         defaultRetriesLeft--;
         const response = await fetch(
-          `http://localhost:${await serverPort}/.well-known/workflow/v1/${pathname}`,
+          `http://localhost:${port}/.well-known/workflow/v1/${pathname}`,
           {
             method: 'POST',
             duplex: 'half',

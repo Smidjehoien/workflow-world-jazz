@@ -1,6 +1,6 @@
 import * as devalue from 'devalue';
+import { getWorld } from './runtime/world.js';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
-import { world } from './runtime/world.js';
 
 /**
  * Detect if a readable stream is a byte stream.
@@ -75,6 +75,7 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
       pull: async (controller) => {
         let reader = this.#reader;
         if (!reader) {
+          const world = getWorld();
           const stream = await world.readFromStream(name, startIndex);
           reader = this.#reader = stream.getReader();
         }
@@ -97,6 +98,7 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
 
 export class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
+    const world = getWorld();
     super({
       write: async (chunk: string | Uint8Array | Buffer) => {
         await world.writeToStream(name, chunk);
