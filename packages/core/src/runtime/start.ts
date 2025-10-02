@@ -1,5 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 import type { WorkflowRun } from '@vercel/workflow-world';
+import { WorkflowRuntimeError } from '../errors.js';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
@@ -53,8 +54,8 @@ export async function start<TArgs extends unknown[], TResult>(
   const workflowName = workflow.workflowId;
 
   if (!workflowName) {
-    throw new Error(
-      `"start" was not called with valid workflow function being passed, ensure the workflow transform was applied and imported workflow function is first argument!`
+    throw new WorkflowRuntimeError(
+      `The function passed to start() is not a workflow function. Ensure it includes the 'use workflow' directive.`
     );
   }
 
