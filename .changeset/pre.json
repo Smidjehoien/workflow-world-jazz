@@ -20,6 +20,7 @@
     "@vercel/workflow-world-vercel": "0.0.1-alpha.1"
   },
   "changesets": [
+    "all-lands-write",
     "breezy-parents-fall",
     "bright-paws-sip",
     "bright-rivers-happen",
@@ -93,6 +94,7 @@
     "nice-breads-ask",
     "nine-geese-arrive",
     "odd-geese-drop",
+    "odd-sloths-run",
     "old-readers-call",
     "polite-jokes-go",
     "quiet-seahorses-melt",
@@ -124,6 +126,7 @@
     "tangy-hornets-battle",
     "tangy-lamps-flash",
     "three-rooms-stare",
+    "tidy-start-types",
     "tricky-walls-join",
     "twenty-tires-rescue",
     "two-cities-behave",

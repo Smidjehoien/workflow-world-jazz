@@ -1,5 +1,13 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.27
+
+### Patch Changes
+
+- 31f3375: Tidy up `start()` function types
+- Updated dependencies [6c93397]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.4
+
 ## 0.0.1-alpha.26
 
 ### Patch Changes

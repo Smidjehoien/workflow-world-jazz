@@ -1,5 +1,15 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.36
+
+### Patch Changes
+
+- 7e55d63: Add esbuild plugin to workflow builder for node imports
+- Updated dependencies [6c93397]
+- Updated dependencies [31f3375]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.4
+  - @vercel/workflow-core@0.0.1-alpha.27
+
 ## 0.0.1-alpha.35
 
 ### Patch Changes

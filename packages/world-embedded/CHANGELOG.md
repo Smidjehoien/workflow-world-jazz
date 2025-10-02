@@ -1,5 +1,11 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- 6c93397: Fix for embedded world pagination
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes
