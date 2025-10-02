@@ -1,8 +1,12 @@
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
 import type { Streamer } from '@vercel/workflow-world';
+import { monotonicFactory } from 'ulid';
 import { listJSONFiles, readBuffer, write } from './fs.js';
-import { generateLexiProcessTime } from './lexi-process-time.js';
+
+// Create a monotonic ULID factory that ensures ULIDs are always increasing
+// even when generated within the same millisecond
+const monotonicUlid = monotonicFactory(() => Math.random());
 
 /**
  * A chunk consists of a boolean `eof` indicating if it's the last chunk,
@@ -44,7 +48,7 @@ export function createStreamer(basedir: string): Streamer {
 
   return {
     async writeToStream(name, chunk) {
-      const chunkId = `strm_${generateLexiProcessTime()}`;
+      const chunkId = `strm_${monotonicUlid()}`;
 
       if (typeof chunk === 'string') {
         chunk = new TextEncoder().encode(chunk);
@@ -78,7 +82,7 @@ export function createStreamer(basedir: string): Streamer {
     },
 
     async closeStream(name) {
-      const chunkId = `strm_${generateLexiProcessTime()}`;
+      const chunkId = `strm_${monotonicUlid()}`;
       const chunkPath = path.join(
         basedir,
         'streams',

@@ -10,6 +10,7 @@ import {
   type WorkflowRun,
   WorkflowRunSchema,
 } from '@vercel/workflow-world';
+import { monotonicFactory } from 'ulid';
 import {
   deleteJSON,
   listJSONFiles,
@@ -18,17 +19,32 @@ import {
   ulidToDate,
   writeJSON,
 } from './fs.js';
-import { generateLexiProcessTime } from './lexi-process-time.js';
+
+// Create a monotonic ULID factory that ensures ULIDs are always increasing
+// even when generated within the same millisecond
+const monotonicUlid = monotonicFactory(() => Math.random());
 
 const getObjectCreatedAt =
   (idPrefix: string) =>
   (filename: string): Date | null => {
     const replaceRegex = new RegExp(`^${idPrefix}_`, 'g');
     const dashIndex = filename.indexOf('-');
+
     if (dashIndex === -1) {
+      // No dash - extract ULID from the filename (e.g., wrun_ULID.json, evnt_ULID.json)
       const ulid = filename.replace(/\.json$/, '').replace(replaceRegex, '');
       return ulidToDate(ulid);
     }
+
+    // For composite keys like {runId}-{stepId}, extract from the appropriate part
+    if (idPrefix === 'step') {
+      // For steps: wrun_ULID-step_123.json - extract from the runId part
+      const runId = filename.substring(0, dashIndex);
+      const ulid = runId.replace(/^wrun_/, '');
+      return ulidToDate(ulid);
+    }
+
+    // For events: wrun_ULID-evnt_ULID.json - extract from the eventId part
     const id = filename.substring(dashIndex + 1).replace(/\.json$/, '');
     const ulid = id.replace(replaceRegex, '');
     return ulidToDate(ulid);
@@ -38,7 +54,7 @@ export function createStorage(basedir: string): Storage {
   return {
     runs: {
       async create(data) {
-        const runId = `wrun_${generateLexiProcessTime()}`;
+        const runId = `wrun_${monotonicUlid()}`;
         const now = new Date();
 
         const result: WorkflowRun = {
@@ -49,7 +65,7 @@ export function createStorage(basedir: string): Storage {
           executionContext: data.executionContext as
             | Record<string, any>
             | undefined,
-          input: data.input as any[],
+          input: (data.input as any[]) || [],
           output: undefined,
           error: undefined,
           errorCode: undefined,
@@ -113,6 +129,7 @@ export function createStorage(basedir: string): Storage {
           limit: params?.pagination?.limit,
           cursor: params?.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('wrun'),
+          getId: (run) => run.runId,
         });
       },
 
@@ -211,6 +228,7 @@ export function createStorage(basedir: string): Storage {
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('step'),
+          getId: (step) => step.stepId,
         });
       },
     },
@@ -218,7 +236,7 @@ export function createStorage(basedir: string): Storage {
     // Events - filesystem-backed storage
     events: {
       async create(runId, data) {
-        const eventId = `evnt_${generateLexiProcessTime()}`;
+        const eventId = `evnt_${monotonicUlid()}`;
         const now = new Date();
 
         const result: Event = {
@@ -245,6 +263,7 @@ export function createStorage(basedir: string): Storage {
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('evnt'),
+          getId: (event) => event.eventId,
         });
       },
     },
@@ -304,6 +323,7 @@ export function createStorage(basedir: string): Storage {
           cursor: undefined, // Remove buggy page-to-date conversion, use standard cursor pagination
           getCreatedAt: (filename) =>
             ulidToDate(filename.replace(/\.json$/, '')),
+          getId: (webhook) => webhook.webhookId,
         });
       },
     },

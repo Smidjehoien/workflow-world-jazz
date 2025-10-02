@@ -89,7 +89,28 @@ interface PaginatedFileSystemQueryConfig<T> {
   limit?: number;
   cursor?: string;
   getCreatedAt(filename: string): Date | null;
+  getId?(item: T): string;
 }
+// Cursor format: "timestamp|id" for tie-breaking
+interface ParsedCursor {
+  timestamp: Date;
+  id: string | null;
+}
+
+function parseCursor(cursor: string | undefined): ParsedCursor | null {
+  if (!cursor) return null;
+
+  const parts = cursor.split('|');
+  return {
+    timestamp: new Date(parts[0]),
+    id: parts[1] || null,
+  };
+}
+
+function createCursor(timestamp: Date, id: string | undefined): string {
+  return id ? `${timestamp.toISOString()}|${id}` : timestamp.toISOString();
+}
+
 export async function paginatedFileSystemQuery<T extends { createdAt: Date }>(
   config: PaginatedFileSystemQueryConfig<T>
 ): Promise<PaginatedResponse<T>> {
@@ -102,6 +123,7 @@ export async function paginatedFileSystemQuery<T extends { createdAt: Date }>(
     limit = 20,
     cursor,
     getCreatedAt,
+    getId,
   } = config;
 
   // 1. Get all JSON files in directory
@@ -113,17 +135,31 @@ export async function paginatedFileSystemQuery<T extends { createdAt: Date }>(
     : fileIds;
 
   // 3. ULID Optimization: Filter by cursor using filename timestamps before loading JSON
-  const cursorDate = cursor ? new Date(cursor) : null;
+  const parsedCursor = parseCursor(cursor);
   let candidateFileIds = relevantFileIds;
 
-  if (cursorDate) {
+  if (parsedCursor) {
     candidateFileIds = relevantFileIds.filter((fileId) => {
       const filenameDate = getCreatedAt(`${fileId}.json`);
       if (filenameDate) {
         // Use filename timestamp for cursor filtering
-        return sortOrder === 'desc'
-          ? filenameDate < cursorDate
-          : filenameDate > cursorDate;
+        // We need to be careful here: if parsedCursor has an ID (for tie-breaking),
+        // we need to include items with the same timestamp for later ID-based filtering.
+        // If no ID, we can use strict inequality for optimization.
+        const cursorTime = parsedCursor.timestamp.getTime();
+        const fileTime = filenameDate.getTime();
+
+        if (parsedCursor.id) {
+          // Tie-breaking mode: include items at or near cursor timestamp
+          return sortOrder === 'desc'
+            ? fileTime <= cursorTime
+            : fileTime >= cursorTime;
+        } else {
+          // No tie-breaking: strict inequality
+          return sortOrder === 'desc'
+            ? fileTime < cursorTime
+            : fileTime > cursorTime;
+        }
       }
       // Skip files where we can't extract timestamp - no optimization benefit
       return false;
@@ -148,31 +184,61 @@ export async function paginatedFileSystemQuery<T extends { createdAt: Date }>(
 
       // Double-check cursor filtering with actual createdAt from JSON
       // (in case ULID timestamp differs from stored createdAt)
-      if (cursorDate) {
-        const passesFilter =
-          sortOrder === 'desc'
-            ? item.createdAt < cursorDate
-            : item.createdAt > cursorDate;
-        if (!passesFilter) continue;
+      if (parsedCursor) {
+        const itemTime = item.createdAt.getTime();
+        const cursorTime = parsedCursor.timestamp.getTime();
+
+        if (sortOrder === 'desc') {
+          // For descending order, skip items >= cursor
+          if (itemTime > cursorTime) continue;
+          // If timestamps are equal, use ID for tie-breaking (skip if ID >= cursorId)
+          if (itemTime === cursorTime && parsedCursor.id && getId) {
+            const itemId = getId(item);
+            if (itemId >= parsedCursor.id) continue;
+          }
+        } else {
+          // For ascending order, skip items <= cursor
+          if (itemTime < cursorTime) continue;
+          // If timestamps are equal, use ID for tie-breaking (skip if ID <= cursorId)
+          if (itemTime === cursorTime && parsedCursor.id && getId) {
+            const itemId = getId(item);
+            if (itemId <= parsedCursor.id) continue;
+          }
+        }
       }
 
       validItems.push(item);
     }
   }
 
-  // 5. Sort by createdAt
+  // 5. Sort by createdAt (and by ID for tie-breaking if getId is provided)
   validItems.sort((a, b) => {
     const aTime = a.createdAt.getTime();
     const bTime = b.createdAt.getTime();
-    return sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
+    const timeComparison = sortOrder === 'asc' ? aTime - bTime : bTime - aTime;
+
+    // If timestamps are equal and we have getId, use ID for stable sorting
+    if (timeComparison === 0 && getId) {
+      const aId = getId(a);
+      const bId = getId(b);
+      return sortOrder === 'asc'
+        ? aId.localeCompare(bId)
+        : bId.localeCompare(aId);
+    }
+
+    return timeComparison;
   });
 
   // 6. Apply pagination
   const hasMore = validItems.length > limit;
   const items = hasMore ? validItems.slice(0, limit) : validItems;
-  const nextCursor = hasMore
-    ? items[items.length - 1]?.createdAt?.toISOString()
-    : null;
+  const nextCursor =
+    hasMore && items.length > 0
+      ? createCursor(
+          items[items.length - 1].createdAt,
+          getId?.(items[items.length - 1])
+        )
+      : null;
 
   return {
     data: items,

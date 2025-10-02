@@ -1,7 +1,7 @@
-import { JsonTransport } from '@vercel/queue';
 import { setTimeout } from 'node:timers/promises';
-import z from 'zod';
+import { JsonTransport } from '@vercel/queue';
 import { MessageId, type Queue, ValidQueueName } from '@vercel/workflow-world';
+import z from 'zod';
 
 export function createQueue(port?: number): Queue {
   const transport = new JsonTransport();
@@ -60,7 +60,9 @@ export function createQueue(port?: number): Queue {
         });
       }
 
-      console.error(`No more retries`);
+      console.error(
+        `[embedded world] Reached max retries of embedded world queue implementation`
+      );
     })();
 
     return { messageId };

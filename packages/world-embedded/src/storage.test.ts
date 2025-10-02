@@ -1,0 +1,745 @@
+import { promises as fs } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import type { Storage } from '@vercel/workflow-world';
+import { monotonicFactory } from 'ulid';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { createStorage } from './storage.js';
+
+// Create a new monotonic ULID factory for each test to avoid state pollution
+let ulid = monotonicFactory(() => Math.random());
+
+describe('Storage', () => {
+  let testDir: string;
+  let storage: Storage;
+
+  beforeEach(async () => {
+    // Reset the ULID factory for each test to avoid state pollution
+    ulid = monotonicFactory(() => Math.random());
+
+    // Create a temporary directory for testing
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'storage-test-'));
+
+    storage = createStorage(testDir);
+  });
+
+  afterEach(async () => {
+    // Clean up test dir
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  describe('runs', () => {
+    describe('create', () => {
+      it('should create a new workflow run', async () => {
+        const runData = {
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          executionContext: { userId: 'user-1' },
+          input: ['arg1', 'arg2'],
+        };
+
+        const run = await storage.runs.create(runData);
+
+        expect(run.runId).toMatch(/^wrun_/);
+        expect(run.deploymentId).toBe('deployment-123');
+        expect(run.status).toBe('pending');
+        expect(run.workflowName).toBe('test-workflow');
+        expect(run.executionContext).toEqual({ userId: 'user-1' });
+        expect(run.input).toEqual(['arg1', 'arg2']);
+        expect(run.output).toBeUndefined();
+        expect(run.error).toBeUndefined();
+        expect(run.errorCode).toBeUndefined();
+        expect(run.startedAt).toBeUndefined();
+        expect(run.completedAt).toBeUndefined();
+        expect(run.createdAt).toBeInstanceOf(Date);
+        expect(run.updatedAt).toBeInstanceOf(Date);
+
+        // Verify file was created
+        const filePath = path.join(testDir, 'runs', `${run.runId}.json`);
+        const fileExists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+      });
+
+      it('should handle minimal run data', async () => {
+        const runData = {
+          deploymentId: 'deployment-123',
+          workflowName: 'minimal-workflow',
+        };
+
+        const run = await storage.runs.create(runData);
+
+        expect(run.executionContext).toBeUndefined();
+        expect(run.input).toEqual([]);
+      });
+    });
+
+    describe('get', () => {
+      it('should retrieve an existing run', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        const retrieved = await storage.runs.get(created.runId);
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error for non-existent run', async () => {
+        await expect(storage.runs.get('wrun_nonexistent')).rejects.toThrow(
+          'Workflow run wrun_nonexistent not found'
+        );
+      });
+    });
+
+    describe('update', () => {
+      it('should update run status to running', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        // Small delay to ensure different timestamps
+        await new Promise((resolve) => setTimeout(resolve, 1));
+
+        const updated = await storage.runs.update(created.runId, {
+          status: 'running',
+        });
+
+        expect(updated.status).toBe('running');
+        expect(updated.startedAt).toBeInstanceOf(Date);
+        expect(updated.updatedAt.getTime()).toBeGreaterThan(
+          created.updatedAt.getTime()
+        );
+      });
+
+      it('should update run status to completed', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        const updated = await storage.runs.update(created.runId, {
+          status: 'completed',
+          output: { result: 'success' },
+        });
+
+        expect(updated.status).toBe('completed');
+        expect(updated.output).toEqual({ result: 'success' });
+        expect(updated.completedAt).toBeInstanceOf(Date);
+      });
+
+      it('should update run status to failed', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        const updated = await storage.runs.update(created.runId, {
+          status: 'failed',
+          error: 'Something went wrong',
+          errorCode: 'ERR_001',
+        });
+
+        expect(updated.status).toBe('failed');
+        expect(updated.error).toBe('Something went wrong');
+        expect(updated.errorCode).toBe('ERR_001');
+        expect(updated.completedAt).toBeInstanceOf(Date);
+      });
+
+      it('should throw error for non-existent run', async () => {
+        await expect(
+          storage.runs.update('wrun_nonexistent', { status: 'running' })
+        ).rejects.toThrow('Workflow run wrun_nonexistent not found');
+      });
+    });
+
+    describe('list', () => {
+      it('should list all runs', async () => {
+        const run1 = await storage.runs.create({
+          deploymentId: 'deployment-1',
+          workflowName: 'workflow-1',
+          input: [],
+        });
+
+        // Small delay to ensure different timestamps in ULIDs
+        await new Promise((resolve) => setTimeout(resolve, 2));
+
+        const run2 = await storage.runs.create({
+          deploymentId: 'deployment-2',
+          workflowName: 'workflow-2',
+          input: [],
+        });
+
+        const result = await storage.runs.list();
+
+        expect(result.data).toHaveLength(2);
+        // Should be in descending order (most recent first)
+        expect(result.data[0].runId).toBe(run2.runId);
+        expect(result.data[1].runId).toBe(run1.runId);
+      });
+
+      it('should filter runs by workflowName', async () => {
+        await storage.runs.create({
+          deploymentId: 'deployment-1',
+          workflowName: 'workflow-1',
+          input: [],
+        });
+        const run2 = await storage.runs.create({
+          deploymentId: 'deployment-2',
+          workflowName: 'workflow-2',
+          input: [],
+        });
+
+        const result = await storage.runs.list({ workflowName: 'workflow-2' });
+
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].runId).toBe(run2.runId);
+      });
+
+      it('should support pagination', async () => {
+        // Create multiple runs
+        for (let i = 0; i < 5; i++) {
+          await storage.runs.create({
+            deploymentId: `deployment-${i}`,
+            workflowName: `workflow-${i}`,
+            input: [],
+          });
+        }
+
+        const page1 = await storage.runs.list({
+          pagination: { limit: 2 },
+        });
+
+        expect(page1.data).toHaveLength(2);
+        expect(page1.cursor).not.toBeNull();
+
+        const page2 = await storage.runs.list({
+          pagination: { limit: 2, cursor: page1.cursor || undefined },
+        });
+
+        expect(page2.data).toHaveLength(2);
+        expect(page2.data[0].runId).not.toBe(page1.data[0].runId);
+      });
+    });
+
+    describe('cancel', () => {
+      it('should cancel a run', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        const cancelled = await storage.runs.cancel(created.runId);
+
+        expect(cancelled.status).toBe('cancelled');
+        expect(cancelled.completedAt).toBeInstanceOf(Date);
+      });
+    });
+
+    describe('pause', () => {
+      it('should pause a run', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        const paused = await storage.runs.pause(created.runId);
+
+        expect(paused.status).toBe('paused');
+      });
+    });
+
+    describe('resume', () => {
+      it('should resume a paused run', async () => {
+        const created = await storage.runs.create({
+          deploymentId: 'deployment-123',
+          workflowName: 'test-workflow',
+          input: [],
+        });
+
+        await storage.runs.pause(created.runId);
+        const resumed = await storage.runs.resume(created.runId);
+
+        expect(resumed.status).toBe('running');
+        expect(resumed.startedAt).toBeInstanceOf(Date);
+      });
+    });
+  });
+
+  describe('steps', () => {
+    let testRunId: string;
+
+    beforeEach(async () => {
+      const run = await storage.runs.create({
+        deploymentId: 'deployment-123',
+        workflowName: 'test-workflow',
+        input: [],
+      });
+      testRunId = run.runId;
+    });
+
+    describe('create', () => {
+      it('should create a new step', async () => {
+        const stepData = {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1', 'input2'],
+        };
+
+        const step = await storage.steps.create(testRunId, stepData);
+
+        expect(step.runId).toBe(testRunId);
+        expect(step.stepId).toBe('step_123');
+        expect(step.stepName).toBe('test-step');
+        expect(step.status).toBe('pending');
+        expect(step.input).toEqual(['input1', 'input2']);
+        expect(step.output).toBeUndefined();
+        expect(step.error).toBeUndefined();
+        expect(step.errorCode).toBeUndefined();
+        expect(step.attempt).toBe(1);
+        expect(step.startedAt).toBeUndefined();
+        expect(step.completedAt).toBeUndefined();
+        expect(step.createdAt).toBeInstanceOf(Date);
+        expect(step.updatedAt).toBeInstanceOf(Date);
+
+        // Verify file was created
+        const filePath = path.join(
+          testDir,
+          'steps',
+          `${testRunId}-step_123.json`
+        );
+        const fileExists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+      });
+    });
+
+    describe('get', () => {
+      it('should retrieve a step with runId and stepId', async () => {
+        const created = await storage.steps.create(testRunId, {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        const retrieved = await storage.steps.get(testRunId, 'step_123');
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should retrieve a step with only stepId', async () => {
+        const created = await storage.steps.create(testRunId, {
+          stepId: 'unique_step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        const retrieved = await storage.steps.get(undefined, 'unique_step_123');
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error for non-existent step', async () => {
+        await expect(
+          storage.steps.get(testRunId, 'nonexistent_step')
+        ).rejects.toThrow('Step nonexistent_step in run');
+      });
+    });
+
+    describe('update', () => {
+      it('should update step status to running', async () => {
+        await storage.steps.create(testRunId, {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        const updated = await storage.steps.update(testRunId, 'step_123', {
+          status: 'running',
+        });
+
+        expect(updated.status).toBe('running');
+        expect(updated.startedAt).toBeInstanceOf(Date);
+      });
+
+      it('should update step status to completed', async () => {
+        await storage.steps.create(testRunId, {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        const updated = await storage.steps.update(testRunId, 'step_123', {
+          status: 'completed',
+          output: { result: 'done' },
+        });
+
+        expect(updated.status).toBe('completed');
+        expect(updated.output).toEqual({ result: 'done' });
+        expect(updated.completedAt).toBeInstanceOf(Date);
+      });
+
+      it('should update step status to failed', async () => {
+        await storage.steps.create(testRunId, {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        const updated = await storage.steps.update(testRunId, 'step_123', {
+          status: 'failed',
+          error: 'Step failed',
+          errorCode: 'STEP_ERR',
+        });
+
+        expect(updated.status).toBe('failed');
+        expect(updated.error).toBe('Step failed');
+        expect(updated.errorCode).toBe('STEP_ERR');
+        expect(updated.completedAt).toBeInstanceOf(Date);
+      });
+
+      it('should update attempt count', async () => {
+        await storage.steps.create(testRunId, {
+          stepId: 'step_123',
+          stepName: 'test-step',
+          input: ['input1'],
+        });
+
+        // TODO: this isn't typed
+        const updated = await storage.steps.update(testRunId, 'step_123', {
+          attempt: 2,
+        });
+
+        expect(updated.attempt).toBe(2);
+      });
+    });
+
+    describe('list', () => {
+      it('should list all steps for a run', async () => {
+        const step1 = await storage.steps.create(testRunId, {
+          stepId: 'step_1',
+          stepName: 'first-step',
+          input: [],
+        });
+        const step2 = await storage.steps.create(testRunId, {
+          stepId: 'step_2',
+          stepName: 'second-step',
+          input: [],
+        });
+
+        const result = await storage.steps.list({
+          runId: testRunId,
+        });
+
+        expect(result.data).toHaveLength(2);
+        // Should be in descending order
+        expect(result.data[0].stepId).toBe(step2.stepId);
+        expect(result.data[1].stepId).toBe(step1.stepId);
+      });
+
+      it('should support pagination', async () => {
+        // Create multiple steps
+        for (let i = 0; i < 5; i++) {
+          await storage.steps.create(testRunId, {
+            stepId: `step_${i}`,
+            stepName: `step-${i}`,
+            input: [],
+          });
+        }
+
+        const page1 = await storage.steps.list({
+          runId: testRunId,
+          pagination: { limit: 2 },
+        });
+
+        expect(page1.data).toHaveLength(2);
+        expect(page1.cursor).not.toBeNull();
+
+        const page2 = await storage.steps.list({
+          runId: testRunId,
+          pagination: { limit: 2, cursor: page1.cursor || undefined },
+        });
+
+        expect(page2.data).toHaveLength(2);
+        expect(page2.data[0].stepId).not.toBe(page1.data[0].stepId);
+      });
+    });
+  });
+
+  describe('events', () => {
+    let testRunId: string;
+
+    beforeEach(async () => {
+      const run = await storage.runs.create({
+        deploymentId: 'deployment-123',
+        workflowName: 'test-workflow',
+        input: [],
+      });
+      testRunId = run.runId;
+    });
+
+    describe('create', () => {
+      it('should create a new event', async () => {
+        const eventData = {
+          eventType: 'step_started' as const,
+          correlationId: 'corr_123',
+        };
+
+        const event = await storage.events.create(testRunId, eventData);
+
+        expect(event.runId).toBe(testRunId);
+        expect(event.eventId).toMatch(/^evnt_/);
+        expect(event.eventType).toBe('step_started');
+        expect(event.correlationId).toBe('corr_123');
+        expect(event.createdAt).toBeInstanceOf(Date);
+
+        // Verify file was created
+        const filePath = path.join(
+          testDir,
+          'events',
+          `${testRunId}-${event.eventId}.json`
+        );
+        const fileExists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+      });
+
+      it('should handle workflow completed events', async () => {
+        const eventData = {
+          eventType: 'workflow_completed' as const,
+        };
+
+        const event = await storage.events.create(testRunId, eventData);
+
+        expect(event.eventType).toBe('workflow_completed');
+        expect(event.correlationId).toBeUndefined();
+      });
+    });
+
+    describe('list', () => {
+      it('should list all events for a run', async () => {
+        const event1 = await storage.events.create(testRunId, {
+          eventType: 'workflow_started' as const,
+        });
+
+        // Small delay to ensure different timestamps in event IDs
+        await new Promise((resolve) => setTimeout(resolve, 2));
+
+        const event2 = await storage.events.create(testRunId, {
+          eventType: 'step_started' as const,
+          correlationId: 'corr_step_1',
+        });
+
+        const result = await storage.events.list({
+          runId: testRunId,
+        });
+
+        expect(result.data).toHaveLength(2);
+        // Should be in ascending order (chronological)
+        expect(result.data[0].eventId).toBe(event1.eventId);
+        expect(result.data[1].eventId).toBe(event2.eventId);
+      });
+
+      it('should support pagination', async () => {
+        // Create multiple events
+        for (let i = 0; i < 5; i++) {
+          await storage.events.create(testRunId, {
+            eventType: 'step_completed' as const,
+            correlationId: `corr_${i}`,
+            eventData: { result: i },
+          });
+        }
+
+        const page1 = await storage.events.list({
+          runId: testRunId,
+          pagination: { limit: 2 },
+        });
+
+        expect(page1.data).toHaveLength(2);
+        expect(page1.cursor).not.toBeNull();
+
+        const page2 = await storage.events.list({
+          runId: testRunId,
+          pagination: { limit: 2, cursor: page1.cursor || undefined },
+        });
+
+        expect(page2.data).toHaveLength(2);
+        expect(page2.data[0].eventId).not.toBe(page1.data[0].eventId);
+      });
+    });
+  });
+
+  describe('webhooks', () => {
+    let testRunId: string;
+
+    beforeEach(async () => {
+      const run = await storage.runs.create({
+        deploymentId: 'deployment-123',
+        workflowName: 'test-workflow',
+        input: [],
+      });
+      testRunId = run.runId;
+    });
+
+    describe('create', () => {
+      it('should create a new webhook', async () => {
+        const webhookData = {
+          webhookId: 'webhook_123',
+          url: 'https://example.com/webhook',
+          allowedMethods: ['GET', 'POST'],
+          searchParamsSchema: { type: 'object' },
+          headersSchema: { type: 'object' },
+          bodySchema: { type: 'string' },
+        };
+
+        const webhook = await storage.webhooks.create(testRunId, webhookData);
+
+        expect(webhook.runId).toBe(testRunId);
+        expect(webhook.webhookId).toBe('webhook_123');
+        expect(webhook.ownerId).toBe('embedded-owner');
+        expect(webhook.projectId).toBe('embedded-project');
+        expect(webhook.environment).toBe('embedded');
+        expect(webhook.url).toBe('https://example.com/webhook');
+        expect(webhook.allowedMethods).toEqual(['GET', 'POST']);
+        expect(webhook.searchParamsSchema).toEqual({ type: 'object' });
+        expect(webhook.headersSchema).toEqual({ type: 'object' });
+        expect(webhook.bodySchema).toEqual({ type: 'string' });
+        expect(webhook.createdAt).toBeInstanceOf(Date);
+        expect(webhook.updatedAt).toBeInstanceOf(Date);
+
+        // Verify file was created
+        const filePath = path.join(testDir, 'webhooks', 'webhook_123.json');
+        const fileExists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+      });
+
+      it('should handle minimal webhook data', async () => {
+        const webhookData = {
+          webhookId: 'webhook_minimal',
+          url: 'https://example.com/minimal',
+        };
+
+        const webhook = await storage.webhooks.create(testRunId, webhookData);
+
+        expect(webhook.allowedMethods).toEqual([]);
+        expect(webhook.searchParamsSchema).toBeUndefined();
+        expect(webhook.headersSchema).toBeUndefined();
+        expect(webhook.bodySchema).toBeUndefined();
+      });
+    });
+
+    describe('get', () => {
+      it('should retrieve an existing webhook', async () => {
+        const created = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook_123',
+          url: 'https://example.com/webhook',
+        });
+
+        const retrieved = await storage.webhooks.get(
+          'webhook_123',
+          'deployment-123'
+        );
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error for non-existent webhook', async () => {
+        await expect(
+          storage.webhooks.get('webhook_nonexistent', 'deployment-123')
+        ).rejects.toThrow('Webhook webhook_nonexistent not found');
+      });
+    });
+
+    describe('dispose', () => {
+      it('should delete an existing webhook', async () => {
+        const created = await storage.webhooks.create(testRunId, {
+          webhookId: 'webhook_to_delete',
+          url: 'https://example.com/webhook',
+        });
+
+        const disposed = await storage.webhooks.dispose(
+          'webhook_to_delete',
+          'deployment-123'
+        );
+
+        expect(disposed).toEqual(created);
+
+        // Verify file was deleted
+        await expect(
+          storage.webhooks.get('webhook_to_delete', 'deployment-123')
+        ).rejects.toThrow('Webhook webhook_to_delete not found');
+      });
+    });
+
+    describe('getByUrl', () => {
+      it('should find webhooks by URL', async () => {
+        const webhookId1 = ulid();
+        await storage.webhooks.create(testRunId, {
+          webhookId: webhookId1,
+          url: 'https://example.com/webhook',
+        });
+        await storage.webhooks.create(testRunId, {
+          webhookId: ulid(),
+          url: 'https://example.com/other',
+        });
+
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          'deployment-123'
+        );
+
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].webhookId).toBe(webhookId1);
+      });
+
+      it('should return empty list for non-matching URL', async () => {
+        await storage.webhooks.create(testRunId, {
+          webhookId: ulid(),
+          url: 'https://example.com/webhook',
+        });
+
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/nonexistent',
+          'deployment-123'
+        );
+
+        expect(result.data).toHaveLength(0);
+      });
+
+      it('should support pagination', async () => {
+        // Create multiple webhooks with same URL
+        for (let i = 0; i < 5; i++) {
+          await storage.webhooks.create(testRunId, {
+            webhookId: ulid(),
+            url: 'https://example.com/webhook',
+          });
+        }
+
+        const result = await storage.webhooks.getByUrl(
+          'https://example.com/webhook',
+          'deployment-123',
+          { limit: 3 }
+        );
+
+        expect(result.data).toHaveLength(3);
+      });
+    });
+  });
+});

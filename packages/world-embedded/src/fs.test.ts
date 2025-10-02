@@ -3,10 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import type { PaginatedResponse } from '@vercel/workflow-world';
 import ms from 'ms';
-import { ulid } from 'ulid';
+import { monotonicFactory } from 'ulid';
 import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { paginatedFileSystemQuery, ulidToDate } from './fs.js';
+
+// Create a new monotonic ULID factory for each test to avoid state pollution
+let ulid = monotonicFactory(() => Math.random());
 
 // Test schema for pagination tests
 const TestItemSchema = z.object({
@@ -39,6 +42,8 @@ describe('fs utilities', () => {
 
   beforeEach(async () => {
     testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'fs-test-'));
+    // Reset the ULID factory for each test to avoid state pollution
+    ulid = monotonicFactory(() => Math.random());
   });
 
   afterEach(async () => {
@@ -379,6 +384,86 @@ describe('fs utilities', () => {
           (item) => item.id === 'not-a-ulid'
         );
         expect(skippedItem).toBeUndefined(); // Should not be found
+      });
+
+      it('should handle pagination correctly when items have identical timestamps', async () => {
+        // This test reproduces the bug where items with the same timestamp
+        // are incorrectly filtered out during pagination, causing items to be skipped.
+
+        // Create a separate test directory
+        const sameTimeDir = await fs.mkdtemp(
+          path.join(os.tmpdir(), 'same-time-test-')
+        );
+
+        try {
+          const baseTime = new Date('2024-01-01T00:00:00.000Z').getTime();
+          const sameTimestamp = new Date(baseTime);
+
+          // Create 25 items all with the exact same timestamp but different IDs
+          const files: Record<string, object> = {};
+          const ids: string[] = [];
+          for (let i = 0; i < 25; i++) {
+            // Use monotonic ULID at the same base time
+            // Monotonic factory ensures they have different IDs that sort consistently
+            const id = ulid(baseTime);
+            ids.push(id);
+            files[id] = {
+              id,
+              name: `item-${i}`,
+              createdAt: sameTimestamp, // All have identical timestamp!
+            };
+          }
+
+          await createFilesystem(sameTimeDir, files);
+
+          // Get first page (limit 20)
+          const firstPage = await paginatedFileSystemQuery({
+            directory: sameTimeDir,
+            schema: TestItemSchema,
+            getCreatedAt: getCreatedAt,
+            getId: (item) => item.id, // Provide getId for tie-breaking
+            limit: 20,
+            sortOrder: 'asc',
+          });
+
+          expect(firstPage.data).toHaveLength(20);
+          expect(firstPage.hasMore).toBe(true);
+          assert(firstPage.cursor, 'expected cursor to be defined');
+
+          // Verify all items have the same timestamp
+          for (const item of firstPage.data) {
+            expect(item.createdAt.getTime()).toBe(sameTimestamp.getTime());
+          }
+
+          // Get second page
+          const secondPage = await paginatedFileSystemQuery({
+            directory: sameTimeDir,
+            schema: TestItemSchema,
+            getCreatedAt: getCreatedAt,
+            getId: (item) => item.id,
+            limit: 20,
+            cursor: firstPage.cursor,
+            sortOrder: 'asc',
+          });
+
+          // THIS IS THE KEY ASSERTION
+          expect(secondPage.data).toHaveLength(5);
+          expect(secondPage.hasMore).toBe(false);
+
+          // Verify no overlap between pages
+          const firstPageIds = new Set(firstPage.data.map((item) => item.id));
+          const secondPageIds = new Set(secondPage.data.map((item) => item.id));
+
+          for (const id of secondPageIds) {
+            expect(firstPageIds).not.toContain(id);
+          }
+
+          // Verify we got all 25 items across both pages
+          const allIds = new Set([...firstPageIds, ...secondPageIds]);
+          expect(allIds.size).toBe(25);
+        } finally {
+          await fs.rm(sameTimeDir, { recursive: true, force: true });
+        }
       });
     });
 
