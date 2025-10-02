@@ -1,5 +1,6 @@
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
+import { Heading } from 'fumadocs-ui/components/heading';
 import BaseUrl from '@/components/base-url';
 import * as CalloutComponents from '@/components/ui/callout';
 import * as CardComponents from '@/components/ui/card';
@@ -19,6 +20,12 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     ...TabsComponents,
     ...CardComponents,
     ...CalloutComponents,
+    h1: (props) => <Heading as="h1" {...props} />,
+    h2: (props) => <Heading as="h2" {...props} />,
+    h3: (props) => <Heading as="h3" {...props} />,
+    h4: (props) => <Heading as="h4" {...props} />,
+    h5: (props) => <Heading as="h5" {...props} />,
+    h6: (props) => <Heading as="h6" {...props} />,
     li: ({ ref: _ref, ...props }) => (
       <li {...props} className="prose">
         {props.children}
