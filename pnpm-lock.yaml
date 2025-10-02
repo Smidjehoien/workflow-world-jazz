@@ -104,6 +104,9 @@ importers:
       '@vercel/swc-plugin-workflow':
         specifier: workspace:*
         version: link:../packages/swc-plugin-workflow
+      '@vercel/workflow-ai':
+        specifier: workspace:*
+        version: link:../packages/ai
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../packages/core
