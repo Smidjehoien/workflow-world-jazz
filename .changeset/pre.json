@@ -17,7 +17,8 @@
     "workflow-ai-sdk-rag-agent": "0.1.0",
     "@vercel/workflow-world": "0.0.1-alpha.1",
     "@vercel/workflow-world-embedded": "0.0.1-alpha.1",
-    "@vercel/workflow-world-vercel": "0.0.1-alpha.1"
+    "@vercel/workflow-world-vercel": "0.0.1-alpha.1",
+    "@vercel/workflow-web": "0.0.1-alpha.36"
   },
   "changesets": [
     "all-lands-write",
@@ -31,6 +32,7 @@
     "chubby-goats-repair",
     "chubby-shrimps-divide",
     "chubby-swans-stare",
+    "chubby-trains-study",
     "clever-heads-throw",
     "cold-carpets-double",
     "cold-regions-beg",
@@ -78,6 +80,7 @@
     "happy-flowers-chew",
     "happy-trees-sing",
     "happy-zoos-hug",
+    "heavy-cars-appear",
     "hip-zoos-smell",
     "itchy-aliens-tickle",
     "khaki-mirrors-cover",
@@ -92,6 +95,7 @@
     "mighty-rabbits-hope",
     "new-crabs-drop",
     "nice-breads-ask",
+    "nice-pianos-try",
     "nine-geese-arrive",
     "odd-geese-drop",
     "odd-sloths-run",

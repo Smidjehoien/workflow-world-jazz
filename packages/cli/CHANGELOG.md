@@ -1,5 +1,17 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.37
+
+### Patch Changes
+
+- b6fee10: Add cancel command
+- 01d3679: Use v1 API endpoint for vercel, add web package, extract shared logic from CLI&web into core package
+- Updated dependencies [07ebb97]
+- Updated dependencies [01d3679]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.5
+  - @vercel/workflow-world-vercel@0.0.1-alpha.3
+  - @vercel/workflow-core@0.0.1-alpha.28
+
 ## 0.0.1-alpha.36
 
 ### Patch Changes
