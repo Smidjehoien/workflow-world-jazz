@@ -171,6 +171,13 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
               console.warn(
                 `Workflow "${runId}" has status "${workflowRun.status}", skipping`
               );
+
+              // TODO: for `cancel`, we actually want to propagate a WorkflowCancelled event
+              // inside the workflow context so the user can gracefully exit. this is SIGTERM
+              // TODO: furthermore, there should be a timeout or a way to force cancel SIGKILL
+              // so that we actually exit here without replaying the workflow at all, in the case
+              // the replaying the workflow is itself failing.
+
               return;
             }
 
