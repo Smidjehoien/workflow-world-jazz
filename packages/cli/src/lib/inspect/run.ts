@@ -1,4 +1,6 @@
 import type { World } from '@vercel/workflow-world';
+import chalk from 'chalk';
+import { logger } from '../config/log.js';
 import { start } from '../runtime.js';
 
 interface CLICreateOpts {
@@ -32,6 +34,11 @@ export const startRun = async (
   if (opts.json) {
     process.stdout.write(JSON.stringify(run, null, 2));
   } else {
-    console.log(run);
+    logger.log(run);
   }
+};
+
+export const cancelRun = async (world: World, runId: string) => {
+  await world.runs.cancel(runId);
+  logger.log(chalk.green(`Cancel signal sent to run ${runId}`));
 };
