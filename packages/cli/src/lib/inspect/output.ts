@@ -16,7 +16,7 @@ import type { InspectCLIOptions } from '../config/types.js';
 import { getWorkflowReadableStream } from '../runtime.js';
 import { streamToConsole } from './stream.js';
 
-const DEFAULT_PAGINATION_LIMIT = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 class StreamID {
   constructor(public name: string | null) {}
@@ -125,16 +125,19 @@ const getCursorHint = ({
   cursor: string | null;
 }) => {
   if (hasMore && cursor) {
-    return `More results available. Append\n--cursor ${cursor}\nto fetch the next page.`;
+    return `More results available. Append\n--cursor "${cursor}"\nto this command to fetch the next page.`;
   }
 };
 
 /**
  * In tables, we want to show a shorter timestamp, YYYY-MM-DD HH:MM:SS
  */
-const formatTableTimestamp = (value: Date) => {
-  const relativeValue = formatDistance(value, new Date());
-  return `${relativeValue} ago`;
+const formatTableTimestamp = (value: Date, relative = true) => {
+  if (relative) {
+    const relativeValue = formatDistance(value, new Date());
+    return `${relativeValue} ago`;
+  }
+  return value.toISOString();
 };
 
 /**
@@ -237,7 +240,7 @@ const inlineFormatIO = <T>(io: T): string => {
 
 export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   const runs = await world.runs.list({
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGINATION_LIMIT },
+    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
   });
   if (opts.stepId || opts.runId) {
     logger.warn(
@@ -301,7 +304,7 @@ export const listSteps = async (
   logger.debug(`Fetching steps for run ${runId}`);
   const stepChunks = await world.steps.list({
     runId,
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGINATION_LIMIT },
+    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
   });
   const steps = stepChunks.data;
   if (opts.json) {
@@ -375,7 +378,7 @@ export const listStreams = async (
     runs.push(run);
     const runsSteps = await world.steps.list({
       runId: opts.runId,
-      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGINATION_LIMIT },
+      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
     });
     runsSteps.data.forEach((step: Step) => steps.push(step));
     logger.info(getCursorHint(runsSteps));
@@ -392,7 +395,7 @@ export const listStreams = async (
     runs.push(run);
     const runsSteps = await world.steps.list({
       runId: runs[0].runId,
-      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGINATION_LIMIT },
+      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
     });
     runsSteps.data.forEach((step: Step) => steps.push(step));
     logger.info(getCursorHint(runsSteps));
@@ -489,7 +492,7 @@ export const listEvents = async (
   logger.debug(`Fetching events for run ${runId}`);
   const events = await world.events.list({
     runId,
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGINATION_LIMIT },
+    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
   });
   if (opts.stepId) {
     events.data = events.data.filter(
@@ -501,4 +504,8 @@ export const listEvents = async (
     return;
   }
   logger.log(showTable(events.data, EVENT_LISTED_PROPS));
+  const hint = getCursorHint(events);
+  if (hint) {
+    logger.info(hint);
+  }
 };

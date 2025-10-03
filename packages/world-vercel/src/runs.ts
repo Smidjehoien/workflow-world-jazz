@@ -30,7 +30,7 @@ export async function listWorkflowRuns(
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
 
   const queryString = searchParams.toString();
-  const endpoint = `/runs${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/v1/runs${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -45,7 +45,7 @@ export async function createWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: '/runs/create',
+    endpoint: '/v1/runs/create',
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -60,7 +60,7 @@ export async function getWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/runs/${id}`,
+    endpoint: `/v1/runs/${id}`,
     options: { method: 'GET' },
     config,
     schema: WorkflowRunSchema,
@@ -73,7 +73,7 @@ export async function updateWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/runs/${id}`,
+    endpoint: `/v1/runs/${id}`,
     options: {
       method: 'PUT',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -88,7 +88,7 @@ export async function cancelWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/runs/${id}/cancel`,
+    endpoint: `/v1/runs/${id}/cancel`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,
@@ -100,7 +100,7 @@ export async function pauseWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/runs/${id}/pause`,
+    endpoint: `/v1/runs/${id}/pause`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,
@@ -112,7 +112,7 @@ export async function resumeWorkflowRun(
   config?: APIConfig
 ): Promise<WorkflowRun> {
   return makeRequest({
-    endpoint: `/runs/${id}/resume`,
+    endpoint: `/v1/runs/${id}/resume`,
     options: { method: 'PUT' },
     config,
     schema: WorkflowRunSchema,

@@ -15,14 +15,15 @@ export async function listWorkflowRunSteps(
   params: ListWorkflowRunStepsParams,
   config?: APIConfig
 ): Promise<PaginatedResponse<Step>> {
+  const { runId, pagination } = params;
+
   const searchParams = new URLSearchParams();
-  if (params.pagination?.cursor)
-    searchParams.set('cursor', params.pagination.cursor);
-  if (params.pagination?.limit)
-    searchParams.set('limit', params.pagination.limit.toString());
+
+  if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
+  if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
 
   const queryString = searchParams.toString();
-  const endpoint = `/runs/${params.runId}/steps${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/v1/runs/${runId}/steps${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -38,7 +39,7 @@ export async function createStep(
   config?: APIConfig
 ): Promise<Step> {
   return makeRequest({
-    endpoint: `/runs/${runId}/steps`,
+    endpoint: `/v1/runs/${runId}/steps`,
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -55,7 +56,7 @@ export async function updateStep(
   config?: APIConfig
 ): Promise<Step> {
   return makeRequest({
-    endpoint: `/runs/${runId}/steps/${stepId}`,
+    endpoint: `/v1/runs/${runId}/steps/${stepId}`,
     options: {
       method: 'PUT',
       body: JSON.stringify(data, dateToStringReplacer),
@@ -71,8 +72,8 @@ export async function getStep(
   config?: APIConfig
 ): Promise<Step> {
   const endpoint = runId
-    ? `/runs/${runId}/steps/${stepId}`
-    : `/steps/${stepId}`;
+    ? `/v1/runs/${runId}/steps/${stepId}`
+    : `/v1/steps/${stepId}`;
   return makeRequest({
     endpoint,
     options: { method: 'GET' },

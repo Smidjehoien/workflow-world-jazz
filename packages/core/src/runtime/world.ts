@@ -67,3 +67,11 @@ export const getWorld = (): World => {
   world = initWorld();
   return world;
 };
+
+/**
+ * Reset the cached world instance. This should be called when environment
+ * variables change and you need to reinitialize the world with new config.
+ */
+export const resetWorld = (): void => {
+  world = undefined;
+};

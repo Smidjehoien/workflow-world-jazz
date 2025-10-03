@@ -22,7 +22,7 @@ export async function getWorkflowRunEvents(
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
 
   const queryString = searchParams.toString();
-  const endpoint = `/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
+  const endpoint = `/v1/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
 
   return makeRequest({
     endpoint,
@@ -38,7 +38,7 @@ export async function createWorkflowRunEvent(
   config?: APIConfig
 ): Promise<Event> {
   return makeRequest({
-    endpoint: `/runs/${id}/events`,
+    endpoint: `/v1/runs/${id}/events`,
     options: {
       method: 'POST',
       body: JSON.stringify(data, dateToStringReplacer),

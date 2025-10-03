@@ -12,6 +12,7 @@ import {
   showStream,
 } from '../lib/inspect/output.js';
 import { setupCliWorld } from '../lib/inspect/setup.js';
+import { launchWebUI } from '../lib/inspect/web.js';
 
 export default class Inspect extends BaseCommand {
   static description = 'Inspect runs, steps, streams, or events';
@@ -81,8 +82,6 @@ export default class Inspect extends BaseCommand {
   public async run(): Promise<void> {
     const { args, flags } = await this.parse(Inspect);
 
-    const world = await setupCliWorld(flags, this.config.version);
-
     const resource = normalizeResource(args.resource);
     if (!resource) {
       this.logError(
@@ -92,6 +91,13 @@ export default class Inspect extends BaseCommand {
     }
 
     const id = args.id;
+
+    // Handle web UI mode
+    if (flags.web) {
+      return await launchWebUI(resource, id, flags);
+    }
+
+    const world = await setupCliWorld(flags, this.config.version);
 
     if (resource === 'run') {
       if (id) {

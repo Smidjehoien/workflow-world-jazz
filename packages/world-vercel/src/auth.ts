@@ -11,7 +11,7 @@ import { makeRequest } from './utils.js';
 // Functions
 export async function getAuthInfo(config?: APIConfig): Promise<AuthInfo> {
   return makeRequest({
-    endpoint: '',
+    endpoint: '/v1',
     options: { method: 'GET' },
     config,
     schema: AuthInfoSchema,
@@ -22,7 +22,7 @@ export async function checkHealth(
   config?: APIConfig
 ): Promise<HealthCheckResponse> {
   return makeRequest({
-    endpoint: '/health',
+    endpoint: '/v1/health',
     options: { method: 'GET' },
     config,
     schema: HealthCheckResponseSchema,

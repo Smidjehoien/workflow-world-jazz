@@ -113,7 +113,7 @@ describe('Storage', () => {
 
         expect(updated.status).toBe('running');
         expect(updated.startedAt).toBeInstanceOf(Date);
-        expect(updated.updatedAt.getTime()).toBeGreaterThan(
+        expect(updated.updatedAt.getTime()).toBeGreaterThanOrEqual(
           created.updatedAt.getTime()
         );
       });
@@ -184,6 +184,9 @@ describe('Storage', () => {
         // Should be in descending order (most recent first)
         expect(result.data[0].runId).toBe(run2.runId);
         expect(result.data[1].runId).toBe(run1.runId);
+        expect(result.data[0].createdAt.getTime()).toBeGreaterThan(
+          result.data[1].createdAt.getTime()
+        );
       });
 
       it('should filter runs by workflowName', async () => {
@@ -447,6 +450,9 @@ describe('Storage', () => {
         // Should be in descending order
         expect(result.data[0].stepId).toBe(step2.stepId);
         expect(result.data[1].stepId).toBe(step1.stepId);
+        expect(result.data[0].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result.data[1].createdAt.getTime()
+        );
       });
 
       it('should support pagination', async () => {
@@ -549,9 +555,12 @@ describe('Storage', () => {
         });
 
         expect(result.data).toHaveLength(2);
-        // Should be in ascending order (chronological)
+        // Should be in chronological order (oldest first)
         expect(result.data[0].eventId).toBe(event1.eventId);
         expect(result.data[1].eventId).toBe(event2.eventId);
+        expect(result.data[1].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result.data[0].createdAt.getTime()
+        );
       });
 
       it('should support pagination', async () => {

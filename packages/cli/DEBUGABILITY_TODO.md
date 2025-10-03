@@ -67,15 +67,41 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [ ] Add a getManifest method or similar to the world interface in order to retrieve valid workflow names
 - [ ] Add infobox after running start for how to follow run stream / event stream / wait for output
 
-# PR 8 - Web UI
+# PR 8 - Web UI MVP
 
-- [ ] Add a web package that's a NextJS project depending on `workflow/core`, able to show data by accessing the world interface directly
-- [ ] Take all of the args/envs that the CLI takes as query params
-- [ ] CLI `wf inspect --web` should ensure web package is globally installed
+- [x] Add a web package that's a NextJS project depending on `workflow/core`, able to show data by accessing the world interface directly
+  - The npm package should only publish the built version of this
+- [x] Take all of the args/envs that the CLI takes as query params
+- [x] CLI `wf inspect --web` should ensure web package is globally installed
   - Locally it should be linked to the neighbor package
-- [ ] CLI web call should seed web UI with CLI-given variables so ensure it's accessing the same world in the same way
+- [x] CLI web call should seed web UI with CLI-given variables so ensure it's accessing the same world in the same way
+- [x] Add a readme for local dev
+- [x] Web UI should show the same `runs` tables as the CLI, using ShadCN
+- [x] Build out Web UI functionality, live streaming, ensuring all content is visible, etc.
+- [x] Add timeline view
+- [x] Ensure pagination works
+- [x] Fix flicker / optimize render performance
+- [x] Ensure opening UI works well for vercel backend
+- [ ] Refactor for maintainability
+- [ ] Bundle next app and ensure prod version can be pulled
+- [ ] Tests
+
+# PR 9 - Web UI Polish
+
+- [ ] Fix differentiation in API calls between empty results and error responses
+- [ ] Refactor workflow-server and vercel/embedded backend to ensure all list calls are timestamp descending by default, and have unified options for ascending
+- [ ] Add CLI instructions to the docs
+- [ ] Add commands to stop the server deamon
+- [ ] Cache network calls where possible
+- [ ] Ensure as much of the app as possible is in SSR
+- [ ] Use actual/better Gantt chart for timeline view. Also add one to main page for runs.
+- [ ] Use serviced / OS-specific service runner for the Web UI daemon
+- [ ] Use advanced node dependency resolve instead of default `resolve`
+- [ ] Handle upgrade of web UI by detecting version on CLI use, and stop/re-download if old
+- [ ] ??
 
 ## TBD - not assigned a priority yet
+- [ ] Ensure all resources are listed in reverse-chronological order by default
 - [ ] Add unit tests on workflow-server for checking `remoteRefBehavior: resolve` on /runs return data
 - [ ] Move all the logging code to `core` and re-use in `core`
 - [ ] Support `pause`/`unpause`/`cancel` commands

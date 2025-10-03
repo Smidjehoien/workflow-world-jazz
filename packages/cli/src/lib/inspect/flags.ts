@@ -85,4 +85,12 @@ export const cliFlags = {
     helpValue: ['production', 'preview'],
     defaultHelp: 'production',
   }),
+  web: Flags.boolean({
+    description: 'Open the web UI instead of displaying in terminal',
+    required: false,
+    char: 'w',
+    default: false,
+    helpGroup: 'Output',
+    helpLabel: '-w, --web',
+  }),
 } as const;
