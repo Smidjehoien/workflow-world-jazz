@@ -6,7 +6,7 @@ import ms from 'ms';
 import { monotonicFactory } from 'ulid';
 import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { paginatedFileSystemQuery, ulidToDate } from './fs.js';
+import { paginatedFileSystemQuery, ulidToDate, writeJSON } from './fs.js';
 
 // Create a new monotonic ULID factory for each test to avoid state pollution
 let ulid = monotonicFactory(() => Math.random());
@@ -712,6 +712,28 @@ describe('fs utilities', () => {
           );
         }
       });
+    });
+  });
+
+  describe('concurrent writes', () => {
+    it('should not fail when concurrent writes occur', async () => {
+      const filePath = path.join(testDir, 'concurrency-test.json');
+      const testTime = new Date();
+      const firstUlid = ulid();
+      const secondUlid = ulid();
+
+      await Promise.all([
+        writeJSON(filePath, {
+          id: firstUlid,
+          name: 'test-item-1',
+          createdAt: testTime,
+        }),
+        writeJSON(filePath, {
+          id: secondUlid,
+          name: 'test-item-2',
+          createdAt: testTime,
+        }),
+      ]);
     });
   });
 });

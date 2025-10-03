@@ -1,8 +1,10 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
-import { decodeTime } from 'ulid';
-import { z } from 'zod';
 import type { PaginatedResponse } from '@vercel/workflow-world';
+import { decodeTime, monotonicFactory } from 'ulid';
+import { z } from 'zod';
+
+const ulid = monotonicFactory(() => Math.random());
 
 const Ulid = z.ulid();
 
@@ -31,7 +33,7 @@ export async function write(
   filePath: string,
   data: string | Buffer
 ): Promise<void> {
-  const tempPath = `${filePath}.tmp.${Date.now()}`;
+  const tempPath = `${filePath}.tmp.${ulid()}`;
   try {
     await ensureDir(path.dirname(filePath));
     await fs.writeFile(tempPath, data);
