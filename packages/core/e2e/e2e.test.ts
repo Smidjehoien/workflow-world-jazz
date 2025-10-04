@@ -126,56 +126,60 @@ describe.concurrent('e2e', () => {
     expect(contents).toBe('0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n');
   });
 
-  // TODO @TooTallNate: currently flaky because of a race condition
-  test.skip('namedWebhookWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('namedWebhookWorkflow', []);
+  test('hookWorkflow', { timeout: 60_000 }, async () => {
+    const token = Math.random().toString(36).slice(2);
+    console.log('token', token);
+
+    const run = await triggerWorkflow('hookWorkflow', [token]);
 
     // Wait a few seconds so that the webhook is registered.
     // TODO: make this more efficient when we add subscription support.
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    // Send a GET request to the webhook.
-    const webhookUrl = new URL('/api/e2e/webhook', deploymentUrl);
-    const getRes = await fetch(webhookUrl, {
-      method: 'GET',
-      headers: {
-        'x-workflow-e2e-custom-header': '1',
-      },
-    });
-    expect(getRes.status).toBe(200);
+    const hookUrl = new URL('/api/webhook', deploymentUrl);
 
-    // Send a POST request to the webhook.
-    const postRes = await fetch(webhookUrl, {
+    let res = await fetch(hookUrl, {
       method: 'POST',
-      body: 'Hello, world from POST!',
-      headers: {
-        'x-workflow-e2e-custom-header': '2',
-      },
+      body: JSON.stringify({ token, data: { message: 'one' } }),
     });
-    expect(postRes.status).toBe(200);
+    expect(res.status).toBe(200);
+    let body = await res.json();
+    expect(body.runId).toBe(run.runId);
 
-    // Send a DELETE request to the webhook.
-    const deleteRes = await fetch(webhookUrl, {
-      method: 'DELETE',
-      body: 'Hello, world from DELETE!',
-      headers: {
-        'x-workflow-e2e-custom-header': '3',
-      },
+    // Invalid token test
+    res = await fetch(hookUrl, {
+      method: 'POST',
+      body: JSON.stringify({ token: 'invalid' }),
     });
-    expect(deleteRes.status).toBe(200);
+    expect(res.status).toBe(404);
+    body = await res.json();
+    expect(body).toBeNull();
+
+    res = await fetch(hookUrl, {
+      method: 'POST',
+      body: JSON.stringify({ token, data: { message: 'two' } }),
+    });
+    expect(res.status).toBe(200);
+    body = await res.json();
+    expect(body.runId).toBe(run.runId);
+
+    res = await fetch(hookUrl, {
+      method: 'POST',
+      body: JSON.stringify({ token, data: { message: 'three', done: true } }),
+    });
+    expect(res.status).toBe(200);
+    body = await res.json();
+    expect(body.runId).toBe(run.runId);
 
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBeInstanceOf(Array);
     expect(returnValue.length).toBe(3);
-    expect(returnValue[0].method).toBe('GET');
-    expect(returnValue[0].body).toBe('');
-    expect(returnValue[0].headers['x-workflow-e2e-custom-header']).toBe('1');
-    expect(returnValue[1].method).toBe('POST');
-    expect(returnValue[1].body).toBe('Hello, world from POST!');
-    expect(returnValue[1].headers['x-workflow-e2e-custom-header']).toBe('2');
-    expect(returnValue[2].method).toBe('DELETE');
-    expect(returnValue[2].body).toBe('Hello, world from DELETE!');
-    expect(returnValue[2].headers['x-workflow-e2e-custom-header']).toBe('3');
+    expect(returnValue[0].message).toBe('one');
+    expect(returnValue[0].done).toBeUndefined();
+    expect(returnValue[1].message).toBe('two');
+    expect(returnValue[1].done).toBeUndefined();
+    expect(returnValue[2].message).toBe('three');
+    expect(returnValue[2].done).toBe(true);
   });
 
   test('sleepingWorkflow', { timeout: 60_000 }, async () => {

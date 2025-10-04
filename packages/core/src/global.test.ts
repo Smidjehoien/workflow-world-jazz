@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   FatalError,
+  type HookInvocationQueueItem,
   type StepInvocationQueueItem,
+  type WebhookInvocationQueueItem,
   WorkflowSuspension,
 } from './global.js';
 
@@ -34,14 +36,15 @@ describe('FatalError', () => {
 
 describe('WorkflowSuspension', () => {
   it('should create a WorkflowSuspension instance with basic properties', () => {
-    const steps: InvocationQueueItem[] = [
+    const steps: StepInvocationQueueItem[] = [
       {
+        type: 'step',
         stepName: 'test-step',
         args: ['arg1', 'arg2'],
-        invocationId: 'inv-1',
+        correlationId: 'inv-1',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error).toBeInstanceOf(WorkflowSuspension);
     expect(error).toBeInstanceOf(Error);
@@ -55,12 +58,12 @@ describe('WorkflowSuspension', () => {
         type: 'step',
         stepName: 'test-step',
         args: ['arg1', 42, { key: 'value' }],
-        invocationId: 'inv-1',
+        correlationId: 'inv-1',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
-    expect(error.message).toBe('1 steps have not been run yet');
+    expect(error.message).toBe('1 step has not been run yet');
   });
 
   it('should generate correct error message for multiple steps', () => {
@@ -69,23 +72,23 @@ describe('WorkflowSuspension', () => {
         type: 'step',
         stepName: '__wkf_step_1',
         args: ['arg1'],
-        invocationId: 'inv-1',
+        correlationId: 'inv-1',
       },
       {
         type: 'step',
         stepName: '__wkf_step_2',
         args: ['arg2'],
-        invocationId: 'inv-2',
+        correlationId: 'inv-2',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error.message).toBe('2 steps have not been run yet');
   });
 
   it('should handle empty steps array', () => {
     const steps: StepInvocationQueueItem[] = [];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error.steps).toEqual([]);
     expect(error.message).toBe('0 steps have not been run yet');
@@ -104,25 +107,29 @@ describe('WorkflowSuspension', () => {
           [1, 2, 3],
           null,
         ],
-        invocationId: 'complex-inv',
+        correlationId: 'complex-inv',
       },
       {
         type: 'step',
         stepName: 'another-step',
         args: [],
-        invocationId: 'another-inv',
+        correlationId: 'another-inv',
       },
     ];
-    const error = new WorkflowSuspension(complexSteps);
+    const error = new WorkflowSuspension(complexSteps, globalThis);
 
     expect(error.steps).toEqual(complexSteps);
     expect(error.message).toBe('2 steps have not been run yet');
-    expect(error.steps[0].stepName).toBe('complex-step');
-    expect((error.steps[0] as StepInvocationQueueItem).invocationId).toBe(
+    expect((error.steps[0] as StepInvocationQueueItem).stepName).toBe(
+      'complex-step'
+    );
+    expect((error.steps[0] as StepInvocationQueueItem).correlationId).toBe(
       'complex-inv'
     );
-    expect(error.steps[1].stepName).toBe('another-step');
-    expect((error.steps[1] as StepInvocationQueueItem).invocationId).toBe(
+    expect((error.steps[1] as StepInvocationQueueItem).stepName).toBe(
+      'another-step'
+    );
+    expect((error.steps[1] as StepInvocationQueueItem).correlationId).toBe(
       'another-inv'
     );
   });
@@ -133,10 +140,10 @@ describe('WorkflowSuspension', () => {
         type: 'step',
         stepName: 'test-step',
         args: [],
-        invocationId: 'inv-1',
+        correlationId: 'inv-1',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error instanceof Error).toBe(true);
     expect(error instanceof WorkflowSuspension).toBe(true);
@@ -149,10 +156,10 @@ describe('WorkflowSuspension', () => {
         type: 'step',
         stepName: 'test-step',
         args: ['arg'],
-        invocationId: 'inv-1',
+        correlationId: 'inv-1',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error.stack).toBeDefined();
     expect(error.stack).toContain('WorkflowSuspension');
@@ -164,33 +171,212 @@ describe('WorkflowSuspension', () => {
         type: 'step',
         stepName: 'database-query',
         args: ['SELECT * FROM users', { limit: 10 }],
-        invocationId: 'db-query-123',
+        correlationId: 'db-query-123',
       },
       {
         type: 'step',
         stepName: 'send-email',
         args: ['user@example.com', 'Welcome!'],
-        invocationId: 'email-456',
+        correlationId: 'email-456',
       },
     ];
-    const error = new WorkflowSuspension(steps);
+    const error = new WorkflowSuspension(steps, globalThis);
 
     expect(error.steps).toHaveLength(2);
-    expect(error.steps[0].stepName).toBe('database-query');
+    expect((error.steps[0] as StepInvocationQueueItem).stepName).toBe(
+      'database-query'
+    );
     expect((error.steps[0] as StepInvocationQueueItem).args).toEqual([
       'SELECT * FROM users',
       { limit: 10 },
     ]);
-    expect((error.steps[0] as StepInvocationQueueItem).invocationId).toBe(
+    expect((error.steps[0] as StepInvocationQueueItem).correlationId).toBe(
       'db-query-123'
     );
-    expect(error.steps[1].stepName).toBe('send-email');
+    expect((error.steps[1] as StepInvocationQueueItem).stepName).toBe(
+      'send-email'
+    );
     expect((error.steps[1] as StepInvocationQueueItem).args).toEqual([
       'user@example.com',
       'Welcome!',
     ]);
-    expect((error.steps[1] as StepInvocationQueueItem).invocationId).toBe(
+    expect((error.steps[1] as StepInvocationQueueItem).correlationId).toBe(
       'email-456'
     );
+  });
+
+  it('should generate correct error message for single webhook', () => {
+    const webhooks: WebhookInvocationQueueItem[] = [
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_123',
+      },
+    ];
+    const error = new WorkflowSuspension(webhooks, globalThis);
+
+    expect(error.message).toBe('1 webhook has not been created yet');
+    expect(error.webhookCount).toBe(1);
+  });
+
+  it('should generate correct error message for multiple webhooks', () => {
+    const webhooks: WebhookInvocationQueueItem[] = [
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_123',
+      },
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_456',
+      },
+    ];
+    const error = new WorkflowSuspension(webhooks, globalThis);
+
+    expect(error.message).toBe('2 webhooks have not been created yet');
+    expect(error.webhookCount).toBe(2);
+  });
+
+  it('should generate correct error message for single hook', () => {
+    const hooks: HookInvocationQueueItem[] = [
+      {
+        type: 'hook',
+        correlationId: 'hook_123',
+        token: 'my-token',
+      },
+    ];
+    const error = new WorkflowSuspension(hooks, globalThis);
+
+    expect(error.message).toBe('1 hook has not been received yet');
+    expect(error.hookCount).toBe(1);
+  });
+
+  it('should generate correct error message for multiple hooks', () => {
+    const hooks: HookInvocationQueueItem[] = [
+      {
+        type: 'hook',
+        correlationId: 'hook_123',
+        token: 'token-1',
+      },
+      {
+        type: 'hook',
+        correlationId: 'hook_456',
+        token: 'token-2',
+      },
+    ];
+    const error = new WorkflowSuspension(hooks, globalThis);
+
+    expect(error.message).toBe('2 hooks have not been received yet');
+    expect(error.hookCount).toBe(2);
+  });
+
+  it('should generate correct error message for mixed step types', () => {
+    const items: (
+      | StepInvocationQueueItem
+      | WebhookInvocationQueueItem
+      | HookInvocationQueueItem
+    )[] = [
+      {
+        type: 'step',
+        stepName: 'test-step',
+        args: [],
+        correlationId: 'inv-1',
+      },
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_123',
+      },
+      {
+        type: 'hook',
+        correlationId: 'hook_123',
+        token: 'my-token',
+      },
+    ];
+    const error = new WorkflowSuspension(items, globalThis);
+
+    expect(error.message).toBe(
+      '1 step and 1 webhook and 1 hook have not been run yet'
+    );
+    expect(error.stepCount).toBe(1);
+    expect(error.webhookCount).toBe(1);
+    expect(error.hookCount).toBe(1);
+  });
+
+  it('should generate correct error message for multiple mixed types', () => {
+    const items: (
+      | StepInvocationQueueItem
+      | WebhookInvocationQueueItem
+      | HookInvocationQueueItem
+    )[] = [
+      {
+        type: 'step',
+        stepName: 'step-1',
+        args: [],
+        correlationId: 'inv-1',
+      },
+      {
+        type: 'step',
+        stepName: 'step-2',
+        args: [],
+        correlationId: 'inv-2',
+      },
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_123',
+      },
+    ];
+    const error = new WorkflowSuspension(items, globalThis);
+
+    expect(error.message).toBe('2 steps and 1 webhook have not been run yet');
+    expect(error.stepCount).toBe(2);
+    expect(error.webhookCount).toBe(1);
+    expect(error.hookCount).toBe(0);
+  });
+
+  it('should prioritize step action over webhook/hook action', () => {
+    const items: (
+      | StepInvocationQueueItem
+      | WebhookInvocationQueueItem
+      | HookInvocationQueueItem
+    )[] = [
+      {
+        type: 'step',
+        stepName: 'test-step',
+        args: [],
+        correlationId: 'inv-1',
+      },
+      {
+        type: 'hook',
+        correlationId: 'hook_123',
+        token: 'my-token',
+      },
+    ];
+    const error = new WorkflowSuspension(items, globalThis);
+
+    // When there are steps, the action should be "run" not "received"
+    expect(error.message).toBe('1 step and 1 hook have not been run yet');
+  });
+
+  it('should use "created" action when only webhooks are present', () => {
+    const webhooks: WebhookInvocationQueueItem[] = [
+      {
+        type: 'webhook',
+        correlationId: 'wbhk_123',
+      },
+    ];
+    const error = new WorkflowSuspension(webhooks, globalThis);
+
+    expect(error.message).toBe('1 webhook has not been created yet');
+  });
+
+  it('should use "received" action when only hooks are present', () => {
+    const hooks: HookInvocationQueueItem[] = [
+      {
+        type: 'hook',
+        correlationId: 'hook_123',
+        token: 'my-token',
+      },
+    ];
+    const error = new WorkflowSuspension(hooks, globalThis);
+
+    expect(error.message).toBe('1 hook has not been received yet');
   });
 });

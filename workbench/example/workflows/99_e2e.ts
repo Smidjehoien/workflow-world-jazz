@@ -1,8 +1,8 @@
 import {
+  createHook,
   FatalError,
   fetch,
   getStepContext,
-  getWebhook,
   getWorkflowContext,
   getWorkflowWritableStream,
   sleep,
@@ -102,31 +102,23 @@ export async function readableStreamWorkflow() {
 
 //////////////////////////////////////////////////////////
 
-export async function namedWebhookWorkflow() {
+export async function hookWorkflow(token: string) {
   'use workflow';
-  const webhook = getWebhook({
-    url: '/api/e2e/webhook',
-    method: ['GET', 'POST', 'DELETE'],
-  });
 
-  const requests: {
-    method: string;
-    headers: Record<string, string>;
-    body: any;
-  }[] = [];
-  for await (const request of webhook) {
-    requests.push({
-      method: request.method,
-      headers: Object.fromEntries(request.headers.entries()),
-      body: await request.text(),
-    });
+  type Payload = { message: string; done?: boolean };
 
-    if (request.method === 'DELETE') {
-      // The DELETE request will be the last one, so break out of the loop
+  const hook = createHook<Payload>({ token });
+
+  const payloads: Payload[] = [];
+  for await (const payload of hook) {
+    payloads.push(payload);
+
+    if (payload.done) {
       break;
     }
   }
-  return requests;
+
+  return payloads;
 }
 
 //////////////////////////////////////////////////////////

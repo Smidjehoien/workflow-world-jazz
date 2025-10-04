@@ -1,6 +1,7 @@
 import type { AuthProvider, Storage } from '@vercel/workflow-world';
 import { checkHealth, getAuthInfo } from './auth.js';
 import { createWorkflowRunEvent, getWorkflowRunEvents } from './events.js';
+import { createHook, disposeHook, getHookByToken } from './hooks.js';
 import {
   cancelWorkflowRun,
   createWorkflowRun,
@@ -58,6 +59,11 @@ export function createStorage(config?: APIConfig): Storage & AuthProvider {
         disposeWebhook(webhookId, deploymentId, config),
       getByUrl: (url, deploymentId, params) =>
         getWebhooksByUrl(url, deploymentId, params, config),
+    },
+    hooks: {
+      create: (runId, data) => createHook(runId, data, config),
+      getByToken: (token) => getHookByToken(token, config),
+      dispose: (hookId) => disposeHook(hookId, config),
     },
   };
 }

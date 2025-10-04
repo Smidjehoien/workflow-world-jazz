@@ -38,6 +38,7 @@ export {
   getWorkflowReadableStream,
   type WorkflowReadableStreamOptions,
 } from './runtime/readable-stream.js';
+export { resumeHook } from './runtime/resume-hook.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
 
@@ -73,7 +74,7 @@ export async function getWorkflowReturnValue(
   const run = await getWorkflowRun(runId);
 
   if (run.status === 'completed' || run.status === 'cancelled') {
-    return hydrateWorkflowReturnValue(run.output as any, ops, global);
+    return hydrateWorkflowReturnValue(run.output, ops, global);
   }
 
   if (run.status === 'failed') {
@@ -282,6 +283,38 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                         // Workflow has already completed, so no-op
                         console.warn(
                           `Workflow run "${runId}" has already completed, skipping webhook "${queueItem.correlationId}": ${err.message}`
+                        );
+                        continue;
+                      }
+                    }
+                    throw err;
+                  }
+                } else if (queueItem.type === 'hook') {
+                  // Handle hook operations
+                  try {
+                    // Create hook in database
+                    await world.hooks.create(runId, {
+                      hookId: queueItem.correlationId,
+                      token: queueItem.token,
+                    });
+
+                    // Create hook_created event in event log
+                    await world.events.create(runId, {
+                      eventType: 'hook_created',
+                      correlationId: queueItem.correlationId,
+                    });
+                  } catch (err) {
+                    if (isInstanceOf(err, WorkflowAPIError)) {
+                      if (err.status === 409) {
+                        // Hook already exists (duplicate hook_id constraint), so we can skip it
+                        console.warn(
+                          `Hook with correlation ID "${queueItem.correlationId}" already exists, skipping: ${err.message}`
+                        );
+                        continue;
+                      } else if (err.status === 410) {
+                        // Workflow has already completed, so no-op
+                        console.warn(
+                          `Workflow run "${runId}" has already completed, skipping hook "${queueItem.correlationId}": ${err.message}`
                         );
                         continue;
                       }

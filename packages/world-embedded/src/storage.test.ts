@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Storage } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createStorage } from './storage.js';
 
 // Create a new monotonic ULID factory for each test to avoid state pollution
@@ -748,6 +748,109 @@ describe('Storage', () => {
         );
 
         expect(result.data).toHaveLength(3);
+      });
+    });
+  });
+
+  describe('hooks', () => {
+    let testRunId: string;
+
+    beforeEach(async () => {
+      const run = await storage.runs.create({
+        deploymentId: 'deployment-123',
+        workflowName: 'test-workflow',
+        input: [],
+      });
+      testRunId = run.runId;
+    });
+
+    describe('create', () => {
+      it('should create a new hook', async () => {
+        const hookData = {
+          hookId: 'hook_123',
+          token: 'my-hook-token',
+        };
+
+        const hook = await storage.hooks.create(testRunId, hookData);
+
+        expect(hook.runId).toBe(testRunId);
+        expect(hook.hookId).toBe('hook_123');
+        expect(hook.token).toBe('my-hook-token');
+        expect(hook.ownerId).toBe('embedded-owner');
+        expect(hook.projectId).toBe('embedded-project');
+        expect(hook.environment).toBe('embedded');
+        expect(hook.createdAt).toBeInstanceOf(Date);
+
+        // Verify file was created
+        const filePath = path.join(testDir, 'hooks', 'hook_123.json');
+        const fileExists = await fs
+          .access(filePath)
+          .then(() => true)
+          .catch(() => false);
+        expect(fileExists).toBe(true);
+      });
+    });
+
+    describe('getByToken', () => {
+      it('should retrieve an existing hook by token', async () => {
+        const created = await storage.hooks.create(testRunId, {
+          hookId: 'hook_123',
+          token: 'test-token-123',
+        });
+
+        const retrieved = await storage.hooks.getByToken('test-token-123');
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error for non-existent token', async () => {
+        await expect(
+          storage.hooks.getByToken('nonexistent-token')
+        ).rejects.toThrow('Hook with token nonexistent-token not found');
+      });
+
+      it('should find the correct hook when multiple hooks exist', async () => {
+        const hook1 = await storage.hooks.create(testRunId, {
+          hookId: 'hook_1',
+          token: 'token-1',
+        });
+        await storage.hooks.create(testRunId, {
+          hookId: 'hook_2',
+          token: 'token-2',
+        });
+        await storage.hooks.create(testRunId, {
+          hookId: 'hook_3',
+          token: 'token-3',
+        });
+
+        const retrieved = await storage.hooks.getByToken('token-1');
+
+        expect(retrieved).toEqual(hook1);
+        expect(retrieved.hookId).toBe('hook_1');
+      });
+    });
+
+    describe('dispose', () => {
+      it('should delete an existing hook', async () => {
+        const created = await storage.hooks.create(testRunId, {
+          hookId: 'hook_to_delete',
+          token: 'token-to-delete',
+        });
+
+        const disposed = await storage.hooks.dispose('hook_to_delete');
+
+        expect(disposed).toEqual(created);
+
+        // Verify file was deleted
+        await expect(
+          storage.hooks.getByToken('token-to-delete')
+        ).rejects.toThrow('Hook with token token-to-delete not found');
+      });
+
+      it('should throw error for non-existent hook', async () => {
+        await expect(storage.hooks.dispose('hook_nonexistent')).rejects.toThrow(
+          'Hook hook_nonexistent not found'
+        );
       });
     });
   });

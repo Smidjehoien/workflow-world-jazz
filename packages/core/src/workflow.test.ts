@@ -605,7 +605,7 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 steps have not been run yet');
+      expect(error.message).toEqual('1 step has not been run yet');
       expect((error as WorkflowSuspension).steps).toEqual([
         {
           type: 'step',
@@ -744,7 +744,7 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 steps have not been run yet');
+      expect(error.message).toEqual('1 step has not been run yet');
     });
   });
 
@@ -781,7 +781,7 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 webhooks have not been created yet');
+      expect(error.message).toEqual('1 webhook has not been created yet');
       expect((error as WorkflowSuspension).steps).toHaveLength(1);
       expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
     });
@@ -1169,9 +1169,450 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 webhooks have not been created yet');
+      expect(error.message).toEqual('1 webhook has not been created yet');
       expect((error as WorkflowSuspension).steps).toHaveLength(1);
       expect((error as WorkflowSuspension).steps[0].type).toEqual('webhook');
+    });
+  });
+
+  describe('hook', () => {
+    it('should throw `WorkflowSuspension` when a hook is awaiting without a "hook_received" event', async () => {
+      let error: Error | undefined;
+      try {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          deploymentId: 'test-deployment',
+        };
+
+        const events: Event[] = [];
+
+        await runWorkflow(
+          `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+          async function workflow() {
+            const hook = createHook();
+            const payload = await hook;
+            return payload.message;
+          }` + getWorkflowTransformCode('workflow'),
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err as Error;
+      }
+      assert(error);
+      expect(error.name).toEqual('WorkflowSuspension');
+      expect(error.message).toEqual('1 hook has not been received yet');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('hook');
+    });
+
+    it('should resolve `createHook` await upon "hook_received" event', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue(
+              { message: 'Hello from hook' },
+              ops
+            ),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      async function workflow() {
+        const hook = createHook();
+        const payload = await hook;
+        return payload.message;
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(
+        'Hello from hook'
+      );
+    });
+
+    it('should resolve multiple `createHook` awaits upon "hook_received" events', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue(
+              { message: 'First payload' },
+              ops
+            ),
+          },
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue(
+              { message: 'Second payload' },
+              ops
+            ),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      async function workflow() {
+        const hook = createHook();
+        const payload1 = await hook;
+        const payload2 = await hook;
+        return [payload1.message, payload2.message];
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+        'First payload',
+        'Second payload',
+      ]);
+    });
+
+    it('should support `for await` loops with `createHook`', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue(
+              { count: 1, status: 'active' },
+              ops
+            ),
+          },
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue(
+              { count: 2, status: 'complete' },
+              ops
+            ),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      async function workflow() {
+        const hook = createHook();
+        const payloads = [];
+        for await (const payload of hook) {
+          payloads.push({ count: payload.count, status: payload.status });
+          if (payloads.length === 2) {
+            break;
+          }
+        }
+        return payloads;
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+        { count: 1, status: 'active' },
+        { count: 2, status: 'complete' },
+      ]);
+    });
+
+    it('should support multiple "hook_received" events even when the workflow is only interested in one', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ value: 100 }, ops),
+          },
+          createdAt: new Date(),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ value: 200 }, ops),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      async function workflow() {
+        const hook = createHook();
+        const payload = await hook;
+        return payload.value;
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(100);
+    });
+
+    it('should support multiple queued "hook_received" events with step events in between', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ data: 'first' }, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ data: 'second' }, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:02.000Z'),
+        },
+        {
+          eventId: 'event-2',
+          runId: workflowRun.runId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date('2024-01-01T00:00:03.000Z'),
+        },
+        {
+          eventId: 'event-3',
+          runId: workflowRun.runId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(42, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:04.000Z'),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      async function workflow() {
+        const hook = createHook();
+        const payload1 = await hook;
+        const stepResult = await add(1, 2);
+        const payload2 = await hook;
+        return {
+          data1: payload1.data,
+          stepResult,
+          data2: payload2.data,
+        };
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+        data1: 'first',
+        stepResult: 42,
+        data2: 'second',
+      });
+    });
+
+    it('should throw `WorkflowSuspension` when a hook is awaited after the event log is empty', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ iteration: 1 }, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:01.000Z'),
+        },
+        {
+          eventId: 'event-1',
+          runId: workflowRun.runId,
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          createdAt: new Date('2024-01-01T00:00:02.000Z'),
+        },
+        {
+          eventId: 'event-2',
+          runId: workflowRun.runId,
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          eventData: {
+            result: dehydrateStepReturnValue(10, ops),
+          },
+          createdAt: new Date('2024-01-01T00:00:03.000Z'),
+        },
+      ];
+
+      let error: Error | undefined;
+      try {
+        await runWorkflow(
+          `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      const add = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("add");
+      async function workflow() {
+        const hook = createHook();
+        for await (const payload of hook) {
+          await add(payload.iteration, 2);
+        }
+      }` + getWorkflowTransformCode('workflow'),
+          workflowRun,
+          events
+        );
+      } catch (err) {
+        error = err as Error;
+      }
+      assert(error);
+      expect(error.name).toEqual('WorkflowSuspension');
+      expect(error.message).toEqual('1 hook has not been received yet');
+      expect((error as WorkflowSuspension).steps).toHaveLength(1);
+      expect((error as WorkflowSuspension).steps[0].type).toEqual('hook');
+    });
+
+    it('should handle hook with custom token', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventId: 'event-0',
+          runId: workflowRun.runId,
+          eventType: 'hook_received',
+          correlationId: 'hook_01HK153X008RT6YEW43G8QX6JX',
+          eventData: {
+            payload: dehydrateStepReturnValue({ result: 'success' }, ops),
+          },
+          createdAt: new Date(),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `const createHook = globalThis[Symbol.for("WORKFLOW_CREATE_HOOK")];
+      async function workflow() {
+        const hook = createHook({ token: 'my-custom-token' });
+        const payload = await hook;
+        return { token: hook.token, result: payload.result };
+      }` + getWorkflowTransformCode('workflow'),
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual({
+        token: 'my-custom-token',
+        result: 'success',
+      });
     });
   });
 });

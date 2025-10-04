@@ -10,11 +10,17 @@ import {
   hydrateWorkflowArguments,
 } from './serialization.js';
 import { createUseStep } from './step.js';
+import {
+  WORKFLOW_CREATE_HOOK,
+  WORKFLOW_GET_WEBHOOK,
+  WORKFLOW_USE_STEP,
+} from './symbols.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
 import type { WorkflowContext } from './workflow/get-workflow-context.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-context.js';
+import { createCreateHook } from './workflow/hook.js';
 import { createGetWebhook } from './workflow/webhook.js';
 
 export async function runWorkflow(
@@ -73,12 +79,15 @@ export async function runWorkflow(
     });
 
     const useStep = createUseStep(workflowContext);
+    const createHook = createCreateHook(workflowContext);
     const getWebhook = createGetWebhook(workflowContext);
 
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-    vmGlobalThis[Symbol.for('WORKFLOW_USE_STEP')] = useStep;
+    vmGlobalThis[WORKFLOW_USE_STEP] = useStep;
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
-    vmGlobalThis[Symbol.for('WORKFLOW_GET_WEBHOOK')] = getWebhook;
+    vmGlobalThis[WORKFLOW_CREATE_HOOK] = createHook;
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    vmGlobalThis[WORKFLOW_GET_WEBHOOK] = getWebhook;
 
     // For the workflow VM, we store the context in a symbol on the `globalThis` object
     const ctx: WorkflowContext = {

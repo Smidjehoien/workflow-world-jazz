@@ -95,7 +95,7 @@ describe('createUseStep', () => {
     }
     expect(error).toBeInstanceOf(WorkflowSuspension);
     expect((error as WorkflowSuspension).message).toBe(
-      '1 steps have not been run yet'
+      '1 step has not been run yet'
     );
     expect(ctx.invocationsQueue).toEqual((error as WorkflowSuspension).steps);
     expect((error as WorkflowSuspension).steps).toMatchInlineSnapshot(`

@@ -1,5 +1,6 @@
 import type { AuthInfo, HealthCheckResponse } from './auth.js';
 import type { CreateEventRequest, Event, ListEventsParams } from './events.js';
+import type { CreateHookRequest, Hook } from './hooks.js';
 import type { Queue } from './queue.js';
 import type {
   CreateWorkflowRunRequest,
@@ -75,6 +76,12 @@ export interface Storage {
       deploymentId: string,
       params?: ListWebhooksByUrlParams
     ): Promise<PaginatedResponse<Webhook>>;
+  };
+
+  hooks: {
+    create(runId: string, data: CreateHookRequest): Promise<Hook>;
+    getByToken(token: string): Promise<Hook>;
+    dispose(hookId: string): Promise<Hook>;
   };
 }
 

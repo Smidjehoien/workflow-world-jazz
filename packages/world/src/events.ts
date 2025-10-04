@@ -7,12 +7,17 @@ export const EventTypeSchema = z.enum([
   'step_failed',
   'step_retrying',
   'step_started',
-  'webhook_created',
-  'webhook_request',
-  'webhook_disposed',
+  'hook_created',
+  'hook_received',
+  'hook_disposed',
   'workflow_completed',
   'workflow_failed',
   'workflow_started',
+
+  // deprecated
+  'webhook_created',
+  'webhook_request',
+  'webhook_disposed',
 ]);
 
 // Base event schema with common properties
@@ -75,6 +80,24 @@ const WebhookDisposedEventSchema = BaseEventSchema.extend({
   correlationId: z.string(),
 });
 
+const HookCreatedEventSchema = BaseEventSchema.extend({
+  eventType: z.literal('hook_created'),
+  correlationId: z.string(),
+});
+
+const HookReceivedEventSchema = BaseEventSchema.extend({
+  eventType: z.literal('hook_received'),
+  correlationId: z.string(),
+  eventData: z.object({
+    payload: z.any(), // Serialized payload
+  }),
+});
+
+const HookDisposedEventSchema = BaseEventSchema.extend({
+  eventType: z.literal('hook_disposed'),
+  correlationId: z.string(),
+});
+
 // TODO: not used yet
 const WorkflowCompletedEventSchema = BaseEventSchema.extend({
   eventType: z.literal('workflow_completed'),
@@ -102,6 +125,9 @@ export const CreateEventSchema = z.discriminatedUnion('eventType', [
   WebhookCreatedEventSchema,
   WebhookRequestEventSchema,
   WebhookDisposedEventSchema,
+  HookCreatedEventSchema,
+  HookReceivedEventSchema,
+  HookDisposedEventSchema,
   WorkflowCompletedEventSchema,
   WorkflowFailedEventSchema,
   WorkflowStartedEventSchema,
@@ -120,6 +146,7 @@ export const EventSchema = CreateEventSchema.and(
 export type Event = z.infer<typeof EventSchema>;
 export type CreateEventRequest = z.infer<typeof CreateEventSchema>;
 export type WebhookRequestEvent = z.infer<typeof WebhookRequestEventSchema>;
+export type HookReceivedEvent = z.infer<typeof HookReceivedEventSchema>;
 
 export interface ListEventsParams {
   runId: string;

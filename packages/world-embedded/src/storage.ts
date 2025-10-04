@@ -2,6 +2,8 @@ import path from 'node:path';
 import {
   type Event,
   EventSchema,
+  type Hook,
+  HookSchema,
   type Step,
   StepSchema,
   type Storage,
@@ -325,6 +327,53 @@ export function createStorage(basedir: string): Storage {
             ulidToDate(filename.replace(/\.json$/, '')),
           getId: (webhook) => webhook.webhookId,
         });
+      },
+    },
+
+    // Hooks
+    hooks: {
+      async create(runId, data) {
+        const now = new Date();
+
+        const result: Hook = {
+          runId,
+          hookId: data.hookId,
+          token: data.token,
+          ownerId: 'embedded-owner',
+          projectId: 'embedded-project',
+          environment: 'embedded',
+          createdAt: now,
+        };
+
+        const hookPath = path.join(basedir, 'hooks', `${data.hookId}.json`);
+        await writeJSON(hookPath, result);
+        return result;
+      },
+
+      async getByToken(token) {
+        // Need to search through all hooks to find one with matching token
+        const hooksDir = path.join(basedir, 'hooks');
+        const files = await listJSONFiles(hooksDir);
+
+        for (const file of files) {
+          const hookPath = path.join(hooksDir, `${file}.json`);
+          const hook = await readJSON(hookPath, HookSchema);
+          if (hook && hook.token === token) {
+            return hook;
+          }
+        }
+
+        throw new Error(`Hook with token ${token} not found`);
+      },
+
+      async dispose(hookId) {
+        const hookPath = path.join(basedir, 'hooks', `${hookId}.json`);
+        const hook = await readJSON(hookPath, HookSchema);
+        if (!hook) {
+          throw new Error(`Hook ${hookId} not found`);
+        }
+        await deleteJSON(hookPath);
+        return hook;
       },
     },
   };

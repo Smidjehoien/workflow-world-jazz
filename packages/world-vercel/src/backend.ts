@@ -23,6 +23,7 @@ export function createVercel(
     runs: storage.runs,
     steps: storage.steps,
     events: storage.events,
+    hooks: storage.hooks,
     webhooks: storage.webhooks,
   };
 }

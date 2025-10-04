@@ -7,6 +7,8 @@
  */
 
 export { __builtin_fetch as fetch } from './builtins.js';
+export { createHook, type Hook, type HookOptions } from './create-hook.js';
+export { defineHook } from './define-hook.js';
 export {
   getWebhook,
   type Webhook,

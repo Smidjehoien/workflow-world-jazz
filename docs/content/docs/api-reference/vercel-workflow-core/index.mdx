@@ -47,6 +47,12 @@ Workflow SDK Core contains the following core functions you can use inside your 
     <Card href="/docs/api-reference/vercel-workflow-core/fetch" title="fetch()">
         Make HTTP requests from within a workflow with automatic retry semantics.
     </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/create-hook" title="createHook()">
+        Create a low-level hook to receive arbitrary payloads from external systems.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/define-hook" title="defineHook()">
+        Type-safe hook helper for consistent payload types.
+    </Card>
     <Card href="/docs/api-reference/vercel-workflow-core/get-webhook" title="getWebhook()">
         Registers a webhook URL that can be used to invoke a workflow.
     </Card>
@@ -64,6 +70,9 @@ Workflow SDK Core also provides runtime functions that are used outside of workf
 <Cards>
     <Card href="/docs/api-reference/vercel-workflow-core/start" title="start()">
         Start/enqueue a new workflow run.
+    </Card>
+    <Card href="/docs/api-reference/vercel-workflow-core/resume-hook" title="resumeHook()">
+        Resume a workflow by sending a payload to a hook.
     </Card>
     <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-return-value" title="getWorkflowReturnValue()">
         Get the final return value of a completed workflow run.
