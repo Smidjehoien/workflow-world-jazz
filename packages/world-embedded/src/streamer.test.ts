@@ -357,6 +357,111 @@ describe('streamer', () => {
         const completeContent = Buffer.concat(completeChunks).toString();
         expect(completeContent).toBe('start middle end');
       });
+
+      it('should not lose or duplicate chunks written during stream initialization (race condition test)', async () => {
+        // Run multiple iterations to increase probability of catching race conditions
+        for (let iteration = 0; iteration < 10; iteration++) {
+          const { streamer } = await setupStreamer();
+          const streamName = `race-${iteration}`;
+
+          // Write a few chunks to disk first
+          await streamer.writeToStream(streamName, '0\n');
+          await streamer.writeToStream(streamName, '1\n');
+
+          // Start writing chunks in background IMMEDIATELY before reading
+          const writeTask = (async () => {
+            for (let i = 2; i < 10; i++) {
+              await streamer.writeToStream(streamName, `${i}\n`);
+              // No delay - fire them off as fast as possible to hit the race window
+            }
+            await streamer.closeStream(streamName);
+          })();
+
+          // Start reading - this triggers start() which should set up listeners
+          // BEFORE listing files to avoid missing chunks, and track delivered
+          // chunk IDs to avoid duplicates
+          const stream = await streamer.readFromStream(streamName);
+          const reader = stream.getReader();
+          const chunks: string[] = [];
+
+          let done = false;
+          while (!done) {
+            const result = await reader.read();
+            done = result.done;
+            if (result.value) {
+              chunks.push(Buffer.from(result.value).toString());
+            }
+          }
+
+          await writeTask;
+
+          // Verify exactly 10 chunks were received (no duplicates, no missing)
+          const content = chunks.join('');
+          const lines = content.split('\n').filter((l) => l !== '');
+
+          // Check for duplicates
+          if (lines.length !== 10) {
+            const numbers = lines.map(Number);
+            throw new Error(
+              `Expected 10 chunks but got ${lines.length}. ` +
+                (lines.length > 10
+                  ? 'Duplicates detected!'
+                  : 'Missing chunks!') +
+                ` Received: ${numbers.join(',')}`
+            );
+          }
+
+          // Check all numbers 0-9 are present
+          const numbers = lines.map(Number).sort((a, b) => a - b);
+          for (let i = 0; i < 10; i++) {
+            if (numbers[i] !== i) {
+              throw new Error(
+                `Race condition detected! Missing or incorrect chunk at position ${i}. ` +
+                  `Expected ${i}, got ${numbers[i]}. Full list: ${numbers.join(',')}`
+              );
+            }
+          }
+        }
+      }, 20000);
+
+      it('should maintain chronological order when chunks arrive during disk reading', async () => {
+        const { streamer } = await setupStreamer();
+        const streamName = 'ordering-test';
+
+        // Write chunks 0-4 to disk
+        for (let i = 0; i < 5; i++) {
+          await streamer.writeToStream(streamName, `${i}\n`);
+          await new Promise((resolve) => setTimeout(resolve, 2));
+        }
+
+        // Start reading
+        const stream = await streamer.readFromStream(streamName);
+        const reader = stream.getReader();
+        const chunks: string[] = [];
+
+        const readPromise = (async () => {
+          let done = false;
+          while (!done) {
+            const result = await reader.read();
+            done = result.done;
+            if (result.value) {
+              chunks.push(Buffer.from(result.value).toString());
+            }
+          }
+        })();
+
+        // Immediately write more chunks (5-9) while disk reading might be in progress
+        for (let i = 5; i < 10; i++) {
+          await streamer.writeToStream(streamName, `${i}\n`);
+        }
+
+        await streamer.closeStream(streamName);
+        await readPromise;
+
+        // Verify chunks are in exact chronological order (not just all present)
+        const content = chunks.join('');
+        expect(content).toBe('0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n');
+      });
     });
   });
 });

@@ -37,6 +37,7 @@ export function createStreamer(basedir: string): Streamer {
       {
         streamName: string;
         chunkData: Uint8Array;
+        chunkId: string;
       },
     ];
     [key: `close:${string}`]: [
@@ -78,6 +79,7 @@ export function createStreamer(basedir: string): Streamer {
       streamEmitter.emit(`chunk:${name}` as const, {
         streamName: name,
         chunkData,
+        chunkId,
       });
     },
 
@@ -99,30 +101,69 @@ export function createStreamer(basedir: string): Streamer {
     },
 
     async readFromStream(name, startIndex = 0) {
-      // Load all existing chunks
       const chunksDir = path.join(basedir, 'streams', 'chunks');
-      const files = await listJSONFiles(chunksDir);
-      const chunkFiles = files
-        .filter((file) => file.startsWith(`${name}-`))
-        .sort(); // ULID lexicographic sort = chronological order
-
-      // const existingChunks = await Promise.all(
-      //   chunkFiles.map(async (file) =>
-      //     deserializeChunk(
-      //       await readBuffer(path.join(chunksDir, `${file}.json`))
-      //     )
-      //   )
-      // );
-
-      // Check if stream is complete by looking for eof chunk
-      // const isComplete = existingChunks.some((chunk) => chunk?.eof === true);
       let removeListeners = () => {};
 
       return new ReadableStream<Uint8Array>({
         async start(controller) {
+          // Track chunks delivered via events to prevent duplicates and maintain order.
+          const deliveredChunkIds = new Set<string>();
+          // Buffer for chunks that arrive via events during disk reading
+          const bufferedEventChunks: Array<{
+            chunkId: string;
+            chunkData: Uint8Array;
+          }> = [];
+          let isReadingFromDisk = true;
+
+          const chunkListener = (event: {
+            streamName: string;
+            chunkData: Uint8Array;
+            chunkId: string;
+          }) => {
+            deliveredChunkIds.add(event.chunkId);
+
+            if (isReadingFromDisk) {
+              // Buffer chunks that arrive during disk reading to maintain order
+              bufferedEventChunks.push({
+                chunkId: event.chunkId,
+                chunkData: event.chunkData,
+              });
+            } else {
+              // After disk reading is complete, deliver chunks immediately
+              controller.enqueue(event.chunkData);
+            }
+          };
+
+          const closeListener = () => {
+            // Remove listeners before closing
+            streamEmitter.off(`chunk:${name}` as const, chunkListener);
+            streamEmitter.off(`close:${name}` as const, closeListener);
+            controller.close();
+          };
+          removeListeners = closeListener;
+
+          // Set up listeners FIRST to avoid missing events
+          streamEmitter.on(`chunk:${name}` as const, chunkListener);
+          streamEmitter.on(`close:${name}` as const, closeListener);
+
+          // Now load existing chunks from disk
+          const files = await listJSONFiles(chunksDir);
+          const chunkFiles = files
+            .filter((file) => file.startsWith(`${name}-`))
+            .sort(); // ULID lexicographic sort = chronological order
+
+          // Process existing chunks, skipping any already delivered via events
           let isComplete = false;
           for (let i = startIndex; i < chunkFiles.length; i++) {
             const file = chunkFiles[i];
+            // Extract chunk ID from filename: "streamName-chunkId"
+            const chunkId = file.substring(name.length + 1);
+
+            // Skip if already delivered via event
+            if (deliveredChunkIds.has(chunkId)) {
+              continue;
+            }
+
             const chunk = deserializeChunk(
               await readBuffer(path.join(chunksDir, `${file}.json`))
             );
@@ -135,30 +176,22 @@ export function createStreamer(basedir: string): Streamer {
             }
           }
 
+          // Finished reading from disk - now deliver buffered event chunks in chronological order
+          isReadingFromDisk = false;
+
+          // Sort buffered chunks by ULID (chronological order)
+          bufferedEventChunks.sort((a, b) =>
+            a.chunkId.localeCompare(b.chunkId)
+          );
+          for (const buffered of bufferedEventChunks) {
+            controller.enqueue(buffered.chunkData);
+          }
+
           if (isComplete) {
+            removeListeners();
             controller.close();
             return;
           }
-
-          // Store listener functions for cleanup
-          const chunkListener = (event: {
-            streamName: string;
-            chunkData: Uint8Array;
-          }) => {
-            controller.enqueue(event.chunkData);
-          };
-
-          const closeListener = () => {
-            // Remove listeners before closing
-            streamEmitter.off(`chunk:${name}` as const, chunkListener);
-            streamEmitter.off(`close:${name}` as const, closeListener);
-            controller.close();
-          };
-          removeListeners = closeListener;
-
-          // Add listeners
-          streamEmitter.on(`chunk:${name}` as const, chunkListener);
-          streamEmitter.on(`close:${name}` as const, closeListener);
         },
 
         cancel() {
