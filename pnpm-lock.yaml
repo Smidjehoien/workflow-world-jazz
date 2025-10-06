@@ -131,6 +131,9 @@ importers:
       '@vercel/workflow-next':
         specifier: workspace:*
         version: link:../packages/next
+      '@vercel/workflow-typescript-plugin':
+        specifier: workspace:*
+        version: link:../packages/typescript-plugin
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../packages/vm

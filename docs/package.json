@@ -33,6 +33,7 @@
     "@vercel/swc-plugin-workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
+    "@vercel/workflow-typescript-plugin": "workspace:*",
     "@vercel/workflow-vm": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "class-variance-authority": "^0.7.1",
