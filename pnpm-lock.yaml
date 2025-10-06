@@ -568,6 +568,10 @@ importers:
   packages/tsconfig: {}
 
   packages/typescript-plugin:
+    dependencies:
+      builtin-modules:
+        specifier: ^5.0.0
+        version: 5.0.0
     devDependencies:
       '@types/node':
         specifier: 'catalog:'

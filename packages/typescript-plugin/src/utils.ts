@@ -37,32 +37,6 @@ export function getDirective(
 }
 
 /**
- * Node.js APIs that are not available in the workflow sandbox
- */
-export const DISALLOWED_WORKFLOW_APIS = new Set([
-  'fs',
-  'http',
-  'https',
-  'net',
-  'dgram',
-  'child_process',
-  'cluster',
-  'os',
-  'process',
-  'path',
-  'stream',
-  'buffer',
-  'crypto',
-  'events',
-  'util',
-  'assert',
-  'querystring',
-  'string_decoder',
-  'url',
-  'zlib',
-]);
-
-/**
  * Workflow hooks available from @vercel/workflow-core
  */
 export const WORKFLOW_HOOKS = [
@@ -125,22 +99,4 @@ export function findFunctionCalls(
 
   visit(node);
   return calls;
-}
-
-/**
- * Check if an import is from a disallowed module
- */
-export function isDisallowedImport(importSpecifier: string): boolean {
-  // Check direct imports (e.g., 'fs', 'http')
-  if (DISALLOWED_WORKFLOW_APIS.has(importSpecifier)) {
-    return true;
-  }
-
-  // Check node: prefixed imports (e.g., 'node:fs')
-  if (importSpecifier.startsWith('node:')) {
-    const module = importSpecifier.slice(5);
-    return DISALLOWED_WORKFLOW_APIS.has(module);
-  }
-
-  return false;
 }

@@ -1,9 +1,5 @@
-import {
-  DISALLOWED_WORKFLOW_APIS,
-  findFunctionCalls,
-  getDirective,
-  isAsyncFunction,
-} from './utils';
+import builtinModules from 'builtin-modules';
+import { findFunctionCalls, getDirective, isAsyncFunction } from './utils';
 
 type TypeScriptLib = typeof import('typescript/lib/tsserverlibrary');
 type Program = import('typescript/lib/tsserverlibrary').Program;
@@ -133,13 +129,9 @@ export function getCustomDiagnostics(
         ) {
           const moduleName = importDecl.moduleSpecifier.text;
 
-          // Remove 'node:' prefix if present
-          const cleanModuleName = moduleName.startsWith('node:')
-            ? moduleName.slice(5)
-            : moduleName;
-
           // Check if it's a disallowed Node.js module
-          if (DISALLOWED_WORKFLOW_APIS.has(cleanModuleName)) {
+          // builtin-modules already includes both 'fs' and 'node:fs' variants
+          if (builtinModules.includes(moduleName)) {
             diagnostics.push({
               file: sourceFile,
               start: callNode.getStart(),

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import ts from 'typescript/lib/tsserverlibrary';
-import {
-  getDirective,
-  isAsyncFunction,
-  findFunctionCalls,
-  DISALLOWED_WORKFLOW_APIS,
-} from './utils';
+import { getDirective, isAsyncFunction, findFunctionCalls } from './utils';
 import { createTestProgram } from './test-helpers';
 
 describe('getDirective', () => {
@@ -257,22 +252,5 @@ describe('findFunctionCalls', () => {
     });
 
     expect(calls).toEqual([]);
-  });
-});
-
-describe('DISALLOWED_WORKFLOW_APIS', () => {
-  it('includes common Node.js modules', () => {
-    expect(DISALLOWED_WORKFLOW_APIS.has('fs')).toBe(true);
-    expect(DISALLOWED_WORKFLOW_APIS.has('http')).toBe(true);
-    expect(DISALLOWED_WORKFLOW_APIS.has('https')).toBe(true);
-    expect(DISALLOWED_WORKFLOW_APIS.has('net')).toBe(true);
-    expect(DISALLOWED_WORKFLOW_APIS.has('crypto')).toBe(true);
-  });
-
-  it('does not include modules that are allowed', () => {
-    // These modules/packages are not in the disallowed list
-    expect(DISALLOWED_WORKFLOW_APIS.has('@vercel/workflow-core')).toBe(false);
-    expect(DISALLOWED_WORKFLOW_APIS.has('lodash')).toBe(false);
-    expect(DISALLOWED_WORKFLOW_APIS.has('date-fns')).toBe(false);
   });
 });

@@ -24,6 +24,9 @@
   "peerDependencies": {
     "typescript": ">=5.0.0"
   },
+  "dependencies": {
+    "builtin-modules": "^5.0.0"
+  },
   "devDependencies": {
     "@types/node": "catalog:",
     "@vercel/workflow-core": "workspace:*",
