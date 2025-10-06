@@ -166,6 +166,10 @@ jobs:
       - name: Link to Vercel and Pull env
         run: pnpm i -g vercel@latest && vc link --token=${{ secrets.VERCEL_LABS_TOKEN }} --project=${{ matrix.app.project }} --scope=vercel-labs -y && vc env pull --token=${{ secrets.VERCEL_LABS_TOKEN }} workbench/${{ matrix.app.name }}/.env.local
 
+      - name: Resolve symlinks for next dev to work
+        if: matrix.app.name == 'nextjs-webpack'
+        run: cd workbench/${{ matrix.app.name }} && ./resolve-symlinks.sh
+
       - name: Run E2E Tests
         run: cd workbench/${{ matrix.app.name }} && pnpm dev & echo "starting tests in 10 seconds" && sleep 10 && pnpm vitest run packages/core/e2e/next-dev.test.ts && pnpm run test:e2e
         env:

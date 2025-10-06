@@ -5,16 +5,18 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "clean": "rm -r .next .swc app/.well-known/workflow",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/react": "2.0.0-beta.19",
+    "@ai-sdk/react": "2.0.43",
     "@node-rs/xxhash": "1.7.6",
     "@opentelemetry/api": "^1.9.0",
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow-cli": "workspace:*",
-    "ai": "5.0.0-beta.19",
+    "@vercel/workflow-ai": "workspace:*",
+    "ai": "5.1.0-beta.7",
     "next": "15.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

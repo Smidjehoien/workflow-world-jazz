@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
+    "clean": "rm -rf .next .swc app/.well-known/workflow",
     "start": "next start",
     "lint": "next lint"
   },
