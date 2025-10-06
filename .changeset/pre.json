@@ -18,7 +18,8 @@
     "@vercel/workflow-world": "0.0.1-alpha.1",
     "@vercel/workflow-world-embedded": "0.0.1-alpha.1",
     "@vercel/workflow-world-vercel": "0.0.1-alpha.1",
-    "@vercel/workflow-web": "0.0.1-alpha.36"
+    "@vercel/workflow-web": "0.0.1-alpha.36",
+    "@vercel/workflow-typescript-plugin": "0.0.1-alpha.1"
   },
   "changesets": [
     "all-lands-write",
@@ -58,8 +59,12 @@
     "eighty-terms-mate",
     "empty-lands-add",
     "esbuild-logging-improvements",
+    "evil-bags-cheer",
+    "evil-masks-study",
+    "evil-taxes-argue",
     "famous-seas-travel",
     "fancy-eggs-sort",
+    "few-days-tickle",
     "fifty-meals-grin",
     "five-results-do",
     "flat-corners-design",
@@ -103,6 +108,7 @@
     "polite-jokes-go",
     "quiet-seahorses-melt",
     "quiet-webs-greet",
+    "real-moles-smash",
     "real-tools-invent",
     "remove-step-retry-http-status",
     "sad-lamps-grab",

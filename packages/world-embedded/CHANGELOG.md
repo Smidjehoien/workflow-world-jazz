@@ -1,5 +1,15 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 689621a: Add initial `Hook` implementation
+- f9491a7: Fix race condition in streams implementation
+- 9281a86: Consolidate some external deps across packages
+- Updated dependencies [689621a]
+  - @vercel/workflow-world@0.0.1-alpha.3
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

@@ -1,5 +1,20 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.29
+
+### Patch Changes
+
+- 689621a: Add initial `Hook` implementation
+- c7b8643: Add WorkflowRuntimeError on serialization errors in workflow runtime
+- 9281a86: Consolidate some external deps across packages
+- Updated dependencies [689621a]
+- Updated dependencies [f9491a7]
+- Updated dependencies [9281a86]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.6
+  - @vercel/workflow-world-vercel@0.0.1-alpha.4
+  - @vercel/workflow-world@0.0.1-alpha.3
+  - @vercel/workflow-vm@0.0.1-alpha.5
+
 ## 0.0.1-alpha.28
 
 ### Patch Changes

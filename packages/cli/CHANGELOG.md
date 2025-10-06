@@ -1,5 +1,19 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.38
+
+### Patch Changes
+
+- 9281a86: Consolidate some external deps across packages
+- Updated dependencies [689621a]
+- Updated dependencies [c7b8643]
+- Updated dependencies [f9491a7]
+- Updated dependencies [9281a86]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.6
+  - @vercel/workflow-world-vercel@0.0.1-alpha.4
+  - @vercel/workflow-world@0.0.1-alpha.3
+  - @vercel/workflow-core@0.0.1-alpha.29
+
 ## 0.0.1-alpha.37
 
 ### Patch Changes

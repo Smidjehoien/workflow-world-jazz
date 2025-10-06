@@ -1,5 +1,11 @@
 # @vercel/workflow-vm
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- 9281a86: Consolidate some external deps across packages
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes

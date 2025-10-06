@@ -1,5 +1,13 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- 689621a: Add initial `Hook` implementation
+- Updated dependencies [689621a]
+  - @vercel/workflow-world@0.0.1-alpha.3
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes
