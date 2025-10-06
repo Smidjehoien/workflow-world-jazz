@@ -184,6 +184,65 @@ export function getCustomDiagnostics(
           });
           return;
         }
+
+        // Check for global fetch - suggest using the one from @vercel/workflow-core
+        if (functionName === 'fetch') {
+          const symbol = typeChecker.getSymbolAtLocation(call.expression);
+
+          // Check if this is the global fetch (no import) or not from @vercel/workflow-core
+          if (symbol) {
+            const declarations = symbol.getDeclarations();
+
+            if (declarations && declarations.length > 0) {
+              const decl = declarations[0];
+
+              // If it's an import, check if it's from @vercel/workflow-core
+              if (
+                ts.isImportSpecifier(decl) ||
+                ts.isImportClause(decl) ||
+                ts.isNamespaceImport(decl)
+              ) {
+                let importDecl:
+                  | import('typescript/lib/tsserverlibrary').ImportDeclaration
+                  | undefined;
+                if (ts.isImportClause(decl)) {
+                  importDecl =
+                    decl.parent as import('typescript/lib/tsserverlibrary').ImportDeclaration;
+                } else if (ts.isImportSpecifier(decl)) {
+                  importDecl = decl.parent?.parent
+                    ?.parent as import('typescript/lib/tsserverlibrary').ImportDeclaration;
+                } else if (ts.isNamespaceImport(decl)) {
+                  importDecl = decl.parent
+                    ?.parent as import('typescript/lib/tsserverlibrary').ImportDeclaration;
+                }
+
+                if (
+                  importDecl &&
+                  importDecl.moduleSpecifier &&
+                  ts.isStringLiteral(importDecl.moduleSpecifier)
+                ) {
+                  const moduleName = importDecl.moduleSpecifier.text;
+
+                  // If it's already from @vercel/workflow-core, it's fine
+                  if (moduleName === '@vercel/workflow-core') {
+                    return;
+                  }
+                }
+              }
+            }
+          }
+
+          // If we get here, it's either global fetch or not from @vercel/workflow-core
+          diagnostics.push({
+            file: sourceFile,
+            start: call.getStart(),
+            length: call.getWidth(),
+            messageText: `Use the 'fetch' step from @vercel/workflow-core instead of the global fetch in workflow functions.`,
+            category: ts.DiagnosticCategory.Error,
+            code: 9006,
+          });
+          return;
+        }
       }
 
       // Case 1: Property access like fs.readFileSync()
