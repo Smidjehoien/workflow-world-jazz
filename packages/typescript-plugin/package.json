@@ -10,6 +10,9 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "tsc --build --clean && rm -r dist ||:",
+    "test": "vitest run src",
+    "test:watch": "vitest watch src",
+    "test:coverage": "vitest run src --coverage",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [
@@ -25,6 +28,8 @@
     "@types/node": "catalog:",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-tsconfig": "workspace:*",
-    "typescript": "catalog:"
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

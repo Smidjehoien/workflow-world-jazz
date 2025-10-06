@@ -8,8 +8,8 @@ This plugin enhances the TypeScript editing experience when writing workflows by
 
 ### Diagnostics
 
-- **Workflow/Step validation**: Warns when workflow or step functions are not async
-- **Disallowed API detection**: Warns when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
+- **Workflow/Step validation**: Errors when workflow or step functions are not async
+- **Disallowed API detection**: Errors when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
 
 ### Auto-completions
 
@@ -101,17 +101,31 @@ pnpm build
 # Watch mode
 pnpm dev
 
+# Run tests
+pnpm test
+
 # Type check
 pnpm typecheck
 ```
 
 ## Testing
 
-To test the plugin locally:
+### Running the Test Suite
+
+The plugin includes a comprehensive test suite using Vitest:
+
+```bash
+# Run all tests
+pnpm test
+```
+
+### Manual Testing
+
+To test the plugin manually in your IDE:
 
 1. Build the plugin: `pnpm build`
 2. Add it to your test project's `tsconfig.json`
-3. Restart your TypeScript server (in VS Code: cmd+shift+P → "TypeScript: Restart TS Server")
+3. Restart your TypeScript server (in VS Code/Cursor: cmd+shift+P → "TypeScript: Restart TS Server")
 
 ## License
 
