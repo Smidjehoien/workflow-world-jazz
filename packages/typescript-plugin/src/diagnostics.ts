@@ -157,6 +157,35 @@ export function getCustomDiagnostics(
 
   function checkDisallowedApiUsage(call: CallExpression) {
     try {
+      // Check for timer functions (setTimeout, setInterval, setImmediate)
+      if (ts.isIdentifier(call.expression)) {
+        const functionName = call.expression.text;
+
+        if (functionName === 'setTimeout' || functionName === 'setInterval') {
+          diagnostics.push({
+            file: sourceFile,
+            start: call.getStart(),
+            length: call.getWidth(),
+            messageText: `${functionName} is not available in workflow functions. Use 'sleep()' from @vercel/workflow-core instead.`,
+            category: ts.DiagnosticCategory.Error,
+            code: 9004,
+          });
+          return;
+        }
+
+        if (functionName === 'setImmediate') {
+          diagnostics.push({
+            file: sourceFile,
+            start: call.getStart(),
+            length: call.getWidth(),
+            messageText: `setImmediate is not available in workflow functions. Consider restructuring your code or moving this logic to a step function with "use step".`,
+            category: ts.DiagnosticCategory.Error,
+            code: 9005,
+          });
+          return;
+        }
+      }
+
       // Case 1: Property access like fs.readFileSync()
       if (ts.isPropertyAccessExpression(call.expression)) {
         const objectSymbol = typeChecker.getSymbolAtLocation(
