@@ -1,0 +1,30 @@
+{
+  "name": "@vercel/workflow-typescript-plugin",
+  "version": "0.0.1-alpha.1",
+  "description": "TypeScript Language Service Plugin for Vercel Workflow SDK",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean && rm -r dist ||:",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "typescript",
+    "language-service-plugin",
+    "workflow",
+    "vercel"
+  ],
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@vercel/workflow-core": "workspace:*",
+    "@vercel/workflow-tsconfig": "workspace:*",
+    "typescript": "catalog:"
+  }
+}

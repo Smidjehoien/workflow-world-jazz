@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@vercel/workflow-tsconfig": "workspace:*",
-    "ai": "5"
+    "ai": "catalog:"
   },
   "peerDependencies": {
     "ai": "^5"

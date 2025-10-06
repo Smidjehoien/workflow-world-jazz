@@ -1,0 +1,14 @@
+{
+  "extends": "@vercel/workflow-tsconfig/base.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "target": "ES2022",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": false,
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
+}

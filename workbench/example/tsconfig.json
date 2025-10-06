@@ -15,7 +15,12 @@
     "incremental": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@vercel/workflow-typescript-plugin"
+      }
+    ]
   },
   "include": ["**/*.ts", "**/*.tsx", "*.js"],
   "exclude": ["node_modules"]

@@ -11,13 +11,14 @@
   "devDependencies": {
     "@types/node": "catalog:",
     "@vercel/workflow-cli": "workspace:*",
+    "@vercel/workflow-typescript-plugin": "workspace:*",
     "esbuild": "catalog:"
   },
   "dependencies": {
     "@vercel/functions": "^2.2.12",
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow-core": "workspace:*",
-    "ai": "5",
+    "ai": "catalog:",
     "mixpart": "^0.0.4",
     "openai": "^6",
     "zod": "catalog:"
