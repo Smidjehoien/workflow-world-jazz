@@ -1,4 +1,5 @@
 import * as devalue from 'devalue';
+import { WorkflowRuntimeError } from './errors.js';
 import { getWorld } from './runtime/world.js';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
 
@@ -24,8 +25,17 @@ export function getSerializeStream(
   const encoder = new TextEncoder();
   const stream = new TransformStream<any, Uint8Array>({
     transform(chunk, controller) {
-      const serialized = devalue.stringify(chunk, reducers);
-      controller.enqueue(encoder.encode(`${serialized}\n`));
+      try {
+        const serialized = devalue.stringify(chunk, reducers);
+        controller.enqueue(encoder.encode(`${serialized}\n`));
+      } catch (error) {
+        controller.error(
+          new WorkflowRuntimeError(
+            "Failed to serialize stream chunk. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).",
+            error
+          )
+        );
+      }
     },
   });
   return stream;
@@ -648,8 +658,15 @@ export function dehydrateWorkflowArguments(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const str = devalue.stringify(value, getExternalReducers(global, ops));
-  return revive(str);
+  try {
+    const str = devalue.stringify(value, getExternalReducers(global, ops));
+    return revive(str);
+  } catch (error) {
+    throw new WorkflowRuntimeError(
+      `Failed to serialize workflow arguments. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
+      error
+    );
+  }
 }
 
 /**
@@ -685,8 +702,15 @@ export function dehydrateWorkflowReturnValue(
   value: unknown,
   global: Record<string, any> = globalThis
 ) {
-  const str = devalue.stringify(value, getWorkflowReducers(global));
-  return revive(str);
+  try {
+    const str = devalue.stringify(value, getWorkflowReducers(global));
+    return revive(str);
+  } catch (error) {
+    throw new WorkflowRuntimeError(
+      `Failed to serialize workflow return value. Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
+      error
+    );
+  }
 }
 
 /**
@@ -724,8 +748,15 @@ export function dehydrateStepArguments(
   value: unknown,
   global: Record<string, any>
 ) {
-  const str = devalue.stringify(value, getWorkflowReducers(global));
-  return revive(str);
+  try {
+    const str = devalue.stringify(value, getWorkflowReducers(global));
+    return revive(str);
+  } catch (error) {
+    throw new WorkflowRuntimeError(
+      `Failed to serialize step arguments. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
+      error
+    );
+  }
 }
 
 /**
@@ -763,8 +794,15 @@ export function dehydrateStepReturnValue(
   ops: Promise<any>[],
   global: Record<string, any> = globalThis
 ) {
-  const str = devalue.stringify(value, getStepReducers(global, ops));
-  return revive(str);
+  try {
+    const str = devalue.stringify(value, getStepReducers(global, ops));
+    return revive(str);
+  } catch (error) {
+    throw new WorkflowRuntimeError(
+      `Failed to serialize step return value. Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
+      error
+    );
+  }
 }
 
 /**

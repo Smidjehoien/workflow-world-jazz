@@ -1,8 +1,12 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import { describe, expect, it } from 'vitest';
+import type { WorkflowRuntimeError } from './errors.js';
 import {
+  dehydrateStepArguments,
+  dehydrateStepReturnValue,
   dehydrateWorkflowArguments,
+  dehydrateWorkflowReturnValue,
   getStreamType,
   hydrateWorkflowArguments,
 } from './serialization.js';
@@ -354,13 +358,64 @@ describe('workflow arguments', () => {
 
   it('should throw error for an unsupported type', () => {
     class Foo {}
-    let err: Error | undefined;
+    let err: WorkflowRuntimeError | undefined;
     try {
       dehydrateWorkflowArguments(new Foo(), []);
     } catch (err_) {
-      err = err_ as Error;
+      err = err_ as WorkflowRuntimeError;
     }
     expect(err).toBeDefined();
-    expect(err?.message).toEqual(`Cannot stringify arbitrary non-POJOs`);
+    expect(err?.message).toContain(
+      `Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`
+    );
+  });
+});
+
+describe('workflow return value', () => {
+  it('should throw error for an unsupported type', () => {
+    class Foo {}
+    let err: WorkflowRuntimeError | undefined;
+    try {
+      dehydrateWorkflowReturnValue(new Foo());
+    } catch (err_) {
+      err = err_ as WorkflowRuntimeError;
+    }
+    expect(err).toBeDefined();
+    expect(err?.message).toContain(
+      `Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`
+    );
+  });
+});
+
+describe('step arguments', () => {
+  it('should throw error for an unsupported type', () => {
+    class Foo {}
+    let err: WorkflowRuntimeError | undefined;
+    try {
+      dehydrateStepArguments(new Foo(), globalThis);
+    } catch (err_) {
+      err = err_ as WorkflowRuntimeError;
+    }
+    expect(err).toBeDefined();
+    expect(err?.message).toContain(
+      `Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`
+    );
+  });
+});
+
+describe('step return value', () => {
+  it('should throw error for an unsupported type', () => {
+    class Foo {}
+    let err: WorkflowRuntimeError | undefined;
+    try {
+      dehydrateStepReturnValue(new Foo(), []);
+    } catch (err_) {
+      err = err_ as WorkflowRuntimeError;
+    }
+
+    expect(err).toBeDefined();
+    expect(err?.message).toContain(
+      `Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`
+    );
   });
 });
