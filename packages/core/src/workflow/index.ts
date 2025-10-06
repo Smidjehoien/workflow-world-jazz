@@ -1,7 +1,7 @@
 import type { StepContext } from '../step/get-step-context.js';
 
-export { __builtin_fetch as fetch } from '../builtins.js';
 export type { Hook, HookOptions } from '../create-hook.js';
+export { fetch } from '../fetch.js';
 export type {
   Webhook,
   WebhookOptions,
