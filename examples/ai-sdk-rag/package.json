@@ -42,6 +42,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vercel/workflow-typescript-plugin": "workspace:*",
     "drizzle-kit": "^0.22.7",
     "pg": "^8.12.0",
     "postcss": "^8",
