@@ -21,16 +21,16 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
-    "zod": "3"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "catalog:"
   }
 }

@@ -9,17 +9,17 @@
     "build": "workflow build --target vercel-build-output-api --workflow-manifest manifest.js && rm -rf .vercel/output/static && cp -rv public .vercel/output/static"
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@types/node": "catalog:",
     "@vercel/workflow-cli": "workspace:*",
-    "esbuild": "^0.25.5"
+    "esbuild": "catalog:"
   },
   "dependencies": {
     "@vercel/functions": "^2.2.12",
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow-core": "workspace:*",
-    "ai": "beta",
+    "ai": "5",
     "mixpart": "^0.0.4",
-    "openai": "^5.11.0",
-    "zod": "4"
+    "openai": "^6",
+    "zod": "catalog:"
   }
 }

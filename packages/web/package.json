@@ -32,13 +32,13 @@
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "catalog:",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "tailwindcss": "^4",
-    "typescript": "^5",
+    "typescript": "catalog:",
     "@vercel/workflow-world": "workspace:*"
   }
 }

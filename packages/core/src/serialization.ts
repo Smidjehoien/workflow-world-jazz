@@ -170,7 +170,7 @@ function revive(str: string) {
 }
 
 function getCommonReducers(global: Record<string, any> = globalThis) {
-  const abToBase64 = (value: ArrayBuffer, offset: number, length: number) =>
+  const abToBase64 = (value: ArrayBufferLike, offset: number, length: number) =>
     Buffer.from(value, offset, length).toString('base64');
   const viewToBase64 = (value: ArrayBufferView) =>
     abToBase64(value.buffer, value.byteOffset, value.byteLength);

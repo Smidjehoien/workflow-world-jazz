@@ -138,6 +138,10 @@ export async function runWorkflow(
         return resArrayBuffer(this);
       }
 
+      async bytes() {
+        return new Uint8Array(await resArrayBuffer(this));
+      }
+
       async json() {
         return resJson(this);
       }
@@ -177,6 +181,10 @@ export async function runWorkflow(
 
       async arrayBuffer() {
         return resArrayBuffer(this);
+      }
+
+      async bytes() {
+        return new Uint8Array(await resArrayBuffer(this));
       }
 
       async json() {

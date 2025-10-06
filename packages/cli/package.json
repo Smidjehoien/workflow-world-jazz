@@ -26,7 +26,7 @@
     "topicSeparator": " "
   },
   "devDependencies": {
-    "@types/node": "^24.0.3",
+    "@types/node": "catalog:",
     "@vercel/workflow-tsconfig": "workspace:*"
   },
   "dependencies": {
@@ -46,7 +46,7 @@
     "date-fns": "^4.1.0",
     "easy-table": "^1.2.0",
     "enhanced-resolve": "5.18.2",
-    "esbuild": "^0.25.6",
+    "esbuild": "catalog:",
     "find-up": "7.0.0",
     "mixpart": "^0.0.4",
     "open": "^10.2.0",
@@ -55,6 +55,6 @@
     "tinyglobby": "^0.2.14",
     "watchpack": "2.4.4",
     "xdg-app-paths": "^5.1.0",
-    "zod": "^4.1.11"
+    "zod": "catalog:"
   }
 }
