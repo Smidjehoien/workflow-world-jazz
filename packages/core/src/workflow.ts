@@ -99,7 +99,9 @@ export async function runWorkflow(
     vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;
 
     // @ts-ignore Provide a hoisted fetch function
-    vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
+    // NOTE: Will have a config override to use the custom fetch step.
+    //       For now `fetch` must be explictly imported from `@vercel/workflow-core`.
+    // vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
 
     // `Request` and `Response` are special built-in classes that invoke steps
     // for the `json()`, `text()` and `arrayBuffer()` instance methods
