@@ -16,7 +16,7 @@ export function dateToStringReplacer(_key: string, value: unknown): unknown {
 }
 
 export const DEFAULT_CONFIG: APIConfig = {
-  baseUrl: 'https://workflow-server.vercel.sh/api',
+  baseUrl: 'https://vercel-workflow.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
