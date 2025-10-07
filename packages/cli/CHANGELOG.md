@@ -1,5 +1,19 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.39
+
+### Patch Changes
+
+- ca7a43e: Update discover to filter extra items and hide unactionable errors
+- 3876dab: Don't daemonize web server, make less brittle, fix env var detection
+- f63ea6f: Improve formatting of inputs/outputs when listing data via CLI
+- Updated dependencies [290441b]
+- Updated dependencies [ed5d90f]
+- Updated dependencies [3876dab]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.5
+  - @vercel/workflow-core@0.0.1-alpha.30
+  - @vercel/workflow-web@0.0.1-alpha.39
+
 ## 0.0.1-alpha.38
 
 ### Patch Changes

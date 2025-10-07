@@ -19,7 +19,8 @@
     "@vercel/workflow-world-embedded": "0.0.1-alpha.1",
     "@vercel/workflow-world-vercel": "0.0.1-alpha.1",
     "@vercel/workflow-web": "0.0.1-alpha.36",
-    "@vercel/workflow-typescript-plugin": "0.0.1-alpha.1"
+    "@vercel/workflow-typescript-plugin": "0.0.1-alpha.1",
+    "@vercel/workflow-errors": "0.0.1-alpha.0"
   },
   "changesets": [
     "all-lands-write",
@@ -37,6 +38,7 @@
     "clever-heads-throw",
     "cold-carpets-double",
     "cold-regions-beg",
+    "common-words-mix",
     "cool-peaches-hang",
     "cool-tables-double",
     "crazy-hotels-cry",
@@ -95,6 +97,7 @@
     "light-jars-watch",
     "loud-moons-reply",
     "lovely-hornets-shine",
+    "lucky-sides-divide",
     "major-kiwis-lose",
     "mean-views-kneel",
     "mighty-rabbits-hope",
@@ -105,6 +108,7 @@
     "odd-geese-drop",
     "odd-sloths-run",
     "old-readers-call",
+    "olive-queens-check",
     "polite-jokes-go",
     "quiet-seahorses-melt",
     "quiet-webs-greet",
@@ -138,6 +142,7 @@
     "three-rooms-stare",
     "tidy-start-types",
     "tricky-walls-join",
+    "true-toys-own",
     "twenty-tires-rescue",
     "two-cities-behave",
     "two-falcons-type",
@@ -154,6 +159,7 @@
     "wild-bats-mix",
     "wild-clubs-dress",
     "witty-foxes-warn",
+    "witty-swans-brake",
     "yellow-cycles-show",
     "young-breads-yell",
     "young-lamps-deny"

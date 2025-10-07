@@ -1,5 +1,14 @@
 # ai-sdk-workflow-patterns
 
+## 0.1.1-alpha.8
+
+### Patch Changes
+
+- Updated dependencies [290441b]
+- Updated dependencies [ed5d90f]
+  - @vercel/workflow-core@0.0.1-alpha.30
+  - @vercel/workflow-next@0.0.1-alpha.40
+
 ## 0.1.1-alpha.7
 
 ### Patch Changes

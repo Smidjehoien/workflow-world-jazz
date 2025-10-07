@@ -1,5 +1,14 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.39
+
+### Patch Changes
+
+- 3876dab: Don't daemonize web server, make less brittle, fix env var detection
+- Updated dependencies [290441b]
+- Updated dependencies [ed5d90f]
+  - @vercel/workflow-core@0.0.1-alpha.30
+
 ## 0.0.1-alpha.38
 
 ### Patch Changes

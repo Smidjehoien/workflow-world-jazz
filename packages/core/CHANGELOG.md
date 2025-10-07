@@ -1,5 +1,15 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.30
+
+### Patch Changes
+
+- 290441b: Add error package to standardize errors
+- ed5d90f: Remove `fetch()` from "builtins"
+- Updated dependencies [290441b]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.5
+  - @vercel/workflow-errors@0.0.1-alpha.1
+
 ## 0.0.1-alpha.29
 
 ### Patch Changes

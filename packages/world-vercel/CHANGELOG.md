@@ -1,5 +1,13 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- 290441b: Add error package to standardize errors
+- Updated dependencies [290441b]
+  - @vercel/workflow-errors@0.0.1-alpha.1
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes
