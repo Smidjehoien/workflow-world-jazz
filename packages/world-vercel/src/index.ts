@@ -5,7 +5,6 @@ import { createStorage } from './storage.js';
 import { createStreamer } from './streamer.js';
 import type { APIConfig } from './utils.js';
 
-export { WorkflowAPIError } from './errors.js';
 export { createQueue } from './queue.js';
 export { createStorage } from './storage.js';
 export { createStreamer } from './streamer.js';

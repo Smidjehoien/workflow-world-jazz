@@ -1,7 +1,7 @@
 import { runInContext } from 'node:vm';
+import type { WorkflowRuntimeError } from '@vercel/workflow-errors';
 import { createContext } from '@vercel/workflow-vm';
 import { describe, expect, it } from 'vitest';
-import type { WorkflowRuntimeError } from './errors.js';
 import {
   dehydrateStepArguments,
   dehydrateStepReturnValue,

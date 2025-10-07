@@ -1,4 +1,4 @@
-import { WorkflowRuntimeError } from './errors.js';
+import { WorkflowRuntimeError } from '@vercel/workflow-errors';
 import { EventConsumerResult } from './events-consumer.js';
 import { FatalError, WorkflowSuspension } from './global.js';
 import { stepLogger } from './logger.js';

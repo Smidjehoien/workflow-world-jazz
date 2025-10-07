@@ -1,8 +1,8 @@
+import { get } from '@vercel/edge-config';
 import { cookies } from 'next/headers';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { checkTeamMembership } from './lib/check-membership';
-import { get } from '@vercel/edge-config';
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();

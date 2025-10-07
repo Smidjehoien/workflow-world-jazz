@@ -1,6 +1,6 @@
 import { getVercelOidcToken } from '@vercel/oidc';
+import { WorkflowAPIError } from '@vercel/workflow-errors';
 import type { z } from 'zod';
-import { WorkflowAPIError } from './errors.js';
 
 export interface APIConfig {
   baseUrl?: string;

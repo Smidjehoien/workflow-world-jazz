@@ -490,6 +490,9 @@ importers:
       '@vercel/functions':
         specifier: ^2.2.12
         version: 2.2.12(@aws-sdk/credential-provider-web-identity@3.609.0(@aws-sdk/client-sts@3.844.0))
+      '@vercel/workflow-errors':
+        specifier: workspace:*
+        version: link:../errors
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../vm
@@ -548,6 +551,15 @@ importers:
       seedrandom:
         specifier: ^3.0.5
         version: 3.0.5
+
+  packages/errors:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.6.2
+      '@vercel/workflow-tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
 
   packages/next:
     dependencies:
@@ -753,6 +765,9 @@ importers:
       '@vercel/queue':
         specifier: 0.0.0-alpha.23
         version: 0.0.0-alpha.23
+      '@vercel/workflow-errors':
+        specifier: workspace:*
+        version: link:../errors
       '@vercel/workflow-world':
         specifier: workspace:*
         version: link:../world

@@ -31,6 +31,7 @@
     "@types/json-schema": "catalog:",
     "@types/ms": "^2.1.0",
     "@vercel/functions": "^2.2.12",
+    "@vercel/workflow-errors": "workspace:*",
     "@vercel/workflow-vm": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "@vercel/workflow-world-embedded": "workspace:*",

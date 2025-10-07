@@ -1,5 +1,5 @@
+import { WorkflowRuntimeError } from '@vercel/workflow-errors';
 import * as devalue from 'devalue';
-import { WorkflowRuntimeError } from './errors.js';
 import { getWorld } from './runtime/world.js';
 import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
 
@@ -32,7 +32,7 @@ export function getSerializeStream(
         controller.error(
           new WorkflowRuntimeError(
             "Failed to serialize stream chunk. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).",
-            error
+            { slug: 'serialization-failed', cause: error }
           )
         );
       }
@@ -664,7 +664,7 @@ export function dehydrateWorkflowArguments(
   } catch (error) {
     throw new WorkflowRuntimeError(
       `Failed to serialize workflow arguments. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
-      error
+      { slug: 'serialization-failed', cause: error }
     );
   }
 }
@@ -708,7 +708,7 @@ export function dehydrateWorkflowReturnValue(
   } catch (error) {
     throw new WorkflowRuntimeError(
       `Failed to serialize workflow return value. Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
-      error
+      { slug: 'serialization-failed', cause: error }
     );
   }
 }
@@ -754,7 +754,7 @@ export function dehydrateStepArguments(
   } catch (error) {
     throw new WorkflowRuntimeError(
       `Failed to serialize step arguments. Ensure you're passing serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
-      error
+      { slug: 'serialization-failed', cause: error }
     );
   }
 }
@@ -800,7 +800,7 @@ export function dehydrateStepReturnValue(
   } catch (error) {
     throw new WorkflowRuntimeError(
       `Failed to serialize step return value. Ensure you're returning serializable types (plain objects, arrays, primitives, Date, RegExp, Map, Set).`,
-      error
+      { slug: 'serialization-failed', cause: error }
     );
   }
 }
