@@ -92,20 +92,11 @@ export function createDiscoverEntriesPlugin(state: {
             contents: transformedCode,
             loader,
           };
-        } catch (error) {
-          const errorMessage =
-            error instanceof Error ? error.message : String(error);
-          console.error(
-            `❌ Entry discovery error in ${args.path}:`,
-            errorMessage
-          );
+        } catch (_) {
+          // ignore trace errors during discover phase
           return {
-            errors: [
-              {
-                text: `Entry discovery failed: ${errorMessage}`,
-                location: { file: args.path, line: 0, column: 0 },
-              },
-            ],
+            contents: '',
+            loader: 'js',
           };
         }
       });

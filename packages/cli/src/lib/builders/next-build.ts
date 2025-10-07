@@ -314,6 +314,16 @@ export class NextBuilder extends BaseBuilder {
     }
   }
 
+  protected async getInputFiles(): Promise<string[]> {
+    const inputFiles = await super.getInputFiles();
+    return inputFiles.filter((item) =>
+      // non-exact pattern match to try to narrow
+      // down to just app route entrypoints, this will
+      // not be valid when pages router support is added
+      item.match(/[/\\](route|page|layout)\./)
+    );
+  }
+
   private async writeFunctionsConfig(outputDir: string) {
     // we don't run this in development mode as it's not needed
     if (process.env.NODE_ENV === 'development') {
