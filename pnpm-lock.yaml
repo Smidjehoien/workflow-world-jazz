@@ -131,6 +131,9 @@ importers:
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../packages/core
+      '@vercel/workflow-errors':
+        specifier: workspace:*
+        version: link:../packages/errors
       '@vercel/workflow-next':
         specifier: workspace:*
         version: link:../packages/next
