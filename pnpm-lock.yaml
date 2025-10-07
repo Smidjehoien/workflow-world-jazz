@@ -125,6 +125,9 @@ importers:
       '@vercel/workflow-ai':
         specifier: workspace:*
         version: link:../packages/ai
+      '@vercel/workflow-cli':
+        specifier: workspace:*
+        version: link:../packages/cli
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../packages/core
@@ -137,6 +140,9 @@ importers:
       '@vercel/workflow-vm':
         specifier: workspace:*
         version: link:../packages/vm
+      '@vercel/workflow-web':
+        specifier: workspace:*
+        version: link:../packages/web
       '@vercel/workflow-world':
         specifier: workspace:*
         version: link:../packages/world
@@ -399,6 +405,9 @@ importers:
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../core
+      '@vercel/workflow-web':
+        specifier: workspace:*
+        version: link:../web
       '@vercel/workflow-world':
         specifier: workspace:*
         version: link:../world

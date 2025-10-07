@@ -242,18 +242,26 @@ export async function getLinkFromDir(
 export function* traverseUpDirectories({
   start,
   base,
+  maxDepth = 10,
 }: {
   start: string;
   base?: string;
+  maxDepth?: number;
 }) {
   let current: string | undefined = normalize(start);
   const normalizedRoot = base ? normalize(base) : undefined;
+  let depth = 0;
   while (current) {
     yield current;
     if (current === normalizedRoot) break;
     // Go up one directory
     const next = join(current, '..');
     current = next === current ? undefined : next;
+    depth++;
+    if (depth > maxDepth) {
+      logger.debug(`Max traversal depth of ${maxDepth} reached`);
+      break;
+    }
   }
 }
 
@@ -323,8 +331,10 @@ function getGitDirectory(cwd: string): string | null {
     });
 
     return gitConfigPath;
-  } catch (err) {
-    console.error('Failed to get git directory:', err);
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      logger.debug(`Failed to get git directory: ${err.message}`);
+    }
     return null;
   }
 }

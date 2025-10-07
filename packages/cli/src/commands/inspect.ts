@@ -92,12 +92,12 @@ export default class Inspect extends BaseCommand {
 
     const id = args.id;
 
+    const world = await setupCliWorld(flags, this.config.version);
+
     // Handle web UI mode
     if (flags.web) {
-      return await launchWebUI(resource, id, flags);
+      return await launchWebUI(resource, id, flags, this.config.version);
     }
-
-    const world = await setupCliWorld(flags, this.config.version);
 
     if (resource === 'run') {
       if (id) {
