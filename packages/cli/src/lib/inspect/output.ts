@@ -17,6 +17,7 @@ import { getWorkflowReadableStream } from '../runtime.js';
 import { streamToConsole } from './stream.js';
 
 const DEFAULT_PAGE_SIZE = 20;
+const TABLE_TRUNCATE_IO_LENGTH = 25;
 
 class StreamID {
   constructor(public name: string | null) {}
@@ -93,6 +94,9 @@ const showTable = (data: Record<string, unknown>[], props: string[]) => {
         table.cell(prop, value.toString());
       } else if (prop === 'streamId') {
         table.cell(prop, chalk.green(value));
+      } else if (prop === 'workflowName') {
+        const workflowNameNonUnique = String(value).split('-').pop();
+        table.cell(prop, chalk.blue.blueBright(workflowNameNonUnique));
       } else if (prop === 'output' || prop === 'input') {
         table.cell(prop, inlineFormatIO(value));
       } else if (prop === 'status') {
@@ -197,7 +201,10 @@ const hydrateStepIO = (step: Step): Step => {
   };
 };
 
-const truncateString = (str: string, maxLength: number = 20) => {
+const truncateString = (
+  str: string,
+  maxLength: number = TABLE_TRUNCATE_IO_LENGTH
+) => {
   return str && str.length > maxLength
     ? `${str.substring(0, maxLength)}...`
     : str;
@@ -206,7 +213,7 @@ const truncateString = (str: string, maxLength: number = 20) => {
 /**
  * Takes hydrated step/workflow input/output and serializes it for inline display.
  */
-const inlineFormatIO = <T>(io: T): string => {
+const inlineFormatIO = <T>(io: T, topLevel: boolean = true): string => {
   const type = typeof io;
   let value = '';
   if (io === undefined) {
@@ -217,13 +224,20 @@ const inlineFormatIO = <T>(io: T): string => {
     if (io.length === 0) {
       value = '<empty>';
     } else {
-      value = io.map((item) => inlineFormatIO(item)).join(',');
+      const stringified = io
+        .map((item) => inlineFormatIO(item, false))
+        .join(',');
+      if (stringified.length > TABLE_TRUNCATE_IO_LENGTH && topLevel) {
+        value = chalk.yellow(`${io.length} args`);
+      } else {
+        value = stringified;
+      }
     }
   } else if (type === 'object') {
     if (io instanceof StreamID) {
       value = io.toString();
     } else if (io instanceof Date) {
-      value = `${formatTableTimestamp(io)}`;
+      value = io.toISOString();
     } else {
       value = truncateString(JSON.stringify(io));
     }
@@ -256,9 +270,12 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
     'white',
     'INFO',
     'To view the input/output of a run, use `wf i run <run-id>`',
-    'To view the content of any stream, use `wf i stream <stream-id>`',
-    getCursorHint(runs)
+    'To view the content of any stream, use `wf i stream <stream-id>`'
   );
+  const cursorHint = getCursorHint(runs);
+  if (cursorHint) {
+    logger.info(cursorHint);
+  }
   logger.log(showTable(runsWithHydratedIO, WORKFLOW_RUN_LISTED_PROPS));
 };
 
@@ -313,12 +330,12 @@ export const listSteps = async (
   }
   const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
   logger.log(showTable(stepsWithHydratedIO, STEP_LISTED_PROPS));
+  logger.info(getCursorHint(stepChunks));
   logger.showBox(
     'white',
     'INFO',
     'To view the input/output of a step, use `wf i step <step-id>`',
-    'To view the content of any stream, use `wf i stream <stream-id>`',
-    getCursorHint(stepChunks)
+    'To view the content of any stream, use `wf i stream <stream-id>`'
   );
 };
 
