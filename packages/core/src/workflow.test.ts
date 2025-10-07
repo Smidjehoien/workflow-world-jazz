@@ -478,7 +478,7 @@ describe('runWorkflow', () => {
           eventId: 'event-2',
           runId: workflowRunId,
           eventType: 'step_completed',
-          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
           eventData: {
             result: dehydrateStepReturnValue(7, ops),
           },
@@ -488,7 +488,7 @@ describe('runWorkflow', () => {
           eventId: 'event-3',
           runId: workflowRunId,
           eventType: 'step_completed',
-          correlationId: 'step_01HK153X008RT6YEW43G8QX6JY',
+          correlationId: 'step_01HK153X008RT6YEW43G8QX6JX',
           eventData: {
             result: dehydrateStepReturnValue(3, ops),
           },
