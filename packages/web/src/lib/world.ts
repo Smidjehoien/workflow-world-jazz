@@ -1,5 +1,7 @@
 'use server';
 
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { getWorld, resetWorld } from '@vercel/workflow-core';
 import {
   hydrateStepArguments,
@@ -8,8 +10,6 @@ import {
   hydrateWorkflowReturnValue,
 } from '@vercel/workflow-core/serialization';
 import type { SearchParams } from 'next/dist/server/request/search-params';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -182,7 +182,8 @@ export async function fetchSteps(
   const world = await setupWorld(config);
   const steps = await world.steps.list({
     runId,
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
+    // TODO: Make desc once we fix larger pagination
+    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'asc' },
   });
   return steps;
 }

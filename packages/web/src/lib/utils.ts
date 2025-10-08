@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import { formatDistanceStrict } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
@@ -22,3 +23,11 @@ export function getPaginationDisplay(
   }
   return `Page ${currentPage} of ${totalPages}`;
 }
+
+export const formatDuration = (
+  start: number | string | Date | undefined,
+  end: number | string | Date | undefined
+): string | null => {
+  if (!start || !end) return null;
+  return formatDistanceStrict(new Date(start), new Date(end));
+};

@@ -1,7 +1,6 @@
 'use client';
 
 import type { Step } from '@vercel/workflow-world';
-import { formatRelative } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import {
   Tooltip,
@@ -9,178 +8,130 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { getResourceName } from '@/lib/resource-name';
-import { cn } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils';
 import { StatusBadge } from '../display-utils/status-badge';
 
 interface StepsTimelineProps {
   steps: Step[];
   hasMore: boolean;
   onStepClick: (stepId: string) => void;
+  onLoadMore?: () => void;
   selectedStepId?: string;
   runStartTime?: string;
   runEndTime?: string;
 }
 
-interface StepPosition {
-  step: Step;
-  leftPercent: number;
-  widthPercent: number;
-  duration: number;
+interface TimelineItem {
+  id: string;
+  type: 'run' | 'step';
+  name: string;
+  status: Step['status'] | 'running' | 'completed';
+  startTime: number;
+  endTime: number;
+  isOngoing: boolean;
+  step?: Step;
 }
 
-const statusToColor = (status: Step['status']) => {
+const MIN_BAR_WIDTH_PX = 8;
+const BAR_HEIGHT_PX = 16;
+const ROW_GAP_PX = 8;
+const MAX_CHART_HEIGHT_PX = 512;
+const MORE_INDICATOR_WIDTH_PX = 2;
+
+const statusToColor = (status: Step['status'] | 'running' | 'completed') => {
   switch (status) {
     case 'running':
-      return 'bg-blue-500/20 border-blue-500';
+      return 'bg-blue-500 border-blue-600';
     case 'completed':
-      return 'bg-green-500/20 border-green-500';
+      return 'bg-green-500 border-green-600';
     case 'failed':
-      return 'bg-red-500/20 border-red-500';
+      return 'bg-red-500 border-red-600';
     case 'cancelled':
-      return 'bg-yellow-500/20 border-yellow-500';
+      return 'bg-yellow-500 border-yellow-600';
     case 'pending':
-      return 'bg-gray-500/20 border-gray-500';
+      return 'bg-gray-400 border-gray-500';
     default:
-      return 'bg-gray-500/20 border-gray-500';
+      return 'bg-gray-400 border-gray-500';
   }
 };
 
-const formatDuration = (ms: number) => {
-  if (ms < 1000) return `${ms}ms`;
-  if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-  return `${(ms / 60000).toFixed(1)}m`;
-};
-
-/**
- * Takes a date and returns `<absoluteTime> (relativeTime) in <duration>`
- */
-const durationTooltipContent = (date: Date) => {
-  const absoluteTime = date.toLocaleString(undefined, {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-  const relativeTime = formatRelative(date, new Date());
-  return `${absoluteTime} (${relativeTime})`;
-};
-
-const calculateStepPositions = (
-  steps: Step[],
-  minTime: number,
-  maxTime: number
-): StepPosition[] => {
-  const timeRange = maxTime - minTime;
-
-  return steps.map((step) => {
-    const start = step.startedAt ? new Date(step.startedAt).getTime() : 0;
-    const end = step.completedAt
-      ? new Date(step.completedAt).getTime()
-      : Date.now();
-
-    const leftPercent = ((start - minTime) / timeRange) * 100;
-    const widthPercent = ((end - start) / timeRange) * 100;
-
-    return {
-      step,
-      leftPercent,
-      widthPercent: Math.max(widthPercent, 1), // Minimum 1% width for visibility
-      duration: end - start,
-    };
-  });
-};
-
-const groupIntoLanes = (positions: StepPosition[]): StepPosition[][] => {
-  const lanes: StepPosition[][] = [];
-
-  for (const pos of positions) {
-    let placed = false;
-
-    for (const lane of lanes) {
-      const overlaps = lane.some((existing) => {
-        const existingEnd = existing.leftPercent + existing.widthPercent;
-        const posEnd = pos.leftPercent + pos.widthPercent;
-        return !(
-          posEnd <= existing.leftPercent || pos.leftPercent >= existingEnd
-        );
-      });
-
-      if (!overlaps) {
-        lane.push(pos);
-        placed = true;
-        break;
-      }
-    }
-
-    if (!placed) {
-      lanes.push([pos]);
-    }
-  }
-
-  return lanes;
-};
-
-function StepTimelineItem({
-  position,
+function TimelineBar({
+  item,
+  leftPx,
+  widthPx,
   isSelected,
-  onStepClick,
+  onClick,
 }: {
-  position: StepPosition;
+  item: TimelineItem;
+  leftPx: number;
+  widthPx: number;
   isSelected: boolean;
-  onStepClick: (stepId: string) => void;
+  onClick?: () => void;
 }) {
-  const isRunning = position.step.status === 'running';
+  const isRunning = item.status === 'running' || item.isOngoing;
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <button
           type="button"
-          onClick={() => onStepClick(position.step.stepId)}
+          onClick={onClick}
+          disabled={!onClick}
           className={cn(
-            'absolute h-10 rounded-xs border-2 transition-all cursor-pointer border-none',
-            'flex items-center justify-center px-2 text-xs font-medium',
-            'hover:z-10 hover:scale-102 hover:shadow-lg',
-            isSelected && 'ring-1 ring-primary ring-offset-1 z-10',
+            'absolute rounded-sm border transition-all',
+            'flex items-center px-1.5 text-[10px] font-medium text-white',
+            onClick &&
+              'cursor-pointer hover:brightness-110 hover:scale-y-110 hover:z-10',
+            !onClick && 'cursor-default',
+            isSelected && 'ring-2 ring-primary ring-offset-1 z-10',
             isRunning && 'animate-pulse',
-            statusToColor(position.step.status)
+            statusToColor(item.status)
           )}
           style={{
-            left: `${position.leftPercent}%`,
-            width: `${position.widthPercent}%`,
+            left: `${leftPx}px`,
+            width: `${widthPx}px`,
+            height: `${BAR_HEIGHT_PX}px`,
+            top: '0px',
           }}
         >
-          <span className="truncate">
-            {getResourceName(position.step.stepName)}
+          <span className="truncate leading-none text-black bold">
+            {item.name}
           </span>
+          {item.isOngoing && (
+            <span className="ml-1 flex-shrink-0 text-[8px]">●</span>
+          )}
         </button>
       </TooltipTrigger>
       <TooltipContent className="max-w-md">
         <div className="space-y-1">
-          <div className="font-semibold">
-            {getResourceName(position.step.stepName)}
-          </div>
+          <div className="font-semibold">{item.name}</div>
           <div className="text-xs space-y-0.5">
-            <div>Step ID: {position.step.stepId}</div>
-            <div>
-              Status:{' '}
-              <StatusBadge
-                status={position.step.status}
-                context={position.step}
-                className="text-xs"
-              />
-            </div>
-            <div>Duration: {formatDuration(position.duration)}</div>
-            {position.step.startedAt && (
+            {item.type === 'step' && item.step && (
+              <>
+                <div>Step ID: {item.step.stepId}</div>
+                <div className="flex items-center gap-1">
+                  Status:{' '}
+                  <StatusBadge
+                    status={item.step.status}
+                    context={item.step}
+                    className="text-xs"
+                  />
+                </div>
+              </>
+            )}
+            {item.type === 'run' && (
               <div>
-                Started:{' '}
-                {new Date(position.step.startedAt).toLocaleTimeString()}
+                Status: {item.isOngoing ? 'Running' : 'Completed'}
+                {item.isOngoing && ' (ongoing)'}
               </div>
             )}
-            {position.step.completedAt && (
-              <div>
-                Completed:{' '}
-                {new Date(position.step.completedAt).toLocaleTimeString()}
-              </div>
+            <div>
+              Duration: {formatDuration(item.startTime, item.endTime)}
+              {item.isOngoing && ' (so far)'}
+            </div>
+            <div>Started: {new Date(item.startTime).toLocaleTimeString()}</div>
+            {!item.isOngoing && (
+              <div>Ended: {new Date(item.endTime).toLocaleTimeString()}</div>
             )}
           </div>
         </div>
@@ -193,60 +144,77 @@ export function StepsTimeline({
   steps,
   hasMore,
   onStepClick,
+  onLoadMore,
   selectedStepId,
   runStartTime,
   runEndTime,
 }: StepsTimelineProps) {
-  if (steps.length === 0) {
+  if (steps.length === 0 || !runStartTime) {
     return null;
   }
+
+  const now = Date.now();
+  const runStart = new Date(runStartTime).getTime();
+  const runEnd = runEndTime ? new Date(runEndTime).getTime() : now;
+  const runIsOngoing = !runEndTime;
+  const totalDuration = runEnd - runStart;
 
   // Filter steps that have start times
   const stepsWithTimes = steps.filter((step) => step.startedAt);
 
-  if (stepsWithTimes.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-sm text-muted-foreground text-center py-4">
-            No steps have started yet
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  // Create timeline items: run + steps
+  const items: TimelineItem[] = [
+    {
+      id: 'run',
+      type: 'run',
+      name: 'Run',
+      status: runIsOngoing ? 'running' : 'completed',
+      startTime: runStart,
+      endTime: runEnd,
+      isOngoing: runIsOngoing,
+    },
+    ...stepsWithTimes.map((step): TimelineItem => {
+      const stepStart = step.startedAt
+        ? new Date(step.startedAt).getTime()
+        : runStart;
+      const stepEnd = step.completedAt
+        ? new Date(step.completedAt).getTime()
+        : now;
+      const stepIsOngoing = !step.completedAt && step.status === 'running';
 
-  // Calculate time range - use run times if provided, otherwise use step times
-  let minTime: number;
-  let maxTime: number;
+      return {
+        id: step.stepId,
+        type: 'step',
+        name: getResourceName(step.stepName),
+        status: step.status,
+        startTime: stepStart,
+        endTime: stepEnd,
+        isOngoing: stepIsOngoing,
+        step,
+      };
+    }),
+  ];
 
-  if (runStartTime && runEndTime) {
-    minTime = new Date(runStartTime).getTime();
-    maxTime = new Date(runEndTime).getTime();
-  } else {
-    const startTimes = stepsWithTimes.map((s) =>
-      s.startedAt ? new Date(s.startedAt).getTime() : 0
-    );
-    const endTimes = stepsWithTimes.map((s) =>
-      s.completedAt ? new Date(s.completedAt).getTime() : Date.now()
-    );
-    minTime = Math.min(...startTimes);
-    maxTime = Math.max(...endTimes);
-  }
-  const timeRange = maxTime - minTime;
+  // Calculate minimum width needed for the chart
+  // Each item needs at least MIN_BAR_WIDTH_PX
+  const rowCount = items.length;
 
-  // Calculate positions for each step
-  const stepPositions = calculateStepPositions(
-    stepsWithTimes,
-    minTime,
-    maxTime
+  // Calculate the width needed to show all bars at minimum width
+  // For this, we need to check the smallest duration and ensure it gets MIN_BAR_WIDTH_PX
+  let chartWidthPx = 600; // default minimum width
+
+  // Find the shortest duration as a percentage of total
+  const shortestDurationPct = Math.min(
+    ...items.map((item) => {
+      const duration = item.endTime - item.startTime;
+      return (duration / totalDuration) * 100;
+    })
   );
 
-  // Group overlapping steps into lanes
-  const lanes = groupIntoLanes(stepPositions);
-
-  // Calculate the height needed for all lanes
-  const chartHeight = lanes.length * 48; // 40px height + 8px margin
+  // Calculate width needed: if shortest bar is X% of total, and needs MIN_BAR_WIDTH_PX,
+  // then total width = MIN_BAR_WIDTH_PX / (X / 100)
+  const minRequiredWidth = MIN_BAR_WIDTH_PX / (shortestDurationPct / 100);
+  chartWidthPx = Math.max(chartWidthPx, minRequiredWidth);
 
   return (
     <Card>
@@ -254,71 +222,105 @@ export function StepsTimeline({
         <div className="text-sm text-muted-foreground mb-2">
           Timeline (showing {stepsWithTimes.length} step
           {stepsWithTimes.length !== 1 ? 's' : ''}){' '}
-          {hasMore ? ' (load more pages to see more steps)' : ''}
+          {hasMore && '(load more pages to see additional steps)'}
         </div>
-        <div className="relative bg-muted/20 rounded-lg p-4">
-          {/* Run start marker */}
-          {runStartTime && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className="absolute top-0 bottom-0 w-1 bg-primary/40 hover:bg-primary/60 transition-colors cursor-help z-0"
-                  style={{
-                    left: '1%',
-                    height: `${chartHeight}px`,
-                  }}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="text-xs">
-                  Run started at{' '}
-                  {durationTooltipContent(new Date(runStartTime))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          )}
 
-          {/* Run end marker */}
-          {runEndTime && (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className="absolute top-0 bottom-0 w-1 bg-primary/40 hover:bg-primary/60 transition-colors cursor-help z-0"
-                  style={{
-                    left: '99%',
-                    height: `${chartHeight}px`,
-                  }}
-                />
-              </TooltipTrigger>
-              <TooltipContent>
-                <div className="text-xs">
-                  Run ended at {durationTooltipContent(new Date(runEndTime))}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          )}
-
-          {/* Step lanes */}
-          {lanes.map((lane) => (
+        {/* Chart container with vertical scroll */}
+        <div
+          className="overflow-y-auto bg-muted/20 rounded-lg border"
+          style={{ maxHeight: `${MAX_CHART_HEIGHT_PX}px` }}
+        >
+          {/* Horizontal scrolling container */}
+          <div className="overflow-x-auto">
             <div
-              key={lane.map((p) => p.step.stepId).join('-')}
-              className="relative mb-2 h-10 last:mb-0"
+              className="relative p-4"
+              style={{
+                width: `${chartWidthPx}px`,
+                minWidth: '100%',
+                height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
+              }}
             >
-              {lane.map((pos) => (
-                <StepTimelineItem
-                  key={pos.step.stepId}
-                  position={pos}
-                  isSelected={selectedStepId === pos.step.stepId}
-                  onStepClick={onStepClick}
-                />
-              ))}
+              {items.map((item, index) => {
+                const offsetFromStart = item.startTime - runStart;
+                const duration = item.endTime - item.startTime;
+
+                const leftPx = (offsetFromStart / totalDuration) * chartWidthPx;
+                const widthPx = Math.max(
+                  (duration / totalDuration) * chartWidthPx,
+                  MIN_BAR_WIDTH_PX
+                );
+
+                const topPx = index * (BAR_HEIGHT_PX + ROW_GAP_PX);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="absolute"
+                    style={{
+                      top: `${topPx}px`,
+                      left: 0,
+                      right: 0,
+                      height: `${BAR_HEIGHT_PX}px`,
+                    }}
+                  >
+                    <TimelineBar
+                      item={item}
+                      leftPx={leftPx}
+                      widthPx={widthPx}
+                      isSelected={item.id === selectedStepId}
+                      onClick={
+                        item.type === 'step' && item.step
+                          ? () => {
+                              if (item.step) {
+                                onStepClick(item.step.stepId);
+                              }
+                            }
+                          : undefined
+                      }
+                    />
+                  </div>
+                );
+              })}
+
+              {/* Load more indicator */}
+              {hasMore && onLoadMore && items.length > 0 && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={onLoadMore}
+                      className="absolute bg-gray-400 hover:bg-gray-500 transition-colors cursor-pointer"
+                      style={{
+                        left: `${chartWidthPx - MORE_INDICATOR_WIDTH_PX - 16}px`,
+                        top: 0,
+                        width: `${MORE_INDICATOR_WIDTH_PX}px`,
+                        height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
+                      }}
+                      aria-label="Load more steps"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-xs">
+                      There may be more steps after this, click here to load
+                      more
+                    </div>
+                  </TooltipContent>
+                </Tooltip>
+              )}
             </div>
-          ))}
+          </div>
         </div>
+
+        {/* Time labels */}
         <div className="flex justify-between text-xs text-muted-foreground pt-2">
-          <span>{new Date(minTime).toLocaleTimeString()}</span>
-          <span>Duration: {formatDuration(timeRange)}</span>
-          <span>{new Date(maxTime).toLocaleTimeString()}</span>
+          <span>{new Date(runStart).toLocaleTimeString()}</span>
+          <span>
+            Duration: {formatDuration(runStartTime, runEndTime)}
+            {runIsOngoing && ' (ongoing)'}
+          </span>
+          <span>
+            {runIsOngoing ? 'Now' : new Date(runEnd).toLocaleTimeString()}
+          </span>
         </div>
       </CardContent>
     </Card>

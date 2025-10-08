@@ -139,6 +139,7 @@ export function StepsTable({
                     currentPageNumber === maxPagesVisited && data.hasMore
                   }
                   onStepClick={onStepClick}
+                  onLoadMore={handleNextPage}
                   selectedStepId={selectedStepId}
                   runStartTime={runStartTime}
                   runEndTime={runEndTime}

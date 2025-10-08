@@ -1,13 +1,14 @@
 'use client';
 
+import { ChevronRight, Radio } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { useRun } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
+import { formatDuration } from '@/lib/utils';
 import type { WorldConfig } from '@/lib/world';
-import { ChevronRight, Radio } from 'lucide-react';
-import { useState } from 'react';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { EventDetailSidebar } from '../events/event-detail-sidebar';
@@ -61,6 +62,8 @@ export function RunDetailView({
   if (!run) {
     return <div className="text-center py-8">Run not found</div>;
   }
+
+  const duration = formatDuration(run.startedAt, run.completedAt);
 
   return (
     <div className="space-y-6">
@@ -116,17 +119,10 @@ export function RunDetailView({
                 )}
               </div>
             </div>
-            {run.startedAt && run.completedAt && (
+            {duration && (
               <div>
                 <div className="text-sm text-muted-foreground">Duration</div>
-                <div>
-                  {Math.round(
-                    (new Date(run.completedAt).getTime() -
-                      new Date(run.startedAt).getTime()) /
-                      1000
-                  )}
-                  s
-                </div>
+                <div>{duration}</div>
               </div>
             )}
           </div>

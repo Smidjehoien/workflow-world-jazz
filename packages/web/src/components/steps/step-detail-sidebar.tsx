@@ -1,12 +1,13 @@
 'use client';
 
+import { Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStep } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
 import { extractStreamIds } from '@/lib/stream-utils';
+import { formatDuration } from '@/lib/utils';
 import type { WorldConfig } from '@/lib/world';
-import { Radio } from 'lucide-react';
 import { JsonView } from '../display-utils/json-view';
 import { RelativeTime } from '../display-utils/relative-time';
 import { SidePanel } from '../display-utils/side-panel';
@@ -52,14 +53,7 @@ export function StepDetailSidebar({
   const streamList = Array.from(streamIds);
 
   // Calculate duration if both started and completed
-  const duration =
-    step.startedAt && step.completedAt
-      ? Math.round(
-          (new Date(step.completedAt).getTime() -
-            new Date(step.startedAt).getTime()) /
-            1000
-        )
-      : null;
+  const duration = formatDuration(step.startedAt, step.completedAt);
 
   return (
     <SidePanel isOpen={true} onClose={onClose} title="Step Details">
@@ -109,7 +103,7 @@ export function StepDetailSidebar({
               {duration !== null && (
                 <div>
                   <div className="text-sm text-muted-foreground">Duration</div>
-                  <div>{duration}s</div>
+                  <div>{duration}</div>
                 </div>
               )}
             </div>
