@@ -1,5 +1,6 @@
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+import { WorkflowAPIError } from '@vercel/workflow-errors';
 import type { PaginatedResponse } from '@vercel/workflow-world';
 import { decodeTime, monotonicFactory } from 'ulid';
 import { z } from 'zod';
@@ -25,14 +26,38 @@ export async function ensureDir(dirPath: string): Promise<void> {
   }
 }
 
-export async function writeJSON(filePath: string, data: any): Promise<void> {
-  return write(filePath, JSON.stringify(data, null, 2));
+interface WriteOptions {
+  overwrite?: boolean;
+}
+
+export async function writeJSON(
+  filePath: string,
+  data: any,
+  opts?: WriteOptions
+): Promise<void> {
+  return write(filePath, JSON.stringify(data, null, 2), opts);
 }
 
 export async function write(
   filePath: string,
-  data: string | Buffer
+  data: string | Buffer,
+  opts?: WriteOptions
 ): Promise<void> {
+  if (!opts?.overwrite) {
+    try {
+      await fs.access(filePath);
+      throw new WorkflowAPIError(
+        `File ${filePath} already exists and 'overwrite' is false`,
+        { status: 409 }
+      );
+    } catch (error: any) {
+      // If file doesn't exist (ENOENT), continue with write
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+    }
+  }
+
   const tempPath = `${filePath}.tmp.${ulid()}`;
   try {
     await ensureDir(path.dirname(filePath));

@@ -1,13 +1,30 @@
 import { setTimeout } from 'node:timers/promises';
 import { JsonTransport } from '@vercel/queue';
 import { MessageId, type Queue, ValidQueueName } from '@vercel/workflow-world';
+import { monotonicFactory } from 'ulid';
 import z from 'zod';
 
 export function createQueue(port?: number): Queue {
   const transport = new JsonTransport();
+  const generateId = monotonicFactory();
 
-  const queue: Queue['queue'] = async (queueName, x) => {
-    const body = transport.serialize(x);
+  /**
+   * holds inflight messages by idempotency key to ensure
+   * that we don't queue the same message multiple times
+   */
+  const inflightMessages = new Map<string, MessageId>();
+
+  const queue: Queue['queue'] = async (queueName, message, opts) => {
+    const cleanup = [] as (() => void)[];
+
+    if (opts?.idempotencyKey) {
+      const existing = inflightMessages.get(opts.idempotencyKey);
+      if (existing) {
+        return { messageId: existing };
+      }
+    }
+
+    const body = transport.serialize(message);
     let pathname: string;
     if (queueName.startsWith('__wkf_step_')) {
       pathname = `step`;
@@ -16,7 +33,15 @@ export function createQueue(port?: number): Queue {
     } else {
       throw new Error('Unknown queue name prefix');
     }
-    const messageId = MessageId.parse(`msg_${crypto.randomUUID()}`);
+    const messageId = MessageId.parse(`msg_${generateId()}`);
+
+    if (opts?.idempotencyKey) {
+      const key = opts.idempotencyKey;
+      inflightMessages.set(key, messageId);
+      cleanup.push(() => {
+        inflightMessages.delete(key);
+      });
+    }
 
     (async () => {
       let defaultRetriesLeft = 3;
@@ -63,7 +88,11 @@ export function createQueue(port?: number): Queue {
       console.error(
         `[embedded world] Reached max retries of embedded world queue implementation`
       );
-    })();
+    })().finally(() => {
+      for (const fn of cleanup) {
+        fn();
+      }
+    });
 
     return { messageId };
   };

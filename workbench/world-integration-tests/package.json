@@ -1,0 +1,30 @@
+{
+  "name": "world-integration-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "wf build",
+    "start": "node --watch src/server.mts",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^1.19.5",
+    "@types/jsonlines": "^0.1.5",
+    "@types/node": "catalog:",
+    "@vercel/workflow-cli": "workspace:*",
+    "@vercel/workflow-core": "workspace:*",
+    "@vercel/workflow-typescript-plugin": "workspace:*",
+    "@vercel/workflow-world": "workspace:*",
+    "chalk": "^5.6.2",
+    "hono": "^4.9.10",
+    "jsonlines": "^0.1.1",
+    "vitest": "catalog:",
+    "zod": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.1"
+}

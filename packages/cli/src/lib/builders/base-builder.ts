@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { promisify } from 'node:util';
+import chalk from 'chalk';
 import { parse } from 'comment-json';
 import enhancedResolveOriginal from 'enhanced-resolve';
 import * as esbuild from 'esbuild';
@@ -192,7 +193,7 @@ export abstract class BaseBuilder {
     }
 
     if (result.warnings && result.warnings.length > 0) {
-      console.warn(`⚠️  esbuild warnings in ${phase}:`);
+      console.warn(`!  esbuild warnings in ${phase}:`);
       for (const warning of result.warnings) {
         console.warn(`  ${warning.text}`);
         if (warning.location) {
@@ -236,7 +237,16 @@ export abstract class BaseBuilder {
     const resolvedBuiltInSteps = await enhancedResolve(
       dirname(outfile),
       '@vercel/workflow-core/builtins'
-    );
+    ).catch((err) => {
+      throw new Error(
+        [
+          chalk.red('Failed to resolve built-in steps sources.'),
+          `${chalk.yellow.bold('hint:')} run \`${chalk.cyan.italic('npm install @vercel/workflow-core')}\` to resolve this issue.`,
+          '',
+          `Caused by: ${chalk.red(String(err))}`,
+        ].join('\n')
+      );
+    });
 
     // Create a virtual entry that imports all files. All step definitions
     // will get registered thanks to the swc transform.

@@ -116,7 +116,7 @@ export function createStorage(basedir: string): Storage {
           updatedRun.completedAt = now;
         }
 
-        await writeJSON(runPath, updatedRun);
+        await writeJSON(runPath, updatedRun, { overwrite: true });
         return updatedRun;
       },
 
@@ -217,7 +217,7 @@ export function createStorage(basedir: string): Storage {
           updatedStep.completedAt = now;
         }
 
-        await writeJSON(stepPath, updatedStep);
+        await writeJSON(stepPath, updatedStep, { overwrite: true });
         return updatedStep;
       },
 
