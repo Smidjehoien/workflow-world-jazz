@@ -28,6 +28,8 @@ export async function listWorkflowRuns(
   if (status) searchParams.set('status', status);
   if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
+  if (pagination?.sortOrder)
+    searchParams.set('sortOrder', pagination.sortOrder);
 
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs${queryString ? `?${queryString}` : ''}`;

@@ -88,8 +88,11 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [x] Shorten CLI input/output args
 - [ ] Use `next export`
 - [ ] Vercel backend: ensure we can pass deployment ID to filter
-- [ ] Add CLI/web instructions to main docs + READMEs
+- [x] Add CLI/web instructions to main docs + READMEs
+- [ ] Bug: only seeing the last two runs for storytime. Do deployment ID (un)filtering?
 - [x] Make cancel command work (currently 415 error)
+- [ ] Don't resolve refs for input/output data by default, only resolve in detail views
+- [ ] Locally paginate (but pull more than the default page size in the background)
 - [ ] Bundle next app and ensure prod version can be pulled
 - [ ] Tests
 - [ ] Fix differentiation in API calls between empty results and error responses

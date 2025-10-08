@@ -552,6 +552,7 @@ describe('Storage', () => {
 
         const result = await storage.events.list({
           runId: testRunId,
+          pagination: { sortOrder: 'asc' }, // Explicitly request ascending order
         });
 
         expect(result.data).toHaveLength(2);
@@ -560,6 +561,33 @@ describe('Storage', () => {
         expect(result.data[1].eventId).toBe(event2.eventId);
         expect(result.data[1].createdAt.getTime()).toBeGreaterThanOrEqual(
           result.data[0].createdAt.getTime()
+        );
+      });
+
+      it('should list events in descending order when explicitly requested (newest first)', async () => {
+        const event1 = await storage.events.create(testRunId, {
+          eventType: 'workflow_started' as const,
+        });
+
+        // Small delay to ensure different timestamps in event IDs
+        await new Promise((resolve) => setTimeout(resolve, 2));
+
+        const event2 = await storage.events.create(testRunId, {
+          eventType: 'step_started' as const,
+          correlationId: 'corr_step_1',
+        });
+
+        const result = await storage.events.list({
+          runId: testRunId,
+          pagination: { sortOrder: 'desc' },
+        });
+
+        expect(result.data).toHaveLength(2);
+        // Should be in reverse chronological order (newest first)
+        expect(result.data[0].eventId).toBe(event2.eventId);
+        expect(result.data[1].eventId).toBe(event1.eventId);
+        expect(result.data[0].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result.data[1].createdAt.getTime()
         );
       });
 

@@ -148,7 +148,7 @@ const streamDisplayRevivers: Record<string, (value: any) => any> = {
 export async function fetchRuns(config: WorldConfig, cursor?: string) {
   const world = await setupWorld(config);
   const runs = await world.runs.list({
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
   });
   return runs;
 }
@@ -182,7 +182,7 @@ export async function fetchSteps(
   const world = await setupWorld(config);
   const steps = await world.steps.list({
     runId,
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
   });
   return steps;
 }
@@ -215,7 +215,7 @@ export async function fetchEvents(
   const world = await setupWorld(config);
   const events = await world.events.list({
     runId,
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
   });
   return events;
 }
@@ -230,7 +230,7 @@ export async function fetchEvent(
   // This is a limitation - in a real implementation, you'd want a direct get method
   const events = await world.events.list({
     runId,
-    pagination: { limit: DEFAULT_PAGE_SIZE },
+    pagination: { limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
   });
 
   const event = events.data.find((e) => e.eventId === eventId);

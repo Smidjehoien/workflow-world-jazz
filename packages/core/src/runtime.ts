@@ -87,6 +87,7 @@ export async function getWorkflowReturnValue(
 /**
  * Loads all workflow run events by iterating through all pages of paginated results.
  * This ensures that *all* events are loaded into memory before running the workflow.
+ * Events must be in chronological order (ascending) for proper workflow replay.
  */
 async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
   const allEvents: Event[] = [];
@@ -97,7 +98,10 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
   while (hasMore) {
     const response = await world.events.list({
       runId,
-      pagination: cursor ? { cursor } : undefined,
+      pagination: {
+        sortOrder: 'asc', // Required: events must be in chronological order for replay
+        cursor: cursor ?? undefined,
+      },
     });
 
     allEvents.push(...response.data);

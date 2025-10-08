@@ -127,7 +127,7 @@ export function createStorage(basedir: string): Storage {
           filter: params?.workflowName
             ? (run) => run.workflowName === params.workflowName
             : undefined,
-          sortOrder: 'desc',
+          sortOrder: params?.pagination?.sortOrder ?? 'desc',
           limit: params?.pagination?.limit,
           cursor: params?.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('wrun'),
@@ -226,7 +226,7 @@ export function createStorage(basedir: string): Storage {
           directory: path.join(basedir, 'steps'),
           schema: StepSchema,
           filePrefix: `${params.runId}-`,
-          sortOrder: 'desc',
+          sortOrder: params.pagination?.sortOrder ?? 'desc',
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('step'),
@@ -261,7 +261,9 @@ export function createStorage(basedir: string): Storage {
           directory: path.join(basedir, 'events'),
           schema: EventSchema,
           filePrefix: `${params.runId}-`,
-          sortOrder: 'asc', // Events in chronological order (oldest first)
+          // Events in chronological order (oldest first) by default,
+          // different from the default for other list calls.
+          sortOrder: params.pagination?.sortOrder ?? 'asc',
           limit: params.pagination?.limit,
           cursor: params.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('evnt'),

@@ -21,6 +21,8 @@ export async function listWorkflowRunSteps(
 
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
   if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
+  if (pagination?.sortOrder)
+    searchParams.set('sortOrder', pagination.sortOrder);
 
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${runId}/steps${queryString ? `?${queryString}` : ''}`;

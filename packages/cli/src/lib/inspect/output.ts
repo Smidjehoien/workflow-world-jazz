@@ -254,7 +254,11 @@ const inlineFormatIO = <T>(io: T, topLevel: boolean = true): string => {
 
 export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   const runs = await world.runs.list({
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: {
+      sortOrder: 'desc',
+      cursor: opts.cursor,
+      limit: DEFAULT_PAGE_SIZE,
+    },
   });
   if (opts.stepId || opts.runId) {
     logger.warn(
@@ -281,7 +285,9 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
 
 export const getRecentRun = async (world: World) => {
   logger.warn(`No runId provided, fetching data for latest run instead.`);
-  const runs = await world.runs.list({ pagination: { limit: 1 } });
+  const runs = await world.runs.list({
+    pagination: { limit: 1, sortOrder: 'desc' },
+  });
   return runs.data[0];
 };
 
@@ -321,7 +327,11 @@ export const listSteps = async (
   logger.debug(`Fetching steps for run ${runId}`);
   const stepChunks = await world.steps.list({
     runId,
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: {
+      sortOrder: 'desc',
+      cursor: opts.cursor,
+      limit: DEFAULT_PAGE_SIZE,
+    },
   });
   const steps = stepChunks.data;
   if (opts.json) {
@@ -395,7 +405,11 @@ export const listStreams = async (
     runs.push(run);
     const runsSteps = await world.steps.list({
       runId: opts.runId,
-      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
+      pagination: {
+        sortOrder: 'desc',
+        cursor: opts.cursor,
+        limit: DEFAULT_PAGE_SIZE,
+      },
     });
     runsSteps.data.forEach((step: Step) => steps.push(step));
     logger.info(getCursorHint(runsSteps));
@@ -412,7 +426,11 @@ export const listStreams = async (
     runs.push(run);
     const runsSteps = await world.steps.list({
       runId: runs[0].runId,
-      pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
+      pagination: {
+        sortOrder: 'desc',
+        cursor: opts.cursor,
+        limit: DEFAULT_PAGE_SIZE,
+      },
     });
     runsSteps.data.forEach((step: Step) => steps.push(step));
     logger.info(getCursorHint(runsSteps));
@@ -509,7 +527,11 @@ export const listEvents = async (
   logger.debug(`Fetching events for run ${runId}`);
   const events = await world.events.list({
     runId,
-    pagination: { cursor: opts.cursor, limit: DEFAULT_PAGE_SIZE },
+    pagination: {
+      sortOrder: 'desc',
+      cursor: opts.cursor,
+      limit: DEFAULT_PAGE_SIZE,
+    },
   });
   if (opts.stepId) {
     events.data = events.data.filter(

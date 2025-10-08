@@ -9,6 +9,9 @@ export interface PaginationOptions {
   limit?: number;
   /** Cursor for pagination - token from previous response */
   cursor?: string;
+  // Sorted by creation time, defaults to the world's default for the specific
+  // list call. If you know what sort order you want, always specify it.
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Shared schema for paginated responses
