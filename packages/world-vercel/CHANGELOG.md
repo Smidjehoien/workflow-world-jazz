@@ -1,5 +1,13 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- Updated dependencies [dd1c069]
+  - @vercel/workflow-world@0.0.1-alpha.4
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

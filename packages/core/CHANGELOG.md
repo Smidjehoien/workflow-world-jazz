@@ -1,5 +1,17 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.31
+
+### Patch Changes
+
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- 068add4: Reduce amount of world init calls during import time, ensure web UI config persists across reloads
+- Updated dependencies [dd1c069]
+- Updated dependencies [7f756a2]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.7
+  - @vercel/workflow-world-vercel@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.4
+
 ## 0.0.1-alpha.30
 
 ### Patch Changes

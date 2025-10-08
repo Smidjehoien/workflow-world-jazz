@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-world",
-  "version": "0.0.1-alpha.3",
+  "version": "0.0.1-alpha.4",
   "description": "The Workflows World interface",
   "type": "module",
   "main": "dist/index.js",

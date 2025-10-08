@@ -1,5 +1,16 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.40
+
+### Patch Changes
+
+- 068add4: Reduce amount of world init calls during import time, ensure web UI config persists across reloads
+- c9da76f: Improve step timeline display
+- 068add4: Use SWR for handling queries and pagination for tables in web UI
+- Updated dependencies [dd1c069]
+- Updated dependencies [068add4]
+  - @vercel/workflow-core@0.0.1-alpha.31
+
 ## 0.0.1-alpha.39
 
 ### Patch Changes

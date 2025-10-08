@@ -1,5 +1,22 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- 7f756a2: support queue message idempotency, fix storage file overwrites
+
+  - embedded queue now supports `opts.idempotencyKey` on the `Queue.queue` interface.
+    this means that we don't run the same steps while it's already running.
+
+  - throw a conflict error `new WorkflowAPIError(msg, { status: 409 })` whenever we try to write
+    to a storage file that already exists, unless we explicitly want to `.update` it. This is
+    required to avoid creating a limbo state in our storage and makes steps work better with idempotency.
+
+- Updated dependencies [dd1c069]
+  - @vercel/workflow-world@0.0.1-alpha.4
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes
