@@ -6,6 +6,11 @@
  * `workflow` and `workflow/runtime`?
  */
 
+export {
+  FatalError,
+  RetryableError,
+  type RetryableErrorOptions,
+} from '@vercel/workflow-errors';
 export { createHook, type Hook, type HookOptions } from './create-hook.js';
 export { defineHook } from './define-hook.js';
 export { fetch } from './fetch.js';
@@ -14,11 +19,6 @@ export {
   type Webhook,
   type WebhookOptions,
 } from './get-webhook.js';
-export {
-  FatalError,
-  RetryableError,
-  type RetryableErrorOptions,
-} from './global.js';
 export { getWorld, resetWorld } from './runtime/world.js';
 export { sleep } from './sleep.js';
 export { getStepContext, type StepContext } from './step/get-step-context.js';

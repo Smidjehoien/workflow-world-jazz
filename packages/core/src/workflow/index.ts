@@ -1,16 +1,16 @@
 import type { StepContext } from '../step/get-step-context.js';
 
+export {
+  FatalError,
+  RetryableError,
+  type RetryableErrorOptions,
+} from '@vercel/workflow-errors';
 export type { Hook, HookOptions } from '../create-hook.js';
 export { fetch } from '../fetch.js';
 export type {
   Webhook,
   WebhookOptions,
 } from '../get-webhook.js';
-export {
-  FatalError,
-  RetryableError,
-  type RetryableErrorOptions,
-} from '../global.js';
 export { sleep } from '../sleep.js';
 export { createHook } from './create-hook.js';
 export { defineHook } from './define-hook.js';

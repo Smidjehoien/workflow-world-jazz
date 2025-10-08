@@ -1,12 +1,14 @@
 import { waitUntil } from '@vercel/functions';
 import {
+  FatalError,
+  RetryableError,
   WorkflowAPIError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from '@vercel/workflow-errors';
 import type { Event, WorkflowRun } from '@vercel/workflow-world';
-import { FatalError, RetryableError, WorkflowSuspension } from './global.js';
+import { WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import type { start } from './runtime/start.js';

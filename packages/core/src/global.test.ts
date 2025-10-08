@@ -1,6 +1,6 @@
+import { FatalError } from '@vercel/workflow-errors';
 import { describe, expect, it } from 'vitest';
 import {
-  FatalError,
   type HookInvocationQueueItem,
   type StepInvocationQueueItem,
   type WebhookInvocationQueueItem,

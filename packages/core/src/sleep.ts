@@ -1,5 +1,5 @@
+import { RetryableError } from '@vercel/workflow-errors';
 import ms, { type StringValue } from 'ms';
-import { RetryableError } from './global.js';
 import { getStepContext } from './step/get-step-context.js';
 
 // vqs has a max message visibility lifespan, the workflow sleep function

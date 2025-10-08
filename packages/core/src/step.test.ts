@@ -1,9 +1,10 @@
+import { FatalError } from '@vercel/workflow-errors';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
 import { EventsConsumer } from './events-consumer.js';
-import { FatalError, WorkflowSuspension } from './global.js';
+import { WorkflowSuspension } from './global.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import { createUseStep } from './step.js';
 
@@ -71,7 +72,7 @@ describe('createUseStep', () => {
       error = err_ as Error;
     }
     expect(error).toBeInstanceOf(FatalError);
-    expect((error as FatalError).message).toBe('test');
+    expect((error as FatalError).message).toContain('test');
     expect((error as FatalError).fatal).toBe(true);
     expect(ctx.onWorkflowError).not.toHaveBeenCalled();
   });

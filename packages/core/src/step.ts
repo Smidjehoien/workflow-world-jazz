@@ -1,6 +1,6 @@
-import { WorkflowRuntimeError } from '@vercel/workflow-errors';
+import { FatalError, WorkflowRuntimeError } from '@vercel/workflow-errors';
 import { EventConsumerResult } from './events-consumer.js';
-import { FatalError, WorkflowSuspension } from './global.js';
+import { WorkflowSuspension } from './global.js';
 import { stepLogger } from './logger.js';
 import type { WorkflowOrchestratorContext } from './private.js';
 import type { Serializable } from './schemas.js';

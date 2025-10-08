@@ -1,3 +1,5 @@
+import ms, { type StringValue } from 'ms';
+
 const BASE_URL = 'https://workflow-docs.vercel.sh/errors';
 
 /**
@@ -98,5 +100,53 @@ export class WorkflowRuntimeError extends WorkflowError {
       ...options,
     });
     this.name = 'WorkflowRuntimeError';
+  }
+}
+
+/**
+ * A fatal error is an error that cannot be retried.
+ * It will cause the step to fail and the error will
+ * be bubbled up to the workflow logic.
+ */
+export class FatalError extends Error {
+  fatal = true;
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'FatalError';
+  }
+}
+
+export interface RetryableErrorOptions {
+  /**
+   * The number of seconds to wait before retrying the step.
+   * If not provided, the step will be retried after 1 second.
+   */
+  retryAfter?: number | StringValue | Date;
+}
+
+/**
+ * An error that can happen during a step execution, allowing
+ * for configuration of the retry behavior.
+ */
+export class RetryableError extends Error {
+  /**
+   * The Date when the step should be retried.
+   */
+  retryAfter: Date;
+
+  constructor(message: string, options: RetryableErrorOptions = {}) {
+    super(message);
+    this.name = 'RetryableError';
+
+    let retryAfterSeconds: number;
+    if (typeof options.retryAfter === 'string') {
+      retryAfterSeconds = ms(options.retryAfter as StringValue) / 1000;
+    } else if (typeof options.retryAfter === 'number') {
+      retryAfterSeconds = options.retryAfter;
+    } else {
+      retryAfterSeconds = 1;
+    }
+    this.retryAfter = new Date(Date.now() + retryAfterSeconds * 1000);
   }
 }
