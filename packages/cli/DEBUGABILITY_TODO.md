@@ -83,21 +83,23 @@ Make functions from workflow/core "world" API available to the CLI package for s
 - [x] Ensure opening UI works well for vercel backend
 - [x] Bundle next app correctly and ensure prod version can be pulled
 
-# PR 9 - Web UI Polish
+# PR 9 - Web UI / CLI UX Polish
 
 - [x] Shorten CLI input/output args
+- [ ] Use `next export`
+- [ ] Vercel backend: ensure we can pass deployment ID to filter
 - [ ] Add CLI/web instructions to main docs + READMEs
-- [ ] Make cancel command work (currently 415 error)
+- [x] Make cancel command work (currently 415 error)
 - [ ] Bundle next app and ensure prod version can be pulled
 - [ ] Tests
 - [ ] Fix differentiation in API calls between empty results and error responses
 - [ ] Refactor workflow-server and vercel/embedded backend to ensure all list calls are timestamp descending by default, and have unified options for ascending
-- [ ] Don't bundle JS source maps for web package
+
+# PR 10 - Future
+
+- [ ] Add a world config attribute that hides input/output data output in CLI and web UI, later to be re-used for e2e encryption
 - [ ] Catch WorkflowAPIError in CLI/web UI and check status for potential 403 issue / token refresh detection
-- [ ] Refactor for maintainability
-
-# PR 10 - Web UI Maintainability
-
+- [ ] Don't bundle JS source maps for web package
 - [ ] Refactor for maintainability, use SWR
   - [ ] Fix differentiation in API calls between empty results and error responses
 - [ ] Add web UI integration tests

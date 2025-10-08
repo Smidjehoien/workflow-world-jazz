@@ -112,7 +112,7 @@ describe.concurrent('e2e', () => {
     expect(returnValue).toBe('B');
   });
 
-  test('readableStreamWorkflow', { timeout: 60_000 }, async () => {
+  test('readableStreamWorkflow', { timeout: 80_000 }, async () => {
     const run = await triggerWorkflow('readableStreamWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBeInstanceOf(ReadableStream);

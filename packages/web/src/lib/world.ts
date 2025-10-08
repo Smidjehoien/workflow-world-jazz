@@ -1,9 +1,6 @@
 'use server';
 
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { getWorld, resetWorld } from '@vercel/workflow-core';
-import { extractStreamsFromValue } from '@vercel/workflow-core/observability';
 import {
   hydrateStepArguments,
   hydrateStepReturnValue,
@@ -11,9 +8,10 @@ import {
   hydrateWorkflowReturnValue,
 } from '@vercel/workflow-core/serialization';
 import type { SearchParams } from 'next/dist/server/request/search-params';
-import { getResourceName } from './resource-name';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 10;
 
 export interface WorldConfig {
   backend?: string;
@@ -241,69 +239,6 @@ export async function fetchEvent(
   }
 
   return event;
-}
-
-export async function fetchStreamsForRun(config: WorldConfig, runId: string) {
-  const world = await setupWorld(config);
-
-  // Get run and all steps to extract stream IDs
-  const run = await world.runs.get(runId);
-  const stepsResult = await world.steps.list({
-    runId,
-    pagination: { limit: DEFAULT_PAGE_SIZE },
-  });
-
-  const streams: Array<{ streamId: string; source: string }> = [];
-
-  // Extract streams from run input/output with custom revivers
-  const hydratedRun = {
-    ...run,
-    input: run.input
-      ? hydrateWorkflowArguments(run.input, globalThis, streamDisplayRevivers)
-      : run.input,
-    output: run.output
-      ? hydrateWorkflowReturnValue(
-          run.output,
-          [],
-          globalThis,
-          streamDisplayRevivers
-        )
-      : run.output,
-  };
-
-  extractStreamsFromValue(hydratedRun.input, 'Run Input', streams);
-  extractStreamsFromValue(hydratedRun.output, 'Run Output', streams);
-
-  // Extract streams from steps with custom revivers
-  for (const step of stepsResult.data) {
-    const hydratedStep = {
-      ...step,
-      input: step.input
-        ? hydrateStepArguments(
-            step.input,
-            [],
-            globalThis,
-            streamDisplayRevivers
-          )
-        : step.input,
-      output: step.output
-        ? hydrateStepReturnValue(step.output, globalThis, streamDisplayRevivers)
-        : step.output,
-    };
-
-    extractStreamsFromValue(
-      hydratedStep.input,
-      `Step ${getResourceName(step.stepName)} Input`,
-      streams
-    );
-    extractStreamsFromValue(
-      hydratedStep.output,
-      `Step ${getResourceName(step.stepName)} Output`,
-      streams
-    );
-  }
-
-  return streams;
 }
 
 export async function readStream(

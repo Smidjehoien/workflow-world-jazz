@@ -1,13 +1,12 @@
 'use client';
 
-import type { Step } from '@vercel/workflow-world';
-import { Radio } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useStep } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
 import { extractStreamIds } from '@/lib/stream-utils';
-import { fetchStep, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/world';
+import { Radio } from 'lucide-react';
 import { JsonView } from '../display-utils/json-view';
 import { RelativeTime } from '../display-utils/relative-time';
 import { SidePanel } from '../display-utils/side-panel';
@@ -28,16 +27,7 @@ export function StepDetailSidebar({
   onClose,
   onStreamClick,
 }: StepDetailSidebarProps) {
-  const [step, setStep] = useState<Step | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    setLoading(true);
-    void fetchStep(config, runId, stepId)
-      .then(setStep)
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [config, runId, stepId]);
+  const { data: step, isLoading: loading } = useStep(config, runId, stepId);
 
   if (loading) {
     return (

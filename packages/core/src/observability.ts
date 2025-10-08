@@ -35,28 +35,6 @@ export function extractStreamIds(obj: unknown): string[] {
 }
 
 /**
- * Extract streams from a value and collect them with their source information
- * Used for building lists of streams with context about where they came from
- */
-export function extractStreamsFromValue(
-  value: unknown,
-  source: string,
-  streams: Array<{ streamId: string; source: string }>
-): void {
-  if (isStreamId(value)) {
-    streams.push({ streamId: value as string, source });
-  } else if (Array.isArray(value)) {
-    for (const item of value) {
-      extractStreamsFromValue(item, source, streams);
-    }
-  } else if (value && typeof value === 'object') {
-    for (const val of Object.values(value)) {
-      extractStreamsFromValue(val, source, streams);
-    }
-  }
-}
-
-/**
  * Truncate a string to a maximum length, adding ellipsis if needed
  */
 export function truncateId(id: string, maxLength = 12): string {

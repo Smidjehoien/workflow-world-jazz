@@ -5,7 +5,8 @@ import {
   createVercelWorld,
 } from '@vercel/workflow-world-vercel';
 
-let world: World | undefined;
+let worldCache: World | undefined;
+let stubbedWorldCache: World | undefined;
 
 const initWorld = () => {
   const targetWorld = process.env.WORKFLOW_TARGET_WORLD || 'vercel';
@@ -49,23 +50,30 @@ const initWorld = () => {
 
 /**
  * Some functions from the world are needed at build time, but we do NOT want
- * to cache the world in those instances, since we don't have the correct
- * environment variables set yet. This is a safe function to call at build time,
- * that only gives access to non-environment-bound world functions.
+ * to cache the world in those instances for general use, since we don't have
+ * the correct environment variables set yet. This is a safe function to
+ * call at build time, that only gives access to non-environment-bound world
+ * functions. The only binding value should be the target world.
+ * Once we migrate to a file-based configuration (workflow.config.ts), we should
+ * be able to re-combine getWorld and getWorldHandlers into one singleton.
  */
 export const getWorldHandlers = (): Pick<World, 'createQueueHandler'> => {
+  if (stubbedWorldCache) {
+    return stubbedWorldCache;
+  }
   const _world = initWorld();
+  stubbedWorldCache = _world;
   return {
     createQueueHandler: _world.createQueueHandler,
   };
 };
 
 export const getWorld = (): World => {
-  if (world) {
-    return world;
+  if (worldCache) {
+    return worldCache;
   }
-  world = initWorld();
-  return world;
+  worldCache = initWorld();
+  return worldCache;
 };
 
 /**
@@ -73,5 +81,6 @@ export const getWorld = (): World => {
  * variables change and you need to reinitialize the world with new config.
  */
 export const resetWorld = (): void => {
-  world = undefined;
+  worldCache = undefined;
+  stubbedWorldCache = undefined;
 };

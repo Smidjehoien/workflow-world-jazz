@@ -1,8 +1,14 @@
 'use client';
 
 import type { Step } from '@vercel/workflow-world';
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
-import { useCallback, useMemo } from 'react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -13,9 +19,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { usePagination } from '@/hooks/use-pagination';
+import { useSteps } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
-import { fetchSteps, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/world';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { TableSkeleton } from '../display-utils/table-skeleton';
@@ -39,31 +45,46 @@ export function StepsTable({
   runStartTime,
   runEndTime,
 }: StepsTableProps) {
-  const fetchFn = useCallback(
-    (cursor?: string) => fetchSteps(config, runId, cursor),
-    [config, runId]
-  );
+  const [allSteps, setAllSteps] = useState<Step[]>([]);
 
   const {
-    currentPage,
-    pages,
-    currentPageIndex,
+    data,
+    error,
     loading,
+    currentPageNumber,
+    maxPagesVisited,
+    paginationDisplay,
     lastRefreshTime,
     handleNextPage,
     handlePrevPage,
-    handleRefresh,
-  } = usePagination<Step>({ fetchFn });
+    handleRefresh: baseHandleRefresh,
+    canGoNext,
+    canGoPrev,
+  } = useSteps(config, runId);
 
-  const allSteps = useMemo(() => {
-    return pages.flatMap((page) => page.data);
-  }, [pages]);
-  const hasMore = useMemo(() => {
-    return pages.length > 0 && pages[pages.length - 1].hasMore;
-  }, [pages]);
+  // Accumulate all steps across pages for timeline
+  useEffect(() => {
+    if (data?.data) {
+      setAllSteps((prev) => {
+        // If we're on first page, replace all
+        if (currentPageNumber === 1) {
+          return data.data;
+        }
+        // Otherwise, append new steps
+        const existingIds = new Set(prev.map((s) => s.stepId));
+        const newSteps = data.data.filter((s) => !existingIds.has(s.stepId));
+        return [...prev, ...newSteps];
+      });
+    }
+  }, [data, currentPageNumber]);
+
+  const handleRefresh = () => {
+    setAllSteps([]);
+    baseHandleRefresh();
+  };
 
   // Show skeleton for initial load
-  if (loading && !currentPage) {
+  if (loading && !data) {
     return <TableSkeleton title="Steps" />;
   }
 
@@ -93,7 +114,15 @@ export function StepsTable({
         </div>
       </CardHeader>
       <CardContent>
-        {!currentPage || currentPage.data.length === 0 ? (
+        {error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error loading steps</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : 'An error occurred'}
+            </AlertDescription>
+          </Alert>
+        ) : !data || data.data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No steps found
           </div>
@@ -106,7 +135,9 @@ export function StepsTable({
               ) : (
                 <StepsTimeline
                   steps={allSteps}
-                  hasMore={hasMore}
+                  hasMore={
+                    currentPageNumber === maxPagesVisited && data.hasMore
+                  }
                   onStepClick={onStepClick}
                   selectedStepId={selectedStepId}
                   runStartTime={runStartTime}
@@ -125,7 +156,7 @@ export function StepsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentPage.data.map((step) => (
+                {data.data.map((step) => (
                   <TableRow
                     key={step.stepId}
                     className={`cursor-pointer ${
@@ -163,14 +194,14 @@ export function StepsTable({
 
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                Page {currentPageIndex + 1}
+                {paginationDisplay}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePrevPage}
-                  disabled={currentPageIndex === 0}
+                  disabled={!canGoPrev}
                 >
                   <ChevronLeft />
                   Previous
@@ -179,7 +210,7 @@ export function StepsTable({
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={!currentPage.hasMore}
+                  disabled={!canGoNext}
                 >
                   Next
                   <ChevronRight />

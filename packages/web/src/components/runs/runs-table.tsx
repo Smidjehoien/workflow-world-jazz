@@ -1,8 +1,14 @@
 'use client';
 
-import type { WorkflowRun } from '@vercel/workflow-world';
-import { ChevronLeft, ChevronRight, Radio, RefreshCw } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  Radio,
+  RefreshCw,
+} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -19,9 +25,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { usePagination } from '@/hooks/use-pagination';
+import { useRuns } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
-import { fetchRuns, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/world';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { TableSkeleton } from '../display-utils/table-skeleton';
@@ -40,27 +46,23 @@ export function RunsTable({
   const [liveMode, setLiveMode] = useState(false);
   const [hoveredRunId, setHoveredRunId] = useState<string | null>(null);
 
-  const fetchFn = useCallback(
-    (cursor?: string) => fetchRuns(config, cursor),
-    [config]
-  );
-
   const {
-    currentPage,
-    currentPageIndex,
+    data,
+    error,
     loading,
+    paginationDisplay,
     lastRefreshTime,
     handleNextPage,
     handlePrevPage,
     handleRefresh,
-    currentNavPosition,
-  } = usePagination<WorkflowRun>({
-    fetchFn,
-    enableAutoRefresh: liveMode,
+    canGoNext,
+    canGoPrev,
+  } = useRuns(config, {
+    refreshInterval: liveMode ? 5000 : 0,
   });
 
   // Show skeleton for initial load
-  if (loading && !currentPage) {
+  if (loading && !data) {
     return <TableSkeleton title="Workflow Runs" />;
   }
 
@@ -120,7 +122,15 @@ export function RunsTable({
         </div>
       </CardHeader>
       <CardContent>
-        {!currentPage || currentPage.data.length === 0 ? (
+        {error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error loading runs</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : 'An error occurred'}
+            </AlertDescription>
+          </Alert>
+        ) : !data || data.data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No runs found
           </div>
@@ -137,7 +147,7 @@ export function RunsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentPage.data.map((run) => (
+                {data.data.map((run) => (
                   <TableRow
                     key={run.runId}
                     className="cursor-pointer group relative"
@@ -206,14 +216,14 @@ export function RunsTable({
 
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                {currentNavPosition}
+                {paginationDisplay}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePrevPage}
-                  disabled={currentPageIndex === 0}
+                  disabled={!canGoPrev}
                 >
                   <ChevronLeft />
                   Previous
@@ -222,7 +232,7 @@ export function RunsTable({
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={!currentPage.hasMore}
+                  disabled={!canGoNext}
                 >
                   Next
                   <ChevronRight />

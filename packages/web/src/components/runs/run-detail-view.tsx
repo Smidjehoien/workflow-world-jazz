@@ -1,13 +1,13 @@
 'use client';
 
-import type { WorkflowRun } from '@vercel/workflow-world';
-import { ChevronRight, Radio } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { useRun } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
-import { fetchRun, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/world';
+import { ChevronRight, Radio } from 'lucide-react';
+import { useState } from 'react';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { EventDetailSidebar } from '../events/event-detail-sidebar';
@@ -35,28 +35,16 @@ export function RunDetailView({
   onEventSelect,
   onStreamClick,
 }: RunDetailViewProps) {
-  const [run, setRun] = useState<WorkflowRun | null>(null);
-  const [runLoading, setRunLoading] = useState(true);
   const [liveMode, setLiveMode] = useState(false);
   const [showRunDetails, setShowRunDetails] = useState(false);
 
-  // Fetch run details
-  useEffect(() => {
-    setRunLoading(true);
-    fetchRun(config, runId)
-      .then(setRun)
-      .catch(console.error)
-      .finally(() => setRunLoading(false));
-  }, [config, runId]);
-
-  // Auto-refresh run in live mode
-  useEffect(() => {
-    if (!liveMode) return;
-    const interval = setInterval(() => {
-      fetchRun(config, runId).then(setRun).catch(console.error);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [liveMode, config, runId]);
+  const {
+    data: run,
+    isLoading: runLoading,
+    error: runError,
+  } = useRun(config, runId, {
+    refreshInterval: liveMode ? 5000 : 0,
+  });
 
   const handleStreamClickFromJson = (streamId: string) => {
     onStreamClick(streamId);
@@ -64,6 +52,10 @@ export function RunDetailView({
 
   if (runLoading) {
     return <div className="text-center py-8">Loading...</div>;
+  }
+
+  if (runError) {
+    return <div className="text-center py-8">Error: {runError.message}</div>;
   }
 
   if (!run) {

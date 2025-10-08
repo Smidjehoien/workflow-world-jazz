@@ -29,6 +29,7 @@
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "swr": "^2.3.6",
     "tailwind-merge": "^2.5.5"
   },
   "devDependencies": {
@@ -37,8 +38,8 @@
     "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@vercel/workflow-world": "workspace:*",
     "tailwindcss": "^4",
-    "typescript": "catalog:",
-    "@vercel/workflow-world": "workspace:*"
+    "typescript": "catalog:"
   }
 }

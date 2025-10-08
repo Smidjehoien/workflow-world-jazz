@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { connection } from 'next/server';
-import { getDefaultWorldConfig } from '@/lib/world';
 import { LayoutClient } from './layout-client';
 
 const geistSans = Geist({
@@ -29,14 +28,13 @@ export default async function RootLayout({
   // TODO: We should be using SSR as much as possible, remove this line
   // and move the config/search params code to server-compatible pattern
   await connection();
-  const config = await getDefaultWorldConfig({});
 
   return (
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LayoutClient initialConfig={config}>{children}</LayoutClient>
+        <LayoutClient>{children}</LayoutClient>
       </body>
     </html>
   );

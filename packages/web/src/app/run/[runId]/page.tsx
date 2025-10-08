@@ -2,13 +2,13 @@
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { RunDetailView } from '@/components/runs/run-detail-view';
-import { useConfig } from '@/hooks/use-config';
+import { buildUrlWithConfig, useQueryParamConfig } from '@/lib/config';
 
 export default function RunDetailPage() {
   const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
-  const config = useConfig();
+  const config = useQueryParamConfig();
 
   const runId = params.runId as string;
   const sidebar = searchParams.get('sidebar');
@@ -20,22 +20,31 @@ export default function RunDetailPage() {
 
   const handleStepSelect = (stepId: string | undefined) => {
     if (stepId) {
-      router.push(`/run/${runId}?sidebar=step&stepId=${stepId}`);
+      router.push(
+        buildUrlWithConfig(`/run/${runId}`, config, { sidebar: 'step', stepId })
+      );
     } else {
-      router.push(`/run/${runId}`);
+      router.push(buildUrlWithConfig(`/run/${runId}`, config));
     }
   };
 
   const handleEventSelect = (eventId: string | undefined) => {
     if (eventId) {
-      router.push(`/run/${runId}?sidebar=event&eventId=${eventId}`);
+      router.push(
+        buildUrlWithConfig(`/run/${runId}`, config, {
+          sidebar: 'event',
+          eventId,
+        })
+      );
     } else {
-      router.push(`/run/${runId}`);
+      router.push(buildUrlWithConfig(`/run/${runId}`, config));
     }
   };
 
   const handleStreamClick = (streamId: string) => {
-    router.push(`/run/${runId}/streams/${streamId}`);
+    router.push(
+      buildUrlWithConfig(`/run/${runId}/streams/${streamId}`, config)
+    );
   };
 
   return (

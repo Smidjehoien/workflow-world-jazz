@@ -13,18 +13,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useQueryParamConfig, useUpdateConfigQueryParams } from '@/lib/config';
 import {
   type ValidationError,
   validateWorldConfig,
   type WorldConfig,
 } from '@/lib/world';
 
-interface SettingsProps {
-  config: WorldConfig;
-  onConfigChange: (config: WorldConfig) => void;
-}
+export function SettingsSidebar() {
+  const config = useQueryParamConfig();
+  const updateConfig = useUpdateConfigQueryParams();
 
-export function SettingsSidebar({ config, onConfigChange }: SettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [localConfig, setLocalConfig] = useState<WorldConfig>(config);
   const [errors, setErrors] = useState<ValidationError[]>([]);
@@ -33,6 +32,7 @@ export function SettingsSidebar({ config, onConfigChange }: SettingsProps) {
   const backend = localConfig.backend || 'embedded';
   const isEmbedded = backend === 'embedded';
 
+  // Update local config when query params change
   useEffect(() => {
     setLocalConfig(config);
   }, [config]);
@@ -44,7 +44,7 @@ export function SettingsSidebar({ config, onConfigChange }: SettingsProps) {
       setErrors(validationErrors);
 
       if (validationErrors.length === 0) {
-        onConfigChange(localConfig);
+        updateConfig(localConfig);
         setIsOpen(false);
       }
     } catch (error) {

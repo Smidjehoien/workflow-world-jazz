@@ -1,8 +1,13 @@
 'use client';
 
-import type { Event } from '@vercel/workflow-world';
-import { ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
-import { useCallback } from 'react';
+import {
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+} from 'lucide-react';
+import { useMemo } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -13,8 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { usePagination } from '@/hooks/use-pagination';
-import { fetchEvents, type WorldConfig } from '@/lib/world';
+import { useEvents } from '@/hooks/use-api';
+import type { WorldConfig } from '@/lib/world';
 import { RelativeTime } from '../display-utils/relative-time';
 import { TableSkeleton } from '../display-utils/table-skeleton';
 
@@ -31,20 +36,18 @@ export function EventsTable({
   onEventClick,
   selectedEventId,
 }: EventsTableProps) {
-  const fetchFn = useCallback(
-    (cursor?: string) => fetchEvents(config, runId, cursor),
-    [config, runId]
-  );
-
   const {
-    currentPage,
-    currentPageIndex,
+    data,
+    error,
     loading,
+    paginationDisplay,
     lastRefreshTime,
     handleNextPage,
     handlePrevPage,
     handleRefresh,
-  } = usePagination<Event>({ fetchFn });
+    canGoNext,
+    canGoPrev,
+  } = useEvents(config, runId);
 
   const truncate = (str: string | undefined, maxLength = 30) => {
     if (!str) return '';
@@ -52,7 +55,7 @@ export function EventsTable({
   };
 
   // Show skeleton for initial load
-  if (loading && !currentPage) {
+  if (loading && !data) {
     return <TableSkeleton title="Events" />;
   }
 
@@ -82,7 +85,15 @@ export function EventsTable({
         </div>
       </CardHeader>
       <CardContent>
-        {!currentPage || currentPage.data.length === 0 ? (
+        {error ? (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error loading events</AlertTitle>
+            <AlertDescription>
+              {error instanceof Error ? error.message : 'An error occurred'}
+            </AlertDescription>
+          </Alert>
+        ) : !data || data.data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             No events found
           </div>
@@ -99,7 +110,7 @@ export function EventsTable({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {currentPage.data.map((event) => (
+                {data.data.map((event) => (
                   <TableRow
                     key={event.eventId}
                     className={`cursor-pointer ${
@@ -137,14 +148,14 @@ export function EventsTable({
 
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-muted-foreground">
-                Page {currentPageIndex + 1}
+                {paginationDisplay}
               </div>
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handlePrevPage}
-                  disabled={currentPageIndex === 0}
+                  disabled={!canGoPrev}
                 >
                   <ChevronLeft />
                   Previous
@@ -153,7 +164,7 @@ export function EventsTable({
                   variant="outline"
                   size="sm"
                   onClick={handleNextPage}
-                  disabled={!currentPage.hasMore}
+                  disabled={!canGoNext}
                 >
                   Next
                   <ChevronRight />
