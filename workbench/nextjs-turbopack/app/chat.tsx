@@ -1,7 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { WorkflowChatTransport } from '@vercel/workflow-ai';
+import { WorkflowChatTransport } from '@vercel/workflow/ai';
 import { useEffect, useMemo, useRef } from 'react';
 import type { MyUIMessage } from '@/util/chat-schema';
 import ChatInput from './chat-input';

@@ -225,9 +225,6 @@ importers:
       '@vercel/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
-      '@vercel/workflow-ai':
-        specifier: workspace:*
-        version: link:../../packages/ai
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -735,6 +732,9 @@ importers:
       '@opentelemetry/api':
         specifier: '1'
         version: 1.9.0
+      '@vercel/workflow-ai':
+        specifier: workspace:*
+        version: link:../ai
       '@vercel/workflow-cli':
         specifier: workspace:*
         version: link:../cli
@@ -892,9 +892,6 @@ importers:
       '@vercel/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
-      '@vercel/workflow-ai':
-        specifier: workspace:*
-        version: link:../../packages/ai
       '@vercel/workflow-cli':
         specifier: workspace:*
         version: link:../../packages/cli
@@ -959,9 +956,6 @@ importers:
       '@vercel/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
-      '@vercel/workflow-ai':
-        specifier: workspace:*
-        version: link:../../packages/ai
       '@vercel/workflow-cli':
         specifier: workspace:*
         version: link:../../packages/cli

@@ -16,7 +16,6 @@
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow": "workspace:*",
     "@vercel/workflow-cli": "workspace:*",
-    "@vercel/workflow-ai": "workspace:*",
     "ai": "catalog:",
     "next": "15.5.3",
     "react": "^19.0.0",
