@@ -1,6 +1,7 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
 import { LOGGING_CONFIG } from '../lib/config/log.js';
+import type { InspectCLIOptions } from '../lib/config/types.js';
 import { cliFlags } from '../lib/inspect/flags.js';
 import {
   listEvents,
@@ -49,6 +50,8 @@ export default class Inspect extends BaseCommand {
         'st',
         'stream',
         'streams',
+        'w',
+        'web',
       ],
     }),
     id: Args.string({
@@ -76,6 +79,14 @@ export default class Inspect extends BaseCommand {
       helpLabel: '-s, --stepId',
       helpValue: 'STEP_ID',
     }),
+    workflowName: Flags.string({
+      description: 'workflow name to filter by',
+      required: false,
+      char: 'n',
+      aliases: ['workflow'],
+      helpGroup: 'Filtering',
+      helpLabel: '-n, --workflowName',
+    }),
     ...cliFlags,
   } as const;
 
@@ -95,29 +106,33 @@ export default class Inspect extends BaseCommand {
     const world = await setupCliWorld(flags, this.config.version);
 
     // Handle web UI mode
-    if (flags.web) {
-      return await launchWebUI(resource, id, flags, this.config.version);
+    if (flags.web || resource === 'web') {
+      const actualResource = resource === 'web' ? 'run' : resource;
+      return await launchWebUI(actualResource, id, flags, this.config.version);
     }
+
+    // Convert flags to InspectCLIOptions with proper typing
+    const options = toInspectOptions(flags);
 
     if (resource === 'run') {
       if (id) {
-        return await showRun(world, id, flags);
+        return await showRun(world, id, options);
       }
-      return await listRuns(world, flags);
+      return await listRuns(world, options);
     }
 
     if (resource === 'step') {
       if (id) {
-        return await showStep(world, id, flags);
+        return await showStep(world, id, options);
       }
-      return await listSteps(world, flags);
+      return await listSteps(world, options);
     }
 
     if (resource === 'stream') {
       if (id) {
-        return await showStream(world, id, flags);
+        return await showStream(world, id, options);
       }
-      return await listStreams(world, flags);
+      return await listStreams(world, options);
     }
 
     if (resource === 'event') {
@@ -127,7 +142,7 @@ export default class Inspect extends BaseCommand {
         );
         return;
       }
-      return await listEvents(world, flags);
+      return await listEvents(world, options);
     }
 
     this.logError(
@@ -136,14 +151,27 @@ export default class Inspect extends BaseCommand {
   }
 }
 
+function toInspectOptions(flags: any): InspectCLIOptions {
+  return {
+    json: flags.json,
+    runId: flags.runId,
+    stepId: flags.stepId,
+    cursor: flags.cursor,
+    sort: flags.sort as 'asc' | 'desc' | undefined,
+    limit: flags.limit,
+    workflowName: flags.workflowName,
+  };
+}
+
 function normalizeResource(
   value?: string
-): 'run' | 'step' | 'stream' | 'event' | undefined {
+): 'run' | 'step' | 'stream' | 'event' | 'web' | undefined {
   if (!value) return undefined;
   const v = value.toLowerCase();
   if (v.startsWith('r')) return 'run';
   if (v.startsWith('e')) return 'event';
   if (v.startsWith('str')) return 'stream';
   if (v.startsWith('s')) return 'step';
+  if (v.startsWith('w')) return 'web';
   return undefined;
 }

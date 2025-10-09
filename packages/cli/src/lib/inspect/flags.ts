@@ -93,4 +93,22 @@ export const cliFlags = {
     helpGroup: 'Output',
     helpLabel: '-w, --web',
   }),
-} as const;
+  sort: Flags.string({
+    description: 'sort order for list commands',
+    required: false,
+    options: ['asc', 'desc'],
+    default: 'desc',
+    helpGroup: 'Filtering',
+    helpLabel: '--sort',
+    helpValue: ['asc', 'desc'],
+    defaultHelp: 'desc',
+  }),
+  limit: Flags.integer({
+    description: 'number of items to return per page',
+    required: false,
+    default: 20,
+    helpGroup: 'Filtering',
+    helpLabel: '--limit',
+    helpValue: 'NUMBER',
+  }),
+};

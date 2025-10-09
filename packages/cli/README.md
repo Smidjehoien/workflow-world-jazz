@@ -16,11 +16,6 @@ workflow build
 workflow build --target vercel-static
 workflow build --target vercel-build-output-api
 
-# Coming soon commands
-workflow dev          # Development server with file watching
-workflow init         # Initialize new workflow project  
-workflow validate     # Validate workflow files
-
 # Inspect runs, steps, and streams
 workflow inspect runs
 workflow inspect runs <run-id>
@@ -28,6 +23,11 @@ workflow inspect steps <run-id>
 workflow inspect steps <run-id> <step-id>
 workflow inspect streams <run-id>
 workflow inspect streams <run-id> <stream-id>
+
+# Coming soon commands
+workflow dev          # Development server with file watching
+workflow init         # Initialize new workflow project  
+workflow validate     # Validate workflow files
 ```
 
 ## Commands
@@ -81,6 +81,15 @@ runId                       workflowName  status     startedAt      completedAt
 ```
 
 For more commands and explanations, simply run `workflow inspect` without any arguments.
+
+### Web UI
+
+The CLI can also launch a web UI for inspecting runs, steps, and streams.
+For any `workflow inspect` command, you can add the `--web` flag to launch the web UI instead, looking at the same data.
+
+```bash
+workflow inspect runs --web
+```
 
 ## Build Targets
 

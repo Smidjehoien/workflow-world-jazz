@@ -1,3 +1,5 @@
+import type { Event, Step, WorkflowRun } from '@vercel/workflow-world';
+import useSWR from 'swr';
 import {
   fetchEvent,
   fetchEvents,
@@ -7,8 +9,6 @@ import {
   fetchSteps,
   type WorldConfig,
 } from '@/lib/world';
-import type { Event, Step, WorkflowRun } from '@vercel/workflow-world';
-import useSWR from 'swr';
 import { usePaginatedQuery } from './use-paginated-query';
 
 // Helper to create a stable cache key
@@ -62,34 +62,103 @@ export function useEvent(config: WorldConfig, runId: string, eventId: string) {
 // Paginated runs hook
 export function useRuns(
   config: WorldConfig,
-  options?: { refreshInterval?: number }
+  options?: {
+    refreshInterval?: number;
+    sortOrder?: 'asc' | 'desc';
+    limit?: number;
+  }
 ) {
-  return usePaginatedQuery<WorkflowRun, WorldConfig>({
-    createKey: (params, cursor) => createKey(params, 'runs', cursor),
-    fetcher: (params, cursor) => fetchRuns(params, cursor),
-    params: config,
+  const sortOrder = options?.sortOrder || 'desc';
+  const limit = options?.limit || 10;
+  return usePaginatedQuery<
+    WorkflowRun,
+    { config: WorldConfig; sortOrder: 'asc' | 'desc'; limit: number }
+  >({
+    createKey: (params, cursor) =>
+      createKey(
+        params.config,
+        'runs',
+        cursor,
+        params.sortOrder,
+        String(params.limit)
+      ),
+    fetcher: (params, cursor) =>
+      fetchRuns(params.config, cursor, params.sortOrder, params.limit),
+    params: { config, sortOrder, limit },
     refreshInterval: options?.refreshInterval,
   });
 }
 
 // Paginated steps hook
-export function useSteps(config: WorldConfig, runId: string) {
-  return usePaginatedQuery<Step, { config: WorldConfig; runId: string }>({
+export function useSteps(
+  config: WorldConfig,
+  runId: string,
+  sortOrder: 'asc' | 'desc' = 'asc',
+  limit: number = 10
+) {
+  return usePaginatedQuery<
+    Step,
+    {
+      config: WorldConfig;
+      runId: string;
+      sortOrder: 'asc' | 'desc';
+      limit: number;
+    }
+  >({
     createKey: (params, cursor) =>
-      createKey(params.config, 'steps', params.runId, cursor),
+      createKey(
+        params.config,
+        'steps',
+        params.runId,
+        cursor,
+        params.sortOrder,
+        String(params.limit)
+      ),
     fetcher: (params, cursor) =>
-      fetchSteps(params.config, params.runId, cursor),
-    params: { config, runId },
+      fetchSteps(
+        params.config,
+        params.runId,
+        cursor,
+        params.sortOrder,
+        params.limit
+      ),
+    params: { config, runId, sortOrder, limit },
   });
 }
 
 // Paginated events hook
-export function useEvents(config: WorldConfig, runId: string) {
-  return usePaginatedQuery<Event, { config: WorldConfig; runId: string }>({
+export function useEvents(
+  config: WorldConfig,
+  runId: string,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  limit: number = 10
+) {
+  return usePaginatedQuery<
+    Event,
+    {
+      config: WorldConfig;
+      runId: string;
+      sortOrder: 'asc' | 'desc';
+      limit: number;
+    }
+  >({
     createKey: (params, cursor) =>
-      createKey(params.config, 'events', params.runId, cursor),
+      createKey(
+        params.config,
+        'events',
+        params.runId,
+        cursor,
+        params.sortOrder,
+        String(params.limit)
+      ),
     fetcher: (params, cursor) =>
-      fetchEvents(params.config, params.runId, cursor),
-    params: { config, runId },
+      fetchEvents(
+        params.config,
+        params.runId,
+        cursor,
+        params.sortOrder,
+        params.limit
+      ),
+    params: { config, runId, sortOrder, limit },
   });
 }

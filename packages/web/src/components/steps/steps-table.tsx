@@ -3,11 +3,13 @@
 import type { Step } from '@vercel/workflow-world';
 import {
   AlertCircle,
+  ArrowDownAZ,
+  ArrowUpAZ,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,9 +21,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useSteps } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
 import type { WorldConfig } from '@/lib/world';
+import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { TableSkeleton } from '../display-utils/table-skeleton';
@@ -46,6 +54,8 @@ export function StepsTable({
   runEndTime,
 }: StepsTableProps) {
   const [allSteps, setAllSteps] = useState<Step[]>([]);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [limit, setLimit] = useState<number>(10);
 
   const {
     data,
@@ -60,7 +70,11 @@ export function StepsTable({
     handleRefresh: baseHandleRefresh,
     canGoNext,
     canGoPrev,
-  } = useSteps(config, runId);
+  } = useSteps(config, runId, sortOrder, limit);
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+  };
 
   // Accumulate all steps across pages for timeline
   useEffect(() => {
@@ -110,6 +124,28 @@ export function StepsTable({
               <RefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSortOrder}
+                  disabled={loading}
+                >
+                  {sortOrder === 'desc' ? (
+                    <ArrowDownAZ className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpAZ className="h-4 w-4" />
+                  )}
+                  {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {sortOrder === 'desc'
+                  ? 'Showing newest first'
+                  : 'Showing oldest first'}
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </CardHeader>
@@ -197,7 +233,8 @@ export function StepsTable({
               <div className="text-sm text-muted-foreground">
                 {paginationDisplay}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <PageSizeDropdown value={limit} onChange={setLimit} />
                 <Button
                   variant="outline"
                   size="sm"

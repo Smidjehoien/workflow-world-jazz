@@ -9,7 +9,6 @@ import {
 } from '@vercel/workflow-core/serialization';
 import type { Event, Step, WorkflowRun, World } from '@vercel/workflow-world';
 import chalk from 'chalk';
-import { formatDistance } from 'date-fns';
 import Table from 'easy-table';
 import { logger } from '../config/log.js';
 import type { InspectCLIOptions } from '../config/types.js';
@@ -17,7 +16,7 @@ import { getWorkflowReadableStream } from '../runtime.js';
 import { streamToConsole } from './stream.js';
 
 const DEFAULT_PAGE_SIZE = 20;
-const TABLE_TRUNCATE_IO_LENGTH = 25;
+const TABLE_TRUNCATE_IO_LENGTH = 15;
 
 class StreamID {
   constructor(public name: string | null) {}
@@ -136,11 +135,14 @@ const getCursorHint = ({
 /**
  * In tables, we want to show a shorter timestamp, YYYY-MM-DD HH:MM:SS
  */
-const formatTableTimestamp = (value: Date, relative = true) => {
-  if (relative) {
-    const relativeValue = formatDistance(value, new Date());
-    return `${relativeValue} ago`;
-  }
+const formatTableTimestamp = (value: Date) => {
+  // We used to formative relative - but for CLI use it's annoying since we can't
+  // show both relative + absolute on hover like in the Web UI
+  // const isMoreThanAWeekAgo = differenceInDays(new Date(), value) > 6;
+  // if (relative && !isMoreThanAWeekAgo) {
+  //   const relativeValue = formatDistance(value, new Date());
+  //   return `${relativeValue} ago`;
+  // }
   return value.toISOString();
 };
 
@@ -254,10 +256,11 @@ const inlineFormatIO = <T>(io: T, topLevel: boolean = true): string => {
 
 export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   const runs = await world.runs.list({
+    workflowName: opts.workflowName,
     pagination: {
-      sortOrder: 'desc',
+      sortOrder: opts.sort || 'desc',
       cursor: opts.cursor,
-      limit: DEFAULT_PAGE_SIZE,
+      limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
   });
   if (opts.stepId || opts.runId) {
@@ -283,10 +286,13 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   logger.log(showTable(runsWithHydratedIO, WORKFLOW_RUN_LISTED_PROPS));
 };
 
-export const getRecentRun = async (world: World) => {
+export const getRecentRun = async (
+  world: World,
+  opts: InspectCLIOptions = {}
+) => {
   logger.warn(`No runId provided, fetching data for latest run instead.`);
   const runs = await world.runs.list({
-    pagination: { limit: 1, sortOrder: 'desc' },
+    pagination: { limit: 1, sortOrder: opts.sort || 'desc' },
   });
   return runs.data[0];
 };
@@ -317,8 +323,15 @@ export const listSteps = async (
       'Filtering by step-id is not supported in list calls, ignoring filter.'
     );
   }
+  if (opts.workflowName) {
+    logger.warn(
+      'Filtering by workflow-name is not supported for steps, ignoring filter.'
+    );
+  }
 
-  const runId = opts.runId ? opts.runId : (await getRecentRun(world))?.runId;
+  const runId = opts.runId
+    ? opts.runId
+    : (await getRecentRun(world, opts))?.runId;
   if (!runId) {
     logger.error('No run found.');
     return;
@@ -328,9 +341,9 @@ export const listSteps = async (
   const stepChunks = await world.steps.list({
     runId,
     pagination: {
-      sortOrder: 'desc',
+      sortOrder: opts.sort || 'desc',
       cursor: opts.cursor,
-      limit: DEFAULT_PAGE_SIZE,
+      limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
   });
   const steps = stepChunks.data;
@@ -395,6 +408,11 @@ export const listStreams = async (
   world: World,
   opts: InspectCLIOptions = {}
 ) => {
+  if (opts.workflowName) {
+    logger.warn(
+      'Filtering by workflow-name is not supported for streams, ignoring filter.'
+    );
+  }
   const steps: Step[] = [];
   const runs: WorkflowRun[] = [];
   if (opts.stepId) {
@@ -406,19 +424,21 @@ export const listStreams = async (
     const runsSteps = await world.steps.list({
       runId: opts.runId,
       pagination: {
-        sortOrder: 'desc',
+        sortOrder: opts.sort || 'desc',
         cursor: opts.cursor,
-        limit: DEFAULT_PAGE_SIZE,
+        limit: opts.limit || DEFAULT_PAGE_SIZE,
       },
     });
-    runsSteps.data.forEach((step: Step) => steps.push(step));
+    runsSteps.data.forEach((step: Step) => {
+      steps.push(step);
+    });
     logger.info(getCursorHint(runsSteps));
   } else {
     logger.warn(
       'No run-id or step-id provided. Listing streams for latest run instead.',
       'Use --run=<run-id> or --step=<step-id> to filter streams by run or step.'
     );
-    const run = await getRecentRun(world);
+    const run = await getRecentRun(world, opts);
     if (!run) {
       logger.warn('No runs found.');
       return;
@@ -427,12 +447,14 @@ export const listStreams = async (
     const runsSteps = await world.steps.list({
       runId: runs[0].runId,
       pagination: {
-        sortOrder: 'desc',
+        sortOrder: opts.sort || 'desc',
         cursor: opts.cursor,
-        limit: DEFAULT_PAGE_SIZE,
+        limit: opts.limit || DEFAULT_PAGE_SIZE,
       },
     });
-    runsSteps.data.forEach((step: Step) => steps.push(step));
+    runsSteps.data.forEach((step: Step) => {
+      steps.push(step);
+    });
     logger.info(getCursorHint(runsSteps));
   }
 
@@ -514,12 +536,19 @@ export const listEvents = async (
   world: World,
   opts: InspectCLIOptions = {}
 ) => {
+  if (opts.workflowName) {
+    logger.warn(
+      'Filtering by workflow-name is not supported for events, ignoring filter.'
+    );
+  }
   if (opts.stepId) {
     const step = await world.steps.get(undefined, opts.stepId);
     const runId = step.runId;
     opts.runId = runId;
   }
-  const runId = opts.runId ? opts.runId : (await getRecentRun(world))?.runId;
+  const runId = opts.runId
+    ? opts.runId
+    : (await getRecentRun(world, opts))?.runId;
   if (!runId) {
     logger.error('No run found.');
     return;
@@ -528,9 +557,9 @@ export const listEvents = async (
   const events = await world.events.list({
     runId,
     pagination: {
-      sortOrder: 'desc',
+      sortOrder: opts.sort || 'desc',
       cursor: opts.cursor,
-      limit: DEFAULT_PAGE_SIZE,
+      limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
   });
   if (opts.stepId) {

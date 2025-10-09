@@ -36,7 +36,6 @@ const MIN_BAR_WIDTH_PX = 8;
 const BAR_HEIGHT_PX = 16;
 const ROW_GAP_PX = 8;
 const MAX_CHART_HEIGHT_PX = 512;
-const MORE_INDICATOR_WIDTH_PX = 2;
 
 const statusToColor = (status: Step['status'] | 'running' | 'completed') => {
   switch (status) {
@@ -217,112 +216,115 @@ export function StepsTimeline({
   chartWidthPx = Math.max(chartWidthPx, minRequiredWidth);
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-2">
-        <div className="text-sm text-muted-foreground mb-2">
-          Timeline (showing {stepsWithTimes.length} step
-          {stepsWithTimes.length !== 1 ? 's' : ''}){' '}
-          {hasMore && '(load more pages to see additional steps)'}
-        </div>
+    <div>
+      <div className="text-sm text-muted-foreground mb-2">Timeline</div>
+      {/* Chart container with vertical scroll */}
+      <div
+        className="overflow-y-auto bg-muted/20 rounded-lg border"
+        style={{ maxHeight: `${MAX_CHART_HEIGHT_PX}px` }}
+      >
+        {/* Horizontal scrolling container */}
+        <div className="overflow-x-auto">
+          <div
+            className="relative p-4"
+            style={{
+              width: `${chartWidthPx}px`,
+              minWidth: '100%',
+              height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
+            }}
+          >
+            {items.map((item, index) => {
+              const offsetFromStart = item.startTime - runStart;
+              const duration = item.endTime - item.startTime;
 
-        {/* Chart container with vertical scroll */}
-        <div
-          className="overflow-y-auto bg-muted/20 rounded-lg border"
-          style={{ maxHeight: `${MAX_CHART_HEIGHT_PX}px` }}
-        >
-          {/* Horizontal scrolling container */}
-          <div className="overflow-x-auto">
-            <div
-              className="relative p-4"
-              style={{
-                width: `${chartWidthPx}px`,
-                minWidth: '100%',
-                height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
-              }}
-            >
-              {items.map((item, index) => {
-                const offsetFromStart = item.startTime - runStart;
-                const duration = item.endTime - item.startTime;
+              const leftPx = (offsetFromStart / totalDuration) * chartWidthPx;
+              const widthPx = Math.max(
+                (duration / totalDuration) * chartWidthPx,
+                MIN_BAR_WIDTH_PX
+              );
 
-                const leftPx = (offsetFromStart / totalDuration) * chartWidthPx;
-                const widthPx = Math.max(
-                  (duration / totalDuration) * chartWidthPx,
-                  MIN_BAR_WIDTH_PX
-                );
+              const topPx = index * (BAR_HEIGHT_PX + ROW_GAP_PX);
 
-                const topPx = index * (BAR_HEIGHT_PX + ROW_GAP_PX);
+              return (
+                <div
+                  key={item.id}
+                  className="absolute"
+                  style={{
+                    top: `${topPx}px`,
+                    left: 0,
+                    right: 0,
+                    height: `${BAR_HEIGHT_PX}px`,
+                  }}
+                >
+                  <TimelineBar
+                    item={item}
+                    leftPx={leftPx}
+                    widthPx={widthPx}
+                    isSelected={item.id === selectedStepId}
+                    onClick={
+                      item.type === 'step' && item.step
+                        ? () => {
+                            if (item.step) {
+                              onStepClick(item.step.stepId);
+                            }
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
+
+            {/* Load more indicator */}
+            {hasMore &&
+              onLoadMore &&
+              items.length > 1 &&
+              (() => {
+                // Find the last step (skip the run which is first)
+                const lastStep = items[items.length - 1];
+                const lastStepOffsetFromStart = lastStep.endTime - runStart;
+                const lastStepEndPx =
+                  (lastStepOffsetFromStart / totalDuration) * chartWidthPx;
 
                 return (
-                  <div
-                    key={item.id}
-                    className="absolute"
-                    style={{
-                      top: `${topPx}px`,
-                      left: 0,
-                      right: 0,
-                      height: `${BAR_HEIGHT_PX}px`,
-                    }}
-                  >
-                    <TimelineBar
-                      item={item}
-                      leftPx={leftPx}
-                      widthPx={widthPx}
-                      isSelected={item.id === selectedStepId}
-                      onClick={
-                        item.type === 'step' && item.step
-                          ? () => {
-                              if (item.step) {
-                                onStepClick(item.step.stepId);
-                              }
-                            }
-                          : undefined
-                      }
-                    />
-                  </div>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        onClick={onLoadMore}
+                        className="absolute bg-gray-400/30 hover:bg-gray-400/40 transition-colors cursor-pointer"
+                        style={{
+                          left: `${lastStepEndPx + 8}px`,
+                          top: 0,
+                          right: 0,
+                          height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
+                        }}
+                        aria-label="Load more steps"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <div className="text-xs">
+                        There may be more steps after this, click here to load
+                        more
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
                 );
-              })}
-
-              {/* Load more indicator */}
-              {hasMore && onLoadMore && items.length > 0 && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={onLoadMore}
-                      className="absolute bg-gray-400 hover:bg-gray-500 transition-colors cursor-pointer"
-                      style={{
-                        left: `${chartWidthPx - MORE_INDICATOR_WIDTH_PX - 16}px`,
-                        top: 0,
-                        width: `${MORE_INDICATOR_WIDTH_PX}px`,
-                        height: `${rowCount * (BAR_HEIGHT_PX + ROW_GAP_PX)}px`,
-                      }}
-                      aria-label="Load more steps"
-                    />
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <div className="text-xs">
-                      There may be more steps after this, click here to load
-                      more
-                    </div>
-                  </TooltipContent>
-                </Tooltip>
-              )}
-            </div>
+              })()}
           </div>
         </div>
-
-        {/* Time labels */}
-        <div className="flex justify-between text-xs text-muted-foreground pt-2">
-          <span>{new Date(runStart).toLocaleTimeString()}</span>
-          <span>
-            Duration: {formatDuration(runStartTime, runEndTime)}
-            {runIsOngoing && ' (ongoing)'}
-          </span>
-          <span>
-            {runIsOngoing ? 'Now' : new Date(runEnd).toLocaleTimeString()}
-          </span>
-        </div>
-      </CardContent>
-    </Card>
+      </div>
+      {/* Time labels */}
+      <div className="flex justify-between text-xs text-muted-foreground pt-2">
+        <span>{new Date(runStart).toLocaleTimeString()}</span>
+        <span>
+          Duration: {formatDuration(runStartTime, runEndTime)}
+          {runIsOngoing && ' (ongoing)'}
+        </span>
+        <span>
+          {runIsOngoing ? 'Now' : new Date(runEnd).toLocaleTimeString()}
+        </span>
+      </div>{' '}
+    </div>
   );
 }

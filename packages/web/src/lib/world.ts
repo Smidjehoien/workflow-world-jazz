@@ -145,10 +145,15 @@ const streamDisplayRevivers: Record<string, (value: any) => any> = {
   },
 };
 
-export async function fetchRuns(config: WorldConfig, cursor?: string) {
+export async function fetchRuns(
+  config: WorldConfig,
+  cursor?: string,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  limit: number = DEFAULT_PAGE_SIZE
+) {
   const world = await setupWorld(config);
   const runs = await world.runs.list({
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
+    pagination: { cursor, limit, sortOrder },
   });
   return runs;
 }
@@ -177,13 +182,14 @@ export async function fetchRun(config: WorldConfig, runId: string) {
 export async function fetchSteps(
   config: WorldConfig,
   runId: string,
-  cursor?: string
+  cursor?: string,
+  sortOrder: 'asc' | 'desc' = 'asc',
+  limit: number = DEFAULT_PAGE_SIZE
 ) {
   const world = await setupWorld(config);
   const steps = await world.steps.list({
     runId,
-    // TODO: Make desc once we fix larger pagination
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'asc' },
+    pagination: { cursor, limit, sortOrder },
   });
   return steps;
 }
@@ -211,12 +217,14 @@ export async function fetchStep(
 export async function fetchEvents(
   config: WorldConfig,
   runId: string,
-  cursor?: string
+  cursor?: string,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  limit: number = DEFAULT_PAGE_SIZE
 ) {
   const world = await setupWorld(config);
   const events = await world.events.list({
     runId,
-    pagination: { cursor, limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
+    pagination: { cursor, limit, sortOrder },
   });
   return events;
 }

@@ -11,6 +11,9 @@ export type InspectCLIOptions = {
   runId?: string;
   stepId?: string;
   cursor?: string;
+  sort?: 'asc' | 'desc';
+  limit?: number;
+  workflowName?: string;
 };
 
 export interface WorkflowConfig {

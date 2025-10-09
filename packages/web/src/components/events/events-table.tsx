@@ -2,11 +2,13 @@
 
 import {
   AlertCircle,
+  ArrowDownAZ,
+  ArrowUpAZ,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,8 +20,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useEvents } from '@/hooks/use-api';
 import type { WorldConfig } from '@/lib/world';
+import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { TableSkeleton } from '../display-utils/table-skeleton';
 
@@ -36,6 +44,9 @@ export function EventsTable({
   onEventClick,
   selectedEventId,
 }: EventsTableProps) {
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [limit, setLimit] = useState<number>(10);
+
   const {
     data,
     error,
@@ -47,7 +58,11 @@ export function EventsTable({
     handleRefresh,
     canGoNext,
     canGoPrev,
-  } = useEvents(config, runId);
+  } = useEvents(config, runId, sortOrder, limit);
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+  };
 
   const truncate = (str: string | undefined, maxLength = 30) => {
     if (!str) return '';
@@ -81,6 +96,28 @@ export function EventsTable({
               <RefreshCw className={loading ? 'animate-spin' : ''} />
               Refresh
             </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleSortOrder}
+                  disabled={loading}
+                >
+                  {sortOrder === 'desc' ? (
+                    <ArrowDownAZ className="h-4 w-4" />
+                  ) : (
+                    <ArrowUpAZ className="h-4 w-4" />
+                  )}
+                  {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {sortOrder === 'desc'
+                  ? 'Showing newest first'
+                  : 'Showing oldest first'}
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
       </CardHeader>
@@ -150,7 +187,8 @@ export function EventsTable({
               <div className="text-sm text-muted-foreground">
                 {paginationDisplay}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <PageSizeDropdown value={limit} onChange={setLimit} />
                 <Button
                   variant="outline"
                   size="sm"

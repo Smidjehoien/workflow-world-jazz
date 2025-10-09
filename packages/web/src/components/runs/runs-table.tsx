@@ -2,12 +2,14 @@
 
 import {
   AlertCircle,
+  ArrowDownAZ,
+  ArrowUpAZ,
   ChevronLeft,
   ChevronRight,
   Radio,
   RefreshCw,
 } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +30,7 @@ import {
 import { useRuns } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
 import type { WorldConfig } from '@/lib/world';
+import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { TableSkeleton } from '../display-utils/table-skeleton';
@@ -45,6 +48,8 @@ export function RunsTable({
 }: RunsTableProps) {
   const [liveMode, setLiveMode] = useState(false);
   const [hoveredRunId, setHoveredRunId] = useState<string | null>(null);
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [limit, setLimit] = useState<number>(10);
 
   const {
     data,
@@ -59,7 +64,13 @@ export function RunsTable({
     canGoPrev,
   } = useRuns(config, {
     refreshInterval: liveMode ? 5000 : 0,
+    sortOrder,
+    limit,
   });
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
+  };
 
   // Show skeleton for initial load
   if (loading && !data) {
@@ -115,6 +126,28 @@ export function RunsTable({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>Note that this resets pages</TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={toggleSortOrder}
+                      disabled={loading}
+                    >
+                      {sortOrder === 'desc' ? (
+                        <ArrowDownAZ className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpAZ className="h-4 w-4" />
+                      )}
+                      {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {sortOrder === 'desc'
+                      ? 'Showing newest first'
+                      : 'Showing oldest first'}
+                  </TooltipContent>
                 </Tooltip>
               </>
             }
@@ -218,7 +251,8 @@ export function RunsTable({
               <div className="text-sm text-muted-foreground">
                 {paginationDisplay}
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
+                <PageSizeDropdown value={limit} onChange={setLimit} />
                 <Button
                   variant="outline"
                   size="sm"
