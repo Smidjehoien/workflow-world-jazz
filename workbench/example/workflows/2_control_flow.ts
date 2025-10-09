@@ -1,4 +1,4 @@
-import { FatalError, getStepContext, RetryableError } from '@vercel/workflow';
+import { FatalError, getStepMetadata, RetryableError } from '@vercel/workflow';
 
 async function delayedMessage(ms: number, message: string): Promise<string> {
   'use step';
@@ -20,7 +20,7 @@ async function failingStep(): Promise<string> {
 
 async function retryableStep(): Promise<string> {
   'use step';
-  const { attempt } = getStepContext();
+  const { attempt } = getStepMetadata();
   console.log('retryableStep attempt:', attempt);
   if (attempt === 1) {
     console.log(

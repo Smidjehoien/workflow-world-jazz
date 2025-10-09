@@ -1,10 +1,10 @@
 ---
-title: getWorkflowContext
+title: getWorkflowMetadata
 ---
 
 import { generateDefinition } from "@/lib/tsdoc"
 
-# `getWorkflowContext`
+# `getWorkflowMetadata`
 
 Returns additional metadata available in the current workflow function.
 
@@ -14,16 +14,16 @@ You may want to use this function when you need to:
 * Access timing information of a workflow
 
 <Callout>
-If you need to access step context, take a look at [`getStepContext`](/docs/api-reference/vercel-workflow-core/get-step-context).
+If you need to access step context, take a look at [`getStepMetadata`](/docs/api-reference/vercel-workflow-core/get-step-metadata).
 </Callout>
 
 ```typescript lineNumbers
-import { getWorkflowContext } from "@vercel/workflow-core"
+import { getWorkflowMetadata } from "@vercel/workflow-core"
 
 async function testWorkflow() {
     "use workflow"
 
-    const ctx = getWorkflowContext() // [!code highlight]
+    const ctx = getWorkflowMetadata() // [!code highlight]
     console.log(ctx.workflowRunId)
 }
 ```
@@ -35,8 +35,8 @@ async function testWorkflow() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowContext } from "@vercel/workflow-core";
-export default getWorkflowContext;`
+import { getWorkflowMetadata } from "@vercel/workflow-core";
+export default getWorkflowMetadata;`
 })}
 showSections={['parameters']}
 />
@@ -46,7 +46,7 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { WorkflowContext } from "@vercel/workflow-core";
-export default WorkflowContext;`
+import type { WorkflowMetadata } from "@vercel/workflow-core";
+export default WorkflowMetadata;`
 })}
 />

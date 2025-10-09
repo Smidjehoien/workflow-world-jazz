@@ -1,6 +1,6 @@
 import { contextStorage } from './context-storage.js';
 
-export interface StepContext {
+export interface StepMetadata {
   /**
    * Unique identifier for the currently executing step.
    * Useful to use as part of an idempotency key for critical
@@ -39,12 +39,12 @@ export interface StepContext {
  * It uses `AsyncLocalStorage` to store the context and
  * retrieve it in the step function.
  */
-export function getStepContext(): StepContext {
+export function getStepMetadata(): StepMetadata {
   const ctx = contextStorage.getStore();
   if (!ctx) {
     throw new Error(
-      '`getStepContext()` can only be called inside a step function'
+      '`getStepMetadata()` can only be called inside a step function'
     );
   }
-  return ctx.stepContext;
+  return ctx.stepMetadata;
 }

@@ -1,8 +1,8 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { WorkflowContext } from '../workflow/get-workflow-context.js';
-import type { StepContext } from './get-step-context.js';
+import type { WorkflowMetadata } from '../workflow/get-workflow-metadata.js';
+import type { StepMetadata } from './get-step-metadata.js';
 
 export const contextStorage = /* @__PURE__ */ new AsyncLocalStorage<{
-  stepContext: StepContext;
-  workflowContext: WorkflowContext;
+  stepMetadata: StepMetadata;
+  workflowMetadata: WorkflowMetadata;
 }>();

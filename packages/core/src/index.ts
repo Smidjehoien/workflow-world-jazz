@@ -19,9 +19,12 @@ export {
   type WebhookOptions,
 } from './get-webhook.js';
 export { getWorld, resetWorld } from './runtime/world.js';
-export { getStepContext, type StepContext } from './step/get-step-context.js';
 export {
-  getWorkflowContext,
-  type WorkflowContext,
-} from './step/get-workflow-context.js';
+  getStepMetadata,
+  type StepMetadata,
+} from './step/get-step-metadata.js';
+export {
+  getWorkflowMetadata,
+  type WorkflowMetadata,
+} from './step/get-workflow-metadata.js';
 export { getWorkflowWritableStream } from './writable-stream.js';

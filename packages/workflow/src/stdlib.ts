@@ -7,7 +7,7 @@
 
 import { RetryableError } from '@vercel/workflow-errors';
 import ms, { type StringValue } from 'ms';
-import { getStepContext } from './index.js';
+import { getStepMetadata } from './index.js';
 
 // vqs has a max message visibility lifespan, the workflow sleep function
 // will retry repeatedly until the user requested duration is reached.
@@ -35,7 +35,7 @@ export async function sleep(date: Date): Promise<void>;
 
 export async function sleep(param: StringValue | Date): Promise<void> {
   'use step';
-  const { stepStartedAt } = getStepContext();
+  const { stepStartedAt } = getStepMetadata();
   const durationMs =
     typeof param === 'string'
       ? ms(param)

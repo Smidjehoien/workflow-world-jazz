@@ -1,10 +1,10 @@
 ---
-title: getStepContext
+title: getStepMetadata
 ---
 
 import { generateDefinition } from "@/lib/tsdoc"
 
-# `getStepContext`
+# `getStepMetadata`
 
 Returns metadata available in the current step function.
 
@@ -18,7 +18,7 @@ This function can only be called inside a step function.
 </Callout>
 
 ```typescript lineNumbers
-import { getStepContext } from "@vercel/workflow-core"
+import { getStepMetadata } from "@vercel/workflow-core"
 
 async function testWorkflow() {
     "use workflow"
@@ -27,7 +27,7 @@ async function testWorkflow() {
 
 async function logStepId() {
     "use step"
-    const ctx = getStepContext() // [!code highlight]
+    const ctx = getStepMetadata() // [!code highlight]
     console.log(ctx.stepId) // Grab the current step ID
 }
 ```
@@ -39,8 +39,8 @@ async function logStepId() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getStepContext } from "@vercel/workflow-core";
-export default getStepContext;`
+import { getStepMetadata } from "@vercel/workflow-core";
+export default getStepMetadata;`
 })}
 showSections={['parameters']}
 />
@@ -50,7 +50,7 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { StepContext } from "@vercel/workflow-core";
-export default StepContext;`
+import type { StepMetadata } from "@vercel/workflow-core";
+export default StepMetadata;`
 })}
 />

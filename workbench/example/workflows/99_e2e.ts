@@ -2,8 +2,8 @@ import {
   createHook,
   FatalError,
   fetch,
-  getStepContext,
-  getWorkflowContext,
+  getStepMetadata,
+  getWorkflowMetadata,
   getWorkflowWritableStream,
   sleep,
 } from '@vercel/workflow';
@@ -154,25 +154,26 @@ export async function nullByteWorkflow() {
 
 //////////////////////////////////////////////////////////
 
-async function stepWithContext() {
+async function stepWithMetadata() {
   'use step';
-  const stepCtx = getStepContext();
-  const workflowCtx = getWorkflowContext();
-  return { stepCtx, workflowCtx };
+  const stepMetadata = getStepMetadata();
+  const workflowMetadata = getWorkflowMetadata();
+  return { stepMetadata, workflowMetadata };
 }
 
-export async function workflowAndStepContextWorkflow() {
+export async function workflowAndStepMetadataWorkflow() {
   'use workflow';
-  const workflowCtx = getWorkflowContext();
-  const { stepCtx, workflowCtx: innerWorkflowCtx } = await stepWithContext();
+  const workflowMetadata = getWorkflowMetadata();
+  const { stepMetadata, workflowMetadata: innerWorkflowMetadata } =
+    await stepWithMetadata();
   return {
-    workflowCtx: {
-      workflowRunId: workflowCtx.workflowRunId,
-      workflowStartedAt: workflowCtx.workflowStartedAt,
-      url: workflowCtx.url,
+    workflowMetadata: {
+      workflowRunId: workflowMetadata.workflowRunId,
+      workflowStartedAt: workflowMetadata.workflowStartedAt,
+      url: workflowMetadata.url,
     },
-    stepCtx,
-    innerWorkflowCtx,
+    stepMetadata,
+    innerWorkflowMetadata,
   };
 }
 

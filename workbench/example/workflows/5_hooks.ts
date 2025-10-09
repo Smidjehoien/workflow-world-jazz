@@ -1,21 +1,21 @@
 import {
-  getStepContext,
+  getStepMetadata,
   getWebhook,
-  getWorkflowContext,
+  getWorkflowMetadata,
 } from '@vercel/workflow';
 import OpenAI from 'openai';
 import { z } from 'zod';
 
 /**
- * `getStepContext()` is a hook that allows you to access the step's context
+ * `getStepMetadata()` is a hook that allows you to access the step's context
  * of the current workflow run.
  *
  * It is useful for accessing the context of the current workflow run, such as
  * the workflow run ID, the workflow started at, and the attempt number.
  */
-async function stepWithGetContext() {
+async function stepWithGetMetadata() {
   'use step';
-  const ctx = getStepContext();
+  const ctx = getStepMetadata();
   console.log('step context', ctx);
 
   // Mimic a retryable error 50% of the time (so that the `attempt` counter increases)
@@ -24,12 +24,12 @@ async function stepWithGetContext() {
   }
 }
 
-export async function withWorkflowContext() {
+export async function withWorkflowMetadata() {
   'use workflow';
-  const ctx = getWorkflowContext();
+  const ctx = getWorkflowMetadata();
   console.log('workflow context', ctx);
 
-  await stepWithGetContext();
+  await stepWithGetMetadata();
 }
 
 async function initiateOpenAIResponse() {

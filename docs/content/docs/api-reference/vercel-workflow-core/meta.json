@@ -2,8 +2,8 @@
   "title": "@vercel/workflow-core",
   "pages": [
     "vercel-workflow-core",
-    "get-workflow-context",
-    "get-step-context",
+    "get-workflow-metadata",
+    "get-step-metadata",
     "create-hook",
     "define-hook",
     "resume-hook",

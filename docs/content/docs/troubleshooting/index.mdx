@@ -64,37 +64,37 @@ export default withWorkflow(nextConfig); // [!code highlight]
 
 ### Context Function Errors
 
-Functions like `getStepContext`, and `sleep` from the Workflow SDK Core package depend on the execution context (i.e. *where* the function is executed).
+Functions like `getStepMetadata`, and `sleep` from the Workflow SDK Core package depend on the execution context (i.e. *where* the function is executed).
 
 #### Accessing Context
 
 Workflow SDK Core provides the following functions for accessing context:
 
-* [`getWorkflowContext`](/docs/api-reference/vercel-workflow-core/get-workflow-context)
-* [`getStepContext`](/docs/api-reference/vercel-workflow-core/get-step-context).
+* [`getWorkflowMetadata`](/docs/api-reference/vercel-workflow-core/get-workflow-metadata)
+* [`getStepMetadata`](/docs/api-reference/vercel-workflow-core/get-step-metadata).
 
-Trying to call `getStepContext` inside a workflow function isn't possible since no current executing step exists.
+Trying to call `getStepMetadata` inside a workflow function isn't possible since no current executing step exists.
 
 ```ts
-import { getWorkflowContext, getStepContext } from "@vercel/workflow-core"
+import { getWorkflowMetadata, getStepMetadata } from "@vercel/workflow-core"
 
-// getWorkflowContext() - available in workflow and step functions
+// getWorkflowMetadata() - available in workflow and step functions
 export async function myWorkflow() {
     "use workflow";
 
-    const ctx = getWorkflowContext();
-    console.log(ctx.workflowRunId) // Valid
+    const metadata = getWorkflowMetadata();
+    console.log(metadata.workflowRunId) // Valid
 
     await testStep();
 
-    const stepCtx = getStepContext() // Invalid, outside execution context
+    const stepMetadata = getStepMetadata() // Invalid, outside execution context
 }
 
 async function testStep() {
     "use step"
 
-    const ctx = getStepContext()
-    console.log(ctx.stepId)        // Valid, within scope of a step function
+    const metadata = getStepMetadata()
+    console.log(metadata.stepId)        // Valid, within scope of a step function
 }
 ```
 
@@ -135,7 +135,7 @@ From this example:
 
 ## Resources
 
-- [API Reference](/docs/api-reference) - Complete API documentation
-- [Concepts](/docs/foundations/concepts) - Architecture and core concepts
-- [Examples](https://github.com/vercel/workflow) - Sample implementations
-- [GitHub Issues](https://github.com/vercel/workflow/issues) - Report bugs and request features
+* [API Reference](/docs/api-reference) - Complete API documentation
+* [Concepts](/docs/foundations/concepts) - Architecture and core concepts
+* [Examples](https://github.com/vercel/workflow) - Sample implementations
+* [GitHub Issues](https://github.com/vercel/workflow/issues) - Report bugs and request features

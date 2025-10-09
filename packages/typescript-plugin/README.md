@@ -13,7 +13,7 @@ This plugin enhances the TypeScript editing experience when writing workflows by
 
 ### Auto-completions
 
-- **Workflow hooks**: Suggests workflow-specific hooks like `getWebhook()`, `getWorkflowContext()`, `getStepContext()`, etc. when inside workflow functions
+- **Workflow hooks**: Suggests workflow-specific hooks like `getWebhook()`, `getWorkflowMetadata()`, `getStepMetadata()`, etc. when inside workflow functions
 
 ## Installation
 

@@ -18,8 +18,8 @@ import {
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
-import type { WorkflowContext } from './workflow/get-workflow-context.js';
-import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-context.js';
+import type { WorkflowMetadata } from './workflow/get-workflow-metadata.js';
+import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-metadata.js';
 import { createCreateHook } from './workflow/hook.js';
 import { createGetWebhook } from './workflow/webhook.js';
 
@@ -90,7 +90,7 @@ export async function runWorkflow(
     vmGlobalThis[WORKFLOW_GET_WEBHOOK] = getWebhook;
 
     // For the workflow VM, we store the context in a symbol on the `globalThis` object
-    const ctx: WorkflowContext = {
+    const ctx: WorkflowMetadata = {
       workflowRunId: workflowRun.runId,
       workflowStartedAt: new vmGlobalThis.Date(+startedAt),
       url,
@@ -98,9 +98,8 @@ export async function runWorkflow(
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
     vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;
 
-    // @ts-ignore Provide a hoisted fetch function
     // NOTE: Will have a config override to use the custom fetch step.
-    //       For now `fetch` must be explictly imported from `@vercel/workflow-core`.
+    //       For now `fetch` must be explicitly imported from `@vercel/workflow-core`.
     // vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
 
     // `Request` and `Response` are special built-in classes that invoke steps

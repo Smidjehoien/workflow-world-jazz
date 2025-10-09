@@ -203,51 +203,57 @@ describe.concurrent('e2e', () => {
     expect(returnValue).toBe('null byte \0');
   });
 
-  test('workflowAndStepContextWorkflow', { timeout: 60_000 }, async () => {
-    const run = await triggerWorkflow('workflowAndStepContextWorkflow', []);
+  test('workflowAndStepMetadataWorkflow', { timeout: 60_000 }, async () => {
+    const run = await triggerWorkflow('workflowAndStepMetadataWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
 
-    expect(returnValue).toHaveProperty('workflowCtx');
-    expect(returnValue).toHaveProperty('stepCtx');
-    expect(returnValue).toHaveProperty('innerWorkflowCtx');
+    expect(returnValue).toHaveProperty('workflowMetadata');
+    expect(returnValue).toHaveProperty('stepMetadata');
+    expect(returnValue).toHaveProperty('innerWorkflowMetadata');
 
     // workflow and context
 
-    expect(returnValue.workflowCtx).toStrictEqual(returnValue.innerWorkflowCtx);
+    expect(returnValue.workflowMetadata).toStrictEqual(
+      returnValue.innerWorkflowMetadata
+    );
 
-    // workflow context should have workflowRunId and stepCtx shouldn't
-    expect(returnValue.workflowCtx.workflowRunId).toBe(run.runId);
-    expect(returnValue.innerWorkflowCtx.workflowRunId).toBe(run.runId);
-    expect(returnValue.stepCtx.workflowRunId).toBeUndefined();
+    // workflow context should have workflowRunId and stepMetadata shouldn't
+    expect(returnValue.workflowMetadata.workflowRunId).toBe(run.runId);
+    expect(returnValue.innerWorkflowMetadata.workflowRunId).toBe(run.runId);
+    expect(returnValue.stepMetadata.workflowRunId).toBeUndefined();
 
-    // workflow context should have workflowStartedAt and stepCtx shouldn't
-    expect(typeof returnValue.workflowCtx.workflowStartedAt).toBe('string');
-    expect(typeof returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
+    // workflow context should have workflowStartedAt and stepMetadata shouldn't
+    expect(typeof returnValue.workflowMetadata.workflowStartedAt).toBe(
       'string'
     );
-    expect(returnValue.innerWorkflowCtx.workflowStartedAt).toBe(
-      returnValue.workflowCtx.workflowStartedAt
+    expect(typeof returnValue.innerWorkflowMetadata.workflowStartedAt).toBe(
+      'string'
     );
-    expect(returnValue.stepCtx.workflowStartedAt).toBeUndefined();
+    expect(returnValue.innerWorkflowMetadata.workflowStartedAt).toBe(
+      returnValue.workflowMetadata.workflowStartedAt
+    );
+    expect(returnValue.stepMetadata.workflowStartedAt).toBeUndefined();
 
-    // workflow context should have url and stepCtx shouldn't
-    expect(typeof returnValue.workflowCtx.url).toBe('string');
-    expect(typeof returnValue.innerWorkflowCtx.url).toBe('string');
-    expect(returnValue.innerWorkflowCtx.url).toBe(returnValue.workflowCtx.url);
-    expect(returnValue.stepCtx.url).toBeUndefined();
+    // workflow context should have url and stepMetadata shouldn't
+    expect(typeof returnValue.workflowMetadata.url).toBe('string');
+    expect(typeof returnValue.innerWorkflowMetadata.url).toBe('string');
+    expect(returnValue.innerWorkflowMetadata.url).toBe(
+      returnValue.workflowMetadata.url
+    );
+    expect(returnValue.stepMetadata.url).toBeUndefined();
 
     // workflow context shouldn't have stepId, stepStartedAt, or attempt
-    expect(returnValue.workflowCtx.stepId).toBeUndefined();
-    expect(returnValue.workflowCtx.stepStartedAt).toBeUndefined();
-    expect(returnValue.workflowCtx.attempt).toBeUndefined();
+    expect(returnValue.workflowMetadata.stepId).toBeUndefined();
+    expect(returnValue.workflowMetadata.stepStartedAt).toBeUndefined();
+    expect(returnValue.workflowMetadata.attempt).toBeUndefined();
 
     // step context
 
     // Attempt should be atleast 1
-    expect(returnValue.stepCtx.attempt).toBeGreaterThanOrEqual(1);
+    expect(returnValue.stepMetadata.attempt).toBeGreaterThanOrEqual(1);
 
     // stepStartedAt should be a Date
-    expect(typeof returnValue.stepCtx.stepStartedAt).toBe('string');
+    expect(typeof returnValue.stepMetadata.stepStartedAt).toBe('string');
   });
 
   test('outputStreamWorkflow', { timeout: 60_000 }, async () => {

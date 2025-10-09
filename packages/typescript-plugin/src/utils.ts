@@ -41,8 +41,8 @@ export function getDirective(
  */
 export const WORKFLOW_HOOKS = [
   'getWebhook',
-  'getWorkflowContext',
-  'getStepContext',
+  'getWorkflowMetadata',
+  'getStepMetadata',
   'getWorkflowWritableStream',
   'sleep',
 ];

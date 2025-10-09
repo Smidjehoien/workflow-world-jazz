@@ -458,12 +458,12 @@ export const vercelAPIStepsEntrypoint =
 
             result = await contextStorage.run(
               {
-                stepContext: {
+                stepMetadata: {
                   stepId,
                   stepStartedAt: new Date(+step.startedAt),
                   attempt: metadata.attempt,
                 },
-                workflowContext: {
+                workflowMetadata: {
                   workflowRunId,
                   workflowStartedAt: new Date(+workflowStartedAt),
                   url: `https://${process.env.VERCEL_URL}`,
