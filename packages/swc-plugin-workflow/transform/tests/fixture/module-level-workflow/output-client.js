@@ -1,4 +1,3 @@
-import { start as __private_workflow_start } from "@vercel/workflow/api";
 /**__internal_workflows{"workflows":{"input.js":{"arrowWorkflow":{"workflowId":"workflow-input-js-arrowWorkflow"},"workflow":{"workflowId":"workflow-input-js-workflow"}}}}*/;
 const localArrow = async (input)=>{
     return input.bar;

@@ -768,26 +768,9 @@ impl StepTransform {
         }))
     }
 
-    // Generate the import for workflow start function (client mode)
-    fn create_workflow_start_import(&self) -> ModuleItem {
+    // Generate the import for runStep function (client mode)
+    fn create_run_step_import(&self) -> ModuleItem {
         let mut specifiers = Vec::new();
-
-        if !self.workflow_function_names.is_empty() {
-            specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
-                span: DUMMY_SP,
-                local: Ident::new(
-                    "__private_workflow_start".into(),
-                    DUMMY_SP,
-                    SyntaxContext::empty(),
-                ),
-                imported: Some(ModuleExportName::Ident(Ident::new(
-                    "start".into(),
-                    DUMMY_SP,
-                    SyntaxContext::empty(),
-                ))),
-                is_type_only: false,
-            }));
-        }
 
         if !self.step_function_names.is_empty() {
             specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
@@ -1470,10 +1453,8 @@ impl VisitMut for StepTransform {
                         }
                     }
                     TransformMode::Client => {
-                        if !self.workflow_function_names.is_empty()
-                            || !self.step_function_names.is_empty()
-                        {
-                            imports_to_add.push(self.create_workflow_start_import());
+                        if !self.step_function_names.is_empty() {
+                            imports_to_add.push(self.create_run_step_import());
                         }
                     }
                 }
