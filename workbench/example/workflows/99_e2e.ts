@@ -219,3 +219,41 @@ export async function fetchWorkflow() {
   const data = await response.json();
   return data;
 }
+
+//////////////////////////////////////////////////////////
+
+export async function promiseRaceStressTestDelayStep(
+  dur: number,
+  resp: number
+): Promise<number> {
+  'use step';
+
+  console.log(`sleep`, resp, `/`, dur);
+  await new Promise((resolve) => setTimeout(resolve, dur));
+
+  console.log(resp, `done`);
+  return resp;
+}
+
+export async function promiseRaceStressTestWorkflow() {
+  'use workflow';
+
+  const promises = new Map<number, Promise<number>>();
+  const done: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    const resp = i;
+    const dur = 1000 * (10 - i);
+    console.log(`sched`, resp, `/`, dur);
+    promises.set(i, promiseRaceStressTestDelayStep(dur, resp));
+  }
+
+  while (promises.size > 0) {
+    console.log(`promises.size`, promises.size);
+    const res = await Promise.race(promises.values());
+    console.log(res);
+    done.push(res);
+    promises.delete(res);
+  }
+
+  return done;
+}

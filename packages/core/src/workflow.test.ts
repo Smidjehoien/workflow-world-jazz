@@ -24,9 +24,7 @@ describe('runWorkflow', () => {
   describe('successful workflow execution', () => {
     it('should execute a simple workflow successfully', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode =
-        'function workflow() { return "success"; }' +
-        getWorkflowTransformCode('workflow');
+      const workflowCode = `function workflow() { return "success"; }${getWorkflowTransformCode('workflow')}`;
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -47,9 +45,7 @@ describe('runWorkflow', () => {
 
     it('should execute workflow with arguments', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode =
-        'function workflow(a, b) { return a + b; }' +
-        getWorkflowTransformCode('workflow');
+      const workflowCode = `function workflow(a, b) { return a + b; }${getWorkflowTransformCode('workflow')}`;
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -70,14 +66,13 @@ describe('runWorkflow', () => {
 
     it('allow user code to handle user-defined errors', async () => {
       const ops: Promise<any>[] = [];
-      const workflowCode =
-        `function workflow() {
+      const workflowCode = `function workflow() {
         try {
           throw new TypeError("my workflow error");
         } catch (err) {
           return err;
         }
-      }` + getWorkflowTransformCode('workflow');
+      }${getWorkflowTransformCode('workflow')}`;
 
       const workflowRun: WorkflowRun = {
         runId: 'wrun_123',
@@ -142,7 +137,7 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
       workflowRun,
       events
     );
@@ -229,7 +224,7 @@ describe('runWorkflow', () => {
             await add(5, 6);
             timestamps.push(new Date());
             return timestamps;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
       workflowRun,
       events
     );
@@ -285,13 +280,12 @@ describe('runWorkflow', () => {
         },
       ];
 
-      const workflowCode =
-        `
+      const workflowCode = `
       const sleep = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("sleep");
       async function workflow() {
         await Promise.race([sleep(1), sleep(2)]);
         return Date.now();
-      }` + getWorkflowTransformCode('workflow');
+      }${getWorkflowTransformCode('workflow')}`;
 
       // Execute the workflow with only sleep(1) resolved
       const result1 = await runWorkflow(workflowCode, workflowRun, events);
@@ -375,7 +369,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -438,7 +432,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -501,11 +495,142 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.race([add(1, 2), add(3, 4)]);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
       expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual(7);
+    });
+
+    it('should handle Promise.race with multiple concurrent steps completing out of order', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [
+        {
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGD',
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K755385N02MMWXYHFCQSP9P0',
+          createdAt: new Date('2025-10-09T18:52:51.253Z'),
+        },
+        {
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGE',
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K755386GHGAFYYDC58V17E3T',
+          createdAt: new Date('2025-10-09T18:52:51.280Z'),
+        },
+        {
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGF',
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K75538D4Q4X8PJ1ZNDZD5R0W',
+          createdAt: new Date('2025-10-09T18:52:51.492Z'),
+        },
+        {
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGG',
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K75538Y9GEHXJQXT3JB89M4C',
+          createdAt: new Date('2025-10-09T18:52:52.041Z'),
+        },
+        {
+          eventType: 'step_started',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGH',
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K75539CD2PAH419SKJ2X5V5T',
+          createdAt: new Date('2025-10-09T18:52:52.493Z'),
+        },
+        {
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGH',
+          eventData: {
+            result: dehydrateStepReturnValue(4, ops),
+          },
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K7553EABWCK00JQ9R8P1FTK7',
+          createdAt: new Date('2025-10-09T18:52:57.547Z'),
+        },
+        {
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGG',
+          eventData: {
+            result: dehydrateStepReturnValue(3, ops),
+          },
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K7553F31YS6C94NG23WGEEMV',
+          createdAt: new Date('2025-10-09T18:52:58.337Z'),
+        },
+        {
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGF',
+          eventData: {
+            result: dehydrateStepReturnValue(2, ops),
+          },
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K7553G0XEE4R440QS5SV89YE',
+          createdAt: new Date('2025-10-09T18:52:59.293Z'),
+        },
+        {
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGE',
+          eventData: {
+            result: dehydrateStepReturnValue(1, ops),
+          },
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K7553HS9R1XJQKVVW0ZRCMNP',
+          createdAt: new Date('2025-10-09T18:53:01.097Z'),
+        },
+        {
+          eventType: 'step_completed',
+          correlationId: 'step_01HK153X00DKMJB5AQEJZ3FQGD',
+          eventData: {
+            result: dehydrateStepReturnValue(0, ops),
+          },
+          runId: 'wrun_01K75533W56DAE35VY3082DN3P',
+          eventId: 'evnt_01K7553K67FQG02YCFE9QDKJ90',
+          createdAt: new Date('2025-10-09T18:53:02.535Z'),
+        },
+      ];
+
+      const result = await runWorkflow(
+        `
+        const promiseRaceStressTestDelayStep = globalThis[Symbol.for("WORKFLOW_USE_STEP")]("promiseRaceStressTestDelayStep");
+
+        async function workflow() {
+  const promises = new Map();
+  const done = [];
+  for (let i = 0; i < 5; i++) {
+    const dur = 1000 * (10 - i);
+    console.log(\`sched\`, i, \`/\`, dur);
+    promises.set(i, promiseRaceStressTestDelayStep(dur, i));
+  }
+
+  while (promises.size > 0) {
+    console.log(\`promises.size\`, promises.size);
+    const res = await Promise.race(promises.values());
+    console.log(res);
+    done.push(res);
+    promises.delete(res);
+  }
+    return done;
+}${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      expect(hydrateWorkflowReturnValue(result as any, ops)).toEqual([
+        4, 3, 2, 1, 0,
+      ]);
     });
   });
 
@@ -528,7 +653,7 @@ describe('runWorkflow', () => {
         const events: Event[] = [];
 
         await runWorkflow(
-          'const value = "test"' + getWorkflowTransformCode(),
+          `const value = "test"${getWorkflowTransformCode()}`,
           workflowRun,
           events
         );
@@ -560,8 +685,7 @@ describe('runWorkflow', () => {
         const events: Event[] = [];
 
         await runWorkflow(
-          'function workflow() { throw new Error("test"); }' +
-            getWorkflowTransformCode('workflow'),
+          `function workflow() { throw new Error("test"); }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -596,7 +720,7 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -647,7 +771,7 @@ describe('runWorkflow', () => {
             // 'add()' will throw a 'WorkflowSuspension' because it has not been run yet
             const a = await add(1, 2);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -682,7 +806,7 @@ describe('runWorkflow', () => {
           async function workflow() {
             const a = await Promise.all([add(1, 2), add(3, 4)]);
             return a;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -735,7 +859,7 @@ describe('runWorkflow', () => {
             } catch (err) {
               return err;
             }
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -772,7 +896,7 @@ describe('runWorkflow', () => {
             const webhook = getWebhook();
             const req = await webhook;
             return req.url;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -821,7 +945,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return req.url;
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -879,7 +1003,7 @@ describe('runWorkflow', () => {
         const req1 = await webhook;
         const req2 = await webhook;
         return [req1.url, req2.url];
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -945,7 +1069,7 @@ describe('runWorkflow', () => {
           }
         }
         return reqs;
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1005,7 +1129,7 @@ describe('runWorkflow', () => {
         const webhook = getWebhook();
         const req = await webhook;
         return { url: req.url, method: req.method };
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1091,7 +1215,7 @@ describe('runWorkflow', () => {
           url2: req2.url,
           method2: req2.method,
         };
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1160,7 +1284,7 @@ describe('runWorkflow', () => {
         for await (const req of webhook) {
           await add(1, 2);
         }
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -1199,7 +1323,7 @@ describe('runWorkflow', () => {
             const hook = createHook();
             const payload = await hook;
             return payload.message;
-          }` + getWorkflowTransformCode('workflow'),
+          }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -1248,7 +1372,7 @@ describe('runWorkflow', () => {
         const hook = createHook();
         const payload = await hook;
         return payload.message;
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1306,7 +1430,7 @@ describe('runWorkflow', () => {
         const payload1 = await hook;
         const payload2 = await hook;
         return [payload1.message, payload2.message];
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1370,7 +1494,7 @@ describe('runWorkflow', () => {
           }
         }
         return payloads;
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1422,7 +1546,7 @@ describe('runWorkflow', () => {
         const hook = createHook();
         const payload = await hook;
         return payload.value;
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1495,7 +1619,7 @@ describe('runWorkflow', () => {
           stepResult,
           data2: payload2.data,
         };
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );
@@ -1559,7 +1683,7 @@ describe('runWorkflow', () => {
         for await (const payload of hook) {
           await add(payload.iteration, 2);
         }
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
           workflowRun,
           events
         );
@@ -1605,7 +1729,7 @@ describe('runWorkflow', () => {
         const hook = createHook({ token: 'my-custom-token' });
         const payload = await hook;
         return { token: hook.token, result: payload.result };
-      }` + getWorkflowTransformCode('workflow'),
+      }${getWorkflowTransformCode('workflow')}`,
         workflowRun,
         events
       );

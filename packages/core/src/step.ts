@@ -76,7 +76,9 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
         if (event.eventType === 'step_failed') {
           // Step failed - bubble up to workflow
           if (event.eventData.fatal) {
-            reject(new FatalError(event.eventData.error));
+            setTimeout(() => {
+              reject(new FatalError(event.eventData.error));
+            }, 0);
             return EventConsumerResult.Finished;
           } else {
             // This is a retryable error, so nothing to do here,
@@ -89,15 +91,19 @@ export function createUseStep(ctx: WorkflowOrchestratorContext) {
             event.eventData.result,
             ctx.globalThis
           );
-          resolve(hydratedResult);
+          setTimeout(() => {
+            resolve(hydratedResult);
+          }, 0);
           return EventConsumerResult.Finished;
         } else {
           // An unexpected event type has been received, but it does belong to this step (matching `correlationId`)
-          reject(
-            new WorkflowRuntimeError(
-              `Unexpected event type: "${event.eventType}"`
-            )
-          );
+          setTimeout(() => {
+            reject(
+              new WorkflowRuntimeError(
+                `Unexpected event type: "${event.eventType}"`
+              )
+            );
+          }, 0);
           return EventConsumerResult.Finished;
         }
       });
