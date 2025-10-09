@@ -1,4 +1,4 @@
-import { getWorkflowWritableStream } from '@vercel/workflow-core';
+import { getWorkflowWritableStream } from '@vercel/workflow';
 import {
   convertToModelMessages,
   type FinishReason,

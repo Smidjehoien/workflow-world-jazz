@@ -293,13 +293,13 @@ describe('getCustomDiagnostics', () => {
 
       expectDiagnostic(diagnostics, {
         code: 9006,
-        messageIncludes: '@vercel/workflow-core',
+        messageIncludes: '@vercel/workflow',
       });
     });
 
-    it('does not warn when using fetch from @vercel/workflow-core', () => {
+    it('does not warn when using fetch from @vercel/workflow', () => {
       const source = `
-        import { fetch } from '@vercel/workflow-core';
+        import { fetch } from '@vercel/workflow';
 
         export async function myWorkflow() {
           'use workflow';

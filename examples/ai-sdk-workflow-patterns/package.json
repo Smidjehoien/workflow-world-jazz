@@ -12,6 +12,7 @@
   "dependencies": {
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
+    "@vercel/workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
     "ai": "^5.0.47",

@@ -1,4 +1,4 @@
-import { hydrateWorkflowReturnValue } from '@vercel/workflow-core/serialization';
+import { hydrateWorkflowReturnValue } from '@vercel/workflow/internal/serialization';
 import { expect, test, vi } from 'vitest';
 import { createFetcher, startServer } from './util';
 

@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import { serve } from '@hono/node-server';
-import { getWorld } from '@vercel/workflow-core';
-import { start } from '@vercel/workflow-core/runtime';
+import { getWorld } from '@vercel/workflow';
+import { start } from '@vercel/workflow/api';
 import { Hono } from 'hono';
 import * as z from 'zod';
 import * as flow from '../.well-known/workflow/v1/flow.js';

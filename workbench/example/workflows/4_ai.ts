@@ -1,4 +1,4 @@
-import { FatalError } from '@vercel/workflow-core';
+import { FatalError } from '@vercel/workflow';
 import { generateText, stepCountIs } from 'ai';
 import z from 'zod/v4';
 

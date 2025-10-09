@@ -1,4 +1,4 @@
-import { FatalError } from '@vercel/workflow-core';
+import { FatalError } from '@vercel/workflow';
 
 async function add(a: number, b: number): Promise<number> {
   'use step';

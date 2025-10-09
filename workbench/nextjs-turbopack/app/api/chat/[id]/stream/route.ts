@@ -1,4 +1,4 @@
-import { getWorkflowReadableStream } from '@vercel/workflow-core/runtime';
+import { getWorkflowReadableStream } from '@vercel/workflow/api';
 import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 
 // Uncomment to simulate a long running Vercel Function timing

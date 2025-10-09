@@ -1,4 +1,4 @@
-import { registerStepFunction } from "@vercel/workflow-core/private";
+import { registerStepFunction } from "@vercel/workflow/internal/private";
 /**__internal_workflows{"steps":{"input.js":{"stepWithArguments":{"stepId":"step-input-js-stepWithArguments"},"stepWithThis":{"stepId":"step-input-js-stepWithThis"}}}}*/;
 export async function stepWithThis() {
     // Error: this is not allowed

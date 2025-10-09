@@ -16,7 +16,8 @@
     "./private": "./dist/private.js",
     "./builtins": "./dist/builtins.js",
     "./serialization": "./dist/serialization.js",
-    "./observability": "./dist/observability.js"
+    "./observability": "./dist/observability.js",
+    "./_workflow": "./dist/workflow/index.js"
   },
   "scripts": {
     "build": "tsc",

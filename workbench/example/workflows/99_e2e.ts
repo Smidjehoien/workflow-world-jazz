@@ -6,7 +6,7 @@ import {
   getWorkflowContext,
   getWorkflowWritableStream,
   sleep,
-} from '@vercel/workflow-core';
+} from '@vercel/workflow';
 
 //////////////////////////////////////////////////////////
 

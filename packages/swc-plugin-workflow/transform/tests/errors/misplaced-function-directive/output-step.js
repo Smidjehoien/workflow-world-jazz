@@ -1,4 +1,4 @@
-import { registerStepFunction } from "@vercel/workflow-core/private";
+import { registerStepFunction } from "@vercel/workflow/internal/private";
 /**__internal_workflows{"steps":{"input.js":{"badStep":{"stepId":"step-input-js-badStep"}}}}*/;
 export async function badStep() {
     const x = 42;

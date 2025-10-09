@@ -2,8 +2,8 @@ import {
   getWorkflowReadableStream,
   getWorkflowReturnValue,
   start,
-} from '@vercel/workflow-core/runtime';
-import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
+} from '@vercel/workflow/api';
+import { hydrateWorkflowArguments } from '@vercel/workflow/internal/serialization';
 import * as duplicateE2e from '@/workflows/98_duplicate_case';
 import * as e2eWorkflows from '@/workflows/99_e2e';
 

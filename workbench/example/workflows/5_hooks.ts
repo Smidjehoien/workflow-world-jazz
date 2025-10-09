@@ -2,7 +2,7 @@ import {
   getStepContext,
   getWebhook,
   getWorkflowContext,
-} from '@vercel/workflow-core';
+} from '@vercel/workflow';
 import OpenAI from 'openai';
 import { z } from 'zod';
 

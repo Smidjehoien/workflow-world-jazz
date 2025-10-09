@@ -17,7 +17,7 @@
   "dependencies": {
     "@vercel/functions": "^2.2.12",
     "@vercel/otel": "^1.13.0",
-    "@vercel/workflow-core": "workspace:*",
+    "@vercel/workflow": "workspace:*",
     "ai": "catalog:",
     "mixpart": "^0.0.4",
     "openai": "^6",

@@ -1,4 +1,4 @@
-import { RetryableError } from '@vercel/workflow-core';
+import { RetryableError } from '@vercel/workflow';
 
 async function add(num: number, num2: number): Promise<number> {
   'use step';

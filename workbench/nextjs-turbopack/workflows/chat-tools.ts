@@ -1,4 +1,4 @@
-import { FatalError } from '@vercel/workflow-core';
+import { FatalError } from '@vercel/workflow';
 import { z } from 'zod';
 
 export const mockAirports: Record<

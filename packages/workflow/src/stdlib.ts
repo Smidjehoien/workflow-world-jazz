@@ -1,6 +1,13 @@
+/**
+ * This is the "standard library" of steps that we make available to all workflow users.
+ * The can be imported like so: `import { sleep, fetch } from 'workflow'`. and used in workflow.
+ * The need to be exported directly in this package and cannot live in `core` to prevent
+ * circular dependencies post-compilation.
+ */
+
 import { RetryableError } from '@vercel/workflow-errors';
 import ms, { type StringValue } from 'ms';
-import { getStepContext } from './step/get-step-context.js';
+import { getStepContext } from './index.js';
 
 // vqs has a max message visibility lifespan, the workflow sleep function
 // will retry repeatedly until the user requested duration is reached.
@@ -56,3 +63,14 @@ export async function sleep(param: StringValue | Date): Promise<void> {
   }
 }
 sleep.maxRetries = Infinity;
+
+/**
+ * A hoisted `fetch()` function that is executed as a "step" function,
+ * for use within workflow functions.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
+ */
+export async function fetch(...args: Parameters<typeof globalThis.fetch>) {
+  'use step';
+  return globalThis.fetch(...args);
+}

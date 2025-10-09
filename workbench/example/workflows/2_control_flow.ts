@@ -1,8 +1,4 @@
-import {
-  FatalError,
-  getStepContext,
-  RetryableError,
-} from '@vercel/workflow-core';
+import { FatalError, getStepContext, RetryableError } from '@vercel/workflow';
 
 async function delayedMessage(ms: number, message: string): Promise<string> {
   'use step';

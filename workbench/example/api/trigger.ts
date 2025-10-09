@@ -2,8 +2,8 @@ import {
   getWorkflowReadableStream,
   getWorkflowReturnValue,
   start,
-} from '@vercel/workflow-core/runtime';
-import { hydrateWorkflowArguments } from '@vercel/workflow-core/serialization';
+} from '@vercel/workflow/api';
+import { hydrateWorkflowArguments } from '@vercel/workflow/internal/serialization';
 import workflowManifest from '../manifest.js';
 
 export async function POST(req: Request) {

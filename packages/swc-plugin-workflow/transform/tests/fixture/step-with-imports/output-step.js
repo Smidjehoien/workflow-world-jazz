@@ -1,4 +1,4 @@
-import { registerStepFunction } from "@vercel/workflow-core/private";
+import { registerStepFunction } from "@vercel/workflow/internal/private";
 import { someHelper } from './helpers'; // should be removed
 import { anotherHelper, usefulHelper// do not remove
  } from './utils';

@@ -1,4 +1,4 @@
-import { registerStepFunction } from "@vercel/workflow-core/private";
+import { registerStepFunction } from "@vercel/workflow/internal/private";
 /**__internal_workflows{"workflows":{"input.js":{"workflowFunction":{"workflowId":"workflow-input-js-workflowFunction"}}},"steps":{"input.js":{"stepFunction":{"stepId":"step-input-js-stepFunction"}}}}*/;
 export async function stepFunction(a, b) {
     return a + b;

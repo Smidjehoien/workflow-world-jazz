@@ -1,4 +1,4 @@
-import { runStep as __private_run_step } from "@vercel/workflow-core/runtime";
+import { runStep as __private_run_step } from "@vercel/workflow/api";
 import { usefulHelper// do not remove
  } from './utils';
 import * as useful from './useful'; // do not remove

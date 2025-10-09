@@ -15,7 +15,7 @@ This is useful when you need to call external APIs or services from within your 
 </Callout>
 
 ```typescript lineNumbers
-import { fetch } from "@vercel/workflow-core"
+import { fetch } from "@vercel/workflow"
 
 async function apiWorkflow() {
     "use workflow"
@@ -35,7 +35,7 @@ Accepts the same arguments as web [`fetch`](https://developer.mozilla.org/en-US/
 <TSDoc
 definition={generateDefinition({
   code: `
-import { fetch } from "@vercel/workflow-core";
+import { fetch } from "@vercel/workflow";
 export default fetch;`
 })}
 showSections={['parameters']}
@@ -48,7 +48,7 @@ Returns the same response as web [`fetch`](https://developer.mozilla.org/en-US/d
 <TSDoc
 definition={generateDefinition({
   code: `
-import { fetch } from "@vercel/workflow-core";
+import { fetch } from "@vercel/workflow";
 export default fetch;`
 })}
 showSections={['returns']}

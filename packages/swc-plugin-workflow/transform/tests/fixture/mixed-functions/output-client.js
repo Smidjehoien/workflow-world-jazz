@@ -1,4 +1,4 @@
-import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow-core/runtime";
+import { start as __private_workflow_start, runStep as __private_run_step } from "@vercel/workflow/api";
 /**__internal_workflows{"workflows":{"input.js":{"workflowFunction":{"workflowId":"workflow-input-js-workflowFunction"}}},"steps":{"input.js":{"stepFunction":{"stepId":"step-input-js-stepFunction"}}}}*/;
 export async function stepFunction(a, b) {
     return __private_run_step("stepFunction", {

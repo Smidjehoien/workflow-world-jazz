@@ -1,5 +1,5 @@
 // Error: sync function with use step
-import { registerStepFunction } from "@vercel/workflow-core/private";
+import { registerStepFunction } from "@vercel/workflow/internal/private";
 /**__internal_workflows{"workflows":{"input.js":{"validWorkflow":{"workflowId":"workflow-input-js-validWorkflow"}}},"steps":{"input.js":{"validStep":{"stepId":"step-input-js-validStep"}}}}*/;
 export function syncStep() {
     'use step';

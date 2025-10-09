@@ -33,6 +33,7 @@
     "@vercel/workflow-ai": "workspace:*",
     "@vercel/swc-plugin-workflow": "workspace:*",
     "@vercel/workflow-cli": "workspace:*",
+    "@vercel/workflow": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-next": "workspace:*",
     "@vercel/workflow-typescript-plugin": "workspace:*",

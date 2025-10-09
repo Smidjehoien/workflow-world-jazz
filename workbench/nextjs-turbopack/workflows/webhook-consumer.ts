@@ -1,4 +1,4 @@
-import { getWebhook } from '@vercel/workflow-core';
+import { getWebhook } from '@vercel/workflow';
 import { write } from './streams';
 
 export async function webhookConsumer(writable: WritableStream<Uint8Array>) {

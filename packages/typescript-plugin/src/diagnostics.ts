@@ -158,7 +158,7 @@ export function getCustomDiagnostics(
             file: sourceFile,
             start: call.getStart(),
             length: call.getWidth(),
-            messageText: `${functionName} is not available in workflow functions. Use 'sleep()' from @vercel/workflow-core instead.`,
+            messageText: `${functionName} is not available in workflow functions. Use 'sleep()' from @vercel/workflow instead.`,
             category: ts.DiagnosticCategory.Error,
             code: 9004,
           });
@@ -177,18 +177,18 @@ export function getCustomDiagnostics(
           return;
         }
 
-        // Check for global fetch - suggest using the one from @vercel/workflow-core
+        // Check for global fetch - suggest using the one from @vercel/workflow
         if (functionName === 'fetch') {
           const symbol = typeChecker.getSymbolAtLocation(call.expression);
 
-          // Check if this is the global fetch (no import) or not from @vercel/workflow-core
+          // Check if this is the global fetch (no import) or not from @vercel/workflow
           if (symbol) {
             const declarations = symbol.getDeclarations();
 
             if (declarations && declarations.length > 0) {
               const decl = declarations[0];
 
-              // If it's an import, check if it's from @vercel/workflow-core
+              // If it's an import, check if it's from @vercel/workflow
               if (
                 ts.isImportSpecifier(decl) ||
                 ts.isImportClause(decl) ||
@@ -215,8 +215,8 @@ export function getCustomDiagnostics(
                 ) {
                   const moduleName = importDecl.moduleSpecifier.text;
 
-                  // If it's already from @vercel/workflow-core, it's fine
-                  if (moduleName === '@vercel/workflow-core') {
+                  // If it's already from @vercel/workflow, it's fine
+                  if (moduleName === '@vercel/workflow') {
                     return;
                   }
                 }
@@ -224,12 +224,12 @@ export function getCustomDiagnostics(
             }
           }
 
-          // If we get here, it's either global fetch or not from @vercel/workflow-core
+          // If we get here, it's either global fetch or not from @vercel/workflow
           diagnostics.push({
             file: sourceFile,
             start: call.getStart(),
             length: call.getWidth(),
-            messageText: `Use the 'fetch' step from @vercel/workflow-core instead of the global fetch in workflow functions.`,
+            messageText: `Use the 'fetch' step from @vercel/workflow instead of the global fetch in workflow functions.`,
             category: ts.DiagnosticCategory.Error,
             code: 9006,
           });

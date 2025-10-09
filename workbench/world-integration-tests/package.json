@@ -14,7 +14,7 @@
     "@types/jsonlines": "^0.1.5",
     "@types/node": "catalog:",
     "@vercel/workflow-cli": "workspace:*",
-    "@vercel/workflow-core": "workspace:*",
+    "@vercel/workflow": "workspace:*",
     "@vercel/workflow-typescript-plugin": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "chalk": "^5.6.2",

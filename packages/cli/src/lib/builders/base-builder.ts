@@ -232,16 +232,16 @@ export abstract class BaseBuilder {
 
     const stepsBundleStart = Date.now();
     const workflowManifest: WorkflowManifest = {};
-    const builtInSteps = '@vercel/workflow-core/builtins';
+    const builtInSteps = '@vercel/workflow/internal/builtins';
 
     const resolvedBuiltInSteps = await enhancedResolve(
       dirname(outfile),
-      '@vercel/workflow-core/builtins'
+      '@vercel/workflow/internal/builtins'
     ).catch((err) => {
       throw new Error(
         [
           chalk.red('Failed to resolve built-in steps sources.'),
-          `${chalk.yellow.bold('hint:')} run \`${chalk.cyan.italic('npm install @vercel/workflow-core')}\` to resolve this issue.`,
+          `${chalk.yellow.bold('hint:')} run \`${chalk.cyan.italic('npm install @vercel/workflow')}\` to resolve this issue.`,
           '',
           `Caused by: ${chalk.red(String(err))}`,
         ].join('\n')
@@ -257,7 +257,7 @@ export abstract class BaseBuilder {
     // User steps
     ${imports}
     // API entrypoint
-    export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow-core/runtime';`;
+    export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow/api';`;
 
     // Bundle with esbuild and our custom SWC plugin
     const esbuildCtx = await esbuild.context({
@@ -459,7 +459,7 @@ import { vercelAPIWorkflowsEntrypoint } from '${
         // The runtime import path is configurable so that the Next.js loader
         // runtime path can be resolved. This is to avoid the user needing to
         // add @vercel/workflow-core as a dependency to their Next.js project.
-        this.config.runtimeImportPath || '@vercel/workflow-core/runtime'
+        this.config.runtimeImportPath || '@vercel/workflow/api'
       }';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
