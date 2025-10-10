@@ -211,19 +211,22 @@ export async function workflowAndStepMetadataWorkflow() {
 
 //////////////////////////////////////////////////////////
 
-async function stepWithOutputStreamBinary(writable: WritableStream) {
+async function stepWithOutputStreamBinary(
+  writable: WritableStream,
+  text: string
+) {
   'use step';
   const writer = writable.getWriter();
   // binary data
-  await writer.write(new TextEncoder().encode('Hello, world!'));
+  await writer.write(new TextEncoder().encode(text));
   writer.releaseLock();
 }
 
-async function stepWithOutputStreamObject(writable: WritableStream) {
+async function stepWithOutputStreamObject(writable: WritableStream, obj: any) {
   'use step';
   const writer = writable.getWriter();
   // object data
-  await writer.write({ foo: 'test' });
+  await writer.write(obj);
   writer.releaseLock();
 }
 
@@ -235,12 +238,18 @@ async function stepCloseOutputStream(writable: WritableStream) {
 export async function outputStreamWorkflow() {
   'use workflow';
   const writable = getWorkflowWritableStream();
+  const namedWritable = getWorkflowWritableStream({ namespace: 'test' });
   await sleep('1s');
-  await stepWithOutputStreamBinary(writable);
+  await stepWithOutputStreamBinary(writable, 'Hello, world!');
   await sleep('1s');
-  await stepWithOutputStreamObject(writable);
+  await stepWithOutputStreamBinary(namedWritable, 'Hello, named stream!');
+  await sleep('1s');
+  await stepWithOutputStreamObject(writable, { foo: 'test' });
+  await sleep('1s');
+  await stepWithOutputStreamObject(namedWritable, { foo: 'bar' });
   await sleep('1s');
   await stepCloseOutputStream(writable);
+  await stepCloseOutputStream(namedWritable);
   return 'done';
 }
 

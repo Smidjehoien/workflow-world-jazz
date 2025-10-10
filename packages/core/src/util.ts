@@ -73,3 +73,8 @@ export function buildWorkflowSuspensionMessage(
 
   return `[Workflows] "${runId}" - ${parts.join(' and ')} to be enqueued\n  Workflow will suspend and resume when ${resumeMsg}`;
 }
+
+export function getWorkflowRunStreamId(runId: string, namespace?: string) {
+  const streamId = runId.replace('wrun_', 'strm_');
+  return namespace ? `${streamId}_${namespace}` : streamId;
+}

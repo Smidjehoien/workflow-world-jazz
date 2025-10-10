@@ -307,9 +307,16 @@ describe('e2e', () => {
     const stream = await fetch(
       `${deploymentUrl}/api/trigger?runId=${run.runId}&output-stream=1`
     );
+    const namedStream = await fetch(
+      `${deploymentUrl}/api/trigger?runId=${run.runId}&output-stream=test`
+    );
     const textDecoderStream = new TextDecoderStream();
     stream.body?.pipeThrough(textDecoderStream);
     const reader = textDecoderStream.readable.getReader();
+
+    const namedTextDecoderStream = new TextDecoderStream();
+    namedStream.body?.pipeThrough(namedTextDecoderStream);
+    const namedReader = namedTextDecoderStream.readable.getReader();
 
     const r1 = await reader.read();
     assert(r1.value);
@@ -317,13 +324,27 @@ describe('e2e', () => {
     const binaryData = Buffer.from(chunk1.data, 'base64');
     expect(binaryData.toString()).toEqual('Hello, world!');
 
+    const r1Named = await namedReader.read();
+    assert(r1Named.value);
+    const chunk1Named = JSON.parse(r1Named.value);
+    const binaryDataNamed = Buffer.from(chunk1Named.data, 'base64');
+    expect(binaryDataNamed.toString()).toEqual('Hello, named stream!');
+
     const r2 = await reader.read();
     assert(r2.value);
     const chunk2 = JSON.parse(r2.value);
     expect(chunk2).toEqual({ foo: 'test' });
 
+    const r2Named = await namedReader.read();
+    assert(r2Named.value);
+    const chunk2Named = JSON.parse(r2Named.value);
+    expect(chunk2Named).toEqual({ foo: 'bar' });
+
     const r3 = await reader.read();
     expect(r3.done).toBe(true);
+
+    const r3Named = await namedReader.read();
+    expect(r3Named.done).toBe(true);
 
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toEqual('done');

@@ -56,8 +56,12 @@ export async function GET(req: Request) {
     return new Response('No runId provided', { status: 400 });
   }
 
-  if (url.searchParams.get('output-stream') === '1') {
-    const stream = getWorkflowReadableStream(runId);
+  const outputStreamParam = url.searchParams.get('output-stream');
+  if (outputStreamParam) {
+    const namespace = outputStreamParam === '1' ? undefined : outputStreamParam;
+    const stream = getWorkflowReadableStream(runId, {
+      namespace,
+    });
     // Add JSON framing to the stream, wrapping binary data in base64
     const streamWithFraming = new TransformStream({
       transform(chunk, controller) {

@@ -1,10 +1,16 @@
 import { getExternalRevivers } from '../serialization.js';
+import { getWorkflowRunStreamId } from '../util.js';
 import type { getWorkflowWritableStream } from '../writable-stream.js';
 
 /**
  * The options for {@link getWorkflowReadableStream}.
  */
 export interface WorkflowReadableStreamOptions {
+  /**
+   * An optional namespace to distinguish between multiple streams associated
+   * with the same workflow run.
+   */
+  namespace?: string;
   /**
    * The index number of the starting chunk to beging reading the stream from.
    */
@@ -35,9 +41,10 @@ export function getWorkflowReadableStream<R = any>(
   runId: string,
   options: WorkflowReadableStreamOptions = {}
 ): ReadableStream<R> {
-  const { ops = [], global = globalThis, startIndex } = options;
+  const { ops = [], global = globalThis, startIndex, namespace } = options;
+  const name = getWorkflowRunStreamId(runId, namespace);
   return getExternalRevivers(global, ops).ReadableStream({
-    name: runId,
+    name,
     startIndex,
   }) as ReadableStream<R>;
 }
