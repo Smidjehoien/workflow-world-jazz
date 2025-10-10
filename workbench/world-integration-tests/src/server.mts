@@ -49,8 +49,9 @@ const app = new Hono()
   .get('/_manifest', (ctx) => ctx.json(manifest))
   .post('/invoke', async (ctx) => {
     const json = await ctx.req.json().then(Invoke.parse);
-    const data = await start(json.workflow, json.args);
-    return ctx.json(data);
+    const handler = await start(json.workflow, json.args);
+
+    return ctx.json({ runId: handler.runId });
   })
   .get('/runs/:runId', async (ctx) => {
     return ctx.json(await getWorld().runs.get(ctx.req.param('runId')));

@@ -75,7 +75,7 @@ export function createFetcher(control: Control) {
         body: JSON.stringify({ file, workflow, args }),
       });
       const data = await x.json();
-      return WorkflowRunSchema.parseAsync(data);
+      return data;
     },
     async getRun(id: string) {
       const x = await fetch(

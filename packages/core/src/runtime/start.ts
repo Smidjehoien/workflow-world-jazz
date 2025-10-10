@@ -1,6 +1,6 @@
 import { waitUntil } from '@vercel/functions';
 import { WorkflowRuntimeError } from '@vercel/workflow-errors';
-import type { WorkflowRun } from '@vercel/workflow-world';
+import { Run } from '../runtime.js';
 import type { Serializable, WorkflowInvokePayload } from '../schemas.js';
 import { dehydrateWorkflowArguments } from '../serialization.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
@@ -38,12 +38,12 @@ export function start<TArgs extends unknown[], TResult>(
   workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
   args: TArgs,
   options?: StartOptions
-): Promise<WorkflowRun>;
+): Promise<Run<TResult>>;
 
 export function start<TArgs extends unknown[], TResult>(
   workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
   options?: StartOptions
-): Promise<WorkflowRun>;
+): Promise<Run<TResult>>;
 
 export async function start<TArgs extends unknown[], TResult>(
   workflow: WorkflowFunction<TArgs, TResult> | WorkflowMetadata,
@@ -85,7 +85,7 @@ export async function start<TArgs extends unknown[], TResult>(
     // Serialize current trace context to propagate across queue boundary
     const traceCarrier = await serializeTraceCarrier();
 
-    const run = await world.runs.create({
+    const runResponse = await world.runs.create({
       deploymentId: deploymentId,
       workflowName: workflowName,
       input: workflowArguments,
@@ -94,15 +94,15 @@ export async function start<TArgs extends unknown[], TResult>(
     waitUntil(Promise.all(ops));
 
     span?.setAttributes({
-      ...Attribute.WorkflowRunId(run.runId),
-      ...Attribute.WorkflowRunStatus(run.status),
+      ...Attribute.WorkflowRunId(runResponse.runId),
+      ...Attribute.WorkflowRunStatus(runResponse.status),
       ...Attribute.DeploymentId(deploymentId),
     });
 
     await world.queue(
       `__wkf_workflow_${workflowName}`,
       {
-        runId: run.runId,
+        runId: runResponse.runId,
         traceCarrier,
       } satisfies WorkflowInvokePayload,
       {
@@ -110,6 +110,7 @@ export async function start<TArgs extends unknown[], TResult>(
       }
     );
 
-    return run;
+    const runHandler = new Run<TResult>(runResponse.runId);
+    return runHandler;
   });
 }

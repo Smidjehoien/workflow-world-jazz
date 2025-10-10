@@ -7,12 +7,18 @@ import {
   WorkflowRunNotCompletedError,
   WorkflowRuntimeError,
 } from '@vercel/workflow-errors';
-import type { Event, WorkflowRun } from '@vercel/workflow-world';
+import type {
+  Event,
+  WorkflowRun,
+  WorkflowRunStatus,
+  World,
+} from '@vercel/workflow-world';
 import { WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import type { start } from './runtime/start.js';
 import { getWorld, getWorldHandlers } from './runtime/world.js';
+import { getWorkflowReadableStream } from './runtime.js';
 import {
   type Serializable,
   type StepInvokePayload,
@@ -43,6 +49,73 @@ export {
 export { resumeHook } from './runtime/resume-hook.js';
 export { type StartOptions, start } from './runtime/start.js';
 export { handleWebhook, processWebhooks } from './runtime/webhook.js';
+
+/**
+ * A handler class for a workflow run.
+ */
+export class Run<TResult> {
+  /**
+   * The ID of the workflow run.
+   */
+  runId: string;
+
+  /**
+   * The world object.
+   */
+  private world: World;
+
+  constructor(runId: string) {
+    this.runId = runId;
+    this.world = getWorld();
+  }
+
+  /**
+   * Cancels the workflow run.
+   */
+  async cancel(): Promise<void> {
+    await this.world.runs.cancel(this.runId);
+  }
+
+  /**
+   * The status of the workflow run.
+   */
+  get status(): Promise<WorkflowRunStatus> {
+    return this.world.runs.get(this.runId).then((run) => run.status);
+  }
+
+  /**
+   * The return value of the workflow run.
+   * Polls the workflow return value until it is completed.
+   */
+  get returnValue(): Promise<TResult> {
+    return this.pollReturnValue();
+  }
+
+  /**
+   * The readable stream of the workflow run.
+   */
+  get readable(): ReadableStream {
+    return getWorkflowReadableStream(this.runId);
+  }
+
+  /**
+   * Polls the workflow return value every 1 second until it is completed.
+   * @returns The workflow return value.
+   */
+  private async pollReturnValue(): Promise<TResult> {
+    while (true) {
+      try {
+        return await getWorkflowReturnValue(this.runId);
+      } catch (error) {
+        if (error instanceof WorkflowRunNotCompletedError) {
+          await new Promise((resolve) => setTimeout(resolve, 1_000));
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+}
 
 /**
  * Retrieves the workflow run metadata and status information for a given run ID.

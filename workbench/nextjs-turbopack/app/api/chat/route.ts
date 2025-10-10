@@ -1,9 +1,5 @@
-import { getWorkflowReadableStream, start } from '@vercel/workflow/api';
-import {
-  createUIMessageStreamResponse,
-  type UIMessage,
-  type UIMessageChunk,
-} from 'ai';
+import { start } from '@vercel/workflow/api';
+import { createUIMessageStreamResponse, type UIMessage } from 'ai';
 import { chat } from '@/workflows/chat';
 
 // Uncomment to simulate a long running Vercel Function timing
@@ -15,9 +11,10 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const run = await start(chat, [messages]);
+  const workflowStream = run.readable;
 
   return createUIMessageStreamResponse({
-    stream: getWorkflowReadableStream<UIMessageChunk>(run.runId),
+    stream: workflowStream,
     headers: {
       // The workflow run ID is stored into `localStorage` on the client side,
       // which influences the `resume` flag in the `useChat` hook.
