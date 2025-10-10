@@ -1,0 +1,82 @@
+---
+title: Observability
+---
+
+# Observability
+
+The Workflow SDK provides powerful tools to inspect, monitor, and debug your workflows through the CLI and Web UI.
+
+## Installing the CLI
+
+```bash
+npm install -g @vercel/workflow-cli@latest
+```
+
+## Quick Start
+
+### Inspecting Local Workflows
+
+By default, the CLI and Web UI inspect your local development environment:
+
+```bash
+# Get started by listing recent workflow runs
+npx wf i runs
+
+# Launch Web UI for visual exploration, running locally on port 3456
+npx wf i runs --web
+
+# See all available commands
+npx wf i --help
+```
+
+See the [API Reference: CLI](/docs/api-reference/cli) for detailed command documentation.
+
+### Inspecting Vercel Deployments
+
+To inspect workflows running on Vercel, add the `--backend vercel` flag:
+
+```bash
+# Inspect production workflows
+npx wf i runs --backend vercel
+
+# Launch Web UI for production
+npx wf i runs --web --backend vercel
+```
+
+## Vercel CLI Setup
+
+When inspecting Vercel deployments, you need to be authenticated and have your project linked:
+
+1. **Login to Vercel CLI:**
+   ```bash
+   npx vercel login
+   ```
+
+2. **Link your project:**
+   ```bash
+   npx vercel link
+   ```
+
+3. **Inspect workflows:**
+   ```bash
+   npx wf i runs --backend vercel
+   ```
+
+The CLI will automatically use your Vercel authentication and project configuration. You can specify a different environment with `--env`:
+
+```bash
+# Inspect preview environment
+npx wf i runs --backend vercel --env preview
+
+# Inspect development environment  
+npx wf i runs --backend vercel --env development
+```
+
+## Custom Backends
+
+The observability tools are compatible with custom world implementations and third-party backends. Follow the configuration instructions for the appropriate backend
+
+## Learn More
+
+- [API Reference: CLI](/docs/api-reference/cli) - Complete CLI command documentation
+- [API Reference: World](/docs/api-reference/world) - Custom backend configuration

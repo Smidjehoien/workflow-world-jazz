@@ -1,0 +1,262 @@
+---
+title: CLI
+---
+
+# Workflow CLI
+
+The Workflow CLI (`@vercel/workflow-cli`) is a command-line tool for building, inspecting, and managing workflows. It provides both `workflow` and `wf` (shorthand) commands.
+
+## Installation
+
+```bash
+npm install @vercel/workflow-cli
+```
+
+## Commands
+
+### inspect
+
+Provides detailed views into your workflow runs, steps, and streams.
+
+**Shorthand:** `i`
+
+#### inspect runs
+
+View all workflow runs:
+
+```bash
+npx workflow inspect runs
+npx wf i runs
+```
+
+**Output example:**
+
+```
+runId                       workflowName         status     started        completed
+--------------------------  -------------------  ---------  -------------  -------------
+01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
+```
+
+View detailed information about a specific run:
+
+```bash
+npx workflow inspect runs <run-id>
+```
+
+#### inspect steps
+
+View all steps in a workflow run:
+
+```bash
+npx workflow inspect steps <run-id>
+```
+
+View detailed information about a specific step:
+
+```bash
+npx workflow inspect steps <run-id> <step-id>
+```
+
+#### inspect streams
+
+View all streams in a workflow run:
+
+```bash
+npx workflow inspect streams -r <run-id>
+```
+
+View a specific stream:
+
+```bash
+npx workflow inspect streams <stream-id>
+```
+
+### build
+
+Build workflow bundles for deployment.
+
+```bash
+npx workflow build
+npx workflow build --target vercel-static
+npx workflow build --target vercel-build-output-api
+```
+
+**Options:**
+- `--target, -t` - Build target (`vercel-static` | `vercel-build-output-api`)
+
+#### Build Targets
+
+**`vercel-static` (default)**
+- Creates bundles at `.well-known/workflow/v1/step.js` and `.well-known/workflow/v1/flow.js`
+- Uses standard Vercel deployment process
+- Functions available at `.well-known/workflow/v1/step` and `.well-known/workflow/v1/flow`
+
+**`vercel-build-output-api`**
+- Creates `.vercel/output` directory structure
+- Generates serverless functions at:
+  - `.well-known/workflow/v1/step.func`
+  - `.well-known/workflow/v1/flow.func`
+- Compatible with Vercel Build Output API v3
+
+## Global Options
+
+### Backend Configuration
+
+**`--backend`**
+
+Specify the world backend to connect to:
+
+```bash
+npx wf i runs --backend vercel
+npx wf i runs --backend embedded
+```
+
+Default: `embedded` (local development)
+
+### Vercel Options
+
+When using `--backend vercel`:
+
+**`--env`**
+
+Specify the Vercel environment:
+
+```bash
+npx wf i runs --backend vercel --env production
+npx wf i runs --backend vercel --env preview
+npx wf i runs --backend vercel --env development
+```
+
+Default: `production`
+
+**`--project`**
+
+Specify the Vercel project ID:
+
+```bash
+npx wf i runs --backend vercel --project my-project-id
+```
+
+**`--team`**
+
+Specify the Vercel team ID (for team projects):
+
+```bash
+npx wf i runs --backend vercel --team my-team-id
+```
+
+**`--auth-token`**
+
+Provide a Vercel authentication token:
+
+```bash
+npx wf i runs --backend vercel --auth-token <token>
+```
+
+Note: If you ran `vercel login` and `vercel link`, authentication is handled automatically.
+
+### Web UI Mode
+
+**`--web`**
+
+Launch the Web UI interface:
+
+```bash
+npx wf i runs --web
+npx wf i runs --web --backend vercel
+```
+
+Opens a browser-based interface for visual exploration of workflow data.
+
+## Environment Variables
+
+Configuration can also be provided via environment variables:
+
+**Vercel World:**
+```bash
+export WORKFLOW_TARGET_WORLD=vercel
+export WORKFLOW_VERCEL_AUTH_TOKEN=<your-token>
+export WORKFLOW_VERCEL_ENV=production
+export WORKFLOW_VERCEL_PROJECT_ID=<project-id>
+export WORKFLOW_VERCEL_TEAM_ID=<team-id>
+```
+
+**Embedded World:**
+```bash
+export WORKFLOW_TARGET_WORLD=embedded
+export WORKFLOW_EMBEDDED_DATA_DIR=./.workflow-data
+```
+
+**Web UI:**
+```bash
+export PORT=3456
+```
+
+## Configuration
+
+The CLI looks for workflow files in the `./workflows/` directory by default:
+
+```
+workflows/
+├── user-signup.ts
+├── email-campaign.ts
+└── utils/
+```
+
+## Examples
+
+### Inspect Local Workflows
+
+```bash
+# View recent runs
+npx wf i runs
+
+# View specific run
+npx wf i runs <run-id>
+
+# View steps in a run
+npx wf i steps <run-id>
+
+# Launch Web UI
+npx wf i runs --web
+```
+
+### Inspect Vercel Production
+
+```bash
+# View production runs
+npx wf i runs --backend vercel
+
+# View production runs in Web UI
+npx wf i runs --web --backend vercel
+
+# View preview environment
+npx wf i runs --backend vercel --env preview
+```
+
+### Build Workflows
+
+```bash
+# Build with default target
+npx workflow build
+
+# Build for Vercel static
+npx workflow build --target vercel-static
+
+# Build with Vercel Build Output API
+npx workflow build --target vercel-build-output-api
+```
+
+## Coming Soon
+
+The following commands are planned for future releases:
+
+- `workflow dev` - Development server with file watching and hot reloading
+- `workflow init` - Initialize new workflow project with templates
+- `workflow validate` - Validate workflow files with syntax and type checking
+
+## Learn More
+
+- [Observability](/docs/observability) - Overview of observability tools
+- [Self-Hosting](/docs/self-hosting) - Custom backend configuration
+

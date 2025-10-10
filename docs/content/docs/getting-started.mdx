@@ -36,19 +36,22 @@ Install `@vercel/workflow-core`, and `@vercel/workflow-next`, which are the pack
       <Tab value="pnpm">
         <CodeBlock>
             pnpm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz
+            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-cli.tgz
         </CodeBlock>
       </Tab>
       <Tab value="npm">
         <CodeBlock>
             npm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz
+            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-cli.tgz
         </CodeBlock>
       </Tab>
       <Tab value="yarn">
         <CodeBlock>
             yarn add {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz
+            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
+            {baseUrl}/vercel-workflow-cli.tgz
         </CodeBlock>
       </Tab>
     </Tabs>
@@ -172,6 +175,47 @@ curl -X POST --json '{"email":"hello@example.com"}' http://localhost:3000/api/si
 This terminal command sends a `POST` request to your development server at `http://localhost:3000/api/signup` with the payload email `hello@example.com`, which will be consumed by your workflow function.
 
 Watch the Next.js development server logs to see your workflow execute as well as the steps that are being processed.
+
+## Observability
+
+The Workflow SDK provides powerful tools to inspect and debug your workflow runs.
+After triggering your workflow, you can use the [CLI or Web UI](/docs/observability/) to view detailed information about runs, steps, and their execution.
+
+To see a list of all workflow runs, ensure `@vercel/workflow-cli` is installed globally or in your project, and run:
+
+```bash
+# When installed locally
+npx wf i runs
+# When installed globally
+wf i runs
+```
+
+This displays information on your most recent runs.
+
+```bash
+runId                       workflowName         status     started        completed
+--------------------------  -------------------  ---------  -------------  -------------
+01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
+```
+
+Run `npx wf i --help` for more information on commands and filtering.
+
+### Web UI
+
+The Workflow SDK also provides a web UI for inspecting and debugging your workflow runs.
+
+To start the web UI, add `--web` to any of the inspect commands, like so:
+```bash
+npx wf i runs <run-id> --web
+```
+
+This will open the web UI in your browser.
+
+<img src="/o11y-ui.png" alt="Web UI" />
+
+<Callout>
+For more details, see [CLI and Web UI documentation](/docs/observability/).
+</Callout>
 
 ---
 

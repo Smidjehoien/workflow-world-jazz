@@ -1,0 +1,361 @@
+---
+title: Hooks [WIP]
+---
+
+# Hooks
+
+Hooks provide a powerful mechanism for pausing workflow execution and resuming it later with external data. They enable workflows to wait for external events, webhook calls, or user interactions.
+
+## Overview
+
+There are two main types of hooks:
+
+- **`createHook()`**: A low-level primitive for resuming workflows with arbitrary payloads
+- **`createWebhook()`**: A higher-level abstraction built on hooks, automatically wired up as HTTP endpoints
+
+## API Reference
+
+### `createHook<T>()`
+
+Creates a hook that can pause workflow execution and resume it with a payload of type `T`.
+
+```ts
+function createHook<T>(opts?: HookOptions): Hook<T>
+```
+
+#### Options
+
+```ts
+interface HookOptions {
+  token?: string;
+}
+```
+
+- **`token`**: Optional unique token to associate with the hook. When not provided, a randomly generated token (ULID with `hook_` prefix) will be assigned.
+  - When specifying an explicit token, construct it with information that the dispatching side can reliably reconstruct. 
+  - Example: For a Slackbot workflow per channel, use `slack_webhook:${channelId}` where the channel ID is accessible in the webhook API route.
+
+#### Returns
+
+Returns a `Hook<T>` object that is:
+- **Awaitable**: `const payload: T = await hook`
+- **AsyncIterable**: `for await (const payload of hook) { ... }`
+
+The hook object has a `token` property containing either the user-specified or automatically generated token.
+
+### `createWebhook()`
+
+Creates a webhook hook that automatically handles HTTP requests at a generated endpoint.
+
+```ts
+function createWebhook(opts?: WebhookOptions): Hook<WebhookPayload>
+```
+
+#### Options
+
+```ts
+interface WebhookOptions extends HookOptions {
+  autoResponse?: boolean;
+  respond?: Response | (() => Response) | false;
+}
+```
+
+- **`token`**: Optional unique token (inherited from `HookOptions`)
+- **`autoResponse`**: Whether to automatically send a response (default: `true`)
+- **`respond`**: The response to send, can be:
+  - A `Response` object
+  - A function returning a `Response`
+  - `false` to disable auto-response
+  - Default: `new Response(null, { status: 204 })`
+
+#### Returns
+
+Returns a `Hook<WebhookPayload>` where the payload has the following shape:
+
+```ts
+{
+  request: Request;
+  respondWith: (response: Response) => void;
+}
+```
+
+The webhook is automatically available at: `/.well-known/workflow/v1/webhook/:token`
+
+### `resumeHook<T>()`
+
+Resumes a paused workflow by sending data to a hook.
+
+```ts
+function resumeHook<T>(token: string, payload: T): Promise<{ runId: string } | null>
+```
+
+- **`token`**: The token of the hook to resume
+- **`payload`**: The data to send to the waiting workflow (must match the hook's type `T`)
+- **Returns**: An object with the `runId` if successful, or `null` if the token is invalid
+
+Call this externally from API routes, server actions, or other external contexts to send data to a waiting workflow.
+
+### `resumeWebhook()`
+
+Higher-level abstraction for resuming webhook hooks specifically.
+
+```ts
+function resumeWebhook(token: string, request: Request): Promise<Response | null>
+```
+
+- **`token`**: The webhook token
+- **`request`**: The incoming HTTP request
+- **Returns**: The response from the workflow, or `null` if the token is invalid
+
+This function wraps `resumeHook()` and handles the request/response lifecycle automatically.
+
+### `defineHook<T>()`
+
+A type-safe wrapper that pairs `createHook()` and `resumeHook()` together to avoid type mismatches.
+
+```ts
+function defineHook<T>(): {
+  create: (opts?: HookOptions) => Hook<T>;
+  resume: (token: string, payload: T) => Promise<{ runId: string } | null>;
+}
+```
+
+This ensures the payload type is consistent between creating and resuming the hook.
+
+## Examples
+
+### Basic Hook Example
+
+```ts
+import { createHook, resumeHook } from "workflow";
+
+export async function workflowWithHook() {
+  "use workflow";
+
+  const hook = createHook<{ data: string }>();
+  
+  console.log("Waiting for data...");
+  console.log("Hook token:", hook.token);
+  
+  const payload = await hook;
+  console.log("Received:", payload.data);
+}
+
+// In an API route or external handler:
+async function handleExternalEvent(data: string) {
+  const token = "some-known-token";
+  await resumeHook(token, { data });
+}
+```
+
+### Basic Webhook Example
+
+```ts
+import { createWebhook } from "workflow";
+
+export async function workflowWithWebhook() {
+  "use workflow";
+
+  // Randomly assigned token (ephemeral webhook)
+  const webhook = createWebhook();
+  
+  console.log("Waiting for webhook at:", webhook.token);
+  
+  const { request, respondWith } = await webhook;
+  console.log("Received request:", request.url);
+
+  // Serialized functions must be called in step functions
+  await sendResponse(respondWith);
+}
+
+async function sendResponse(respondWith: (r: Response) => void) {
+  "use step";
+
+  respondWith(new Response('OK'));
+}
+```
+
+### Webhook with Custom Token
+
+```ts
+import { createWebhook } from "workflow";
+
+export async function slackBotWorkflow(channelId: string) {
+  "use workflow";
+
+  // Use a deterministic token based on channel ID
+  const webhook = createWebhook({
+    token: `slack_webhook:${channelId}`
+  });
+  
+  const { request, respondWith } = await webhook;
+  
+  // Process the webhook
+  const body = await request.json();
+  await processSlackEvent(body, respondWith);
+}
+
+async function processSlackEvent(body: any, respondWith: (r: Response) => void) {
+  "use step";
+  
+  // Handle the event
+  console.log("Slack event:", body);
+  
+  respondWith(new Response(JSON.stringify({ ok: true }), {
+    headers: { "Content-Type": "application/json" }
+  }));
+}
+```
+
+### Using `defineHook()` for Type Safety
+
+```ts
+import { defineHook } from "workflow";
+
+// Define the hook type once
+type SlackEvent = {
+  type: string;
+  channel: string;
+  user: string;
+  text: string;
+};
+
+const slackHook = defineHook<SlackEvent>();
+
+// In your workflow
+export async function handleSlackMessages() {
+  "use workflow";
+
+  const hook = slackHook.create({ token: "slack_events" });
+  
+  for await (const event of hook) {
+    console.log(`${event.user} in ${event.channel}: ${event.text}`);
+    await processMessage(event);
+  }
+}
+
+// In your API route
+export async function POST(request: Request) {
+  const event: SlackEvent = await request.json();
+  
+  // Type-safe resume - TypeScript ensures the payload matches
+  await slackHook.resume("slack_events", event);
+  
+  return new Response("OK");
+}
+```
+
+### Webhook with Custom Response
+
+```ts
+import { createWebhook } from "workflow";
+
+export async function webhookWithCustomResponse() {
+  "use workflow";
+
+  const webhook = createWebhook({
+    autoResponse: true,
+    respond: new Response("Webhook received!", { 
+      status: 200,
+      headers: { "Content-Type": "text/plain" }
+    })
+  });
+  
+  const { request } = await webhook;
+  
+  // Process the webhook asynchronously
+  // The response was already sent automatically
+  await processWebhookAsync(request);
+}
+
+async function processWebhookAsync(request: Request) {
+  "use step";
+  
+  // Long-running processing here
+  const data = await request.json();
+  console.log("Processing:", data);
+}
+```
+
+## Implementation Details
+
+### How Webhooks Work
+
+The `createWebhook()` function is a convenience wrapper around `createHook()`. When you create a webhook, the framework:
+
+1. Generates or uses the provided token
+2. Creates a hook that expects a payload with `request` and `respondWith` properties
+3. Sets up routing at `/.well-known/workflow/v1/webhook/:token`
+
+When `resumeWebhook()` is called:
+
+```ts
+async function resumeWebhook(token: string, request: Request) {
+  const response = Promise.withResolvers<Response>();
+  const result = await resumeHook(`wbhk_${token}`, {
+    request,
+    respondWith: response.resolve,
+  });
+  if (!result) {
+    return null; // Invalid token
+  }
+  const responseValue = await response.promise;
+  return responseValue;
+}
+```
+
+The function creates a Promise and serializes its `resolve` function into the workflow context, allowing the workflow to send back a response asynchronously.
+
+### Generated Webhook Route
+
+The framework automatically generates a webhook handler at `/.well-known/workflow/v1/webhook/:token`:
+
+```ts
+import { resumeWebhook } from "workflow/runtime";
+
+async function handler(request: Request) {
+  const { pathname } = new URL(request.url);
+  const token = pathname.split('/').pop();
+  const response = await resumeWebhook(token, request);
+  return response ?? new Response('Invalid token', { status: 404 });
+}
+
+export const GET = handler;
+export const POST = handler;
+export const PUT = handler;
+export const DELETE = handler;
+// ... all HTTP methods
+```
+
+This route extracts the token from the URL, calls `resumeWebhook()`, and returns either the workflow's response or a 404 if the token is invalid.
+
+## Best Practices
+
+### Token Design
+
+When using explicit tokens:
+- Make them deterministic based on context the receiver can reconstruct
+- Include enough information to route to the correct workflow instance
+- Use namespacing to avoid conflicts (e.g., `slack:${channelId}`, `github:${repoId}`)
+
+### Response Handling
+
+For webhooks that need to send responses:
+- Remember that serialized functions (like `respondWith`) must be called within step functions
+- Use `autoResponse` with a static response for simple acknowledgments
+- Manually call `respondWith()` for dynamic responses based on processing
+
+### Iterating Over Hooks
+
+Hooks are `AsyncIterable`, making them perfect for event loops:
+
+```ts
+const hook = createHook<Event>();
+
+for await (const event of hook) {
+  await processEvent(event);
+  // Loop continues, waiting for the next event
+}
+```
+
+This pattern is useful for long-running workflows that handle multiple events over time.

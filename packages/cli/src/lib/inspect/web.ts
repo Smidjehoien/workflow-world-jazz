@@ -1,9 +1,9 @@
-import chalk from 'chalk';
 import type { ChildProcess } from 'node:child_process';
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import chalk from 'chalk';
 import open from 'open';
 import { logger } from '../config/log.js';
 import { getEnvVars } from './env.js';
