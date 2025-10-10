@@ -2,13 +2,17 @@
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 
 interface TableSkeletonProps {
   title?: string;
   rows?: number;
 }
 
-export function TableSkeleton({ title, rows = 10 }: TableSkeletonProps) {
+export function TableSkeleton({
+  title,
+  rows = DEFAULT_PAGE_SIZE,
+}: TableSkeletonProps) {
   return (
     <Card>
       <CardHeader>

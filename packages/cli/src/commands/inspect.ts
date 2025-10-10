@@ -87,6 +87,14 @@ export default class Inspect extends BaseCommand {
       helpGroup: 'Filtering',
       helpLabel: '-n, --workflowName',
     }),
+    withData: Flags.boolean({
+      description: 'include full input/output data in list views',
+      required: false,
+      char: 'd',
+      default: false,
+      helpGroup: 'Display',
+      helpLabel: '-d, --withData',
+    }),
     ...cliFlags,
   } as const;
 
@@ -160,6 +168,7 @@ function toInspectOptions(flags: any): InspectCLIOptions {
     sort: flags.sort as 'asc' | 'desc' | undefined,
     limit: flags.limit,
     workflowName: flags.workflowName,
+    withData: flags.withData,
   };
 }
 

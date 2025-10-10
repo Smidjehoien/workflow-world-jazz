@@ -9,9 +9,9 @@ import {
   hydrateWorkflowArguments,
   hydrateWorkflowReturnValue,
 } from '@vercel/workflow-core/serialization';
+import type { WorkflowRun } from '@vercel/workflow-world';
 import type { SearchParams } from 'next/dist/server/request/search-params';
-
-const DEFAULT_PAGE_SIZE = 10;
+import { DEFAULT_PAGE_SIZE } from './utils';
 
 export interface WorldConfig {
   backend?: string;
@@ -27,6 +27,10 @@ export interface ValidationError {
   field: string;
   message: string;
 }
+const removeExecutionContext = (resource: WorkflowRun) => {
+  const { executionContext: _, ...rest } = resource;
+  return rest;
+};
 
 // Validate configuration and return errors if any
 export async function validateWorldConfig(
@@ -154,17 +158,19 @@ export async function fetchRuns(
   const world = await setupWorld(config);
   const runs = await world.runs.list({
     pagination: { cursor, limit, sortOrder },
+    resolveData: 'none', // List views don't need full data
   });
+  runs.data = runs.data.map((run) => removeExecutionContext(run));
   return runs;
 }
 
 export async function fetchRun(config: WorldConfig, runId: string) {
   const world = await setupWorld(config);
-  const run = await world.runs.get(runId);
+  const run = await world.runs.get(runId, { resolveData: 'all' });
 
   // Hydrate input/output with custom revivers that preserve stream IDs
   return {
-    ...run,
+    ...removeExecutionContext(run),
     input: run.input
       ? hydrateWorkflowArguments(run.input, globalThis, streamDisplayRevivers)
       : run.input,
@@ -190,6 +196,7 @@ export async function fetchSteps(
   const steps = await world.steps.list({
     runId,
     pagination: { cursor, limit, sortOrder },
+    resolveData: 'none', // List views don't need full data
   });
   return steps;
 }
@@ -200,7 +207,7 @@ export async function fetchStep(
   stepId: string
 ) {
   const world = await setupWorld(config);
-  const step = await world.steps.get(runId, stepId);
+  const step = await world.steps.get(runId, stepId, { resolveData: 'all' });
 
   // Hydrate input/output with custom revivers that preserve stream IDs
   return {
@@ -219,35 +226,19 @@ export async function fetchEvents(
   runId: string,
   cursor?: string,
   sortOrder: 'asc' | 'desc' = 'desc',
-  limit: number = DEFAULT_PAGE_SIZE
+  limit: number = DEFAULT_PAGE_SIZE,
+  // List views don't need full data by default, but if we use this
+  // to re-fetch data for events in detail, we need to set this to true.
+  // This is because the world doesn't have a function to get a single event.
+  withData: boolean = false
 ) {
   const world = await setupWorld(config);
   const events = await world.events.list({
     runId,
     pagination: { cursor, limit, sortOrder },
+    resolveData: withData ? 'all' : 'none',
   });
   return events;
-}
-
-export async function fetchEvent(
-  config: WorldConfig,
-  runId: string,
-  eventId: string
-) {
-  const world = await setupWorld(config);
-  // For now, we need to get it from list since there's no direct get
-  // This is a limitation - in a real implementation, you'd want a direct get method
-  const events = await world.events.list({
-    runId,
-    pagination: { limit: DEFAULT_PAGE_SIZE, sortOrder: 'desc' },
-  });
-
-  const event = events.data.find((e) => e.eventId === eventId);
-  if (!event) {
-    throw new Error(`Event not found: ${eventId}`);
-  }
-
-  return event;
 }
 
 export async function readStream(

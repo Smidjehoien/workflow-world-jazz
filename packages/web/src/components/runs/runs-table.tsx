@@ -9,7 +9,7 @@ import {
   Radio,
   RefreshCw,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useRuns } from '@/hooks/use-api';
 import { getResourceName } from '@/lib/resource-name';
+import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import type { WorldConfig } from '@/lib/world';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -49,7 +50,7 @@ export function RunsTable({
   const [liveMode, setLiveMode] = useState(false);
   const [hoveredRunId, setHoveredRunId] = useState<string | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [limit, setLimit] = useState<number>(10);
+  const [limit, setLimit] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const {
     data,
@@ -71,6 +72,8 @@ export function RunsTable({
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
   };
+
+  const liveModeId = useId();
 
   // Show skeleton for initial load
   if (loading && !data) {
@@ -98,10 +101,10 @@ export function RunsTable({
                       <Switch
                         checked={liveMode}
                         onCheckedChange={setLiveMode}
-                        id="live-mode"
+                        id={liveModeId}
                       />
                       <label
-                        htmlFor="live-mode"
+                        htmlFor={liveModeId}
                         className="text-sm font-medium cursor-pointer"
                       >
                         Live

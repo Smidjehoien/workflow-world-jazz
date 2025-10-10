@@ -1,4 +1,5 @@
 import {
+  type CreateEventParams,
   type CreateEventRequest,
   type Event,
   EventSchema,
@@ -7,7 +8,20 @@ import {
   PaginatedResponseSchema,
 } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
-import { dateToStringReplacer, makeRequest } from './utils.js';
+import {
+  DEFAULT_RESOLVE_DATA_OPTION,
+  dateToStringReplacer,
+  makeRequest,
+} from './utils.js';
+
+// Helper to filter event data based on resolveData setting
+function filterEventData(event: any, resolveData: 'none' | 'all'): Event {
+  if (resolveData === 'none') {
+    const { eventData: _eventData, ...rest } = event;
+    return rest;
+  }
+  return event;
+}
 
 // Functions
 export async function getWorkflowRunEvents(
@@ -16,7 +30,11 @@ export async function getWorkflowRunEvents(
 ): Promise<PaginatedResponse<Event>> {
   const searchParams = new URLSearchParams();
 
-  const { runId, pagination } = params;
+  const {
+    runId,
+    pagination,
+    resolveData = DEFAULT_RESOLVE_DATA_OPTION,
+  } = params;
 
   if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
@@ -26,20 +44,30 @@ export async function getWorkflowRunEvents(
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
 
-  return makeRequest({
+  const response = await makeRequest({
     endpoint,
     options: { method: 'GET' },
     config,
     schema: PaginatedResponseSchema(EventSchema),
   });
+
+  return {
+    ...response,
+    data: response.data.map((event: any) =>
+      filterEventData(event, resolveData)
+    ),
+  };
 }
 
 export async function createWorkflowRunEvent(
   id: string,
   data: CreateEventRequest,
+  params?: CreateEventParams,
   config?: APIConfig
 ): Promise<Event> {
-  return makeRequest({
+  const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+
+  const event = await makeRequest({
     endpoint: `/v1/runs/${id}/events`,
     options: {
       method: 'POST',
@@ -48,4 +76,6 @@ export async function createWorkflowRunEvent(
     config,
     schema: EventSchema,
   });
+
+  return filterEventData(event, resolveData);
 }

@@ -1,7 +1,12 @@
 export type * from './auth.js';
 export { AuthInfoSchema, HealthCheckResponseSchema } from './auth.js';
 export type * from './events.js';
-export { CreateEventSchema, EventSchema, EventTypeSchema } from './events.js';
+export {
+  BaseEventSchema,
+  CreateEventSchema,
+  EventSchema,
+  EventTypeSchema,
+} from './events.js';
 export type * from './hooks.js';
 export { HookSchema, WebhookSchema } from './hooks.js';
 export type * from './interfaces.js';

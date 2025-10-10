@@ -14,6 +14,7 @@ export type InspectCLIOptions = {
   sort?: 'asc' | 'desc';
   limit?: number;
   workflowName?: string;
+  withData?: boolean;
 };
 
 export interface WorkflowConfig {

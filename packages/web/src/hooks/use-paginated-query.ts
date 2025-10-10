@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import useSWR, { type SWRConfiguration } from 'swr';
 import { getPaginationDisplay } from '@/lib/utils';
 
-interface PaginatedResult<T> {
+export interface PaginatedResult<T> {
   data: T[];
   cursor: string | null;
   hasMore: boolean;
@@ -110,6 +110,7 @@ export function usePaginatedQuery<T, TParams = any>({
     lastRefreshTime,
 
     // Pagination state
+    cursor,
     currentPageNumber,
     maxPagesVisited,
     paginationDisplay,

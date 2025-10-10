@@ -8,6 +8,8 @@ export interface APIConfig {
   headers?: RequestInit['headers'];
 }
 
+export const DEFAULT_RESOLVE_DATA_OPTION = 'all';
+
 export function dateToStringReplacer(_key: string, value: unknown): unknown {
   if (value instanceof Date) {
     return value.toISOString();

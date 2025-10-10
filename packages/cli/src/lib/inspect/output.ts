@@ -9,6 +9,7 @@ import {
 } from '@vercel/workflow-core/serialization';
 import type { Event, Step, WorkflowRun, World } from '@vercel/workflow-world';
 import chalk from 'chalk';
+import { formatDistance } from 'date-fns';
 import Table from 'easy-table';
 import { logger } from '../config/log.js';
 import type { InspectCLIOptions } from '../config/types.js';
@@ -31,14 +32,17 @@ class StreamID {
   }
 }
 
+const WORKFLOW_RUN_IO_PROPS: (keyof WorkflowRun)[] = ['input', 'output'];
+
+const STEP_IO_PROPS: (keyof Step)[] = ['input', 'output'];
+
 const WORKFLOW_RUN_LISTED_PROPS: (keyof WorkflowRun)[] = [
   'runId',
   'workflowName',
   'status',
   'startedAt',
   'completedAt',
-  'input',
-  'output',
+  ...WORKFLOW_RUN_IO_PROPS,
 ];
 
 const STEP_LISTED_PROPS: (keyof Step)[] = [
@@ -48,16 +52,17 @@ const STEP_LISTED_PROPS: (keyof Step)[] = [
   'status',
   'startedAt',
   'completedAt',
-  'input',
-  'output',
+  ...STEP_IO_PROPS,
 ];
+
+const EVENT_IO_PROPS: (keyof Event | 'eventData')[] = ['eventData'];
 
 const EVENT_LISTED_PROPS: (keyof Event | 'eventData')[] = [
   'eventId',
   'eventType',
   'correlationId',
   'createdAt',
-  'eventData',
+  ...EVENT_IO_PROPS,
 ];
 
 const STATUS_COLORS: Record<
@@ -72,7 +77,15 @@ const STATUS_COLORS: Record<
   paused: chalk.yellow,
 };
 
-const showTable = (data: Record<string, unknown>[], props: string[]) => {
+const getNonUniqueName = (dashSeparatedId: string) => {
+  return dashSeparatedId.split('-').pop() ?? dashSeparatedId;
+};
+
+const showTable = (
+  data: Record<string, unknown>[],
+  props: string[],
+  opts: InspectCLIOptions = {}
+) => {
   // Add a blank line before any table
   const table = new Table();
   if (data && data.length === 0) {
@@ -93,8 +106,11 @@ const showTable = (data: Record<string, unknown>[], props: string[]) => {
         table.cell(prop, value.toString());
       } else if (prop === 'streamId') {
         table.cell(prop, chalk.green(value));
+      } else if (prop === 'stepName') {
+        const stepNameNonUnique = getNonUniqueName(String(value));
+        table.cell(prop, chalk.blue.blueBright(stepNameNonUnique));
       } else if (prop === 'workflowName') {
-        const workflowNameNonUnique = String(value).split('-').pop();
+        const workflowNameNonUnique = getNonUniqueName(String(value));
         table.cell(prop, chalk.blue.blueBright(workflowNameNonUnique));
       } else if (prop === 'output' || prop === 'input') {
         table.cell(prop, inlineFormatIO(value));
@@ -105,7 +121,7 @@ const showTable = (data: Record<string, unknown>[], props: string[]) => {
       } else if (prop === 'eventData') {
         table.cell(prop, truncateString(JSON.stringify(value)));
       } else if (value instanceof Date) {
-        table.cell(`${prop}`, formatTableTimestamp(value));
+        table.cell(`${prop}`, formatTableTimestamp(value, opts));
       } else {
         table.cell(prop, value);
       }
@@ -135,15 +151,17 @@ const getCursorHint = ({
 /**
  * In tables, we want to show a shorter timestamp, YYYY-MM-DD HH:MM:SS
  */
-const formatTableTimestamp = (value: Date) => {
-  // We used to formative relative - but for CLI use it's annoying since we can't
-  // show both relative + absolute on hover like in the Web UI
-  // const isMoreThanAWeekAgo = differenceInDays(new Date(), value) > 6;
-  // if (relative && !isMoreThanAWeekAgo) {
-  //   const relativeValue = formatDistance(value, new Date());
-  //   return `${relativeValue} ago`;
-  // }
-  return value.toISOString();
+const formatTableTimestamp = (value: Date, opts: InspectCLIOptions = {}) => {
+  const isoTime = value.toISOString();
+
+  // If withData is disabled and we're not in JSON mode, we show relative time too,
+  // since we have more space with the inputs/outputs hidden.
+  if (!opts.withData && !opts.json) {
+    const relative = formatDistance(value, new Date(), { addSuffix: true });
+    return `${isoTime} (${relative})`;
+  }
+
+  return isoTime;
 };
 
 /**
@@ -203,6 +221,11 @@ const hydrateStepIO = (step: Step): Step => {
   };
 };
 
+const removeExecutionContext = (resource: WorkflowRun) => {
+  const { executionContext: _, ...rest } = resource;
+  return rest;
+};
+
 const truncateString = (
   str: string,
   maxLength: number = TABLE_TRUNCATE_IO_LENGTH
@@ -255,6 +278,7 @@ const inlineFormatIO = <T>(io: T, topLevel: boolean = true): string => {
 };
 
 export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
+  const resolveData = opts.withData ? 'all' : 'none';
   const runs = await world.runs.list({
     workflowName: opts.workflowName,
     pagination: {
@@ -262,7 +286,9 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
       cursor: opts.cursor,
       limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
+    resolveData,
   });
+  runs.data = runs.data.map((run) => removeExecutionContext(run));
   if (opts.stepId || opts.runId) {
     logger.warn(
       'Filtering by step-id or run-id is not supported in list calls, ignoring filter.'
@@ -272,7 +298,18 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
     showJson(runs);
     return;
   }
-  const runsWithHydratedIO = runs.data.map((run) => hydrateWorkflowRunIO(run));
+  const runsWithHydratedIO =
+    resolveData === 'all'
+      ? runs.data.map((run) => hydrateWorkflowRunIO(run))
+      : runs.data;
+
+  // Determine which props to show based on withData flag
+  const props = opts.withData
+    ? WORKFLOW_RUN_LISTED_PROPS
+    : WORKFLOW_RUN_LISTED_PROPS.filter(
+        (prop) => !WORKFLOW_RUN_IO_PROPS.includes(prop)
+      );
+
   logger.showBox(
     'white',
     'INFO',
@@ -283,7 +320,7 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
   if (cursorHint) {
     logger.info(cursorHint);
   }
-  logger.log(showTable(runsWithHydratedIO, WORKFLOW_RUN_LISTED_PROPS));
+  logger.log(showTable(runsWithHydratedIO, props, opts));
 };
 
 export const getRecentRun = async (
@@ -293,7 +330,9 @@ export const getRecentRun = async (
   logger.warn(`No runId provided, fetching data for latest run instead.`);
   const runs = await world.runs.list({
     pagination: { limit: 1, sortOrder: opts.sort || 'desc' },
+    resolveData: 'none', // Don't need data for just getting the ID
   });
+  runs.data = runs.data.map((run) => removeExecutionContext(run));
   return runs.data[0];
 };
 
@@ -302,8 +341,11 @@ export const showRun = async (
   runId: string,
   opts: InspectCLIOptions = {}
 ) => {
-  const run = await world.runs.get(runId);
-  const runWithHydratedIO = hydrateWorkflowRunIO(run);
+  const resolveData = opts.withData ? 'all' : 'none';
+  const run = await world.runs.get(runId, { resolveData: 'all' });
+  const runWithHydratedIO = removeExecutionContext(
+    resolveData === 'all' ? hydrateWorkflowRunIO(run) : run
+  );
   if (opts.json) {
     showJson(runWithHydratedIO);
     return;
@@ -338,6 +380,7 @@ export const listSteps = async (
   }
 
   logger.debug(`Fetching steps for run ${runId}`);
+  const resolveData = opts.withData ? 'all' : 'none';
   const stepChunks = await world.steps.list({
     runId,
     pagination: {
@@ -345,14 +388,22 @@ export const listSteps = async (
       cursor: opts.cursor,
       limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
+    resolveData,
   });
   const steps = stepChunks.data;
   if (opts.json) {
     showJson(steps);
     return;
   }
-  const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
-  logger.log(showTable(stepsWithHydratedIO, STEP_LISTED_PROPS));
+  const stepsWithHydratedIO =
+    resolveData === 'all' ? steps.map((step) => hydrateStepIO(step)) : steps;
+
+  // Determine which props to show based on withData flag
+  const props = opts.withData
+    ? STEP_LISTED_PROPS
+    : STEP_LISTED_PROPS.filter((prop) => !STEP_IO_PROPS.includes(prop));
+
+  logger.log(showTable(stepsWithHydratedIO, props, opts));
   logger.info(getCursorHint(stepChunks));
   logger.showBox(
     'white',
@@ -367,13 +418,16 @@ export const showStep = async (
   stepId: string,
   opts: InspectCLIOptions = {}
 ) => {
+  const resolveData = opts.withData ? 'all' : 'none';
   if (opts.stepId) {
     logger.warn(
       'Filtering by step-id is not supported in get calls, ignoring filter.'
     );
   }
-  const step = await world.steps.get(opts.runId, stepId);
-  const stepWithHydratedIO = hydrateStepIO(step);
+  const step = await world.steps.get(opts.runId, stepId, {
+    resolveData: 'all',
+  });
+  const stepWithHydratedIO = resolveData === 'all' ? hydrateStepIO(step) : step;
   if (opts.json) {
     showJson(stepWithHydratedIO);
     return;
@@ -416,10 +470,12 @@ export const listStreams = async (
   const steps: Step[] = [];
   const runs: WorkflowRun[] = [];
   if (opts.stepId) {
-    const step = await world.steps.get(undefined, opts.stepId);
+    const step = await world.steps.get(undefined, opts.stepId, {
+      resolveData: 'all',
+    });
     steps.push(step);
   } else if (opts.runId) {
-    const run = await world.runs.get(opts.runId);
+    const run = await world.runs.get(opts.runId, { resolveData: 'all' });
     runs.push(run);
     const runsSteps = await world.steps.list({
       runId: opts.runId,
@@ -428,6 +484,7 @@ export const listStreams = async (
         cursor: opts.cursor,
         limit: opts.limit || DEFAULT_PAGE_SIZE,
       },
+      resolveData: 'all', // Need data to find stream IDs
     });
     runsSteps.data.forEach((step: Step) => {
       steps.push(step);
@@ -443,7 +500,9 @@ export const listStreams = async (
       logger.warn('No runs found.');
       return;
     }
-    runs.push(run);
+    // Get full run data for stream listing
+    const fullRun = await world.runs.get(run.runId, { resolveData: 'all' });
+    runs.push(fullRun);
     const runsSteps = await world.steps.list({
       runId: runs[0].runId,
       pagination: {
@@ -451,6 +510,7 @@ export const listStreams = async (
         cursor: opts.cursor,
         limit: opts.limit || DEFAULT_PAGE_SIZE,
       },
+      resolveData: 'all', // Need data to find stream IDs
     });
     runsSteps.data.forEach((step: Step) => {
       steps.push(step);
@@ -463,8 +523,11 @@ export const listStreams = async (
   logger.debug(`Found IO for runs/steps: ${runIds.concat(stepIds).join(', ')}`);
 
   // We need to hydrate IO for all the runs and steps to find stream IDs
-  const runsWithHydratedIO = runs.map((run) => hydrateWorkflowRunIO(run));
-  const stepsWithHydratedIO = steps.map((step) => hydrateStepIO(step));
+  const resolveData = opts.withData ? 'all' : 'none';
+  const runsWithHydratedIO =
+    resolveData === 'all' ? runs.map((run) => hydrateWorkflowRunIO(run)) : runs;
+  const stepsWithHydratedIO =
+    resolveData === 'all' ? steps.map((step) => hydrateStepIO(step)) : steps;
 
   const matchingStreams = [
     ...runsWithHydratedIO,
@@ -542,7 +605,9 @@ export const listEvents = async (
     );
   }
   if (opts.stepId) {
-    const step = await world.steps.get(undefined, opts.stepId);
+    const step = await world.steps.get(undefined, opts.stepId, {
+      resolveData: 'none',
+    });
     const runId = step.runId;
     opts.runId = runId;
   }
@@ -554,6 +619,7 @@ export const listEvents = async (
     return;
   }
   logger.debug(`Fetching events for run ${runId}`);
+  const resolveData = opts.withData ? 'all' : 'none';
   const events = await world.events.list({
     runId,
     pagination: {
@@ -561,6 +627,7 @@ export const listEvents = async (
       cursor: opts.cursor,
       limit: opts.limit || DEFAULT_PAGE_SIZE,
     },
+    resolveData,
   });
   if (opts.stepId) {
     events.data = events.data.filter(
@@ -571,7 +638,13 @@ export const listEvents = async (
     showJson(events.data);
     return;
   }
-  logger.log(showTable(events.data, EVENT_LISTED_PROPS));
+
+  // Determine which props to show based on withData flag
+  const props = opts.withData
+    ? EVENT_LISTED_PROPS
+    : EVENT_LISTED_PROPS.filter((prop) => !EVENT_IO_PROPS.includes(prop));
+
+  logger.log(showTable(events.data, props, opts));
   const hint = getCursorHint(events);
   if (hint) {
     logger.info(hint);

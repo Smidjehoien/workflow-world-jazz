@@ -8,7 +8,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,16 +26,19 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useEvents } from '@/hooks/use-api';
+import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import type { WorldConfig } from '@/lib/world';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { TableSkeleton } from '../display-utils/table-skeleton';
+import { EventDetailSidebar } from './event-detail-sidebar';
 
 interface EventsTableProps {
   config: WorldConfig;
   runId: string;
   onEventClick: (eventId: string) => void;
   selectedEventId?: string;
+  onCloseDetailSidebar: () => void;
 }
 
 export function EventsTable({
@@ -43,14 +46,16 @@ export function EventsTable({
   runId,
   onEventClick,
   selectedEventId,
+  onCloseDetailSidebar,
 }: EventsTableProps) {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [limit, setLimit] = useState<number>(10);
+  const [limit, setLimit] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const {
     data,
     error,
     loading,
+    cursor,
     paginationDisplay,
     lastRefreshTime,
     handleNextPage,
@@ -64,10 +69,14 @@ export function EventsTable({
     setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
   };
 
-  const truncate = (str: string | undefined, maxLength = 30) => {
-    if (!str) return '';
-    return str.length > maxLength ? `${str.substring(0, maxLength)}...` : str;
-  };
+  const currentPageInfo = useMemo(
+    () => ({
+      sortOrder,
+      limit,
+      cursor,
+    }),
+    [sortOrder, limit, cursor]
+  );
 
   // Show skeleton for initial load
   if (loading && !data) {
@@ -76,6 +85,15 @@ export function EventsTable({
 
   return (
     <Card>
+      {selectedEventId && (
+        <EventDetailSidebar
+          config={config}
+          currentPageInfo={currentPageInfo}
+          runId={runId}
+          eventId={selectedEventId}
+          onClose={() => onCloseDetailSidebar()}
+        />
+      )}
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Events</CardTitle>
@@ -143,7 +161,6 @@ export function EventsTable({
                   <TableHead>Event Type</TableHead>
                   <TableHead>Correlation ID</TableHead>
                   <TableHead>Created At</TableHead>
-                  <TableHead>Data</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -158,25 +175,14 @@ export function EventsTable({
                     onClick={() => onEventClick(event.eventId)}
                   >
                     <TableCell className="font-mono text-xs">
-                      {truncate(event.eventId, 30)}
+                      {event.eventId}
                     </TableCell>
                     <TableCell>{event.eventType}</TableCell>
                     <TableCell className="font-mono text-xs">
-                      {truncate(event.correlationId, 30)}
+                      {event.correlationId}
                     </TableCell>
                     <TableCell>
                       <RelativeTime date={event.createdAt} />
-                    </TableCell>
-                    <TableCell className="font-mono text-xs max-w-xs truncate">
-                      {'eventData' in event &&
-                      Object.keys(event.eventData || {}).length > 0
-                        ? truncate(
-                            JSON.stringify(
-                              (event as { eventData?: unknown }).eventData ?? {}
-                            ),
-                            20
-                          )
-                        : 'N/A'}
                     </TableCell>
                   </TableRow>
                 ))}

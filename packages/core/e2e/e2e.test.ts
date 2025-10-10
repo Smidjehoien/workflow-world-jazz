@@ -79,7 +79,7 @@ describe('e2e', () => {
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBe(133);
 
-    const { json } = await cliInspectJson(`runs ${run.runId}`);
+    const { json } = await cliInspectJson(`runs ${run.runId} --withData`);
     const workflowName = `${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`;
     expect(json).toMatchObject({
       runId: run.runId,
@@ -114,7 +114,7 @@ describe('e2e', () => {
     expect(returnValue).toBe('B');
   });
 
-  test('readableStreamWorkflow', { timeout: 80_000 }, async () => {
+  test('readableStreamWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('readableStreamWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toBeInstanceOf(ReadableStream);

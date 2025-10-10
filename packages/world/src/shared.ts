@@ -28,3 +28,10 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(
 export type PaginatedResponse<T> = z.infer<
   ReturnType<typeof PaginatedResponseSchema<z.ZodType<T>>>
 >;
+
+/**
+ * Controls how much data is resolved in the response.
+ * - "none": Returns minimal data with input: [] and output: undefined
+ * - "all": Returns full data with complete input and output
+ */
+export type ResolveData = 'none' | 'all';

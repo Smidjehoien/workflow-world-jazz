@@ -11,6 +11,7 @@ import {
   WorkflowRunSchema,
 } from '@vercel/workflow-world';
 import { monotonicFactory } from 'ulid';
+import { DEFAULT_RESOLVE_DATA_OPTION } from './config.js';
 import {
   deleteJSON,
   listJSONFiles,
@@ -23,6 +24,40 @@ import {
 // Create a monotonic ULID factory that ensures ULIDs are always increasing
 // even when generated within the same millisecond
 const monotonicUlid = monotonicFactory(() => Math.random());
+
+// Helper functions to filter data based on resolveData setting
+function filterRunData(
+  run: WorkflowRun,
+  resolveData: 'none' | 'all'
+): WorkflowRun {
+  if (resolveData === 'none') {
+    return {
+      ...run,
+      input: [],
+      output: undefined,
+    };
+  }
+  return run;
+}
+
+function filterStepData(step: Step, resolveData: 'none' | 'all'): Step {
+  if (resolveData === 'none') {
+    return {
+      ...step,
+      input: [],
+      output: undefined,
+    };
+  }
+  return step;
+}
+
+function filterEventData(event: Event, resolveData: 'none' | 'all'): Event {
+  if (resolveData === 'none') {
+    const { eventData: _eventData, ...rest } = event as any;
+    return rest;
+  }
+  return event;
+}
 
 const getObjectCreatedAt =
   (idPrefix: string) =>
@@ -80,13 +115,14 @@ export function createStorage(basedir: string): Storage {
         return result;
       },
 
-      async get(id) {
+      async get(id, params) {
         const runPath = path.join(basedir, 'runs', `${id}.json`);
         const run = await readJSON(runPath, WorkflowRunSchema);
         if (!run) {
           throw new Error(`Workflow run ${id} not found`);
         }
-        return run;
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterRunData(run, resolveData);
       },
 
       async update(id, data) {
@@ -119,7 +155,8 @@ export function createStorage(basedir: string): Storage {
       },
 
       async list(params) {
-        return paginatedFileSystemQuery({
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        const result = await paginatedFileSystemQuery({
           directory: path.join(basedir, 'runs'),
           schema: WorkflowRunSchema,
           filter: params?.workflowName
@@ -131,18 +168,38 @@ export function createStorage(basedir: string): Storage {
           getCreatedAt: getObjectCreatedAt('wrun'),
           getId: (run) => run.runId,
         });
+
+        // If resolveData is "none", replace input/output with empty data
+        if (resolveData === 'none') {
+          return {
+            ...result,
+            data: result.data.map((run) => ({
+              ...run,
+              input: [],
+              output: undefined,
+            })),
+          };
+        }
+
+        return result;
       },
 
-      async cancel(id) {
-        return this.update(id, { status: 'cancelled' });
+      async cancel(id, params) {
+        const run = await this.update(id, { status: 'cancelled' });
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterRunData(run, resolveData);
       },
 
-      async pause(id) {
-        return this.update(id, { status: 'paused' });
+      async pause(id, params) {
+        const run = await this.update(id, { status: 'paused' });
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterRunData(run, resolveData);
       },
 
-      async resume(id) {
-        return this.update(id, { status: 'running' });
+      async resume(id, params) {
+        const run = await this.update(id, { status: 'running' });
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterRunData(run, resolveData);
       },
     },
 
@@ -173,7 +230,11 @@ export function createStorage(basedir: string): Storage {
         return result;
       },
 
-      async get(runId: string | undefined, stepId: string): Promise<Step> {
+      async get(
+        runId: string | undefined,
+        stepId: string,
+        params
+      ): Promise<Step> {
         if (!runId) {
           const fileIds = await listJSONFiles(path.join(basedir, 'steps'));
           const fileId = fileIds.find((fileId) =>
@@ -190,7 +251,8 @@ export function createStorage(basedir: string): Storage {
         if (!step) {
           throw new Error(`Step ${stepId} in run ${runId} not found`);
         }
-        return step;
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterStepData(step, resolveData);
       },
 
       async update(runId, stepId, data) {
@@ -220,7 +282,8 @@ export function createStorage(basedir: string): Storage {
       },
 
       async list(params) {
-        return paginatedFileSystemQuery({
+        const resolveData = params.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        const result = await paginatedFileSystemQuery({
           directory: path.join(basedir, 'steps'),
           schema: StepSchema,
           filePrefix: `${params.runId}-`,
@@ -230,12 +293,26 @@ export function createStorage(basedir: string): Storage {
           getCreatedAt: getObjectCreatedAt('step'),
           getId: (step) => step.stepId,
         });
+
+        // If resolveData is "none", replace input/output with empty data
+        if (resolveData === 'none') {
+          return {
+            ...result,
+            data: result.data.map((step) => ({
+              ...step,
+              input: [],
+              output: undefined,
+            })),
+          };
+        }
+
+        return result;
       },
     },
 
     // Events - filesystem-backed storage
     events: {
-      async create(runId, data) {
+      async create(runId, data, params) {
         const eventId = `evnt_${monotonicUlid()}`;
         const now = new Date();
 
@@ -251,11 +328,13 @@ export function createStorage(basedir: string): Storage {
         const eventPath = path.join(basedir, 'events', `${compositeKey}.json`);
         await writeJSON(eventPath, result);
 
-        return result;
+        const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        return filterEventData(result, resolveData);
       },
 
       async list(params) {
-        return paginatedFileSystemQuery({
+        const resolveData = params.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
+        const result = await paginatedFileSystemQuery({
           directory: path.join(basedir, 'events'),
           schema: EventSchema,
           filePrefix: `${params.runId}-`,
@@ -267,6 +346,19 @@ export function createStorage(basedir: string): Storage {
           getCreatedAt: getObjectCreatedAt('evnt'),
           getId: (event) => event.eventId,
         });
+
+        // If resolveData is "none", remove eventData from events
+        if (resolveData === 'none') {
+          return {
+            ...result,
+            data: result.data.map((event) => {
+              const { eventData: _eventData, ...rest } = event as any;
+              return rest;
+            }),
+          };
+        }
+
+        return result;
       },
     },
 

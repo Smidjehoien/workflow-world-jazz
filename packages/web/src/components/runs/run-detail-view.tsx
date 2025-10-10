@@ -1,7 +1,7 @@
 'use client';
 
 import { ChevronRight, Radio } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -51,6 +51,8 @@ export function RunDetailView({
     onStreamClick(streamId);
   };
 
+  const liveModeId = useId();
+
   if (runLoading) {
     return <div className="text-center py-8">Loading...</div>;
   }
@@ -76,10 +78,10 @@ export function RunDetailView({
               <Switch
                 checked={liveMode}
                 onCheckedChange={setLiveMode}
-                id="run-live-mode"
+                id={liveModeId}
               />
               <label
-                htmlFor="run-live-mode"
+                htmlFor={liveModeId}
                 className="text-sm font-medium cursor-pointer"
               >
                 Live
@@ -138,6 +140,16 @@ export function RunDetailView({
               <ChevronRight className="h-4 w-4" />
             </Button>
 
+            {/* Run Details JSON Side Panel */}
+            {showRunDetails && (
+              <RunDetailSidebar
+                runData={run}
+                runId={runId}
+                onClose={() => setShowRunDetails(false)}
+                onStreamClick={handleStreamClickFromJson}
+              />
+            )}
+
             <Button
               variant="outline"
               size="sm"
@@ -160,25 +172,6 @@ export function RunDetailView({
         runStartTime={run.startedAt?.toISOString()}
         runEndTime={run.completedAt?.toISOString()}
       />
-
-      {/* Events Table */}
-      <EventsTable
-        config={config}
-        runId={runId}
-        onEventClick={onEventSelect}
-        selectedEventId={selectedEventId}
-      />
-
-      {/* Run Details JSON Side Panel */}
-      {showRunDetails && (
-        <RunDetailSidebar
-          runData={run}
-          runId={runId}
-          onClose={() => setShowRunDetails(false)}
-          onStreamClick={handleStreamClickFromJson}
-        />
-      )}
-
       {/* Step Detail Side Panel */}
       {selectedStepId && (
         <StepDetailSidebar
@@ -190,15 +183,14 @@ export function RunDetailView({
         />
       )}
 
-      {/* Event Detail Side Panel */}
-      {selectedEventId && (
-        <EventDetailSidebar
-          config={config}
-          runId={runId}
-          eventId={selectedEventId}
-          onClose={() => onEventSelect(undefined)}
-        />
-      )}
+      {/* Events Table */}
+      <EventsTable
+        config={config}
+        runId={runId}
+        onEventClick={onEventSelect}
+        selectedEventId={selectedEventId}
+        onCloseDetailSidebar={() => onEventSelect(undefined)}
+      />
     </div>
   );
 }

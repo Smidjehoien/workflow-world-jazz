@@ -1,7 +1,7 @@
 import type { Event, Step, WorkflowRun } from '@vercel/workflow-world';
 import useSWR from 'swr';
+import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import {
-  fetchEvent,
   fetchEvents,
   fetchRun,
   fetchRuns,
@@ -12,7 +12,10 @@ import {
 import { usePaginatedQuery } from './use-paginated-query';
 
 // Helper to create a stable cache key
-function createKey(config: WorldConfig, ...parts: (string | undefined)[]) {
+export function createAPICallKey(
+  config: WorldConfig,
+  ...parts: (string | undefined)[]
+) {
   const configKey = JSON.stringify(config);
   return [configKey, ...parts].filter(Boolean).join('::');
 }
@@ -24,7 +27,7 @@ export function useRun(
   options?: { refreshInterval?: number }
 ) {
   return useSWR(
-    createKey(config, 'run', runId),
+    createAPICallKey(config, 'run', runId),
     () => fetchRun(config, runId),
     {
       refreshInterval: options?.refreshInterval,
@@ -40,19 +43,8 @@ export function useStep(
   stepId: string
 ) {
   return useSWR(
-    stepId ? createKey(config, 'step', runId, stepId) : null,
+    stepId ? createAPICallKey(config, 'step', runId, stepId) : null,
     () => fetchStep(config, runId, stepId),
-    {
-      revalidateOnFocus: false,
-    }
-  );
-}
-
-// Single event hook
-export function useEvent(config: WorldConfig, runId: string, eventId: string) {
-  return useSWR(
-    eventId ? createKey(config, 'event', runId, eventId) : null,
-    () => fetchEvent(config, runId, eventId),
     {
       revalidateOnFocus: false,
     }
@@ -75,7 +67,7 @@ export function useRuns(
     { config: WorldConfig; sortOrder: 'asc' | 'desc'; limit: number }
   >({
     createKey: (params, cursor) =>
-      createKey(
+      createAPICallKey(
         params.config,
         'runs',
         cursor,
@@ -94,7 +86,7 @@ export function useSteps(
   config: WorldConfig,
   runId: string,
   sortOrder: 'asc' | 'desc' = 'asc',
-  limit: number = 10
+  limit: number = DEFAULT_PAGE_SIZE
 ) {
   return usePaginatedQuery<
     Step,
@@ -106,7 +98,7 @@ export function useSteps(
     }
   >({
     createKey: (params, cursor) =>
-      createKey(
+      createAPICallKey(
         params.config,
         'steps',
         params.runId,
@@ -126,12 +118,31 @@ export function useSteps(
   });
 }
 
+export const createEventKey = (
+  params: {
+    config: WorldConfig;
+    runId: string;
+    sortOrder: 'asc' | 'desc';
+    limit: number;
+  },
+  cursor?: string
+) => {
+  return createAPICallKey(
+    params.config,
+    'events',
+    params.runId,
+    cursor,
+    params.sortOrder,
+    String(params.limit)
+  );
+};
+
 // Paginated events hook
 export function useEvents(
   config: WorldConfig,
   runId: string,
   sortOrder: 'asc' | 'desc' = 'desc',
-  limit: number = 10
+  limit: number = DEFAULT_PAGE_SIZE
 ) {
   return usePaginatedQuery<
     Event,
@@ -142,15 +153,7 @@ export function useEvents(
       limit: number;
     }
   >({
-    createKey: (params, cursor) =>
-      createKey(
-        params.config,
-        'events',
-        params.runId,
-        cursor,
-        params.sortOrder,
-        String(params.limit)
-      ),
+    createKey: (params, cursor) => createEventKey(params, cursor),
     fetcher: (params, cursor) =>
       fetchEvents(
         params.config,

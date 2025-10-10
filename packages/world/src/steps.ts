@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SerializedData } from './serialization.js';
-import type { PaginationOptions } from './shared.js';
+import type { PaginationOptions, ResolveData } from './shared.js';
 
 // Step schemas
 export const StepStatusSchema = z.enum([
@@ -45,7 +45,12 @@ export interface UpdateStepRequest {
   errorCode?: string;
 }
 
+export interface GetStepParams {
+  resolveData?: ResolveData;
+}
+
 export interface ListWorkflowRunStepsParams {
   runId: string;
   pagination?: PaginationOptions;
+  resolveData?: ResolveData;
 }

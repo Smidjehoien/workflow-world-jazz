@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { PaginationOptions } from './shared.js';
+import type { PaginationOptions, ResolveData } from './shared.js';
 
 // Event type enum
 export const EventTypeSchema = z.enum([
@@ -16,7 +16,7 @@ export const EventTypeSchema = z.enum([
 ]);
 
 // Base event schema with common properties
-const BaseEventSchema = z.object({
+export const BaseEventSchema = z.object({
   eventType: EventTypeSchema,
   correlationId: z.string().optional(),
 });
@@ -120,7 +120,12 @@ export type Event = z.infer<typeof EventSchema>;
 export type CreateEventRequest = z.infer<typeof CreateEventSchema>;
 export type HookReceivedEvent = z.infer<typeof HookReceivedEventSchema>;
 
+export interface CreateEventParams {
+  resolveData?: ResolveData;
+}
+
 export interface ListEventsParams {
   runId: string;
   pagination?: PaginationOptions;
+  resolveData?: ResolveData;
 }

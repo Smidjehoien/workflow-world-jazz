@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { SerializedData } from './serialization.js';
-import type { PaginationOptions } from './shared.js';
+import type { PaginationOptions, ResolveData } from './shared.js';
 
 // Workflow run schemas
 export const WorkflowRunStatusSchema = z.enum([
@@ -48,8 +48,25 @@ export interface UpdateWorkflowRunRequest {
   executionContext?: Record<string, any>;
 }
 
+export interface GetWorkflowRunParams {
+  resolveData?: ResolveData;
+}
+
 export interface ListWorkflowRunsParams {
   workflowName?: string;
   status?: WorkflowRunStatus;
   pagination?: PaginationOptions;
+  resolveData?: ResolveData;
+}
+
+export interface CancelWorkflowRunParams {
+  resolveData?: ResolveData;
+}
+
+export interface PauseWorkflowRunParams {
+  resolveData?: ResolveData;
+}
+
+export interface ResumeWorkflowRunParams {
+  resolveData?: ResolveData;
 }

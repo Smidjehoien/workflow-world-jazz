@@ -28,21 +28,22 @@ export function createStorage(config?: APIConfig): Storage & AuthProvider {
     // Storage interface with namespaced methods
     runs: {
       create: (data) => createWorkflowRun(data, config),
-      get: (id) => getWorkflowRun(id, config),
+      get: (id, params) => getWorkflowRun(id, params, config),
       update: (id, data) => updateWorkflowRun(id, data, config),
       list: (params) => listWorkflowRuns(params, config),
-      cancel: (id) => cancelWorkflowRun(id, config),
-      pause: (id) => pauseWorkflowRun(id, config),
-      resume: (id) => resumeWorkflowRun(id, config),
+      cancel: (id, params) => cancelWorkflowRun(id, params, config),
+      pause: (id, params) => pauseWorkflowRun(id, params, config),
+      resume: (id, params) => resumeWorkflowRun(id, params, config),
     },
     steps: {
       create: (runId, data) => createStep(runId, data, config),
-      get: (runId, stepId) => getStep(runId, stepId, config),
+      get: (runId, stepId, params) => getStep(runId, stepId, params, config),
       update: (runId, stepId, data) => updateStep(runId, stepId, data, config),
       list: (params) => listWorkflowRunSteps(params, config),
     },
     events: {
-      create: (runId, data) => createWorkflowRunEvent(runId, data, config),
+      create: (runId, data, params) =>
+        createWorkflowRunEvent(runId, data, params, config),
       list: (params) => getWorkflowRunEvents(params, config),
     },
     hooks: {

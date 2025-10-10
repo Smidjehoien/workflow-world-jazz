@@ -1,16 +1,26 @@
 import type { AuthInfo, HealthCheckResponse } from './auth.js';
-import type { CreateEventRequest, Event, ListEventsParams } from './events.js';
+import type {
+  CreateEventParams,
+  CreateEventRequest,
+  Event,
+  ListEventsParams,
+} from './events.js';
 import type { CreateHookRequest, Hook } from './hooks.js';
 import type { Queue } from './queue.js';
 import type {
+  CancelWorkflowRunParams,
   CreateWorkflowRunRequest,
+  GetWorkflowRunParams,
   ListWorkflowRunsParams,
+  PauseWorkflowRunParams,
+  ResumeWorkflowRunParams,
   UpdateWorkflowRunRequest,
   WorkflowRun,
 } from './runs.js';
 import type { PaginatedResponse } from './shared.js';
 import type {
   CreateStepRequest,
+  GetStepParams,
   ListWorkflowRunStepsParams,
   Step,
   UpdateStepRequest,
@@ -36,19 +46,23 @@ export interface AuthProvider {
 export interface Storage {
   runs: {
     create(data: CreateWorkflowRunRequest): Promise<WorkflowRun>;
-    get(id: string): Promise<WorkflowRun>;
+    get(id: string, params?: GetWorkflowRunParams): Promise<WorkflowRun>;
     update(id: string, data: UpdateWorkflowRunRequest): Promise<WorkflowRun>;
     list(
       params?: ListWorkflowRunsParams
     ): Promise<PaginatedResponse<WorkflowRun>>;
-    cancel(id: string): Promise<WorkflowRun>;
-    pause(id: string): Promise<WorkflowRun>;
-    resume(id: string): Promise<WorkflowRun>;
+    cancel(id: string, params?: CancelWorkflowRunParams): Promise<WorkflowRun>;
+    pause(id: string, params?: PauseWorkflowRunParams): Promise<WorkflowRun>;
+    resume(id: string, params?: ResumeWorkflowRunParams): Promise<WorkflowRun>;
   };
 
   steps: {
     create(runId: string, data: CreateStepRequest): Promise<Step>;
-    get(runId: string | undefined, stepId: string): Promise<Step>;
+    get(
+      runId: string | undefined,
+      stepId: string,
+      params?: GetStepParams
+    ): Promise<Step>;
     update(
       runId: string,
       stepId: string,
@@ -58,7 +72,11 @@ export interface Storage {
   };
 
   events: {
-    create(runId: string, data: CreateEventRequest): Promise<Event>;
+    create(
+      runId: string,
+      data: CreateEventRequest,
+      params?: CreateEventParams
+    ): Promise<Event>;
     list(params: ListEventsParams): Promise<PaginatedResponse<Event>>;
   };
 

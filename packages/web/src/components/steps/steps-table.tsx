@@ -1,6 +1,5 @@
 'use client';
 
-import type { Step } from '@vercel/workflow-world';
 import {
   AlertCircle,
   ArrowDownAZ,
@@ -9,7 +8,7 @@ import {
   ChevronRight,
   RefreshCw,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -26,8 +25,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useSteps } from '@/hooks/use-api';
+import { useStepsWithPreload } from '@/hooks/use-steps-with-preload';
 import { getResourceName } from '@/lib/resource-name';
+import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import type { WorldConfig } from '@/lib/world';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -53,9 +53,8 @@ export function StepsTable({
   runStartTime,
   runEndTime,
 }: StepsTableProps) {
-  const [allSteps, setAllSteps] = useState<Step[]>([]);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [limit, setLimit] = useState<number>(10);
+  const [limit, setLimit] = useState<number>(DEFAULT_PAGE_SIZE);
 
   const {
     data,
@@ -67,34 +66,14 @@ export function StepsTable({
     lastRefreshTime,
     handleNextPage,
     handlePrevPage,
-    handleRefresh: baseHandleRefresh,
+    handleRefresh,
     canGoNext,
     canGoPrev,
-  } = useSteps(config, runId, sortOrder, limit);
+    allSteps,
+  } = useStepsWithPreload(config, runId, sortOrder, limit);
 
   const toggleSortOrder = () => {
     setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
-  };
-
-  // Accumulate all steps across pages for timeline
-  useEffect(() => {
-    if (data?.data) {
-      setAllSteps((prev) => {
-        // If we're on first page, replace all
-        if (currentPageNumber === 1) {
-          return data.data;
-        }
-        // Otherwise, append new steps
-        const existingIds = new Set(prev.map((s) => s.stepId));
-        const newSteps = data.data.filter((s) => !existingIds.has(s.stepId));
-        return [...prev, ...newSteps];
-      });
-    }
-  }, [data, currentPageNumber]);
-
-  const handleRefresh = () => {
-    setAllSteps([]);
-    baseHandleRefresh();
   };
 
   // Show skeleton for initial load
