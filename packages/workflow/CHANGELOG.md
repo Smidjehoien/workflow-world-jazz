@@ -1,5 +1,19 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- 3178863: Add workflow-next to workflow package
+- Updated dependencies [38337d2]
+- Updated dependencies [848b776]
+- Updated dependencies [3178863]
+- Updated dependencies [59ab1dc]
+  - @vercel/workflow-core@0.0.1-alpha.33
+  - @vercel/workflow-cli@0.0.1-alpha.42
+  - @vercel/workflow-next@0.0.1-alpha.43
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.4
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes

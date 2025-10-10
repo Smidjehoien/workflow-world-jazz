@@ -1,5 +1,13 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- 59ab1dc: Implement new `Webhook` spec
+- Updated dependencies [59ab1dc]
+  - @vercel/workflow-world@0.0.1-alpha.5
+
 ## 0.0.1-alpha.7
 
 ### Patch Changes

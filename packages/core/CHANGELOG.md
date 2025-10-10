@@ -1,5 +1,16 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.33
+
+### Patch Changes
+
+- 38337d2: Add "namespace" option to `getWorkflowReadableStream` and `getWorkflowWritableStream`
+- 59ab1dc: Implement new `Webhook` spec
+- Updated dependencies [59ab1dc]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.8
+  - @vercel/workflow-world-vercel@0.0.1-alpha.8
+  - @vercel/workflow-world@0.0.1-alpha.5
+
 ## 0.0.1-alpha.32
 
 ### Patch Changes

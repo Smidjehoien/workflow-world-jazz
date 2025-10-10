@@ -1,5 +1,18 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.42
+
+### Patch Changes
+
+- 848b776: Add Auto-Generated Webhook Route at Build Time
+- Updated dependencies [38337d2]
+- Updated dependencies [59ab1dc]
+  - @vercel/workflow-core@0.0.1-alpha.33
+  - @vercel/workflow-world-embedded@0.0.1-alpha.8
+  - @vercel/workflow-world-vercel@0.0.1-alpha.8
+  - @vercel/workflow-world@0.0.1-alpha.5
+  - @vercel/workflow-web@0.0.1-alpha.42
+
 ## 0.0.1-alpha.41
 
 ### Patch Changes
