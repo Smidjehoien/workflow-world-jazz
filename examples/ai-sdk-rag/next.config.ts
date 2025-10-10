@@ -1,4 +1,4 @@
-import { withWorkflow } from '@vercel/workflow-next';
+import { withWorkflow } from '@vercel/workflow/next';
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {

@@ -16,7 +16,9 @@
     "./api": "./dist/api.js",
     "./internal/serialization": "./dist/internal/serialization.js",
     "./internal/builtins": "./dist/internal/builtins.js",
-    "./internal/private": "./dist/internal/private.js"
+    "./internal/private": "./dist/internal/private.js",
+    "./next": "./dist/next/index.js",
+    "./next/runtime": "./dist/next/runtime.js"
   },
   "scripts": {
     "build": "tsc",
@@ -31,7 +33,8 @@
     "@vercel/workflow-errors": "workspace:*",
     "@vercel/workflow-typescript-plugin": "workspace:*",
     "ms": "2.1.3",
-    "@vercel/workflow-ai": "workspace:*"
+    "@vercel/workflow-ai": "workspace:*",
+    "@vercel/workflow-next": "workspace:*"
   },
   "devDependencies": {
     "@types/ms": "^2.1.0",

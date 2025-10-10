@@ -1,7 +1,4 @@
-import {
-  getWorkflowReadableStream,
-  start,
-} from '@vercel/workflow-core/runtime';
+import { getWorkflowReadableStream, start } from '@vercel/workflow/api';
 import {
   createUIMessageStreamResponse,
   type UIMessage,

@@ -225,12 +225,6 @@ importers:
       '@vercel/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
-      '@vercel/workflow-core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@vercel/workflow-next':
-        specifier: workspace:*
-        version: link:../../packages/next
       ai:
         specifier: ^5.0.48
         version: 5.0.48(zod@3.25.76)
@@ -316,12 +310,6 @@ importers:
       '@vercel/workflow':
         specifier: workspace:*
         version: link:../../packages/workflow
-      '@vercel/workflow-core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@vercel/workflow-next':
-        specifier: workspace:*
-        version: link:../../packages/next
       ai:
         specifier: ^5.0.47
         version: 5.0.48(zod@4.1.9)
@@ -744,6 +732,9 @@ importers:
       '@vercel/workflow-errors':
         specifier: workspace:*
         version: link:../errors
+      '@vercel/workflow-next':
+        specifier: workspace:*
+        version: link:../next
       '@vercel/workflow-typescript-plugin':
         specifier: workspace:*
         version: link:../typescript-plugin
@@ -926,9 +917,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.1.9(@types/react@19.1.13)
-      '@vercel/workflow-next':
-        specifier: workspace:*
-        version: link:../../packages/next
       '@vercel/workflow-typescript-plugin':
         specifier: workspace:*
         version: link:../../packages/typescript-plugin
@@ -990,9 +978,6 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.1.9(@types/react@19.1.13)
-      '@vercel/workflow-next':
-        specifier: workspace:*
-        version: link:../../packages/next
       '@vercel/workflow-typescript-plugin':
         specifier: workspace:*
         version: link:../../packages/typescript-plugin

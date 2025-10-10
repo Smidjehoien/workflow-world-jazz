@@ -28,7 +28,6 @@
     "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vercel/workflow-next": "workspace:*",
     "@vercel/workflow-typescript-plugin": "workspace:*",
     "tailwindcss": "^4",
     "typescript": "catalog:"
