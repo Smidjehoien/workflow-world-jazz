@@ -41,7 +41,6 @@ export async function POST(req: Request) {
     const workflows =
       workflowFile === 'workflows/99_e2e.ts' ? e2eWorkflows : duplicateE2e;
 
-    console.log('calling', workflows, (workflows as any)[workflowFn]);
     const run = await start((workflows as any)[workflowFn], args);
     console.log('Run:', run);
     return Response.json(run);

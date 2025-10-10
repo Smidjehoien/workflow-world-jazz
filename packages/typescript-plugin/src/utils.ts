@@ -40,11 +40,9 @@ export function getDirective(
  * Workflow hooks available from @vercel/workflow-core
  */
 export const WORKFLOW_HOOKS = [
-  'getWebhook',
   'getWorkflowMetadata',
   'getStepMetadata',
   'getWorkflowWritableStream',
-  'sleep',
 ];
 
 /**
@@ -72,7 +70,7 @@ export function isAsyncFunction(
       const typeString = typeChecker.typeToString(returnType);
       return typeString.startsWith('Promise<');
     }
-  } catch (e) {
+  } catch {
     // If type checking fails, assume it's not async
     return false;
   }

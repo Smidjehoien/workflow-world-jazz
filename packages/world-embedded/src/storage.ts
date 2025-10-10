@@ -7,8 +7,6 @@ import {
   type Step,
   StepSchema,
   type Storage,
-  type Webhook,
-  WebhookSchema,
   type WorkflowRun,
   WorkflowRunSchema,
 } from '@vercel/workflow-world';
@@ -268,66 +266,6 @@ export function createStorage(basedir: string): Storage {
           cursor: params.pagination?.cursor,
           getCreatedAt: getObjectCreatedAt('evnt'),
           getId: (event) => event.eventId,
-        });
-      },
-    },
-
-    // Webhooks
-    webhooks: {
-      async create(runId, data) {
-        const now = new Date();
-
-        const result: Webhook = {
-          runId,
-          webhookId: data.webhookId,
-          ownerId: 'embedded-owner',
-          projectId: 'embedded-project',
-          environment: 'embedded',
-          allowedMethods: data.allowedMethods || [],
-          createdAt: now,
-          updatedAt: now,
-          url: data.url,
-          searchParamsSchema: data.searchParamsSchema,
-          headersSchema: data.headersSchema,
-          bodySchema: data.bodySchema,
-        };
-
-        const webhookPath = path.join(
-          basedir,
-          'webhooks',
-          `${data.webhookId}.json`
-        );
-        await writeJSON(webhookPath, result);
-        return result;
-      },
-
-      async get(webhookId, _deploymentId) {
-        const webhookPath = path.join(basedir, 'webhooks', `${webhookId}.json`);
-        const webhook = await readJSON(webhookPath, WebhookSchema);
-        if (!webhook) {
-          throw new Error(`Webhook ${webhookId} not found`);
-        }
-        return webhook;
-      },
-
-      async dispose(webhookId, deploymentId) {
-        const webhook = await this.get(webhookId, deploymentId);
-        const webhookPath = path.join(basedir, 'webhooks', `${webhookId}.json`);
-        await deleteJSON(webhookPath);
-        return webhook;
-      },
-
-      async getByUrl(url, _deploymentId, params) {
-        return paginatedFileSystemQuery({
-          directory: path.join(basedir, 'webhooks'),
-          schema: WebhookSchema,
-          filter: (webhook) => webhook.url === url,
-          sortOrder: 'desc',
-          limit: params?.limit,
-          cursor: undefined, // Remove buggy page-to-date conversion, use standard cursor pagination
-          getCreatedAt: (filename) =>
-            ulidToDate(filename.replace(/\.json$/, '')),
-          getId: (webhook) => webhook.webhookId,
         });
       },
     },

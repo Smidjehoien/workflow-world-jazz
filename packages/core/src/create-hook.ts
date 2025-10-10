@@ -1,10 +1,33 @@
-export interface Hook<T = any> {
+/**
+ * An object that can be awaited to receive a value.
+ */
+interface Thenable<T> {
+  then: Promise<T>['then'];
+}
+
+export interface RequestWithResponse extends Request {
+  respondWith: (response: Response) => Promise<void>;
+}
+
+export interface Hook<T = any> extends AsyncIterable<T>, Thenable<T> {
   /**
    * The token used to identify this hook.
    */
   token: string;
-  then: Promise<T>['then'];
-  [Symbol.asyncIterator](): AsyncIterableIterator<T>;
+}
+
+/**
+ * A webhook that can be used to suspend and resume the workflow run
+ * upon receiving an HTTP request to the specified URL.
+ *
+ * @see {@link createWebhook}
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
+ */
+export interface Webhook extends Hook<RequestWithResponse> {
+  /**
+   * The URL that external systems can call to send data to the workflow.
+   */
+  url: string;
 }
 
 export interface HookOptions {
@@ -29,13 +52,12 @@ export interface HookOptions {
   token?: string;
 }
 
+export interface WebhookOptions extends HookOptions {}
+
 /**
- * Creates a hook that can be used to suspend and resume the workflow run with a payload.
+ * Creates a {@link Hook} that can be used to suspend and resume the workflow run with a payload.
  *
  * Hooks allow external systems to send arbitrary serializable data into a workflow.
- *
- * Unlike {@link createWebhook | webhooks}, hooks don't have built-in HTTP handling
- * and must be explicitly resumed via an API route or other mechanism.
  *
  * @param options - Configuration options for the hook.
  * @returns A `Hook` that can be awaited to receive one or more payloads.
@@ -58,5 +80,21 @@ export interface HookOptions {
 export function createHook<T = any>(options?: HookOptions): Hook<T> {
   throw new Error(
     '`createHook()` can only be called inside a workflow function'
+  );
+}
+
+/**
+ * Creates a {@link Webhook} that can be used to suspend and resume the workflow
+ * run upon receiving an HTTP request to the specified URL.
+ *
+ * Webhooks will result in a {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request} object
+ * that can be inteteracted with in workflow functions.
+ */
+export function createWebhook(
+  // @ts-expect-error `options` is here for types/docs
+  options?: WebhookOptions
+): Webhook {
+  throw new Error(
+    '`createWebhook()` can only be called inside a workflow function'
   );
 }

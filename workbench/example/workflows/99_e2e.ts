@@ -1,10 +1,12 @@
 import {
   createHook,
+  createWebhook,
   FatalError,
   fetch,
   getStepMetadata,
   getWorkflowMetadata,
   getWorkflowWritableStream,
+  type RequestWithResponse,
   sleep,
 } from '@vercel/workflow';
 
@@ -86,9 +88,11 @@ async function genReadableStream() {
   return new ReadableStream({
     async start(controller) {
       for (let i = 0; i < 10; i++) {
+        console.log('enqueueing', i);
         controller.enqueue(encoder.encode(`${i}\n`));
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
+      console.log('closing controller');
       controller.close();
     },
   });
@@ -96,7 +100,9 @@ async function genReadableStream() {
 
 export async function readableStreamWorkflow() {
   'use workflow';
+  console.log('calling genReadableStream');
   const stream = await genReadableStream();
+  console.log('genReadableStream returned', stream);
   return stream;
 }
 
@@ -119,6 +125,32 @@ export async function hookWorkflow(token: string) {
   }
 
   return payloads;
+}
+
+//////////////////////////////////////////////////////////
+
+async function sendWebhookResponse(req: RequestWithResponse) {
+  'use step';
+  const body = await req.text();
+  await req.respondWith(new Response('Hello from webhook!', { status: 202 }));
+  return body;
+}
+
+export async function webhookWorkflow(token: string) {
+  'use workflow';
+
+  const webhook = createWebhook({ token });
+
+  const req = await webhook;
+
+  const body = await sendWebhookResponse(req);
+
+  return {
+    token: webhook.token,
+    url: req.url,
+    method: req.method,
+    body,
+  };
 }
 
 //////////////////////////////////////////////////////////

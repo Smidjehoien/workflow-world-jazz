@@ -6,13 +6,8 @@ export {
   type RetryableErrorOptions,
 } from '@vercel/workflow-errors';
 export type { Hook, HookOptions } from '../create-hook.js';
-export type {
-  Webhook,
-  WebhookOptions,
-} from '../get-webhook.js';
-export { createHook } from './create-hook.js';
+export { createHook, createWebhook } from './create-hook.js';
 export { defineHook } from './define-hook.js';
-export { getWebhook } from './get-webhook.js';
 export { getWorkflowMetadata } from './get-workflow-metadata.js';
 export { getWorkflowWritableStream } from './writable-stream.js';
 

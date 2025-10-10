@@ -13,7 +13,7 @@ This plugin enhances the TypeScript editing experience when writing workflows by
 
 ### Auto-completions
 
-- **Workflow hooks**: Suggests workflow-specific hooks like `getWebhook()`, `getWorkflowMetadata()`, `getStepMetadata()`, etc. when inside workflow functions
+- **Workflow APIs**: Suggests workflow-specific APIs like `createHook()`, `getWorkflowMetadata()`, `getStepMetadata()`, etc. when inside workflow functions
 
 ## Installation
 
@@ -68,8 +68,8 @@ import { readFileSync } from "node:fs"
 export async function myWorkflow() {
   'use workflow';
 
-  // The plugin will suggest workflow hooks here
-  const webhook = getWebhook({ ... });
+  // The plugin will suggest workflow APIs here
+  const workflowContext = getWorkflowContext();
 
   // This will trigger a warning about disallowed APIs
   readFileSync('something.txt');  // ⚠️ Warning: fs is not allowed in workflow files

@@ -18,12 +18,6 @@ import {
   updateStep,
 } from './steps.js';
 import type { APIConfig } from './utils.js';
-import {
-  createWebhook,
-  disposeWebhook,
-  getWebhook,
-  getWebhooksByUrl,
-} from './webhooks.js';
 
 export function createStorage(config?: APIConfig): Storage & AuthProvider {
   return {
@@ -50,15 +44,6 @@ export function createStorage(config?: APIConfig): Storage & AuthProvider {
     events: {
       create: (runId, data) => createWorkflowRunEvent(runId, data, config),
       list: (params) => getWorkflowRunEvents(params, config),
-    },
-    webhooks: {
-      create: (runId, data) => createWebhook(runId, data, config),
-      get: (webhookId, deploymentId) =>
-        getWebhook(webhookId, deploymentId, config),
-      dispose: (webhookId, deploymentId) =>
-        disposeWebhook(webhookId, deploymentId, config),
-      getByUrl: (url, deploymentId, params) =>
-        getWebhooksByUrl(url, deploymentId, params, config),
     },
     hooks: {
       create: (runId, data) => createHook(runId, data, config),

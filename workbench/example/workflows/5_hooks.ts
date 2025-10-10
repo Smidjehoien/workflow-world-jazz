@@ -1,10 +1,9 @@
 import {
+  createHook,
   getStepMetadata,
-  getWebhook,
   getWorkflowMetadata,
 } from '@vercel/workflow';
 import OpenAI from 'openai';
-import { z } from 'zod';
 
 /**
  * `getStepMetadata()` is a hook that allows you to access the step's context
@@ -52,44 +51,34 @@ async function getOpenAIResponse(respId: string): Promise<string> {
 }
 
 /**
- * `getWebhook()` is a hook that allows you to register a webhook URL
- * that can be passed to external services as a callback URL, or used
+ * `createHook()` registers a token that can be used to resume the workflow run.
+ * The token can be passed to external services as a callback URL, or used
  * for human-in-the-loop workflows by, for example, including in an email.
  *
- * The workflow run will be suspended until the webhook is called.
+ * The workflow run will be suspended until the hook is invoked.
  */
-export async function withGetWebhook() {
+export async function withCreateHook() {
   'use workflow';
 
   // Initiate a background "Response" request to OpenAI,
-  // which will invoke the webhook when it's done.
+  // which will invoke the hook when it's done.
   const respId = await initiateOpenAIResponse();
 
-  // Register the webhook URL and provide the schema for the
-  // type of events that we are interested in, and specifically
-  // for the exact response ID that we just created.
-  const webhook = getWebhook({
-    url: '/api/openai/webhook',
-    body: z.object({
-      type: z.string().startsWith('response.'),
-      data: z.object({
-        id: z.literal(respId),
-      }),
-    }),
+  // Register the hook with the token that is specific
+  // to the response ID that we are interested in.
+  const hook = createHook<{ type: string; data: { id: string } }>({
+    token: `openai:${respId}`,
   });
-  console.log('Registered webhook:', webhook.url);
+  console.log('Registered hook:', hook.token);
 
-  // Wait for the webhook to be called.
-  const req = await webhook;
-  console.log('Received webhook request:', req);
+  // Wait for the hook to be called.
+  const payload = await hook;
+  console.log('Received hook payload:', payload);
 
-  const body = await req.json();
-  console.log('Webhook request body:', body);
-
-  if (body.type === 'response.completed') {
-    const text = await getOpenAIResponse(body.data.id);
+  if (payload.type === 'response.completed') {
+    const text = await getOpenAIResponse(payload.data.id);
     console.log('OpenAI response text:', text);
   }
 
-  console.log('Webhook demo workflow completed');
+  console.log('Hook demo workflow completed');
 }

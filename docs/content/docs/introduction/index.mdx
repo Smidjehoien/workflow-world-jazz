@@ -21,23 +21,23 @@ The Workflow SDK eliminates these complexities by providing durable functions th
 For example, here's a simple order processing workflow powered by workflow.
 
 ```typescript title="workflow.ts"
-import { sleep, getWebhook } from "workflow"
+import { sleep, createWebhook } from "workflow"
 
 export async function fulfillOrder(orderId: string) {
   "use workflow";
-  
-  // In a workflow, steps are queued in the background while 
+
+  // In a workflow, steps are queued in the background while
   // the workflow function suspends
   const order = await deliverOrder(orderId);
 
-  await sleep("2 days") // Workflows can suspend for a long time between steps
+  await sleep("2 days"); // Workflows can suspend for a long time between steps
 
-  const webhook = getWebhook() // They can even react to external events!
+  const webhook = createWebhook(); // They can even react to external events!
   await sendEmail(`
     Dear ${order.buyer}, please confirm your order was received: ${webhook.url}
   `)
   await webhook; // Workflow suspends until the email link is clicked
-  
+
   console.log("Delivery complete!")
 }
 

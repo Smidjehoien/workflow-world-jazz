@@ -1,7 +1,11 @@
 import { WorkflowRuntimeError } from '@vercel/workflow-errors';
 import * as devalue from 'devalue';
 import { getWorld } from './runtime/world.js';
-import { STREAM_NAME_SYMBOL, STREAM_TYPE_SYMBOL } from './symbols.js';
+import {
+  STREAM_NAME_SYMBOL,
+  STREAM_TYPE_SYMBOL,
+  WEBHOOK_RESPONSE_WRITABLE,
+} from './symbols.js';
 
 /**
  * Detect if a readable stream is a byte stream.
@@ -78,6 +82,9 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
   #reader?: ReadableStreamDefaultReader<Uint8Array>;
 
   constructor(name: string, startIndex?: number) {
+    if (typeof name !== 'string' || name.length === 0) {
+      throw new Error(`"name" is required, got "${name}"`);
+    }
     super({
       // @ts-expect-error Not sure why TypeScript is complaining about this
       type: 'bytes',
@@ -108,6 +115,9 @@ export class WorkflowServerReadableStream extends ReadableStream<Uint8Array> {
 
 export class WorkflowServerWritableStream extends WritableStream<Uint8Array> {
   constructor(name: string) {
+    if (typeof name !== 'string' || name.length === 0) {
+      throw new Error(`"name" is required, got "${name}"`);
+    }
     const world = getWorld();
     super({
       write: async (chunk: string | Uint8Array | Buffer) => {
@@ -140,17 +150,20 @@ export interface SerializableSpecial {
   Request: {
     method: string;
     url: string;
-    headers: SerializableSpecial['Headers'];
-    body: SerializableSpecial['ReadableStream'];
-    duplex: globalThis.Request['duplex'];
+    headers: Headers;
+    body: ReadableStream;
+    duplex: Request['duplex'];
+
+    // This is specifially for the `RequestWithResponse` type which is used for webhooks
+    responseWritable?: WritableStream<Response>;
   };
   Response: {
-    type: globalThis.Response['type'];
+    type: Response['type'];
     url: string;
     status: number;
     statusText: string;
-    headers: SerializableSpecial['Headers'];
-    body: SerializableSpecial['ReadableStream'];
+    headers: Headers;
+    body: ReadableStream;
     redirected: boolean;
   };
   Set: any[];
@@ -225,13 +238,18 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
       },
     Request: (value) => {
       if (!(value instanceof global.Request)) return false;
-      return {
+      const data: SerializableSpecial['Request'] = {
         method: value.method,
         url: value.url,
         headers: value.headers,
         body: value.body,
         duplex: value.duplex,
       };
+      const responseWritable = value[WEBHOOK_RESPONSE_WRITABLE];
+      if (responseWritable) {
+        data.responseWritable = responseWritable;
+      }
+      return data;
     },
     Response: (value) => {
       if (!(value instanceof global.Response)) return false;
@@ -562,6 +580,16 @@ export function getWorkflowRevivers(
     ...getCommonRevivers(global),
     Request: (value) => {
       Object.setPrototypeOf(value, global.Request.prototype);
+      const responseWritable = value.responseWritable;
+      if (responseWritable) {
+        (value as any)[WEBHOOK_RESPONSE_WRITABLE] = responseWritable;
+        delete value.responseWritable;
+        (value as any).respondWith = () => {
+          throw new Error(
+            '`respondWith()` must be called from within a step function'
+          );
+        };
+      }
       return value;
     },
     Response: (value) => {
@@ -607,12 +635,21 @@ function getStepRevivers(
     ...getCommonRevivers(global),
 
     Request: (value) => {
-      return new global.Request(value.url, {
+      const responseWritable = value.responseWritable;
+      const request = new global.Request(value.url, {
         method: value.method,
         headers: new global.Headers(value.headers),
         body: value.body,
         duplex: value.duplex,
       });
+      if (responseWritable) {
+        request.respondWith = async (response: Response) => {
+          const writer = responseWritable.getWriter();
+          await writer.write(response);
+          await writer.close();
+        };
+      }
+      return request;
     },
     Response: (value) => {
       return new global.Response(value.body, {

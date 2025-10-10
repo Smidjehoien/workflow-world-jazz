@@ -15,11 +15,6 @@ import type {
   Step,
   UpdateStepRequest,
 } from './steps.js';
-import type {
-  CreateWebhookRequest,
-  ListWebhooksByUrlParams,
-  Webhook,
-} from './webhooks.js';
 
 export interface Streamer {
   writeToStream(
@@ -65,17 +60,6 @@ export interface Storage {
   events: {
     create(runId: string, data: CreateEventRequest): Promise<Event>;
     list(params: ListEventsParams): Promise<PaginatedResponse<Event>>;
-  };
-
-  webhooks: {
-    create(runId: string, data: CreateWebhookRequest): Promise<Webhook>;
-    get(webhookId: string, deploymentId: string): Promise<Webhook>;
-    dispose(webhookId: string, deploymentId: string): Promise<Webhook>;
-    getByUrl(
-      url: string,
-      deploymentId: string,
-      params?: ListWebhooksByUrlParams
-    ): Promise<PaginatedResponse<Webhook>>;
   };
 
   hooks: {

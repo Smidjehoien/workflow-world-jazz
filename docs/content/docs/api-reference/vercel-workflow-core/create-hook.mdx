@@ -17,7 +17,7 @@ export async function hookWorkflow() {
   "use workflow";
   const hook = createHook();  // [!code highlight]
   const result = await hook; // Suspends the workflow until the hook is resumed
-} 
+}
 ```
 
 ## API Signature
@@ -138,4 +138,4 @@ export async function collectHookWorkflow() {
 
 - [`defineHook()`](/docs/api-reference/vercel-workflow-core/define-hook) - Type-safe hook helper
 - [`resumeHook()`](/docs/api-reference/vercel-workflow-core/resume-hook) - Resume a hook with a payload
-- [`getWebhook()`](/docs/api-reference/vercel-workflow-core/get-webhook) - Higher-level HTTP webhook abstraction
+- [`createWebhook()`](/docs/api-reference/vercel-workflow-core/create-webhook) - Higher-level HTTP webhook abstraction

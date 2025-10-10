@@ -356,6 +356,229 @@ describe('workflow arguments', () => {
     ]);
   });
 
+  it('should work with Request (without responseWritable)', () => {
+    // Mock crypto.randomUUID to return a deterministic value
+    const originalRandomUUID = globalThis.crypto.randomUUID;
+    globalThis.crypto.randomUUID = () =>
+      '00000000-0000-0000-0000-000000000001' as `${string}-${string}-${string}-${string}-${string}`;
+
+    try {
+      const request = new Request('https://example.com/api', {
+        method: 'POST',
+        headers: new Headers([
+          ['content-type', 'application/json'],
+          ['x-custom', 'value'],
+        ]),
+        body: 'Hello, world!',
+        duplex: 'half',
+      } as RequestInit);
+
+      const serialized = dehydrateWorkflowArguments(request, []);
+      expect(serialized).toMatchInlineSnapshot(`
+      [
+        [
+          "Request",
+          1,
+        ],
+        {
+          "body": 12,
+          "duplex": 16,
+          "headers": 4,
+          "method": 2,
+          "url": 3,
+        },
+        "POST",
+        "https://example.com/api",
+        [
+          "Headers",
+          5,
+        ],
+        [
+          6,
+          9,
+        ],
+        [
+          7,
+          8,
+        ],
+        "content-type",
+        "application/json",
+        [
+          10,
+          11,
+        ],
+        "x-custom",
+        "value",
+        [
+          "ReadableStream",
+          13,
+        ],
+        {
+          "name": 14,
+          "type": 15,
+        },
+        "00000000-0000-0000-0000-000000000001",
+        "bytes",
+        "half",
+      ]
+    `);
+
+      class OurRequest {
+        public method;
+        public url;
+        public headers;
+        public body;
+        public duplex;
+        constructor(url, init) {
+          this.method = init.method;
+          this.url = url;
+          this.headers = init.headers;
+          this.body = init.body;
+          this.duplex = init.duplex;
+        }
+      }
+      class OurReadableStream {}
+      class OurHeaders {}
+      const hydrated = hydrateWorkflowArguments(serialized, {
+        Request: OurRequest,
+        Headers: OurHeaders,
+        ReadableStream: OurReadableStream,
+      });
+      expect(hydrated).toBeInstanceOf(OurRequest);
+      expect(hydrated.method).toBe('POST');
+      expect(hydrated.url).toBe('https://example.com/api');
+      expect(hydrated.headers).toBeInstanceOf(OurHeaders);
+      expect(hydrated.body).toBeInstanceOf(OurReadableStream);
+      expect(hydrated.duplex).toBe('half');
+    } finally {
+      globalThis.crypto.randomUUID = originalRandomUUID;
+    }
+  });
+
+  it('should work with Request (with responseWritable)', () => {
+    // Mock crypto.randomUUID to return deterministic values
+    const originalRandomUUID = globalThis.crypto.randomUUID;
+    let uuidCounter = 0;
+    globalThis.crypto.randomUUID = () => {
+      const uuids = [
+        '00000000-0000-0000-0000-000000000001',
+        '00000000-0000-0000-0000-000000000002',
+      ] as const;
+      return uuids[
+        uuidCounter++
+      ] as `${string}-${string}-${string}-${string}-${string}`;
+    };
+
+    try {
+      const request = new Request('https://example.com/webhook', {
+        method: 'POST',
+        headers: new Headers({ 'content-type': 'application/json' }),
+        body: 'webhook payload',
+        duplex: 'half',
+      } as RequestInit);
+
+      // Simulate webhook behavior by attaching a responseWritable stream
+      const responseWritable = new WritableStream();
+      request[Symbol.for('WEBHOOK_RESPONSE_WRITABLE')] = responseWritable;
+
+      const serialized = dehydrateWorkflowArguments(request, []);
+      expect(serialized).toMatchInlineSnapshot(`
+      [
+        [
+          "Request",
+          1,
+        ],
+        {
+          "body": 9,
+          "duplex": 13,
+          "headers": 4,
+          "method": 2,
+          "responseWritable": 14,
+          "url": 3,
+        },
+        "POST",
+        "https://example.com/webhook",
+        [
+          "Headers",
+          5,
+        ],
+        [
+          6,
+        ],
+        [
+          7,
+          8,
+        ],
+        "content-type",
+        "application/json",
+        [
+          "ReadableStream",
+          10,
+        ],
+        {
+          "name": 11,
+          "type": 12,
+        },
+        "00000000-0000-0000-0000-000000000001",
+        "bytes",
+        "half",
+        [
+          "WritableStream",
+          15,
+        ],
+        {
+          "name": 16,
+        },
+        "00000000-0000-0000-0000-000000000002",
+      ]
+    `);
+
+      class OurRequest {
+        public method;
+        public url;
+        public headers;
+        public body;
+        public duplex;
+        public responseWritable;
+        public respondWith;
+        constructor(url, init) {
+          this.method = init.method;
+          this.url = url;
+          this.headers = init.headers;
+          this.body = init.body;
+          this.duplex = init.duplex;
+        }
+      }
+      class OurReadableStream {}
+      class OurWritableStream {}
+      class OurHeaders {}
+      const hydrated = hydrateWorkflowArguments(serialized, {
+        Request: OurRequest,
+        Headers: OurHeaders,
+        ReadableStream: OurReadableStream,
+        WritableStream: OurWritableStream,
+      });
+      expect(hydrated).toBeInstanceOf(OurRequest);
+      expect(hydrated.method).toBe('POST');
+      expect(hydrated.url).toBe('https://example.com/webhook');
+      expect(hydrated.headers).toBeInstanceOf(OurHeaders);
+      expect(hydrated.body).toBeInstanceOf(OurReadableStream);
+      expect(hydrated.duplex).toBe('half');
+      // responseWritable should be moved to the symbol
+      expect(hydrated.responseWritable).toBeUndefined();
+      expect(hydrated[Symbol.for('WEBHOOK_RESPONSE_WRITABLE')]).toBeInstanceOf(
+        OurWritableStream
+      );
+      // respondWith should throw an error when called from workflow context
+      expect(hydrated.respondWith).toBeInstanceOf(Function);
+      expect(() => hydrated.respondWith()).toThrow(
+        '`respondWith()` must be called from within a step function'
+      );
+    } finally {
+      globalThis.crypto.randomUUID = originalRandomUUID;
+    }
+  });
+
   it('should throw error for an unsupported type', () => {
     class Foo {}
     let err: WorkflowRuntimeError | undefined;

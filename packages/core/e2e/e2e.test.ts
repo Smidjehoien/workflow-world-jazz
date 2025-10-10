@@ -62,7 +62,9 @@ async function getWorkflowReturnValue(runId: string) {
   }
 }
 
-describe.concurrent('e2e', () => {
+// NOTE: Temporarily disabling concurrent tests to avoid flakiness.
+// TODO: Re-enable concurrent tests after conf when we have more time to investigate.
+describe('e2e', () => {
   test.each([
     {
       workflowFile: 'workflows/99_e2e.ts',
@@ -128,7 +130,6 @@ describe.concurrent('e2e', () => {
 
   test('hookWorkflow', { timeout: 60_000 }, async () => {
     const token = Math.random().toString(36).slice(2);
-    console.log('token', token);
 
     const run = await triggerWorkflow('hookWorkflow', [token]);
 
@@ -180,6 +181,43 @@ describe.concurrent('e2e', () => {
     expect(returnValue[1].done).toBeUndefined();
     expect(returnValue[2].message).toBe('three');
     expect(returnValue[2].done).toBe(true);
+  });
+
+  test('webhookWorkflow', { timeout: 60_000 }, async () => {
+    const token = Math.random().toString(36).slice(2);
+
+    const run = await triggerWorkflow('webhookWorkflow', [token]);
+
+    // Wait a few seconds so that the webhook is registered.
+    // TODO: make this more efficient when we add subscription support.
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+
+    const hookUrl = new URL('/api/webhook', deploymentUrl);
+
+    let res = await fetch(`${hookUrl}?token=${token}`, {
+      method: 'PUT',
+      body: JSON.stringify({ message: 'one' }),
+    });
+    expect(res.status).toBe(202);
+    let body = await res.text();
+    expect(body).toBe('Hello from webhook!');
+
+    // Invalid token test
+    res = await fetch(hookUrl, {
+      method: 'POST',
+      body: JSON.stringify({ token: 'invalid' }),
+    });
+    expect(res.status).toBe(404);
+    body = await res.json();
+    expect(body).toBeNull();
+
+    const returnValue = await getWorkflowReturnValue(run.runId);
+    expect(returnValue).toMatchObject({
+      token,
+      url: expect.any(String),
+      method: 'PUT',
+      body: '{"message":"one"}',
+    });
   });
 
   test('sleepingWorkflow', { timeout: 60_000 }, async () => {

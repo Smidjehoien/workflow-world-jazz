@@ -32,11 +32,11 @@ The workflow function orchestrates your application logic. It coordinates the se
 ```typescript lineNumbers
 export async function processOrderWorkflow(orderId: string) {
   "use workflow"; // [!code highlight]
-  
+
   // Orchestrate multiple steps
   const order = await fetchOrder(orderId);
   const payment = await chargePayment(order);
-  
+
   return { orderId, status: 'completed' };
 }
 ```
@@ -55,23 +55,23 @@ Workflow functions have the ability to automatically suspend while they wait on 
 
 - Waiting on a step function: the workflow yields while the step runs in the step runtime.
 - Using `sleep()` to pause for some fixed duration.
-- Awaiting on a promise returned by [`getWebhook()`](/docs/api-reference/vercel-workflow-core/get-webhook), which resumes the workflow when an external system calls the generated webhook URL.
+- Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook), which resumes the workflow when an external system passes data into the workflow.
 
 ```typescript
-import { sleep, getWebhook } from '@vercel/workflow-core'; // [!code highlight]
+import { sleep, createHook } from '@vercel/workflow-core'; // [!code highlight]
 
 export async function onboardingWorkflow(userId: string) {
   "use workflow";
 
-  // Create webhook with URL
-  const webhook = getWebhook({
-    url: "/api/webhook"
+  // Create a "hook" for external workflow resumption
+  const webhook = createHook<MyData>({
+    token: `my-token:${userId}`
   });
-  
-  await webhook;             // Suspends workflow until a request hits /api/webhook
-  await sendGreetingEmail(); // Suspends workflow until step function finishes
-  await sleep("1y");         // Suspends workflow for a year
-  
+
+  const data = await webhook;  // Suspends workflow until a request hits /api/webhook
+  await sendGreetingEmail();   // Suspends workflow until step function finishes
+  await sleep("1y");           // Suspends workflow for a year
+
 }
 
 async function sendGreetingEmail() {
@@ -95,16 +95,16 @@ Step functions can only be called inside workflow functions.
 ```typescript
 async function chargePayment(order: Order) {
   "use step";
-  
+
   // Full Node.js access - use any npm package
   const stripe = new Stripe(process.env.STRIPE_KEY);
-  
+
   const charge = await stripe.charges.create({
     amount: order.total,
     currency: 'usd',
     source: order.paymentToken
   });
-  
+
   return { chargeId: charge.id };
 }
 ```
@@ -131,7 +131,7 @@ A workflow consists of a workflow function and one or more step functions.
 // Workflow function (orchestrates the steps)
 export async function greetingWorkflow(name: string) {
   "use workflow";
-  
+
   const message = await greet(name);
   return { message };
 }
@@ -139,7 +139,7 @@ export async function greetingWorkflow(name: string) {
 // Step function (does the actual work)
 async function greet(name: string) {
   "use step";
-  
+
   // Access Node.js APIs
   const message = `Hello ${name} at ${new Date().toISOString()}`;
   console.log(message);
@@ -185,14 +185,14 @@ import { FatalError, RetryableError } from '@vercel/workflow-core';
 
 async function callAPI(endpoint: string) {
   "use step";
-  
+
   const response = await fetch(endpoint);
 
   if (response.status === 429) {
     // Retry with optional backoff
     throw new RetryableError('Rate limited');
   }
-  
+
   if (response.status === 404) {
     // Never retry, marks step as failed
     throw new FatalError('Resource not found');
@@ -202,7 +202,7 @@ async function callAPI(endpoint: string) {
     // Default retry behavior
     throw new Error(`HTTP ${response.status}`);
   }
-  
+
   return response.json();
 }
 ```

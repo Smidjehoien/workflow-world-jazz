@@ -11,13 +11,16 @@ export {
   RetryableError,
   type RetryableErrorOptions,
 } from '@vercel/workflow-errors';
-export { createHook, type Hook, type HookOptions } from './create-hook.js';
-export { defineHook } from './define-hook.js';
 export {
-  getWebhook,
+  createHook,
+  createWebhook,
+  type Hook,
+  type HookOptions,
+  type RequestWithResponse,
   type Webhook,
   type WebhookOptions,
-} from './get-webhook.js';
+} from './create-hook.js';
+export { defineHook } from './define-hook.js';
 export { getWorld, resetWorld } from './runtime/world.js';
 export {
   getStepMetadata,
