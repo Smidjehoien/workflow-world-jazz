@@ -575,6 +575,92 @@ export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
     await this.createSwcGitignore();
   }
 
+  protected async createWebhookBundle({
+    outfile,
+    bundle = false,
+  }: {
+    outfile: string;
+    bundle?: boolean;
+  }): Promise<void> {
+    console.log('Creating webhook route');
+    await mkdir(dirname(outfile), { recursive: true });
+
+    // Create a static route that calls resumeWebhook
+    // This route works for both Next.js and Vercel Build Output API
+    const routeContent = `import { resumeWebhook } from '@vercel/workflow/api';
+
+async function handler(request) {
+  const url = new URL(request.url);
+  // Extract token from pathname: /.well-known/workflow/v1/webhook/{token}
+  const pathParts = url.pathname.split('/');
+  const token = decodeURIComponent(pathParts[pathParts.length - 1]);
+
+  if (!token) {
+    return new Response('Missing token', { status: 400 });
+  }
+
+  const response = await resumeWebhook(token, request);
+
+  if (!response) {
+    return new Response(null, { status: 404 });
+  }
+
+  return response;
+}
+
+export const GET = handler;
+export const POST = handler;
+export const PUT = handler;
+export const PATCH = handler;
+export const DELETE = handler;
+export const HEAD = handler;
+export const OPTIONS = handler;
+`;
+
+    if (!bundle) {
+      // For Next.js, just write the unbundled file
+      await writeFile(outfile, routeContent);
+      return;
+    }
+
+    // For Build Output API, bundle with esbuild to resolve imports
+
+    const webhookBundleStart = Date.now();
+    const result = await esbuild.build({
+      banner: {
+        js: '// biome-ignore-all lint: generated file\n/* eslint-disable */\n',
+      },
+      stdin: {
+        contents: routeContent,
+        resolveDir: this.config.workingDir,
+        sourcefile: 'webhook-route.js',
+        loader: 'js',
+      },
+      outfile,
+      absWorkingDir: this.config.workingDir,
+      bundle: true,
+      format: 'cjs',
+      platform: 'node',
+      conditions: ['import', 'module', 'node', 'default'],
+      target: 'es2022',
+      write: true,
+      treeShaking: true,
+      keepNames: true,
+      minify: false,
+      resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
+      sourcemap: false,
+      mainFields: ['module', 'main'],
+      // Don't externalize anything - bundle everything including workflow packages
+      external: [],
+    });
+
+    this.logEsbuildMessages(result, 'webhook bundle creation');
+    console.log(
+      'Created webhook bundle',
+      `${Date.now() - webhookBundleStart}ms`
+    );
+  }
+
   private async createSwcGitignore(): Promise<void> {
     try {
       await writeFile(

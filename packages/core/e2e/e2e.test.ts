@@ -137,7 +137,7 @@ describe('e2e', () => {
     // TODO: make this more efficient when we add subscription support.
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const hookUrl = new URL('/api/webhook', deploymentUrl);
+    const hookUrl = new URL('/api/hook', deploymentUrl);
 
     let res = await fetch(hookUrl, {
       method: 'POST',
@@ -192,24 +192,18 @@ describe('e2e', () => {
     // TODO: make this more efficient when we add subscription support.
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const hookUrl = new URL('/api/webhook', deploymentUrl);
+    const webhookUrl = new URL(
+      `/.well-known/workflow/v1/webhook/${encodeURIComponent(token)}`,
+      deploymentUrl
+    );
 
-    let res = await fetch(`${hookUrl}?token=${token}`, {
+    const res = await fetch(webhookUrl, {
       method: 'PUT',
       body: JSON.stringify({ message: 'one' }),
     });
     expect(res.status).toBe(202);
-    let body = await res.text();
+    const body = await res.text();
     expect(body).toBe('Hello from webhook!');
-
-    // Invalid token test
-    res = await fetch(hookUrl, {
-      method: 'POST',
-      body: JSON.stringify({ token: 'invalid' }),
-    });
-    expect(res.status).toBe(404);
-    body = await res.json();
-    expect(body).toBeNull();
 
     const returnValue = await getWorkflowReturnValue(run.runId);
     expect(returnValue).toMatchObject({
@@ -218,6 +212,20 @@ describe('e2e', () => {
       method: 'PUT',
       body: '{"message":"one"}',
     });
+  });
+
+  test('webhook route with invalid token', { timeout: 60_000 }, async () => {
+    const invalidWebhookUrl = new URL(
+      `/.well-known/workflow/v1/webhook/${encodeURIComponent('invalid')}`,
+      deploymentUrl
+    );
+    const res = await fetch(invalidWebhookUrl, {
+      method: 'POST',
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(404);
+    const body = await res.text();
+    expect(body).toBe('');
   });
 
   test('sleepingWorkflow', { timeout: 60_000 }, async () => {

@@ -21,6 +21,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     };
     await this.buildStepsFunction(options);
     await this.buildWorkflowsFunction(options);
+    await this.buildWebhookFunction(options);
     await this.createBuildOutputConfig(outputDir);
 
     await this.buildClientLibrary();
@@ -49,7 +50,7 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
       tsPaths,
     });
 
-    // Create package.json for ESM support
+    // Create package.json for CommonJS
     const packageJson = {
       type: 'commonjs',
     };
@@ -140,10 +141,59 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     );
   }
 
+  private async buildWebhookFunction({
+    workflowGeneratedDir,
+    bundle = true,
+  }: {
+    inputFiles: string[];
+    workflowGeneratedDir: string;
+    tsBaseUrl?: string;
+    tsPaths?: Record<string, string[]>;
+    bundle?: boolean;
+  }): Promise<void> {
+    console.log('Creating Vercel Build Output API webhook function');
+    const webhookFuncDir = join(workflowGeneratedDir, 'webhook/[token].func');
+
+    // Bundle the webhook route with dependencies resolved
+    await this.createWebhookBundle({
+      outfile: join(webhookFuncDir, 'index.js'),
+      bundle, // Build Output API needs bundling (except in tests)
+    });
+
+    // Create package.json for CommonJS
+    const packageJson = {
+      type: 'commonjs',
+    };
+    await writeFile(
+      join(webhookFuncDir, 'package.json'),
+      JSON.stringify(packageJson, null, 2)
+    );
+
+    // Create .vc-config.json for webhook function
+    const webhookConfig = {
+      runtime: 'nodejs22.x',
+      handler: 'index.js',
+      launcherType: 'Nodejs',
+      architecture: 'arm64',
+      shouldAddHelpers: false,
+    };
+
+    await writeFile(
+      join(webhookFuncDir, '.vc-config.json'),
+      JSON.stringify(webhookConfig, null, 2)
+    );
+  }
+
   private async createBuildOutputConfig(outputDir: string): Promise<void> {
     // Create config.json for Build Output API
     const buildOutputConfig = {
       version: 3,
+      routes: [
+        {
+          src: '^\\/\\.well-known\\/workflow\\/v1\\/webhook\\/([^\\/]+)$',
+          dest: '/.well-known/workflow/v1/webhook/[token]',
+        },
+      ],
     };
 
     await writeFile(
@@ -155,6 +205,9 @@ export class VercelBuildOutputAPIBuilder extends BaseBuilder {
     console.log('Steps function available at /.well-known/workflow/v1/step');
     console.log(
       'Workflows function available at /.well-known/workflow/v1/flow'
+    );
+    console.log(
+      'Webhook function available at /.well-known/workflow/v1/webhook/[token]'
     );
   }
 }

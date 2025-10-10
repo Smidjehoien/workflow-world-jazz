@@ -27,6 +27,7 @@ export class NextBuilder extends BaseBuilder {
 
     const stepsBuildContext = await this.buildStepsFunction(options);
     const workflowsBundle = await this.buildWorkflowsFunction(options);
+    await this.buildWebhookRoute({ workflowGeneratedDir });
     await this.writeFunctionsConfig(outputDir);
 
     if (this.config.watch) {
@@ -179,7 +180,7 @@ export class NextBuilder extends BaseBuilder {
         logBuildMessages(stepsResult, 'steps bundle');
         console.log(
           'Rebuilt steps bundle',
-          Date.now() - rebuiltStepStart + 'ms'
+          `${Date.now() - rebuiltStepStart}ms`
         );
 
         const rebuiltWorkflowStart = Date.now();
@@ -198,7 +199,7 @@ export class NextBuilder extends BaseBuilder {
         await workflowsCtx.bundleFinal(workflowResult.outputFiles[0].text);
         console.log(
           'Rebuilt workflow bundle',
-          Date.now() - rebuiltWorkflowStart + 'ms'
+          `${Date.now() - rebuiltWorkflowStart}ms`
         );
       };
 
@@ -417,6 +418,21 @@ export class NextBuilder extends BaseBuilder {
       inputFiles,
       tsBaseUrl,
       tsPaths,
+    });
+  }
+
+  private async buildWebhookRoute({
+    workflowGeneratedDir,
+  }: {
+    workflowGeneratedDir: string;
+  }): Promise<void> {
+    const webhookRouteFile = join(
+      workflowGeneratedDir,
+      'webhook/[token]/route.js'
+    );
+    await this.createWebhookBundle({
+      outfile: webhookRouteFile,
+      bundle: false, // Next.js doesn't need bundling
     });
   }
 
