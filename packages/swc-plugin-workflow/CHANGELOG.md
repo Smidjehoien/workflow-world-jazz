@@ -1,5 +1,12 @@
 # @vercel/swc-plugin-workflow
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 435f44b: Setup the new @vercel/workflow meta package
+- 2fd8dfe: Stop importing start worklfow in client mode
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

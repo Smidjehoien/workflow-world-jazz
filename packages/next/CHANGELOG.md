@@ -1,5 +1,21 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.42
+
+### Patch Changes
+
+- 435f44b: Setup the new @vercel/workflow meta package
+- Updated dependencies [435f44b]
+- Updated dependencies [f55ac2c]
+- Updated dependencies [2507779]
+- Updated dependencies [045e6e4]
+- Updated dependencies [45251db]
+- Updated dependencies [2fd8dfe]
+- Updated dependencies [b995531]
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.6
+  - @vercel/workflow-core@0.0.1-alpha.32
+  - @vercel/workflow-cli@0.0.1-alpha.41
+
 ## 0.0.1-alpha.41
 
 ### Patch Changes

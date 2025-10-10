@@ -1,5 +1,11 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.2
+
+### Patch Changes
+
+- 045e6e4: Move FatalError and RetryableError from core to errors package
+
 ## 0.0.1-alpha.1
 
 ### Patch Changes

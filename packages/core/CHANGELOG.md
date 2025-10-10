@@ -1,5 +1,19 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.32
+
+### Patch Changes
+
+- 435f44b: Setup the new @vercel/workflow meta package
+- 2507779: Fix steps Promise resolution ordering issue
+- 045e6e4: Move FatalError and RetryableError from core to errors package
+- 45251db: Rename getWorkflowContext and getStepContext to getWorkflowMetadata and getStepMetadata
+- b995531: Change start to return Run object
+- Updated dependencies [045e6e4]
+  - @vercel/workflow-errors@0.0.1-alpha.2
+  - @vercel/workflow-world-embedded@0.0.1-alpha.7
+  - @vercel/workflow-world-vercel@0.0.1-alpha.7
+
 ## 0.0.1-alpha.31
 
 ### Patch Changes

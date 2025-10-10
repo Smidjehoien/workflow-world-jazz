@@ -1,5 +1,24 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.41
+
+### Patch Changes
+
+- 435f44b: Setup the new @vercel/workflow meta package
+- f55ac2c: CLI: Add --sort and --limit flags, also add to web UI, and allow filtering runs by workflow name
+- Updated dependencies [435f44b]
+- Updated dependencies [f55ac2c]
+- Updated dependencies [2507779]
+- Updated dependencies [045e6e4]
+- Updated dependencies [45251db]
+- Updated dependencies [2fd8dfe]
+- Updated dependencies [b995531]
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.6
+  - @vercel/workflow-core@0.0.1-alpha.32
+  - @vercel/workflow-web@0.0.1-alpha.41
+  - @vercel/workflow-world-embedded@0.0.1-alpha.7
+  - @vercel/workflow-world-vercel@0.0.1-alpha.7
+
 ## 0.0.1-alpha.40
 
 ### Patch Changes
