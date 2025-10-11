@@ -11,7 +11,7 @@ When a `RetryableError` is thrown in a step, it indicates that the workflow shou
 You should use this when you want to retry a step or retry after a certain duration.
 
 ```typescript lineNumbers
-import { RetryableError } from "@vercel/workflow-core"
+import { RetryableError } from "@vercel/workflow"
 
 async function retryableWorkflow() {
     "use workflow"
@@ -35,7 +35,7 @@ The difference between `Error` and `RetryableError` may not be entirely obvious,
 <TSDoc
 definition={generateDefinition({
   code: `
-import { type RetryableErrorOptions } from "@vercel/workflow-core";
+import { type RetryableErrorOptions } from "@vercel/workflow";
 interface RetryableError {
     options?: RetryableErrorOptions;
     message: string;
@@ -50,7 +50,7 @@ export default RetryableError;`
 <TSDoc
 definition={generateDefinition({
   code: `
-import { type RetryableErrorOptions } from "@vercel/workflow-core";
+import { type RetryableErrorOptions } from "@vercel/workflow";
 export default RetryableErrorOptions;`
 })}
 />
@@ -62,7 +62,7 @@ export default RetryableErrorOptions;`
 `RetryableError` can be configured with a `retryAfter` parameter to specify when the step should be retried after.
 
 ```typescript lineNumbers
-import { RetryableError } from "@vercel/workflow-core"
+import { RetryableError } from "@vercel/workflow"
 
 async function retryableWorkflow() {
     "use workflow"

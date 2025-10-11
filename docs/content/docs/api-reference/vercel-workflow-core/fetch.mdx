@@ -61,7 +61,7 @@ showSections={['returns']}
 Here's a simple example of how you can use `fetch` inside your workflow.
 
 ```typescript lineNumbers
-import { fetch } from "@vercel/workflow-core"
+import { fetch } from "@vercel/workflow"
 
 async function apiWorkflow() {
     "use workflow"
@@ -92,7 +92,7 @@ This API is provided as a convenience to easily use `fetch` in workflow, but oft
 Here's an example of a custom fetch wrapper that provides more sophisticated error handling with custom retry logic:
 
 ```typescript lineNumbers
-import { FatalError, RetryableError } from "@vercel/workflow-core"
+import { FatalError, RetryableError } from "@vercel/workflow"
 
 export async function customFetch(
     url: string,

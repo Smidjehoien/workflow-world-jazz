@@ -82,7 +82,7 @@ class MyCustomWorld implements World {
 Once you've implemented a custom world, you can use it in your workflow configuration:
 
 ```typescript
-import { withWorkflow } from '@vercel/workflow-next';
+import { withWorkflow } from '@vercel/workflow/next';
 import { MyCustomWorld } from './my-custom-world';
 
 export default withWorkflow({
@@ -160,4 +160,3 @@ The Workflow SDK provides two built-in world implementations:
 - [Self-Hosting](/docs/self-hosting) - Overview of worlds and backend configuration
 - [Embedded World](/docs/api-reference/world/world-embedded) - Local development backend
 - [Vercel World](/docs/api-reference/world/world-vercel) - Production backend
-

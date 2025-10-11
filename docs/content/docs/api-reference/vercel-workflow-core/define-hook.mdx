@@ -15,7 +15,7 @@ We recommend using `defineHook()` over `createHook()` in production codebases fo
 </Callout>
 
 ```ts lineNumbers
-import { defineHook } from "@vercel/workflow-core"; 
+import { defineHook } from "@vercel/workflow"; 
 
 const nameHook = defineHook<{
   name: string;
@@ -37,7 +37,7 @@ export async function nameWorkflow() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { defineHook } from "@vercel/workflow-core";
+import { defineHook } from "@vercel/workflow";
 export default defineHook;`
 })}
 showSections={['parameters']}
@@ -72,7 +72,7 @@ export default DefineHook;`
 By defining the hook once with a specific payload type, you can reuse it in multiple workflows and API routes with automatic type safety.
 
 ```typescript lineNumbers
-import { defineHook } from "@vercel/workflow-core";
+import { defineHook } from "@vercel/workflow";
 
 // Define once with a specific payload type
 const approvalHook = defineHook<{ // [!code highlight]

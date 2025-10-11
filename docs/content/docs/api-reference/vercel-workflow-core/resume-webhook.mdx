@@ -15,7 +15,7 @@ This function creates a `hook_received` event and re-triggers the workflow to co
 </Callout>
 
 ```typescript lineNumbers
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 export default resumeWebhook;`
 })}
 showSections={['parameters']}
@@ -62,7 +62,7 @@ Returns a `Promise<Response | null>` that resolves to:
 Forward incoming HTTP requests to a webhook by token:
 
 ```typescript lineNumbers
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
 Handle GitHub webhook events and forward them to workflows:
 
 ```typescript lineNumbers
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 import { verifyGitHubSignature } from "@/lib/github";
 
 export async function POST(request: Request) {
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
 Process Slack slash commands and route them to workflow webhooks:
 
 ```typescript lineNumbers
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -161,7 +161,7 @@ export async function POST(request: Request) {
 Route webhooks to different workflows based on tenant/organization:
 
 ```typescript lineNumbers
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 
 export async function POST(request: Request) {
   const url = new URL(request.url);
@@ -207,7 +207,7 @@ Use `resumeWebhook` in a Next.js server action:
 ```typescript lineNumbers
 'use server';
 
-import { resumeWebhook } from "@vercel/workflow-core/runtime";
+import { resumeWebhook } from "@vercel/workflow/api";
 
 export async function triggerWebhook(
   token: string,

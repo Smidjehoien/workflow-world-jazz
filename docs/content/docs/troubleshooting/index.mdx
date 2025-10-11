@@ -49,7 +49,7 @@ export async function emailOrder(orderId: string, email: string) {
 Make sure you've wrapped the Next.js configuration with the `withWorkflow` plugin:
 
 ```ts lineNumbers title="next.config.ts"
-import { withWorkflow } from '@vercel/workflow-next'; // [!code highlight]
+import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
 
 const nextConfig = {
   // your config
@@ -76,7 +76,7 @@ Workflow SDK Core provides the following functions for accessing context:
 Trying to call `getStepMetadata` inside a workflow function isn't possible since no current executing step exists.
 
 ```ts
-import { getWorkflowMetadata, getStepMetadata } from "@vercel/workflow-core"
+import { getWorkflowMetadata, getStepMetadata } from "@vercel/workflow"
 
 // getWorkflowMetadata() - available in workflow and step functions
 export async function myWorkflow() {

@@ -18,7 +18,7 @@ This function can only be called inside a step function.
 </Callout>
 
 ```typescript lineNumbers
-import { getStepMetadata } from "@vercel/workflow-core"
+import { getStepMetadata } from "@vercel/workflow"
 
 async function testWorkflow() {
     "use workflow"
@@ -39,7 +39,7 @@ async function logStepId() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getStepMetadata } from "@vercel/workflow-core";
+import { getStepMetadata } from "@vercel/workflow";
 export default getStepMetadata;`
 })}
 showSections={['parameters']}
@@ -50,7 +50,7 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { StepMetadata } from "@vercel/workflow-core";
+import type { StepMetadata } from "@vercel/workflow";
 export default StepMetadata;`
 })}
 />

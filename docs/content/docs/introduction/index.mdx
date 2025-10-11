@@ -21,7 +21,7 @@ The Workflow SDK eliminates these complexities by providing durable functions th
 For example, here's a simple order processing workflow powered by workflow.
 
 ```typescript title="workflow.ts"
-import { sleep, createWebhook } from "workflow"
+import { sleep, createWebhook } from "@vercel/workflow"
 
 export async function fulfillOrder(orderId: string) {
   "use workflow";

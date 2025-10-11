@@ -18,7 +18,7 @@ If you need to access step context, take a look at [`getStepMetadata`](/docs/api
 </Callout>
 
 ```typescript lineNumbers
-import { getWorkflowMetadata } from "@vercel/workflow-core"
+import { getWorkflowMetadata } from "@vercel/workflow"
 
 async function testWorkflow() {
     "use workflow"
@@ -35,7 +35,7 @@ async function testWorkflow() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowMetadata } from "@vercel/workflow-core";
+import { getWorkflowMetadata } from "@vercel/workflow";
 export default getWorkflowMetadata;`
 })}
 showSections={['parameters']}
@@ -46,7 +46,7 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { WorkflowMetadata } from "@vercel/workflow-core";
+import type { WorkflowMetadata } from "@vercel/workflow";
 export default WorkflowMetadata;`
 })}
 />

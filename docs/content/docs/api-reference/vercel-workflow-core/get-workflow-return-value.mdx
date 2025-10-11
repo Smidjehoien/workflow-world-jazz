@@ -12,7 +12,7 @@ Use this function to check if a workflow has completed and get its result, typic
 
 ```typescript lineNumbers
 import { NextResponse } from 'next/server';
-import { getWorkflowReturnValue, start } from '@vercel/workflow-core/runtime';
+import { getWorkflowReturnValue, start } from '@vercel/workflow/api';
 import { myWorkflow } from '@/workflows/my-workflow';
 
 export async function GET(_: Request) {
@@ -35,7 +35,7 @@ export async function GET(_: Request) {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+import { getWorkflowReturnValue } from '@vercel/workflow/api';
 export default getWorkflowReturnValue;`
 })}
 typeLinkMap={{
@@ -53,7 +53,7 @@ A `Promise` that resolves to the workflow's return value when the workflow compl
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+import { getWorkflowReturnValue } from '@vercel/workflow/api';
 export default getWorkflowReturnValue;`
 })}
 showSections={['throws']}
@@ -64,7 +64,6 @@ showSections={['throws']}
 - The function returns immediately and it does **not** wait for workflow completion.
 - Throws `WorkflowRunNotCompletedError` if the workflow is still running (status 202).
 - Throws `WorkflowRunFailedError` if the workflow has failed (status 400).
-- For streaming real-time output, use [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) instead.
 - The return value is automatically hydrated from its serialized form.
 
 ## Examples
@@ -74,7 +73,7 @@ showSections={['throws']}
 Get the result of a workflow (if completed):
 
 ```typescript lineNumbers
-import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+import { getWorkflowReturnValue } from '@vercel/workflow/api';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -122,7 +121,7 @@ export async function GET(req: Request) {
 Example of implementing polling to wait for workflow completion:
 
 ```typescript lineNumbers
-import { getWorkflowReturnValue } from '@vercel/workflow-core/runtime';
+import { getWorkflowReturnValue } from '@vercel/workflow/api';
 
 async function pollForWorkflowCompletion(runId: string, maxAttempts: number = 60) {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -170,4 +169,3 @@ export async function GET(req: Request) {
 
 - [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID.
 - [`getWorkflowRun()`](/docs/api-reference/vercel-workflow-core/get-workflow-run) - Get workflow run status without waiting for completion.
-- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output instead of waiting for final result.

@@ -11,7 +11,7 @@ Creates a low-level hook primitive that can be used to resume a workflow run wit
 Hooks allow external systems to send data to a paused workflow without the HTTP-specific constraints of webhooks. They're identified by a token and can receive any serializable payload.
 
 ```ts lineNumbers
-import { createHook } from "@vercel/workflow-core"
+import { createHook } from "@vercel/workflow"
 
 export async function hookWorkflow() {
   "use workflow";
@@ -27,7 +27,7 @@ export async function hookWorkflow() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { createHook } from "@vercel/workflow-core";
+import { createHook } from "@vercel/workflow";
 export default createHook;`
 })}
 showSections={['parameters']}
@@ -38,7 +38,7 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { HookOptions } from "@vercel/workflow-core";
+import type { HookOptions } from "@vercel/workflow";
 export default HookOptions;`
 })}
 />
@@ -48,7 +48,7 @@ export default HookOptions;`
 <TSDoc
 definition={generateDefinition({
   code: `
-import { createHook } from "@vercel/workflow-core";
+import { createHook } from "@vercel/workflow";
 export default createHook;`
 })}
 showSections={['returns']}
@@ -59,7 +59,7 @@ showSections={['returns']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { Hook } from "@vercel/workflow-core";
+import type { Hook } from "@vercel/workflow";
 export default Hook;`
 })}
 />
@@ -73,7 +73,7 @@ The returned `Hook` object also implements `AsyncIterable<T>`, which allows you 
 When creating a hook, you can specify a payload type to be used for automatic type safety.
 
 ```typescript lineNumbers
-import { createHook } from "@vercel/workflow-core"
+import { createHook } from "@vercel/workflow"
 
 export async function approvalWorkflow() {
   "use workflow";
@@ -116,7 +116,7 @@ export async function slackBotWorkflow(channelId: string) {
 You can also wait for multiple payloads by using the `for await...of` syntax.
 
 ```typescript lineNumbers
-import { createHook } from "@vercel/workflow-core"
+import { createHook } from "@vercel/workflow"
 
 export async function collectHookWorkflow() {
   'use workflow';

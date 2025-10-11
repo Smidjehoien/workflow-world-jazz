@@ -12,7 +12,7 @@ Use this function when you need to check workflow status, get timing information
 
 ```typescript lineNumbers
 import { NextResponse } from 'next/server';
-import { getWorkflowRun, start } from '@vercel/workflow-core/runtime';
+import { getWorkflowRun, start } from '@vercel/workflow/api';
 import { myWorkflow } from '@/workflows/my-workflow';
 
 export async function GET(_: Request) {
@@ -35,7 +35,7 @@ export async function GET(_: Request) {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+import { getWorkflowRun } from '@vercel/workflow/api';
 export default getWorkflowRun;`
 })}
 showSections={['parameters']}
@@ -48,7 +48,7 @@ Returns a `Promise<WorkflowRun>` that resolves to:
 <TSDoc
 definition={generateDefinition({
   code: `
-import type { WorkflowRun } from '@vercel/workflow-core/runtime';
+import type { WorkflowRun } from '@vercel/workflow/api';
 export default WorkflowRun;`
 })}
 showSections={['returns']}
@@ -70,7 +70,7 @@ showSections={['returns']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+import { getWorkflowRun } from '@vercel/workflow/api';
 export default getWorkflowRun;`
 })}
 showSections={['throws']}
@@ -89,7 +89,7 @@ showSections={['throws']}
 Check the current status of a workflow run:
 
 ```typescript lineNumbers
-import { getWorkflowRun } from '@vercel/workflow-core/runtime';
+import { getWorkflowRun } from '@vercel/workflow/api';
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -123,4 +123,3 @@ export async function GET(req: Request) {
 
 - [`start()`](/docs/api-reference/vercel-workflow-core/start) - Start a new workflow and get its run ID.
 - [`getWorkflowReturnValue()`](/docs/api-reference/vercel-workflow-core/get-workflow-return-value) - Wait for workflow completion and get the final result.
-- [`getWorkflowReadableStream()`](/docs/api-reference/vercel-workflow-core/get-workflow-readable-stream) - Stream real-time output from the workflow.

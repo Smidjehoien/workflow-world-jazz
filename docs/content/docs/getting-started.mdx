@@ -28,30 +28,24 @@ cd my-workflow-app
 
 ### Install Dependencies
 
-Install `@vercel/workflow-core`, and `@vercel/workflow-next`, which are the packages needed to get started with the Workflow SDK.
+Install `@vercel/workflow` to get started with the Workflow SDK.
 
 <BaseUrl>
   {(baseUrl) => (
     <Tabs items={['pnpm', 'npm', 'yarn']}>
       <Tab value="pnpm">
         <CodeBlock>
-            pnpm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-cli.tgz
+            pnpm i {baseUrl}/vercel-workflow.tgz
         </CodeBlock>
       </Tab>
       <Tab value="npm">
         <CodeBlock>
-            npm i {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-cli.tgz
+            npm i {baseUrl}/vercel-workflow.tgz
         </CodeBlock>
       </Tab>
       <Tab value="yarn">
         <CodeBlock>
-            yarn add {baseUrl}/vercel-workflow-core.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-next.tgz \{'\n'}
-            {baseUrl}/vercel-workflow-cli.tgz
+            yarn add {baseUrl}/vercel-workflow.tgz
         </CodeBlock>
       </Tab>
     </Tabs>
@@ -63,7 +57,7 @@ Install `@vercel/workflow-core`, and `@vercel/workflow-next`, which are the pack
 For workflows to work, you'll have to wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
 
 ```typescript title="next.config.ts" lineNumbers
-import { withWorkflow } from '@vercel/workflow-next'; // [!code highlight]
+import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
 import type { NextConfig } from 'next';
  
 const nextConfig: NextConfig = {
@@ -80,7 +74,7 @@ To create your first workflow, create a new `workflows` directory inside your pr
 Create a new file inside the `workflows` directory and add the following code:
 
 ```typescript title="workflows/user-signup.ts" lineNumbers
-import { sleep } from "@vercel/workflow-core";
+import { sleep } from "@vercel/workflow";
  
 export async function userSignupWorkflow(email: string) {
  "use workflow"; // [!code highlight]
@@ -137,7 +131,7 @@ We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs
 To invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
 
 ```typescript title="app/api/signup/route.ts"
-import { start } from "@vercel/workflow-core/runtime";
+import { start } from '@vercel/workflow/api';
 import { userSignupWorkflow } from "@/workflows/user-signup";
 import { NextResponse } from "next/server";
  
@@ -205,6 +199,7 @@ Run `npx wf i --help` for more information on commands and filtering.
 The Workflow SDK also provides a web UI for inspecting and debugging your workflow runs.
 
 To start the web UI, add `--web` to any of the inspect commands, like so:
+
 ```bash
 npx wf i runs <run-id> --web
 ```

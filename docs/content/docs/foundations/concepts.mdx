@@ -58,7 +58,7 @@ Workflow functions have the ability to automatically suspend while they wait on 
 - Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook), which resumes the workflow when an external system passes data into the workflow.
 
 ```typescript
-import { sleep, createHook } from '@vercel/workflow-core'; // [!code highlight]
+import { sleep, getWebhook } from '@vercel/workflow'; // [!code highlight]
 
 export async function onboardingWorkflow(userId: string) {
   "use workflow";
@@ -181,7 +181,7 @@ You can choose to organize your steps into a single `steps.ts` file or separate 
 Workflow SDK extends `Error` classes for more customizable retry behaviors.
 
 ```typescript
-import { FatalError, RetryableError } from '@vercel/workflow-core';
+import { FatalError, RetryableError } from '@vercel/workflow';
 
 async function callAPI(endpoint: string) {
   "use step";

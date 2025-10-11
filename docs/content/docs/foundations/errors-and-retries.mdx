@@ -13,7 +13,7 @@ When an `Error` or a `RetryableError` is thrown inside a step function, the step
 It may not seem entirely obvious what the difference between `Error` and `RetryableError` is since they both retry a step function. The difference is that throwing an `Error` automatically retries a step after 1 second, while `RetryableError` has an additional parameter `retryAfter` to specify when the step function should be retried.
 
 ```ts lineNumbers
-import { RetryableError } from '@vercel/workflow-core'; // [!code highlight]
+import { RetryableError } from '@vercel/workflow'; // [!code highlight]
 
 async function callAPI(endpoint: string) {
   "use step";
@@ -41,7 +41,7 @@ To learn more about `RetryableError`, refer to [API Reference: `RetryableError`]
 Step functions can also be marked as failed and won't be re-enqueue to be retried when a `FatalError` is thrown.
 
 ```ts lineNumbers
-import { FatalError } from '@vercel/workflow-core'; // [!code highlight] 
+import { FatalError } from '@vercel/workflow'; // [!code highlight] 
 
 async function callAPI(endpoint: string) {
   "use step";
@@ -89,7 +89,7 @@ This function provides a couple of useful properties to give you more control ov
 - `attempt`: Number of times current step has been executed
 
 ```ts lineNumbers
-import { FatalError, RetryableError, getStepMetadata } from '@vercel/workflow-core';
+import { FatalError, RetryableError, getStepMetadata } from '@vercel/workflow';
 
 async function callAPI(endpoint: string) {
   "use step"

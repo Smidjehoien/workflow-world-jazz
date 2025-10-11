@@ -11,7 +11,7 @@ When a `FatalError` is thrown in a step, it indicates that the workflow should n
 You should use this when you don't want a specific step to retry.
 
 ```typescript lineNumbers
-import { FatalError } from "@vercel/workflow-core"
+import { FatalError } from "@vercel/workflow"
 
 async function fallibleWorkflow() {
     "use workflow"
