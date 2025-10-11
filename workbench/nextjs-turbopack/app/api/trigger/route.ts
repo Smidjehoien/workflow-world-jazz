@@ -4,6 +4,7 @@ import {
   start,
 } from '@vercel/workflow/api';
 import { hydrateWorkflowArguments } from '@vercel/workflow/internal/serialization';
+import * as batchingWorkflow from '@/workflows/6_batching';
 import * as duplicateE2e from '@/workflows/98_duplicate_case';
 import * as e2eWorkflows from '@/workflows/99_e2e';
 
@@ -38,8 +39,14 @@ export async function POST(req: Request) {
   );
 
   try {
-    const workflows =
-      workflowFile === 'workflows/99_e2e.ts' ? e2eWorkflows : duplicateE2e;
+    let workflows;
+    if (workflowFile === 'workflows/99_e2e.ts') {
+      workflows = e2eWorkflows;
+    } else if (workflowFile === 'workflows/6_batching.ts') {
+      workflows = batchingWorkflow;
+    } else {
+      workflows = duplicateE2e;
+    }
 
     const run = await start((workflows as any)[workflowFn], args);
     console.log('Run:', run);

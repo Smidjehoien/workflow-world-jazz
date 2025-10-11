@@ -843,6 +843,9 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 5.0.59(zod@4.1.11)
+      lodash.chunk:
+        specifier: ^4.2.0
+        version: 4.2.0
       mixpart:
         specifier: ^0.0.4
         version: 0.0.4
@@ -853,6 +856,9 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11
     devDependencies:
+      '@types/lodash.chunk':
+        specifier: ^4.2.9
+        version: 4.2.9
       '@types/node':
         specifier: 'catalog:'
         version: 24.6.2
@@ -889,6 +895,9 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 5.0.59(zod@4.1.11)
+      lodash.chunk:
+        specifier: ^4.2.0
+        version: 4.2.0
       next:
         specifier: 15.5.3
         version: 15.5.3(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -908,6 +917,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.13
+      '@types/lodash.chunk':
+        specifier: ^4.2.9
+        version: 4.2.9
       '@types/node':
         specifier: 'catalog:'
         version: 24.6.2
@@ -950,6 +962,9 @@ importers:
       ai:
         specifier: 'catalog:'
         version: 5.0.59(zod@4.1.11)
+      lodash.chunk:
+        specifier: ^4.2.0
+        version: 4.2.0
       next:
         specifier: 15.5.3
         version: 15.5.3(@opentelemetry/api@1.9.0)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
@@ -969,6 +984,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4
         version: 4.1.13
+      '@types/lodash.chunk':
+        specifier: ^4.2.9
+        version: 4.2.9
       '@types/node':
         specifier: 'catalog:'
         version: 24.6.2
@@ -3350,6 +3368,12 @@ packages:
   '@types/jsonwebtoken@9.0.10':
     resolution: {integrity: sha512-asx5hIG9Qmf/1oStypjanR7iKTv0gXQ1Ov/jfrX6kS/EO0OFni8orbmGCn0672NHR3kXHwpAwR+B368ZGN/2rA==}
 
+  '@types/lodash.chunk@4.2.9':
+    resolution: {integrity: sha512-Z9VtFUSnmT0No/QymqfG9AGbfOA4O5qB/uyP89xeZBqDAsKsB4gQFTqt7d0pHjbsTwtQ4yZObQVHuKlSOhIJ5Q==}
+
+  '@types/lodash@4.17.20':
+    resolution: {integrity: sha512-H3MHACvFUEiujabxhaI/ImO6gUrd8oOurg7LQtS7mbwIXA/cUqWrvBsaeJ23aZEPk1TAYkurjfMbSELfoCXlGA==}
+
   '@types/mdast@4.0.4':
     resolution: {integrity: sha512-kGaNbPh1k7AFzgpud/gMdvIm5xuECykRR+JnWKQno9TAXVa6WIVCGTPvYGekIDL4uwCZQSYbUxNBSb1aUo79oA==}
 
@@ -4596,6 +4620,9 @@ packages:
   locate-path@7.2.0:
     resolution: {integrity: sha512-gvVijfZvn7R+2qyPX8mAuKcFGDf6Nc61GdvGafQsHL0sBIxfKzA+usWn4GFC/bk+QdwPUD4kWFJLhElipq+0VA==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+
+  lodash.chunk@4.2.0:
+    resolution: {integrity: sha512-ZzydJKfUHJwHa+hF5X66zLFCBrWn5GeF28OHEr4WVWtNDXlQ/IjWKPBiikqKo2ne0+v6JgCgJ0GzJp8k8bHC7w==}
 
   lodash.includes@4.3.0:
     resolution: {integrity: sha512-W3Bx6mdkRTGtlJISOvVD/lbqjTlPPUDTMnlXZFnVwi9NKJ6tiAk6LVdlhZMm17VZisqhKcgzpO5Wz91PCt5b0w==}
@@ -8599,6 +8626,12 @@ snapshots:
       '@types/ms': 2.1.0
       '@types/node': 20.19.7
 
+  '@types/lodash.chunk@4.2.9':
+    dependencies:
+      '@types/lodash': 4.17.20
+
+  '@types/lodash@4.17.20': {}
+
   '@types/mdast@4.0.4':
     dependencies:
       '@types/unist': 3.0.3
@@ -9860,6 +9893,8 @@ snapshots:
   locate-path@7.2.0:
     dependencies:
       p-locate: 6.0.0
+
+  lodash.chunk@4.2.0: {}
 
   lodash.includes@4.3.0: {}
 
