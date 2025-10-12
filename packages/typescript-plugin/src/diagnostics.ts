@@ -42,6 +42,22 @@ export function getCustomDiagnostics(
   }
 
   function checkWorkflowFunction(node: FunctionLikeDeclaration) {
+    // Check if this is a Next.js App Router route handler
+    if (isNextJsRouteHandler(node)) {
+      const start = node.getStart(sourceFile);
+      const length = node.getWidth(sourceFile);
+      diagnostics.push({
+        file: sourceFile,
+        start,
+        length,
+        messageText:
+          '"use workflow" does not work in Next.js App Router route handlers. Extract the logic into a separate function with the `"use workflow"` directive, then use the `start()` function from `@vercel/workflow/api` to invoke that workflow from within your route handler.',
+        category: ts.DiagnosticCategory.Error,
+        code: 9007,
+      });
+      return;
+    }
+
     // Ensure it's async
     if (!isAsyncFunction(node, typeChecker, ts)) {
       const start = node.getStart(sourceFile);
@@ -63,6 +79,64 @@ export function getCustomDiagnostics(
         checkDisallowedApiUsage(call);
       }
     }
+  }
+
+  function isNextJsRouteHandler(node: FunctionLikeDeclaration): boolean {
+    // Check if file is named route.ts or route.js
+    const isRouteFile = /\/route\.(ts|tsx|js|jsx)$/.test(fileName);
+    if (!isRouteFile) {
+      return false;
+    }
+
+    let functionName: string | null = null;
+    let isExported = false;
+
+    // For function declarations: export async function GET() {}
+    if (ts.isFunctionDeclaration(node)) {
+      isExported =
+        node.modifiers?.some(
+          (mod) => mod.kind === ts.SyntaxKind.ExportKeyword
+        ) ?? false;
+      functionName =
+        node.name && ts.isIdentifier(node.name) ? node.name.text : null;
+    }
+    // For arrow functions: export const GET = async () => {}
+    else if (ts.isArrowFunction(node) || ts.isFunctionExpression(node)) {
+      // Check if this is assigned to a variable declaration
+      const parent = node.parent;
+      if (parent && ts.isVariableDeclaration(parent)) {
+        // Get the variable name
+        if (ts.isIdentifier(parent.name)) {
+          functionName = parent.name.text;
+        }
+
+        // Check if the variable statement is exported
+        const variableStatement = parent.parent?.parent;
+        if (variableStatement && ts.isVariableStatement(variableStatement)) {
+          isExported =
+            variableStatement.modifiers?.some(
+              (mod) => mod.kind === ts.SyntaxKind.ExportKeyword
+            ) ?? false;
+        }
+      }
+    }
+
+    if (!isExported || !functionName) {
+      return false;
+    }
+
+    // Check if function name is an HTTP method
+    const httpMethods = [
+      'GET',
+      'POST',
+      'PUT',
+      'PATCH',
+      'DELETE',
+      'HEAD',
+      'OPTIONS',
+    ];
+
+    return httpMethods.includes(functionName);
   }
 
   function checkStepFunction(node: FunctionLikeDeclaration) {

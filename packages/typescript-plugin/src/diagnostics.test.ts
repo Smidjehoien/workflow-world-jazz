@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest';
 import ts from 'typescript/lib/tsserverlibrary';
+import { describe, expect, it } from 'vitest';
 import { getCustomDiagnostics } from './diagnostics';
 import {
   createTestProgram,
@@ -336,6 +336,165 @@ describe('getCustomDiagnostics', () => {
       expectDiagnostic(diagnostics, { code: 9001 });
       expectDiagnostic(diagnostics, { code: 9003 });
       expectDiagnostic(diagnostics, { code: 9004 });
+    });
+  });
+
+  describe('Error 9007: use workflow in Next.js App Router route handler', () => {
+    it('warns when using "use workflow" in exported GET function in route.ts', () => {
+      const source = `
+        export async function GET(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.ts');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.ts',
+        program,
+        ts
+      );
+
+      expectDiagnostic(diagnostics, {
+        code: 9007,
+        messageIncludes: 'start()',
+      });
+    });
+
+    it('warns when using "use workflow" in exported POST function in route.ts', () => {
+      const source = `
+        export async function POST(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.ts');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.ts',
+        program,
+        ts
+      );
+
+      expectDiagnostic(diagnostics, {
+        code: 9007,
+        messageIncludes: 'Next.js App Router',
+      });
+    });
+
+    it('warns for all HTTP methods (PUT, PATCH, DELETE, HEAD, OPTIONS)', () => {
+      const methods = ['PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'];
+
+      for (const method of methods) {
+        const source = `
+          export async function ${method}(req: Request) {
+            'use workflow';
+            return new Response('Hello');
+          }
+        `;
+
+        const { program } = createTestProgram(source, 'app/api/test/route.ts');
+        const diagnostics = getCustomDiagnostics(
+          'app/api/test/route.ts',
+          program,
+          ts
+        );
+
+        expectDiagnostic(diagnostics, {
+          code: 9007,
+        });
+      }
+    });
+
+    it('does not warn when function is not exported', () => {
+      const source = `
+        async function GET(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.ts');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.ts',
+        program,
+        ts
+      );
+
+      expectNoDiagnostic(diagnostics, 9007);
+    });
+
+    it('does not warn when file is not named route.ts', () => {
+      const source = `
+        export async function GET(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'api.ts');
+      const diagnostics = getCustomDiagnostics('api.ts', program, ts);
+
+      expectNoDiagnostic(diagnostics, 9007);
+    });
+
+    it('does not warn when function name is not an HTTP method', () => {
+      const source = `
+        export async function handler(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.ts');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.ts',
+        program,
+        ts
+      );
+
+      expectNoDiagnostic(diagnostics, 9007);
+    });
+
+    it('works with route.tsx files', () => {
+      const source = `
+        export async function GET(req: Request) {
+          'use workflow';
+          return new Response('Hello');
+        }
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.tsx');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.tsx',
+        program,
+        ts
+      );
+
+      expectDiagnostic(diagnostics, {
+        code: 9007,
+      });
+    });
+
+    it('warns when using arrow function syntax', () => {
+      const source = `
+        export const GET = async (req: Request) => {
+          'use workflow';
+          return new Response('Hello');
+        };
+      `;
+
+      const { program } = createTestProgram(source, 'app/api/test/route.ts');
+      const diagnostics = getCustomDiagnostics(
+        'app/api/test/route.ts',
+        program,
+        ts
+      );
+
+      expectDiagnostic(diagnostics, {
+        code: 9007,
+        messageIncludes: 'start()',
+      });
     });
   });
 
