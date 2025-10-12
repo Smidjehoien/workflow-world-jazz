@@ -59,13 +59,62 @@ For workflows to work, you'll have to wrap your `next.config.ts` with `withWorkf
 ```typescript title="next.config.ts" lineNumbers
 import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
 import type { NextConfig } from 'next';
- 
+
 const nextConfig: NextConfig = {
   // … rest of your Next.js config
 };
- 
+
 export default withWorkflow(nextConfig); // [!code highlight]
 ```
+
+### Configure TypeScript
+
+To enhance your development experience with workflow-specific diagnostics and auto-completions, install the TypeScript plugin as a dev dependency:
+
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['pnpm', 'npm', 'yarn']}>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
+
+Then, add the plugin to your `tsconfig.json`:
+
+```json title="tsconfig.json" lineNumbers
+{
+  "compilerOptions": {
+    // … rest of your TypeScript config
+    "plugins": [ // [!code highlight]
+      { // [!code highlight]
+        "name": "@vercel/workflow-typescript-plugin" // [!code highlight]
+      } // [!code highlight]
+    ] // [!code highlight]
+  }
+}
+```
+
+After adding the plugin, restart your TypeScript server in your editor (in VS Code/Cursor: `cmd+shift+P` → "TypeScript: Restart TS Server").
+
+The TypeScript plugin provides:
+
+* **Workflow/Step validation**: Errors when workflow or step functions are not async
+* **Disallowed API detection**: Errors when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
+* **Workflow API completions**: Auto-suggestions for workflow-specific APIs like `createHook()`, `getWorkflowMetadata()`, etc.
 
 ## Create Your First Workflow
 
@@ -75,41 +124,41 @@ Create a new file inside the `workflows` directory and add the following code:
 
 ```typescript title="workflows/user-signup.ts" lineNumbers
 import { sleep } from "@vercel/workflow";
- 
+
 export async function userSignupWorkflow(email: string) {
  "use workflow"; // [!code highlight]
- 
+
  const user = await createUser(email);
  await sendWelcomeEmail(user.id);
- 
+
  await sleep("30s"); // Pause for 30s - doesn't consume any resources
  await sendOnboardingEmail(user.id);
- 
+
  return { userId: user.id, status: "onboarded" };
 }
- 
+
 async function createUser(email: string) {
  "use step"; // [!code highlight]
- 
+
  // Full Node.js access - database calls, APIs, etc.
  console.log(`Creating user with email: ${email}`);
  return { id: crypto.randomUUID(), email };
 }
- 
+
 async function sendWelcomeEmail(userId: string) {
  "use step"; // [!code highlight]
- 
+
  console.log(`Sending welcome email to user: ${userId}`);
- 
+
  if (Math.random() < 0.3) {
   // By default, steps will be retried 3 times for unhandled errors
   throw new Error("Retryable!");
  }
 }
- 
+
 async function sendOnboardingEmail(userId: string) {
  "use step"; // [!code highlight]
- 
+
  console.log(`Sending onboarding email to user: ${userId}`);
  // Email API call here
 }
@@ -134,12 +183,12 @@ To invoke your new workflow, you'll have to add your workflow to a `POST` API Ro
 import { start } from '@vercel/workflow/api';
 import { userSignupWorkflow } from "@/workflows/user-signup";
 import { NextResponse } from "next/server";
- 
+
 export async function POST(request: Request) {
  const { email } = await request.json();
- 
+
  await start(userSignupWorkflow, [email]); // Executes asynchronously and doesn't block your app
- 
+
  return NextResponse.json({
   message: "User signup workflow started",
  });
