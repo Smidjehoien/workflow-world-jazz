@@ -10,8 +10,9 @@ Start/enqueue a new workflow run.
 
 ```typescript lineNumbers
 import { start } from '@vercel/workflow/api';
+import { myWorkflow } from './workflows/my-workflow';
 
-const run = await start('myWorkflow'); // [!code highlight]
+const run = await start(myWorkflow); // [!code highlight]
 ```
 
 ## API Signature
@@ -73,16 +74,18 @@ showSections={['returns']}
 
 ```typescript
 import { start } from '@vercel/workflow/api';
+import { userSignupWorkflow } from './workflows/user-signup';
 
-const run = await start('userSignup', ['user@example.com']); // [!code highlight]
+const run = await start(userSignupWorkflow, ['user@example.com']); // [!code highlight]
 ```
 
 ### With `StartOptions`
 
 ```typescript
 import { start } from '@vercel/workflow/api';
+import { myWorkflow } from './workflows/my-workflow';
 
-const run = await start('myWorkflow', ['arg1', 'arg2'], { // [!code highlight]
+const run = await start(myWorkflow, ['arg1', 'arg2'], { // [!code highlight]
   deploymentId: 'custom-deployment-id' // [!code highlight]
 }); // [!code highlight]
 ```
