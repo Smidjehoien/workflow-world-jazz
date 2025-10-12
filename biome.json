@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.3/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.5/schema.json",
   "files": {
     "includes": [
       "**/*.js",
@@ -9,19 +9,19 @@
       "**/*.mts",
       "**/*.mjs",
       "**/*.json",
-      "!**/node_modules/**",
-      "!**/dist/**",
-      "!**/.vercel/**",
-      "!**/.changeset/**",
-      "!**/.cursor/**",
-      "!**/.well-known/workflow/**",
-      "!**/.prebuilt/**",
-      "!**/.turbo/**",
-      "!**/.next/**",
-      "!**/.env/**",
-      "!target/**",
-      "!**/tests/fixture/**",
-      "!**/tests/errors/**"
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.vercel",
+      "!**/.changeset",
+      "!**/.cursor",
+      "!**/.well-known/workflow",
+      "!**/.prebuilt",
+      "!**/.turbo",
+      "!**/.next",
+      "!**/.env",
+      "!target",
+      "!**/tests/fixture",
+      "!**/tests/errors"
     ],
     "ignoreUnknown": true
   },
