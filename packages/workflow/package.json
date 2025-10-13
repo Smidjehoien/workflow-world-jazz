@@ -3,8 +3,13 @@
   "version": "0.0.1-alpha.3",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "workflow": "./bin/run.js",
+    "wf": "./bin/run.js"
+  },
   "files": [
-    "dist"
+    "dist",
+    "bin"
   ],
   "exports": {
     ".": {
@@ -21,9 +26,9 @@
     "./next/runtime": "./dist/next/runtime.js"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsc && chmod +x bin/run.js",
     "clean": "tsc --build --clean && rm -r dist ||:",
+    "dev": "tsc --watch",
     "test": "vitest run src",
     "typecheck": "tsc --noEmit"
   },
