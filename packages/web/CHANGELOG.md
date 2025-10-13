@@ -1,5 +1,11 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.44
+
+### Patch Changes
+
+- @vercel/workflow-core@0.0.1-alpha.35
+
 ## 0.0.1-alpha.43
 
 ### Patch Changes
