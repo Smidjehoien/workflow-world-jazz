@@ -1,5 +1,11 @@
 # @vercel/workflow-typescript-plugin
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- 1712a25: Add diagnostics error for "use workflow" being used in a Next.js API route handler
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes

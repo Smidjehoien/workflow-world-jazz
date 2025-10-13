@@ -1,5 +1,16 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- dfa12ae: Re-export the CLI bin through the workflow meta package"
+- Updated dependencies [dfa12ae]
+- Updated dependencies [1712a25]
+  - @vercel/workflow-cli@0.0.1-alpha.43
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.5
+  - @vercel/workflow-next@0.0.1-alpha.44
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # ai-sdk-workflow-patterns
 
+## 0.1.1-alpha.12
+
+### Patch Changes
+
+- Updated dependencies [dfa12ae]
+  - @vercel/workflow@0.0.1-alpha.4
+
 ## 0.1.1-alpha.11
 
 ### Patch Changes
