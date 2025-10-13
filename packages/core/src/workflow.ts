@@ -50,16 +50,12 @@ export async function runWorkflow(
 
     const workflowDiscontinuation = withResolvers<void>();
 
-    const url = `https://${process.env.VERCEL_URL}`;
     const ulid = monotonicFactory(() => vmGlobalThis.Math.random());
     const generateNanoid = nanoid.customRandom(nanoid.urlAlphabet, 21, (size) =>
       new Uint8Array(size).map(() => 256 * vmGlobalThis.Math.random())
     );
 
     const workflowContext: WorkflowOrchestratorContext = {
-      url,
-      workflowName: workflowRun.workflowName,
-      workflowRunId: workflowRun.runId,
       globalThis: vmGlobalThis,
       onWorkflowError: workflowDiscontinuation.reject,
       eventsConsumer: new EventsConsumer(events),
@@ -90,7 +86,7 @@ export async function runWorkflow(
     const ctx: WorkflowMetadata = {
       workflowRunId: workflowRun.runId,
       workflowStartedAt: new vmGlobalThis.Date(+startedAt),
-      url,
+      url: `https://${process.env.VERCEL_URL}`,
     };
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
     vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;

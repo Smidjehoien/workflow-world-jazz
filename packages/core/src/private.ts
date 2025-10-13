@@ -30,9 +30,6 @@ export function getStepFunction(stepId: string): StepFunction | undefined {
 }
 
 export interface WorkflowOrchestratorContext {
-  url: string;
-  workflowName: string;
-  workflowRunId: string;
   globalThis: typeof globalThis;
   eventsConsumer: EventsConsumer;
   invocationsQueue: QueueItem[];

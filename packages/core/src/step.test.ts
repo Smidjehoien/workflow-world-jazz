@@ -17,9 +17,6 @@ function setupWorkflowContext(events: Event[]): WorkflowOrchestratorContext {
   const ulid = monotonicFactory(() => context.globalThis.Math.random());
   const workflowStartedAt = context.globalThis.Date.now();
   return {
-    url: 'https://test.com',
-    workflowName: 'test',
-    workflowRunId: 'wrun_123',
     globalThis: context.globalThis,
     eventsConsumer: new EventsConsumer(events),
     invocationsQueue: [],
