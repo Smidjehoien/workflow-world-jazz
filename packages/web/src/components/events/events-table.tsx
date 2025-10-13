@@ -26,8 +26,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useEvents } from '@/hooks/use-api';
+import type { WorldConfig } from '@/lib/config-world';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
-import type { WorldConfig } from '@/lib/world';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { TableSkeleton } from '../display-utils/table-skeleton';

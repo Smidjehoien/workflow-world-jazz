@@ -1,8 +1,10 @@
 import { access } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { logger } from '../config/log.js';
 import { getWorkflowConfig } from '../config/workflow-config.js';
 import { getAuth } from './auth.js';
 import {
+  findRepoRoot,
   getProjectLink,
   isOneOfErrNoExceptions,
   type ProjectLink,
@@ -43,6 +45,27 @@ export const getEnvVars = (): Record<string, string> => {
   };
 };
 
+const possibleWorkflowDataPaths = [
+  '.next/workflow-data',
+  '.workflow-data',
+  'workflow-data',
+];
+
+async function findWorkflowDataDir(cwd: string) {
+  for (const path of possibleWorkflowDataPaths) {
+    const fullPath = join(cwd, path);
+    if (
+      await access(fullPath)
+        .then(() => true)
+        .catch(() => false)
+    ) {
+      const absolutePath = resolve(fullPath);
+      logger.debug('Found workflow data directory:', absolutePath);
+      return absolutePath;
+    }
+  }
+}
+
 /**
  * Overwrites process.env variables related to embedded world configuration,
  * if relevant environment variables aren't set already.
@@ -56,32 +79,36 @@ export const inferEmbeddedWorldEnvVars = async () => {
     envVars.PORT = '3000';
     writeEnvVars(envVars);
   }
+
   // Paths to check, in order of preference
   if (!envVars.WORKFLOW_EMBEDDED_DATA_DIR) {
-    // TODO: Find these relative to repository root, using findRepoRoot?
-    // Unclear, since the workflow data dir might be in a sub-project
-    const paths = ['.next/workflow-data', '.workflow-data', 'workflow-data'];
-    for (const path of paths) {
-      if (
-        await access(path)
-          .then(() => true)
-          .catch(() => false)
-      ) {
-        logger.debug('Found workflow data directory:', path);
-        envVars.WORKFLOW_EMBEDDED_DATA_DIR = path;
+    const cwd = getWorkflowConfig().workingDir;
+
+    const localPath = await findWorkflowDataDir(cwd);
+    if (localPath) {
+      envVars.WORKFLOW_EMBEDDED_DATA_DIR = localPath;
+      writeEnvVars(envVars);
+      return;
+    }
+
+    // As a fallback, find the repo root, and try to infer the data dir from there
+    const repoRoot = await findRepoRoot(cwd, cwd);
+    if (repoRoot) {
+      const repoPath = await findWorkflowDataDir(repoRoot);
+      if (repoPath) {
+        envVars.WORKFLOW_EMBEDDED_DATA_DIR = repoPath;
         writeEnvVars(envVars);
-        break;
+        return;
       }
     }
-    if (!envVars.WORKFLOW_EMBEDDED_DATA_DIR) {
-      logger.error(
-        'No workflow data directory found. Have you run any workflows yet?'
-      );
-      logger.warn(
-        `\nCheck whether your data is in any of:\n${paths.join('\n')}\n\n`
-      );
-      throw new Error('No workflow data directory found');
-    }
+
+    logger.error(
+      'No workflow data directory found. Have you run any workflows yet?'
+    );
+    logger.warn(
+      `\nCheck whether your data is in any of:\n${possibleWorkflowDataPaths.map((p) => `  ${cwd}/${p}${repoRoot && repoRoot !== cwd ? `\n  ${repoRoot}/${p}` : ''}`).join('\n')}\n`
+    );
+    throw new Error('No workflow data directory found');
   }
 };
 

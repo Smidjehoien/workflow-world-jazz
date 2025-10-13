@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/correctness/useUniqueElementIds: <not relevant> */
 'use client';
 
 import { AlertCircle, Settings, X } from 'lucide-react';
@@ -18,7 +19,7 @@ import {
   type ValidationError,
   validateWorldConfig,
   type WorldConfig,
-} from '@/lib/world';
+} from '@/lib/config-world';
 
 export function SettingsSidebar() {
   const config = useQueryParamConfig();

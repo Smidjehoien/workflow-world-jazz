@@ -5,7 +5,9 @@ import { useMemo } from 'react';
 import useSWR from 'swr';
 import { createEventKey } from '@/hooks/use-api';
 import type { PaginatedResult } from '@/hooks/use-paginated-query';
-import { fetchEvents, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/config-world';
+import { fetchEvents } from '@/lib/world';
+
 import { JsonView } from '../display-utils/json-view';
 import { SidePanel } from '../display-utils/side-panel';
 

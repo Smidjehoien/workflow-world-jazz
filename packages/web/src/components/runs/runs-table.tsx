@@ -28,9 +28,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useRuns } from '@/hooks/use-api';
+import type { WorldConfig } from '@/lib/config-world';
 import { getResourceName } from '@/lib/resource-name';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
-import type { WorldConfig } from '@/lib/world';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';

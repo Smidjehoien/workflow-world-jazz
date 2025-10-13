@@ -1,5 +1,6 @@
 import type { Event, Step, WorkflowRun } from '@vercel/workflow-world';
 import useSWR from 'swr';
+import type { WorldConfig } from '@/lib/config-world';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import {
   fetchEvents,
@@ -7,7 +8,6 @@ import {
   fetchRuns,
   fetchStep,
   fetchSteps,
-  type WorldConfig,
 } from '@/lib/world';
 import { usePaginatedQuery } from './use-paginated-query';
 

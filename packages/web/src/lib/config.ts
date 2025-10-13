@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo } from 'react';
-import type { WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/config-world';
 
 // Default configuration
 const DEFAULT_CONFIG: WorldConfig = {

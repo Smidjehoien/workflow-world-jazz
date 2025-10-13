@@ -2,11 +2,9 @@
 // by using the "world" API from the core package.
 
 import {
-  hydrateStepArguments,
-  hydrateStepReturnValue,
-  hydrateWorkflowArguments,
-  hydrateWorkflowReturnValue,
-} from '@vercel/workflow-core/serialization';
+  hydrateResourceIO,
+  StreamID,
+} from '@vercel/workflow-core/observability';
 import type { Event, Step, WorkflowRun, World } from '@vercel/workflow-world';
 import chalk from 'chalk';
 import { formatDistance } from 'date-fns';
@@ -18,19 +16,6 @@ import { streamToConsole } from './stream.js';
 
 const DEFAULT_PAGE_SIZE = 20;
 const TABLE_TRUNCATE_IO_LENGTH = 15;
-
-class StreamID {
-  constructor(public name: string | null) {}
-  toString() {
-    if (this.name === null) {
-      return `strm_null`;
-    }
-    return chalk.green(this.name);
-  }
-  toJSON() {
-    return this.name;
-  }
-}
 
 const WORKFLOW_RUN_IO_PROPS: (keyof WorkflowRun)[] = ['input', 'output'];
 
@@ -81,6 +66,36 @@ const getNonUniqueName = (dashSeparatedId: string) => {
   return dashSeparatedId.split('-').pop() ?? dashSeparatedId;
 };
 
+const formatTableValue = (
+  prop: string,
+  value: unknown,
+  opts: InspectCLIOptions = {}
+) => {
+  if (value instanceof StreamID) {
+    return value.toString();
+  } else if (prop === 'streamId') {
+    return chalk.green(value);
+  } else if (prop === 'stepName') {
+    const stepNameNonUnique = getNonUniqueName(String(value));
+    return chalk.blue.blueBright(stepNameNonUnique);
+  } else if (prop === 'workflowName') {
+    const workflowNameNonUnique = getNonUniqueName(String(value));
+    return chalk.blue.blueBright(workflowNameNonUnique);
+  } else if (prop === 'output' || prop === 'input') {
+    return inlineFormatIO(value);
+  } else if (prop === 'status') {
+    const status = value as WorkflowRun['status'] | Step['status'];
+    const colorFunc = STATUS_COLORS[status];
+    return colorFunc(status);
+  } else if (prop === 'eventData') {
+    return truncateString(JSON.stringify(value));
+  } else if (value instanceof Date) {
+    return formatTableTimestamp(value, opts);
+  } else {
+    return value;
+  }
+};
+
 const showTable = (
   data: Record<string, unknown>[],
   props: string[],
@@ -102,29 +117,7 @@ const showTable = (
   for (const item of data) {
     for (const prop of props) {
       const value = item[prop];
-      if (value instanceof StreamID) {
-        table.cell(prop, value.toString());
-      } else if (prop === 'streamId') {
-        table.cell(prop, chalk.green(value));
-      } else if (prop === 'stepName') {
-        const stepNameNonUnique = getNonUniqueName(String(value));
-        table.cell(prop, chalk.blue.blueBright(stepNameNonUnique));
-      } else if (prop === 'workflowName') {
-        const workflowNameNonUnique = getNonUniqueName(String(value));
-        table.cell(prop, chalk.blue.blueBright(workflowNameNonUnique));
-      } else if (prop === 'output' || prop === 'input') {
-        table.cell(prop, inlineFormatIO(value));
-      } else if (prop === 'status') {
-        const status = value as WorkflowRun['status'] | Step['status'];
-        const colorFunc = STATUS_COLORS[status];
-        table.cell(prop, colorFunc(status));
-      } else if (prop === 'eventData') {
-        table.cell(prop, truncateString(JSON.stringify(value)));
-      } else if (value instanceof Date) {
-        table.cell(`${prop}`, formatTableTimestamp(value, opts));
-      } else {
-        table.cell(prop, value);
-      }
+      table.cell(prop, formatTableValue(prop, value, opts));
     }
     table.newRow();
   }
@@ -162,68 +155,6 @@ const formatTableTimestamp = (value: Date, opts: InspectCLIOptions = {}) => {
   }
 
   return isoTime;
-};
-
-/**
- * This is an extra reviver for devalue that takes any streams that would be converted,
- * into actual streams, and instead formats them as string links for printing in CLI output.
- *
- * This is mainly because we don't want to open any streams that we aren't going to read from,
- * and so we can get the string ID/name, which the serializer stream doesn't provide.
- */
-const streamPrintRevivers: Record<string, (value: any) => any> = {
-  ReadableStream: (value: any) => {
-    if ('name' in value) {
-      return new StreamID(value.name);
-    }
-    return new StreamID(null);
-  },
-  WritableStream: (value: any) => {
-    if ('name' in value) {
-      return new StreamID(value.name);
-    }
-    return new StreamID(null);
-  },
-  TransformStream: (value: any) => {
-    if ('name' in value) {
-      return new StreamID(value.name);
-    }
-    return new StreamID(null);
-  },
-};
-
-const hydrateWorkflowRunIO = (run: WorkflowRun): WorkflowRun => {
-  return {
-    ...run,
-    input: run.input
-      ? hydrateWorkflowArguments(run.input, globalThis, streamPrintRevivers)
-      : run.input,
-    output: run.output
-      ? hydrateWorkflowReturnValue(
-          run.output,
-          [],
-          globalThis,
-          streamPrintRevivers
-        )
-      : run.output,
-  };
-};
-
-const hydrateStepIO = (step: Step): Step => {
-  return {
-    ...step,
-    input: step.input
-      ? hydrateStepArguments(step.input, [], globalThis, streamPrintRevivers)
-      : step.input,
-    output: step.output
-      ? hydrateStepReturnValue(step.output, globalThis, streamPrintRevivers)
-      : step.output,
-  };
-};
-
-const removeExecutionContext = (resource: WorkflowRun) => {
-  const { executionContext: _, ...rest } = resource;
-  return rest;
 };
 
 const truncateString = (
@@ -288,20 +219,16 @@ export const listRuns = async (world: World, opts: InspectCLIOptions = {}) => {
     },
     resolveData,
   });
-  runs.data = runs.data.map((run) => removeExecutionContext(run));
+  const runsWithHydratedIO = runs.data.map(hydrateResourceIO);
   if (opts.stepId || opts.runId) {
     logger.warn(
       'Filtering by step-id or run-id is not supported in list calls, ignoring filter.'
     );
   }
   if (opts.json) {
-    showJson(runs);
+    showJson({ ...runs, data: runsWithHydratedIO });
     return;
   }
-  const runsWithHydratedIO =
-    resolveData === 'all'
-      ? runs.data.map((run) => hydrateWorkflowRunIO(run))
-      : runs.data;
 
   // Determine which props to show based on withData flag
   const props = opts.withData
@@ -332,7 +259,7 @@ export const getRecentRun = async (
     pagination: { limit: 1, sortOrder: opts.sort || 'desc' },
     resolveData: 'none', // Don't need data for just getting the ID
   });
-  runs.data = runs.data.map((run) => removeExecutionContext(run));
+  runs.data = runs.data.map(hydrateResourceIO);
   return runs.data[0];
 };
 
@@ -341,11 +268,11 @@ export const showRun = async (
   runId: string,
   opts: InspectCLIOptions = {}
 ) => {
-  const resolveData = opts.withData ? 'all' : 'none';
+  if (opts.withData) {
+    logger.warn('`withData` flag is ignored when showing individual resources');
+  }
   const run = await world.runs.get(runId, { resolveData: 'all' });
-  const runWithHydratedIO = removeExecutionContext(
-    resolveData === 'all' ? hydrateWorkflowRunIO(run) : run
-  );
+  const runWithHydratedIO = hydrateResourceIO(run);
   if (opts.json) {
     showJson(runWithHydratedIO);
     return;
@@ -391,13 +318,12 @@ export const listSteps = async (
     resolveData,
   });
   const steps = stepChunks.data;
+  const stepsWithHydratedIO = steps.map(hydrateResourceIO);
+
   if (opts.json) {
     showJson(steps);
     return;
   }
-  const stepsWithHydratedIO =
-    resolveData === 'all' ? steps.map((step) => hydrateStepIO(step)) : steps;
-
   // Determine which props to show based on withData flag
   const props = opts.withData
     ? STEP_LISTED_PROPS
@@ -418,7 +344,9 @@ export const showStep = async (
   stepId: string,
   opts: InspectCLIOptions = {}
 ) => {
-  const resolveData = opts.withData ? 'all' : 'none';
+  if (opts.withData) {
+    logger.warn('`withData` flag is ignored when showing individual resources');
+  }
   if (opts.stepId) {
     logger.warn(
       'Filtering by step-id is not supported in get calls, ignoring filter.'
@@ -427,7 +355,7 @@ export const showStep = async (
   const step = await world.steps.get(opts.runId, stepId, {
     resolveData: 'all',
   });
-  const stepWithHydratedIO = resolveData === 'all' ? hydrateStepIO(step) : step;
+  const stepWithHydratedIO = hydrateResourceIO(step);
   if (opts.json) {
     showJson(stepWithHydratedIO);
     return;
@@ -462,6 +390,9 @@ export const listStreams = async (
   world: World,
   opts: InspectCLIOptions = {}
 ) => {
+  if (opts.withData) {
+    logger.warn('`withData` flag is ignored when listing streams');
+  }
   if (opts.workflowName) {
     logger.warn(
       'Filtering by workflow-name is not supported for streams, ignoring filter.'
@@ -522,12 +453,8 @@ export const listStreams = async (
   const stepIds = steps.map((item) => item.stepId);
   logger.debug(`Found IO for runs/steps: ${runIds.concat(stepIds).join(', ')}`);
 
-  // We need to hydrate IO for all the runs and steps to find stream IDs
-  const resolveData = opts.withData ? 'all' : 'none';
-  const runsWithHydratedIO =
-    resolveData === 'all' ? runs.map((run) => hydrateWorkflowRunIO(run)) : runs;
-  const stepsWithHydratedIO =
-    resolveData === 'all' ? steps.map((step) => hydrateStepIO(step)) : steps;
+  const runsWithHydratedIO = runs.map(hydrateResourceIO);
+  const stepsWithHydratedIO = steps.map(hydrateResourceIO);
 
   const matchingStreams = [
     ...runsWithHydratedIO,

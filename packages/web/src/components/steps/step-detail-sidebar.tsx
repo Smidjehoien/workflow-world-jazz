@@ -4,10 +4,9 @@ import { Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStep } from '@/hooks/use-api';
+import type { WorldConfig } from '@/lib/config-world';
 import { getResourceName } from '@/lib/resource-name';
-import { extractStreamIds } from '@/lib/stream-utils';
 import { formatDuration } from '@/lib/utils';
-import type { WorldConfig } from '@/lib/world';
 import { JsonView } from '../display-utils/json-view';
 import { RelativeTime } from '../display-utils/relative-time';
 import { SidePanel } from '../display-utils/side-panel';
@@ -29,6 +28,7 @@ export function StepDetailSidebar({
   onStreamClick,
 }: StepDetailSidebarProps) {
   const { data: step, isLoading: loading } = useStep(config, runId, stepId);
+  const streamList = step?.streamIds || [];
 
   if (loading) {
     return (
@@ -45,12 +45,6 @@ export function StepDetailSidebar({
       </SidePanel>
     );
   }
-
-  // Extract stream IDs from step input and output
-  const streamIds = new Set<string>();
-  extractStreamIds(step.input).forEach((id) => streamIds.add(id));
-  extractStreamIds(step.output).forEach((id) => streamIds.add(id));
-  const streamList = Array.from(streamIds);
 
   // Calculate duration if both started and completed
   const duration = formatDuration(step.startedAt, step.completedAt);

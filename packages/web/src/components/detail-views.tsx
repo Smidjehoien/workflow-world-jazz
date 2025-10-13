@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { readStream, type WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/config-world';
+import { readStream } from '@/lib/world';
 
 interface StreamDetailViewProps {
   config: WorldConfig;

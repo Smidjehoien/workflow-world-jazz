@@ -3,6 +3,124 @@
  * Shared between CLI and Web UI for consistent behavior.
  */
 
+import {
+  hydrateStepArguments,
+  hydrateStepReturnValue,
+  hydrateWorkflowArguments,
+  hydrateWorkflowReturnValue,
+} from './serialization.js';
+
+/**
+ * A class to represent an unresolved stream, serialized as an ID string.
+ */
+export class StreamID {
+  constructor(public name: string | null) {}
+  toString() {
+    if (this.name === null) {
+      return `strm_null`;
+    }
+    return this.name;
+  }
+  toJSON() {
+    return this.name;
+  }
+}
+
+/**
+ * This is an extra reviver for devalue that takes any streams that would be converted,
+ * into actual streams, and instead formats them as string links for printing in CLI output.
+ *
+ * This is mainly because we don't want to open any streams that we aren't going to read from,
+ * and so we can get the string ID/name, which the serializer stream doesn't provide.
+ */
+const streamPrintRevivers: Record<string, (value: any) => any> = {
+  ReadableStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+  WritableStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+  TransformStream: (value: any) => {
+    if ('name' in value) {
+      return new StreamID(value.name);
+    }
+    return new StreamID(null);
+  },
+};
+
+const hydrateStepIO = <
+  T extends { stepId?: string; input?: any; output?: any },
+>(
+  step: T
+): T => {
+  return {
+    ...step,
+    input:
+      step.input && Array.isArray(step.input) && step.input.length
+        ? hydrateStepArguments(step.input, [], globalThis, streamPrintRevivers)
+        : step.input,
+    output: step.output
+      ? hydrateStepReturnValue(step.output, globalThis, streamPrintRevivers)
+      : step.output,
+  };
+};
+
+const hydrateWorkflowIO = <
+  T extends { runId?: string; input?: any; output?: any },
+>(
+  workflow: T
+): T => {
+  return {
+    ...workflow,
+    input:
+      workflow.input && Array.isArray(workflow.input) && workflow.input.length
+        ? hydrateWorkflowArguments(
+            workflow.input,
+            globalThis,
+            streamPrintRevivers
+          )
+        : workflow.input,
+    output: workflow.output
+      ? hydrateWorkflowReturnValue(
+          workflow.output,
+          [],
+          globalThis,
+          streamPrintRevivers
+        )
+      : workflow.output,
+  };
+};
+
+export const hydrateResourceIO = <
+  T extends {
+    stepId?: string;
+    input?: any;
+    output?: any;
+    executionContext?: any;
+  },
+>(
+  resource: T
+): T => {
+  if (!resource) {
+    return resource;
+  }
+  const hydrated =
+    'stepId' in resource
+      ? hydrateStepIO(resource)
+      : hydrateWorkflowIO(resource);
+  if ('executionContext' in hydrated) {
+    const { executionContext: _, ...rest } = hydrated;
+    return rest as T;
+  }
+  return hydrated;
+};
+
 /**
  * Check if a value is a stream ID
  */

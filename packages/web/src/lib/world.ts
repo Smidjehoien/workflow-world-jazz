@@ -1,153 +1,25 @@
 'use server';
 
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { getWorld, resetWorld } from '@vercel/workflow-core';
 import {
-  hydrateStepArguments,
-  hydrateStepReturnValue,
-  hydrateWorkflowArguments,
-  hydrateWorkflowReturnValue,
-} from '@vercel/workflow-core/serialization';
-import type { WorkflowRun } from '@vercel/workflow-world';
-import type { SearchParams } from 'next/dist/server/request/search-params';
+  extractStreamIds,
+  hydrateResourceIO,
+} from '@vercel/workflow-core/observability';
+import type { Step } from '@vercel/workflow-world';
+import { setupWorld, type WorldConfig } from './config-world';
 import { DEFAULT_PAGE_SIZE } from './utils';
 
-export interface WorldConfig {
-  backend?: string;
-  env?: string;
-  authToken?: string;
-  project?: string;
-  team?: string;
-  port?: string;
-  dataDir?: string;
+export async function getStepStreams(step: Step) {
+  'use server';
+  const streamIds = new Set<string>();
+  extractStreamIds(step.input).forEach((id) => {
+    streamIds.add(id);
+  });
+  extractStreamIds(step.output).forEach((id) => {
+    streamIds.add(id);
+  });
+  const streamList = Array.from(streamIds);
+  return streamList;
 }
-
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-const removeExecutionContext = (resource: WorkflowRun) => {
-  const { executionContext: _, ...rest } = resource;
-  return rest;
-};
-
-// Validate configuration and return errors if any
-export async function validateWorldConfig(
-  config: WorldConfig
-): Promise<ValidationError[]> {
-  const errors: ValidationError[] = [];
-  const backend = config.backend || 'embedded';
-
-  if (backend === 'embedded') {
-    // Check if data directory exists
-    if (config.dataDir) {
-      const resolvedPath = resolve(config.dataDir);
-      if (!existsSync(resolvedPath)) {
-        errors.push({
-          field: 'dataDir',
-          message: `Data directory does not exist: ${resolvedPath}`,
-        });
-      }
-    }
-
-    // Validate port if provided
-    if (config.port) {
-      const portNum = Number.parseInt(config.port, 10);
-      if (Number.isNaN(portNum) || portNum < 1 || portNum > 65535) {
-        errors.push({
-          field: 'port',
-          message: 'Port must be a number between 1 and 65535',
-        });
-      }
-    }
-  }
-
-  return errors;
-}
-
-export const getDefaultWorldConfig = async (
-  params: SearchParams
-): Promise<WorldConfig> => {
-  const config: WorldConfig = {
-    backend: 'embedded',
-    dataDir: '../../workbench/nextjs-turbopack/.next/workflow-data',
-    port: '3000',
-    env: 'production',
-  };
-
-  // Convert search params to config object
-  for (const [key, value] of Object.entries(params)) {
-    if (value && !Array.isArray(value)) {
-      config[key as keyof WorldConfig] = value;
-    }
-  }
-
-  return config;
-};
-
-// Set up environment variables from config
-export async function setupWorld(config: WorldConfig) {
-  // Validate first
-  const errors = await validateWorldConfig(config);
-  if (errors.length > 0) {
-    throw new Error(
-      `Configuration validation failed: ${errors.map((e) => `${e.field}: ${e.message}`).join(', ')}`
-    );
-  }
-
-  const backend = config.backend || 'embedded';
-
-  // Reset the cached world instance before changing env vars
-  resetWorld();
-
-  // Set env vars
-  process.env.WORKFLOW_TARGET_WORLD = backend;
-
-  if (backend === 'embedded') {
-    // Use provided config or fall back to default for localhost dev setup
-    if (config.dataDir) {
-      process.env.WORKFLOW_EMBEDDED_DATA_DIR = config.dataDir;
-    }
-
-    if (config.port) {
-      process.env.PORT = config.port;
-    }
-  } else if (backend === 'vercel') {
-    if (config.env) {
-      process.env.WORKFLOW_VERCEL_ENV = config.env;
-    }
-    if (config.authToken) {
-      process.env.WORKFLOW_VERCEL_AUTH_TOKEN = config.authToken;
-    }
-    if (config.project) {
-      process.env.WORKFLOW_VERCEL_PROJECT_ID = config.project;
-    }
-    if (config.team) {
-      process.env.WORKFLOW_VERCEL_TEAM_ID = config.team;
-    }
-    process.env.WORKFLOW_VERCEL_PROXY_URL =
-      'https://api.vercel.com/v1/workflow';
-  }
-
-  return getWorld();
-}
-
-// Custom revivers that preserve stream names as string IDs for display
-const streamDisplayRevivers: Record<string, (value: any) => any> = {
-  ReadableStream: (value: any) => {
-    if ('name' in value) {
-      return value.name;
-    }
-    return value;
-  },
-  WritableStream: (value: any) => {
-    if ('name' in value) {
-      return value.name;
-    }
-    return value;
-  },
-};
 
 export async function fetchRuns(
   config: WorldConfig,
@@ -160,7 +32,7 @@ export async function fetchRuns(
     pagination: { cursor, limit, sortOrder },
     resolveData: 'none', // List views don't need full data
   });
-  runs.data = runs.data.map((run) => removeExecutionContext(run));
+  runs.data = runs.data.map(hydrateResourceIO);
   return runs;
 }
 
@@ -169,20 +41,7 @@ export async function fetchRun(config: WorldConfig, runId: string) {
   const run = await world.runs.get(runId, { resolveData: 'all' });
 
   // Hydrate input/output with custom revivers that preserve stream IDs
-  return {
-    ...removeExecutionContext(run),
-    input: run.input
-      ? hydrateWorkflowArguments(run.input, globalThis, streamDisplayRevivers)
-      : run.input,
-    output: run.output
-      ? hydrateWorkflowReturnValue(
-          run.output,
-          [],
-          globalThis,
-          streamDisplayRevivers
-        )
-      : run.output,
-  };
+  return hydrateResourceIO(run);
 }
 
 export async function fetchSteps(
@@ -208,16 +67,9 @@ export async function fetchStep(
 ) {
   const world = await setupWorld(config);
   const step = await world.steps.get(runId, stepId, { resolveData: 'all' });
-
-  // Hydrate input/output with custom revivers that preserve stream IDs
   return {
-    ...step,
-    input: step.input
-      ? hydrateStepArguments(step.input, [], globalThis, streamDisplayRevivers)
-      : step.input,
-    output: step.output
-      ? hydrateStepReturnValue(step.output, globalThis, streamDisplayRevivers)
-      : step.output,
+    ...hydrateResourceIO(step),
+    streamIds: await getStepStreams(step),
   };
 }
 

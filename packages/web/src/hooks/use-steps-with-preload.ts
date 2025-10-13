@@ -1,8 +1,9 @@
 import type { Step } from '@vercel/workflow-world';
 import { useEffect, useMemo, useState } from 'react';
 import useSWR from 'swr';
+import type { WorldConfig } from '@/lib/config-world';
 import { DEFAULT_PAGE_SIZE, getPaginationDisplay } from '@/lib/utils';
-import { fetchSteps, type WorldConfig } from '@/lib/world';
+import { fetchSteps } from '@/lib/world';
 
 const INITIAL_PRELOAD_SIZE = 100;
 

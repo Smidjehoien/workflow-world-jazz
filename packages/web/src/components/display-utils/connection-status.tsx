@@ -1,6 +1,6 @@
 'use client';
 
-import type { WorldConfig } from '@/lib/world';
+import type { WorldConfig } from '@/lib/config-world';
 
 interface ConnectionStatusProps {
   config: WorldConfig;
