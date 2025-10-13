@@ -1,6 +1,7 @@
 import { FatalError } from '@vercel/workflow-errors';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event } from '@vercel/workflow-world';
+import * as nanoid from 'nanoid';
 import { monotonicFactory } from 'ulid';
 import { describe, expect, it, vi } from 'vitest';
 import { EventsConsumer } from './events-consumer.js';
@@ -21,6 +22,9 @@ function setupWorkflowContext(events: Event[]): WorkflowOrchestratorContext {
     eventsConsumer: new EventsConsumer(events),
     invocationsQueue: [],
     generateUlid: () => ulid(workflowStartedAt), // All generated ulids use the workflow's started at time
+    generateNanoid: nanoid.customRandom(nanoid.urlAlphabet, 21, (size) =>
+      new Uint8Array(size).map(() => 256 * context.globalThis.Math.random())
+    ),
     onWorkflowError: vi.fn(),
   };
 }

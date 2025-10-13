@@ -612,14 +612,11 @@ describe('runWorkflow', () => {
   const done = [];
   for (let i = 0; i < 5; i++) {
     const dur = 1000 * (10 - i);
-    console.log(\`sched\`, i, \`/\`, dur);
     promises.set(i, promiseRaceStressTestDelayStep(dur, i));
   }
 
   while (promises.size > 0) {
-    console.log(\`promises.size\`, promises.size);
     const res = await Promise.race(promises.values());
-    console.log(res);
     done.push(res);
     promises.delete(res);
   }
