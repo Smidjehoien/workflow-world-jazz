@@ -1,6 +1,7 @@
 import { runInContext } from 'node:vm';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from '@vercel/workflow-world';
+import * as nanoid from 'nanoid';
 import { monotonicFactory } from 'ulid';
 import { EventConsumerResult, EventsConsumer } from './events-consumer.js';
 import { ENOTSUP } from './global.js';
@@ -51,6 +52,9 @@ export async function runWorkflow(
 
     const url = `https://${process.env.VERCEL_URL}`;
     const ulid = monotonicFactory(() => vmGlobalThis.Math.random());
+    const generateNanoid = nanoid.customRandom(nanoid.urlAlphabet, 21, (size) =>
+      new Uint8Array(size).map(() => 256 * vmGlobalThis.Math.random())
+    );
 
     const workflowContext: WorkflowOrchestratorContext = {
       url,
@@ -60,6 +64,7 @@ export async function runWorkflow(
       onWorkflowError: workflowDiscontinuation.reject,
       eventsConsumer: new EventsConsumer(events),
       generateUlid: () => ulid(+startedAt),
+      generateNanoid,
       invocationsQueue: [],
     };
 

@@ -10,11 +10,8 @@ import { type PromiseWithResolvers, withResolvers } from '../util.js';
 export function createCreateHook(ctx: WorkflowOrchestratorContext) {
   return function createHookImpl<T = any>(options: HookOptions = {}): Hook<T> {
     // Generate hook ID and token
-    const hookId = ctx.generateUlid();
-    const correlationId = `hook_${hookId}`;
-
-    // TODO: use nanoid instead of `hook_${hookId}`
-    const token = options.token ?? `hook_${hookId}`;
+    const correlationId = `hook_${ctx.generateUlid()}`;
+    const token = options.token ?? ctx.generateNanoid();
 
     // Add hook creation to invocations queue
     ctx.invocationsQueue.push({

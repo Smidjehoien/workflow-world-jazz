@@ -38,4 +38,5 @@ export interface WorkflowOrchestratorContext {
   invocationsQueue: QueueItem[];
   onWorkflowError: (error: Error) => void;
   generateUlid: () => string;
+  generateNanoid: () => string;
 }
