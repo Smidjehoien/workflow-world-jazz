@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-next",
-  "version": "0.0.1-alpha.44",
+  "version": "0.0.1-alpha.45",
   "type": "commonjs",
   "main": "dist/index.js",
   "files": [

@@ -1,5 +1,16 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.43
+
+### Patch Changes
+
+- 9d4653b: Unify hydration behavior between CLI and Web UI
+- Updated dependencies [9d4653b]
+- Updated dependencies [5acebeb]
+- Updated dependencies [40150b0]
+- Updated dependencies [fcc3f5d]
+  - @vercel/workflow-core@0.0.1-alpha.34
+
 ## 0.0.1-alpha.42
 
 ### Patch Changes

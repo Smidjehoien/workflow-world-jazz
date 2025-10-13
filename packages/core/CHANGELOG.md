@@ -1,5 +1,14 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.34
+
+### Patch Changes
+
+- 9d4653b: Unify hydration behavior between CLI and Web UI
+- 5acebeb: Use "nanoid" for default hook `token`
+- 40150b0: Moved getWorkflowReturnValue to Run class and rename getWorkflowRun to getRun
+- fcc3f5d: Remove unused properties from `WorkflowOrchestratorContext`
+
 ## 0.0.1-alpha.33
 
 ### Patch Changes
