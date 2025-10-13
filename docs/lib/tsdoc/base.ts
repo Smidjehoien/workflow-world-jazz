@@ -476,7 +476,6 @@ function getTags(prop: TsSymbol): Tags {
         }
         (tags.throws as string[]).push(tagValue);
         break;
-      case 'internal':
       case 'then':
         continue;
       default:

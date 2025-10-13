@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { WorkflowRunNotFoundError } from '@vercel/workflow-errors';
 import {
   type Event,
   EventSchema,
@@ -119,7 +120,7 @@ export function createStorage(basedir: string): Storage {
         const runPath = path.join(basedir, 'runs', `${id}.json`);
         const run = await readJSON(runPath, WorkflowRunSchema);
         if (!run) {
-          throw new Error(`Workflow run ${id} not found`);
+          throw new WorkflowRunNotFoundError(id);
         }
         const resolveData = params?.resolveData ?? DEFAULT_RESOLVE_DATA_OPTION;
         return filterRunData(run, resolveData);
@@ -129,7 +130,7 @@ export function createStorage(basedir: string): Storage {
         const runPath = path.join(basedir, 'runs', `${id}.json`);
         const run = await readJSON(runPath, WorkflowRunSchema);
         if (!run) {
-          throw new Error(`Workflow run ${id} not found`);
+          throw new WorkflowRunNotFoundError(id);
         }
 
         const now = new Date();

@@ -45,21 +45,11 @@ Returns a `Run` object:
 <TSDoc
 definition={generateDefinition({
   code: `
-interface Run {
-  runId: string;
-  cancel(): Promise<void>;
-  status: Promise<WorkflowRunStatus>;
-  returnValue: Promise<TResult>;
-  readable: ReadableStream<R>;
-}
+import { Run } from '@vercel/workflow/api';
 export default Run;`
 })}
 showSections={['returns']}
 />
-
-* `runId`: The unique run ID for the newly started workflow invocation
-* `status`: The current status of the workflow run
-* Other workflow run metadata
 
 ## Good to Know
 

@@ -9,8 +9,10 @@ export const ERROR_SLUGS = {
   START_INVALID_WORKFLOW_FUNCTION: 'start-invalid-workflow-function',
   SERIALIZATION_FAILED: 'serialization-failed',
   WORKFLOW_API_ERROR: 'workflow-api-error',
+  WORKFLOW_RUN_CANCELLED_ERROR: 'workflow-run-cancelled-error',
   WORKFLOW_RUN_FAILED_ERROR: 'workflow-run-failed-error',
   WORKFLOW_RUN_NOT_COMPLETED_ERROR: 'workflow-run-not-completed-error',
+  WORKFLOW_RUN_NOT_FOUND_ERROR: 'workflow-run-not-found-error',
   WORKFLOW_RUNTIME_ERROR: 'workflow-runtime-error',
 } as const;
 
@@ -148,5 +150,29 @@ export class RetryableError extends Error {
       retryAfterSeconds = 1;
     }
     this.retryAfter = new Date(Date.now() + retryAfterSeconds * 1000);
+  }
+}
+
+export class WorkflowRunNotFoundError extends WorkflowError {
+  runId: string;
+
+  constructor(runId: string) {
+    super(`Workflow run "${runId}" not found`, {
+      slug: ERROR_SLUGS.WORKFLOW_RUN_NOT_FOUND_ERROR,
+    });
+    this.name = 'WorkflowRunNotFoundError';
+    this.runId = runId;
+  }
+}
+
+export class WorkflowRunCancelledError extends WorkflowError {
+  runId: string;
+
+  constructor(runId: string) {
+    super(`Workflow run "${runId}" cancelled`, {
+      slug: ERROR_SLUGS.WORKFLOW_RUN_CANCELLED_ERROR,
+    });
+    this.name = 'WorkflowRunCancelledError';
+    this.runId = runId;
   }
 }

@@ -110,7 +110,6 @@ export async function start<TArgs extends unknown[], TResult>(
       }
     );
 
-    const runHandler = new Run<TResult>(runResponse.runId);
-    return runHandler;
+    return new Run<TResult>(runResponse.runId);
   });
 }

@@ -91,7 +91,7 @@ describe('Storage', () => {
 
       it('should throw error for non-existent run', async () => {
         await expect(storage.runs.get('wrun_nonexistent')).rejects.toThrow(
-          'Workflow run wrun_nonexistent not found'
+          'Workflow run "wrun_nonexistent" not found'
         );
       });
     });
@@ -157,7 +157,7 @@ describe('Storage', () => {
       it('should throw error for non-existent run', async () => {
         await expect(
           storage.runs.update('wrun_nonexistent', { status: 'running' })
-        ).rejects.toThrow('Workflow run wrun_nonexistent not found');
+        ).rejects.toThrow('Workflow run "wrun_nonexistent" not found');
       });
     });
 

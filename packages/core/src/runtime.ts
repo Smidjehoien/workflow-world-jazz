@@ -3,8 +3,10 @@ import {
   FatalError,
   RetryableError,
   WorkflowAPIError,
+  WorkflowRunCancelledError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
+  WorkflowRunNotFoundError,
   WorkflowRuntimeError,
 } from '@vercel/workflow-errors';
 import type {
@@ -16,7 +18,6 @@ import type {
 import { WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
-import type { start } from './runtime/start.js';
 import { getWorld, getWorldHandlers } from './runtime/world.js';
 import { getWorkflowReadableStream } from './runtime.js';
 import {
@@ -60,6 +61,7 @@ export class Run<TResult> {
 
   /**
    * The world object.
+   * @internal
    */
   private world: World;
 
@@ -72,14 +74,27 @@ export class Run<TResult> {
    * Cancels the workflow run.
    */
   async cancel(): Promise<void> {
-    await this.world.runs.cancel(this.runId);
+    await this.world.runs.cancel(this.runId).catch((error) => {
+      if (error instanceof WorkflowAPIError && error.status === 404) {
+        throw new WorkflowRunNotFoundError(this.runId);
+      }
+      throw error;
+    });
   }
 
   /**
    * The status of the workflow run.
    */
   get status(): Promise<WorkflowRunStatus> {
-    return this.world.runs.get(this.runId).then((run) => run.status);
+    return this.world.runs
+      .get(this.runId)
+      .then((run) => run.status)
+      .catch((error) => {
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
+        }
+        throw error;
+      });
   }
 
   /**
@@ -98,17 +113,100 @@ export class Run<TResult> {
   }
 
   /**
+   * The name of the workflow.
+   */
+  get workflowName(): Promise<string> {
+    return this.world.runs
+      .get(this.runId)
+      .then((run) => run.workflowName)
+      .catch((error) => {
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
+        }
+        throw error;
+      });
+  }
+
+  /**
+   * The timestamp when the workflow run was created.
+   */
+  get createdAt(): Promise<Date> {
+    return this.world.runs
+      .get(this.runId)
+      .then((run) => run.createdAt)
+      .catch((error) => {
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
+        }
+        throw error;
+      });
+  }
+
+  /**
+   * The timestamp when the workflow run started execution.
+   * Returns undefined if the workflow has not started yet.
+   */
+  get startedAt(): Promise<Date | undefined> {
+    return this.world.runs
+      .get(this.runId)
+      .then((run) => run.startedAt)
+      .catch((error) => {
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
+        }
+        throw error;
+      });
+  }
+
+  /**
+   * The timestamp when the workflow run completed.
+   * Returns undefined if the workflow has not completed yet.
+   */
+  get completedAt(): Promise<Date | undefined> {
+    return this.world.runs
+      .get(this.runId)
+      .then((run) => run.completedAt)
+      .catch((error) => {
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
+        }
+        throw error;
+      });
+  }
+
+  /**
    * Polls the workflow return value every 1 second until it is completed.
+   * @internal
    * @returns The workflow return value.
    */
   private async pollReturnValue(): Promise<TResult> {
     while (true) {
       try {
-        return await getWorkflowReturnValue(this.runId);
+        const run = await this.world.runs.get(this.runId);
+
+        if (run.status === 'completed') {
+          return hydrateWorkflowReturnValue(run.output, [], globalThis);
+        }
+
+        if (run.status === 'cancelled') {
+          throw new WorkflowRunCancelledError(this.runId);
+        }
+
+        if (run.status === 'failed') {
+          throw new WorkflowRunFailedError(
+            this.runId,
+            run.error ?? 'Unknown error'
+          );
+        }
+
+        throw new WorkflowRunNotCompletedError(this.runId, run.status);
       } catch (error) {
         if (error instanceof WorkflowRunNotCompletedError) {
           await new Promise((resolve) => setTimeout(resolve, 1_000));
           continue;
+        }
+        if (error instanceof WorkflowAPIError && error.status === 404) {
+          throw new WorkflowRunNotFoundError(this.runId);
         }
         throw error;
       }
@@ -117,45 +215,14 @@ export class Run<TResult> {
 }
 
 /**
- * Retrieves the workflow run metadata and status information for a given run ID.
+ * Retrieves a `Run` object for a given run ID.
  *
  * @param runId - The workflow run ID obtained from {@link start}.
- * @throws `Error` - When the workflow run is not found or `deploymentId` is missing.
+ * @returns A `Run` object.
+ * @throws {@link WorkflowRunNotFoundError} if the run ID is not found.
  */
-export async function getWorkflowRun(runId: string) {
-  const world = getWorld();
-  const deploymentId = await world.getDeploymentId();
-  if (!deploymentId) {
-    throw new Error('A `deploymentId` must be provided to get a workflow run');
-  }
-  return world.runs.get(runId);
-}
-
-/**
- * Retrieves the final return value of a completed workflow run.
- *
- * @param runId - The workflow run ID obtained from {@link start}.
- * @param ops - Internal parameter for cleanup operations.
- * @param global - Internal parameter for type hydration scope.
- * @throws `WorkflowRunNotCompletedError` - When the workflow is still running or pending.
- * @throws `WorkflowRunFailedError` - When the workflow has failed.
- */
-export async function getWorkflowReturnValue(
-  runId: string,
-  ops: Promise<any>[] = [],
-  global: Record<string, any> = globalThis
-) {
-  const run = await getWorkflowRun(runId);
-
-  if (run.status === 'completed' || run.status === 'cancelled') {
-    return hydrateWorkflowReturnValue(run.output, ops, global);
-  }
-
-  if (run.status === 'failed') {
-    throw new WorkflowRunFailedError(runId, run.error ?? 'Unknown error');
-  }
-
-  throw new WorkflowRunNotCompletedError(runId, run.status);
+export function getRun(runId: string) {
+  return new Run(runId);
 }
 
 /**
@@ -222,7 +289,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
 
           let workflowStartedAt = -1;
           try {
-            let workflowRun = await getWorkflowRun(runId);
+            let workflowRun = await world.runs.get(runId);
 
             if (workflowRun.status === 'pending') {
               workflowRun = await world.runs.update(runId, {

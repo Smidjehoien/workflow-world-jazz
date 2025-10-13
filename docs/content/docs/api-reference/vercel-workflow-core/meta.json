@@ -13,8 +13,7 @@
     "fetch",
     "get-workflow-writable-stream",
     "start",
-    "get-workflow-return-value",
-    "get-workflow-run",
+    "get-run",
     "fatal-error",
     "retryable-error"
   ]

@@ -1,8 +1,4 @@
-import {
-  getWorkflowReadableStream,
-  getWorkflowReturnValue,
-  start,
-} from '@vercel/workflow/api';
+import { getRun, getWorkflowReadableStream, start } from '@vercel/workflow/api';
 import { hydrateWorkflowArguments } from '@vercel/workflow/internal/serialization';
 import workflowManifest from '../manifest.js';
 
@@ -80,7 +76,8 @@ export async function GET(req: Request) {
   }
 
   try {
-    const returnValue = await getWorkflowReturnValue(runId);
+    const run = getRun(runId);
+    const returnValue = await run.returnValue;
     console.log('Return value:', returnValue);
     return returnValue instanceof ReadableStream
       ? new Response(returnValue, {
