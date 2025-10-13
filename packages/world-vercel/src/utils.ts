@@ -6,6 +6,11 @@ export interface APIConfig {
   baseUrl?: string;
   token?: string;
   headers?: RequestInit['headers'];
+  projectConfig?: {
+    projectId?: string;
+    teamId?: string;
+    environment?: string;
+  };
 }
 
 export const DEFAULT_RESOLVE_DATA_OPTION = 'all';
@@ -17,11 +22,36 @@ export function dateToStringReplacer(_key: string, value: unknown): unknown {
   return value;
 }
 
-export const DEFAULT_CONFIG: APIConfig = {
-  baseUrl: 'https://vercel-workflow.com/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
+export const getHttpConfig = (
+  config?: APIConfig
+): { baseUrl: string; headers: RequestInit['headers'] } => {
+  const projectConfig = config?.projectConfig;
+
+  const headers: Record<string, string> = {};
+  if (projectConfig) {
+    headers['x-vercel-environment'] = projectConfig.environment || 'production';
+    if (projectConfig.projectId) {
+      headers['x-vercel-project-id'] = projectConfig.projectId;
+    }
+    if (projectConfig.teamId) {
+      headers['x-vercel-team-id'] = projectConfig.teamId;
+    }
+  }
+  // Merge with config headers
+  Object.assign(headers, config?.headers || {}); // We honor user-provided baseUrl first
+  if (config?.baseUrl) {
+    return { baseUrl: config.baseUrl, headers };
+  }
+
+  // If projectConfig is provided (only necessary outside of vercel deployments),
+  // we default the baseUrl to the API proxy
+  const shouldUseProxy = projectConfig?.projectId && projectConfig?.teamId;
+  return {
+    baseUrl: shouldUseProxy
+      ? `https://api.vercel.com/v1/workflow`
+      : 'https://vercel-workflow.com/api',
+    headers,
+  };
 };
 
 export async function makeRequest<T>({
@@ -35,19 +65,20 @@ export async function makeRequest<T>({
   config?: APIConfig;
   schema: z.ZodSchema<T>;
 }): Promise<T> {
-  const finalConfig = { ...DEFAULT_CONFIG, ...config };
-  const url = `${finalConfig.baseUrl}${endpoint}`;
+  const { baseUrl, headers: configHeaders } = getHttpConfig(config);
 
   const headers = new Headers({
-    ...finalConfig.headers,
+    'Content-Type': 'application/json',
+    ...configHeaders,
     ...options.headers,
   });
 
-  const token = finalConfig.token ?? (await getVercelOidcToken());
+  const token = config.token ?? (await getVercelOidcToken());
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
+  const url = `${baseUrl}${endpoint}`;
   const response = await fetch(url, {
     ...options,
     headers,

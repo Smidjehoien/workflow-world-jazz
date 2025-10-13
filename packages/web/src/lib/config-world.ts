@@ -2,7 +2,7 @@
 
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { getWorld, resetWorld } from '@vercel/workflow-core';
+import { createWorld } from '@vercel/workflow-core';
 import type { SearchParams } from 'next/dist/server/request/search-params';
 
 export interface WorldConfig {
@@ -79,15 +79,13 @@ export async function setupWorld(config: WorldConfig) {
   // Validate first
   const errors = await validateWorldConfig(config);
   if (errors.length > 0) {
+    // TODO: Catch this error downstream and show the issue to the user
     throw new Error(
       `Configuration validation failed: ${errors.map((e) => `${e.field}: ${e.message}`).join(', ')}`
     );
   }
 
   const backend = config.backend || 'embedded';
-
-  // Reset the cached world instance before changing env vars
-  resetWorld();
 
   // Set env vars
   process.env.WORKFLOW_TARGET_WORLD = backend;
@@ -114,9 +112,7 @@ export async function setupWorld(config: WorldConfig) {
     if (config.team) {
       process.env.WORKFLOW_VERCEL_TEAM_ID = config.team;
     }
-    process.env.WORKFLOW_VERCEL_PROXY_URL =
-      'https://api.vercel.com/v1/workflow';
   }
 
-  return getWorld();
+  return createWorld();
 }

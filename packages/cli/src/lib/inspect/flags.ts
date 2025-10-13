@@ -29,13 +29,12 @@ export const cliFlags = {
   backend: Flags.string({
     description: 'backend to inspect',
     required: false,
-    options: ['vercel', 'embedded', 'custom'],
     char: 'b',
     default: 'embedded',
     env: 'WORKFLOW_TARGET_WORLD',
     helpGroup: 'Target',
     helpLabel: '-b, --backend',
-    helpValue: ['vercel', 'embedded', 'custom'],
+    helpValue: ['embedded', 'vercel', '<your-package-name>'],
     defaultHelp: 'embedded',
   }),
   authToken: Flags.string({

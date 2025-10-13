@@ -9,7 +9,6 @@ export { createQueue } from './queue.js';
 export { createStorage } from './storage.js';
 export { createStreamer } from './streamer.js';
 export type { APIConfig } from './utils.js';
-export { DEFAULT_CONFIG } from './utils.js';
 
 export function createVercelWorld(config?: APIConfig): World {
   return {

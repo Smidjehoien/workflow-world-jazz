@@ -21,7 +21,7 @@ export {
   type WebhookOptions,
 } from './create-hook.js';
 export { defineHook } from './define-hook.js';
-export { getWorld, resetWorld } from './runtime/world.js';
+export { createWorld, getWorld, setWorld } from './runtime/world.js';
 export {
   getStepMetadata,
   type StepMetadata,

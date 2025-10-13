@@ -39,7 +39,6 @@ export const setupCliWorld = async (
     WORKFLOW_VERCEL_TEAM_ID: flags.team,
     WORKFLOW_VERCEL_PROXY_URL: 'https://api.vercel.com/v1/workflow',
   });
-  process.env.DEBUG = flags.verbose ? '1' : '0';
 
   if (flags.backend === 'vercel') {
     await inferVercelEnvVars();
@@ -49,6 +48,5 @@ export const setupCliWorld = async (
 
   logger.debug('Initializing world');
   const world = getWorld();
-
   return world;
 };

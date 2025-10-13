@@ -11,7 +11,13 @@ import { createStreamer } from './streamer.js';
  * @param dataDir - The directory to use for storage. If not provided, the default data dir will be used.
  * @param port - The port to use for the queue. If not provided, the default port will be used.
  */
-export function createEmbeddedWorld(dataDir?: string, port?: number): World {
+export function createEmbeddedWorld({
+  dataDir,
+  port,
+}: {
+  dataDir?: string;
+  port?: number;
+}): World {
   const dir = dataDir ?? config.value.dataDir;
   const queuePort = port ?? config.value.port;
   return {

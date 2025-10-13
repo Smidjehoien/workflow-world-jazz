@@ -1,51 +1,53 @@
+import { createRequire } from 'node:module';
+import Path from 'node:path';
 import type { World } from '@vercel/workflow-world';
 import { createEmbeddedWorld } from '@vercel/workflow-world-embedded';
-import {
-  type APIConfig,
-  createVercelWorld,
-} from '@vercel/workflow-world-vercel';
+import { createVercelWorld } from '@vercel/workflow-world-vercel';
+
+const require = createRequire(Path.join(process.cwd(), 'index.js'));
 
 let worldCache: World | undefined;
 let stubbedWorldCache: World | undefined;
 
-const initWorld = () => {
+/**
+ * Create a new world instance based on environment variables.
+ * WORKFLOW_TARGET_WORLD is used to determine the target world.
+ * All other environment variables are specific to the target world
+ */
+export const createWorld = (): World => {
   const targetWorld = process.env.WORKFLOW_TARGET_WORLD || 'vercel';
 
   if (targetWorld === 'vercel') {
-    const headers: Record<string, string> = {};
-    const config: APIConfig = { headers };
-    const env = process.env.WORKFLOW_VERCEL_ENV;
-    const authToken = process.env.WORKFLOW_VERCEL_AUTH_TOKEN;
-    const projectId = process.env.WORKFLOW_VERCEL_PROJECT_ID;
-    const teamId = process.env.WORKFLOW_VERCEL_TEAM_ID;
-    const proxyUrl = process.env.WORKFLOW_VERCEL_PROXY_URL;
-    if (authToken) {
-      config.token = authToken;
-    }
-    if (env) {
-      headers['x-vercel-environment'] = env;
-    }
-    if (projectId) {
-      headers['x-vercel-project-id'] = projectId;
-    }
-    if (teamId) {
-      headers['x-vercel-team-id'] = teamId;
-    }
-    if (proxyUrl) {
-      config.baseUrl = proxyUrl;
-    }
-    return createVercelWorld(config);
+    return createVercelWorld({
+      baseUrl: process.env.WORKFLOW_VERCEL_PROXY_URL,
+      token: process.env.WORKFLOW_VERCEL_AUTH_TOKEN,
+      projectConfig: {
+        environment: process.env.WORKFLOW_VERCEL_ENV,
+        projectId: process.env.WORKFLOW_VERCEL_PROJECT_ID,
+        teamId: process.env.WORKFLOW_VERCEL_TEAM_ID,
+      },
+    });
   }
 
-  if (targetWorld !== 'embedded') {
-    console.error(
-      `Invalid target world: ${targetWorld}, using embedded world instead.`
-    );
+  if (targetWorld === 'embedded') {
+    return createEmbeddedWorld({
+      dataDir: process.env.WORKFLOW_EMBEDDED_DATA_DIR,
+      port: process.env.PORT ? Number(process.env.PORT) : undefined,
+    });
   }
 
-  const dataDir = process.env.WORKFLOW_EMBEDDED_DATA_DIR;
-  const port = process.env.PORT ? Number(process.env.PORT) : undefined;
-  return createEmbeddedWorld(dataDir, port);
+  const mod = require(targetWorld);
+  if (typeof mod === 'function') {
+    return mod() as World;
+  } else if (typeof mod.default === 'function') {
+    return mod.default() as World;
+  } else if (typeof mod.createWorld === 'function') {
+    return mod.createWorld() as World;
+  }
+
+  throw new Error(
+    `Invalid target world module: ${targetWorld}, must export a default function or createWorld function that returns a World instance.`
+  );
 };
 
 /**
@@ -61,7 +63,7 @@ export const getWorldHandlers = (): Pick<World, 'createQueueHandler'> => {
   if (stubbedWorldCache) {
     return stubbedWorldCache;
   }
-  const _world = initWorld();
+  const _world = createWorld();
   stubbedWorldCache = _world;
   return {
     createQueueHandler: _world.createQueueHandler,
@@ -72,7 +74,7 @@ export const getWorld = (): World => {
   if (worldCache) {
     return worldCache;
   }
-  worldCache = initWorld();
+  worldCache = createWorld();
   return worldCache;
 };
 
@@ -80,7 +82,7 @@ export const getWorld = (): World => {
  * Reset the cached world instance. This should be called when environment
  * variables change and you need to reinitialize the world with new config.
  */
-export const resetWorld = (): void => {
-  worldCache = undefined;
-  stubbedWorldCache = undefined;
+export const setWorld = (world: World | undefined): void => {
+  worldCache = world;
+  stubbedWorldCache = world;
 };

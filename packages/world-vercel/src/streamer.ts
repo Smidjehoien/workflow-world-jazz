@@ -1,10 +1,9 @@
 import type { Streamer } from '@vercel/workflow-world';
-import type { APIConfig } from './utils.js';
-import { DEFAULT_CONFIG } from './utils.js';
+import { type APIConfig, getHttpConfig } from './utils.js';
 
 export function createStreamer(config?: APIConfig): Streamer {
   const getStreamUrl = (name: string) => {
-    const baseUrl = config?.baseUrl ?? DEFAULT_CONFIG.baseUrl;
+    const { baseUrl } = getHttpConfig(config);
     return new URL(`${baseUrl}/stream/${encodeURIComponent(name)}`);
   };
 
