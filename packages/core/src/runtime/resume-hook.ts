@@ -47,8 +47,8 @@ export async function resumeHook<T = any>(
       const hook = await world.hooks.getByToken(token);
 
       span?.setAttributes({
-        'workflow.hook.token': token,
-        'workflow.hook.id': hook.hookId,
+        ...Attribute.HookToken(token),
+        ...Attribute.HookId(hook.hookId),
         ...Attribute.WorkflowRunId(hook.runId),
       });
 
@@ -104,8 +104,8 @@ export async function resumeHook<T = any>(
     } catch (_err) {
       // If hook not found, return null
       span?.setAttributes({
-        'workflow.hook.token': token,
-        'workflow.hook.found': false,
+        ...Attribute.HookToken(token),
+        ...Attribute.HookFound(false),
       });
       // TODO: Check for specific error types
       return null;

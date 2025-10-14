@@ -37,7 +37,7 @@
  * @packageDocumentation
  */
 
-import type { WorkflowRun, Step } from '@vercel/workflow-world';
+import type { Step, WorkflowRun } from '@vercel/workflow-world';
 
 /**
  * Creates a semantic convention function that returns an attribute object.
@@ -180,6 +180,17 @@ export const QueueName = SemanticConvention<string>('queue.name');
 
 /** Unique identifier for the deployment environment */
 export const DeploymentId = SemanticConvention<string>('deployment.id');
+
+// Hook attributes
+
+/** Token identifying a specific hook */
+export const HookToken = SemanticConvention<string>('workflow.hook.token');
+
+/** Unique identifier for a hook instance */
+export const HookId = SemanticConvention<string>('workflow.hook.id');
+
+/** Whether a hook was found by its token */
+export const HookFound = SemanticConvention<boolean>('workflow.hook.found');
 
 // Webhook attributes
 
