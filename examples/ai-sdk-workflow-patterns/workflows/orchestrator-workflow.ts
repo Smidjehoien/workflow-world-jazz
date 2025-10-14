@@ -1,3 +1,4 @@
+import { fetch } from '@vercel/workflow';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 
@@ -5,6 +6,10 @@ const MODEL = 'openai/o4-mini';
 
 export async function orchestratorWorkflow(featureRequest: string) {
   'use workflow';
+
+  // Uses Workflow's "fetch" step. This allows AI SDK calls
+  // to automatically work as steps
+  globalThis.fetch = fetch;
 
   // Orchestrator: Plan the implementation
   const { object: implementationPlan } = await generateObject({

@@ -1,3 +1,4 @@
+import { fetch } from '@vercel/workflow';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
@@ -5,6 +6,10 @@ const MODEL = 'openai/o4-mini';
 
 export async function parallelWorkflow(code: string) {
   'use workflow';
+
+  // Uses Workflow's "fetch" step. This allows AI SDK calls
+  // to automatically work as steps
+  globalThis.fetch = fetch;
 
   // Run parallel reviews
   const [securityReview, performanceReview, maintainabilityReview] =

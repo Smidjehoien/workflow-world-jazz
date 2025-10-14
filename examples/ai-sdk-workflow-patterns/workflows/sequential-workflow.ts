@@ -1,3 +1,4 @@
+import { fetch } from '@vercel/workflow';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
@@ -5,6 +6,10 @@ const MODEL = 'openai/o4-mini';
 
 export async function sequentialWorkflow(input: string) {
   'use workflow';
+
+  // Uses Workflow's "fetch" step. This allows AI SDK calls
+  // to automatically work as steps
+  globalThis.fetch = fetch;
 
   // First step: Generate marketing copy
   const { text: copy } = await generateText({

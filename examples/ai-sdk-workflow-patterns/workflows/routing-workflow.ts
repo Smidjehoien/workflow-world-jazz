@@ -1,8 +1,13 @@
+import { fetch } from '@vercel/workflow';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
 export async function routingWorkflow(query: string) {
   'use workflow';
+
+  // Uses Workflow's "fetch" step. This allows AI SDK calls
+  // to automatically work as steps
+  globalThis.fetch = fetch;
 
   // First step: Classify the query type
   const { object: classification } = await generateObject({

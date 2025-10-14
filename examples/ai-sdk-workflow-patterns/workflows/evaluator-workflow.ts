@@ -1,3 +1,4 @@
+import { fetch } from '@vercel/workflow';
 import { generateObject, generateText } from 'ai';
 import { z } from 'zod';
 
@@ -7,6 +8,10 @@ export async function evaluatorWorkflow(text: string, targetLanguage: string) {
   let currentTranslation = '';
   let iterations = 0;
   const MAX_ITERATIONS = 3;
+
+  // Uses Workflow's "fetch" step. This allows AI SDK calls
+  // to automatically work as steps
+  globalThis.fetch = fetch;
 
   // Initial translation
   const { text: translation } = await generateText({
