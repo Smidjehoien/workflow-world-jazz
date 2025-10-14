@@ -108,12 +108,15 @@ export async function readableStreamWorkflow() {
 
 //////////////////////////////////////////////////////////
 
-export async function hookWorkflow(token: string) {
+export async function hookWorkflow(token: string, customData: string) {
   'use workflow';
 
-  type Payload = { message: string; done?: boolean };
+  type Payload = { message: string; customData: string; done?: boolean };
 
-  const hook = createHook<Payload>({ token });
+  const hook = createHook<Payload>({
+    token,
+    metadata: { customData },
+  });
 
   const payloads: Payload[] = [];
   for await (const payload of hook) {

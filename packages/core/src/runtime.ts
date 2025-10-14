@@ -47,7 +47,11 @@ export {
   getWorkflowReadableStream,
   type WorkflowReadableStreamOptions,
 } from './runtime/readable-stream.js';
-export { resumeHook, resumeWebhook } from './runtime/resume-hook.js';
+export {
+  getHookByToken,
+  resumeHook,
+  resumeWebhook,
+} from './runtime/resume-hook.js';
 export { type StartOptions, start } from './runtime/start.js';
 
 /**
@@ -402,9 +406,17 @@ export function workflowEntrypoint(workflowCode: string) {
                   // Handle hook operations
                   try {
                     // Create hook in database
+                    const hookMetadata =
+                      typeof queueItem.metadata === 'undefined'
+                        ? undefined
+                        : dehydrateStepArguments(
+                            queueItem.metadata,
+                            globalThis
+                          );
                     await world.hooks.create(runId, {
                       hookId: queueItem.correlationId,
                       token: queueItem.token,
+                      metadata: hookMetadata,
                     });
 
                     // Create hook_created event in event log

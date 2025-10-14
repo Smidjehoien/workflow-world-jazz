@@ -18,6 +18,7 @@ export function createCreateHook(ctx: WorkflowOrchestratorContext) {
       type: 'hook',
       correlationId,
       token,
+      metadata: options.metadata,
     });
 
     // Queue of hook events that have been received but not yet processed

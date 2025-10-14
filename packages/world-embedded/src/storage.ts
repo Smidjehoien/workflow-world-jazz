@@ -61,9 +61,9 @@ function filterEventData(event: Event, resolveData: 'none' | 'all'): Event {
 }
 
 function filterHookData(hook: Hook, resolveData: 'none' | 'all'): Hook {
-  // TODO: Implement this
   if (resolveData === 'none') {
-    return hook;
+    const { metadata: _metadata, ...rest } = hook as any;
+    return rest;
   }
   return hook;
 }
@@ -376,15 +376,16 @@ export function createStorage(basedir: string): Storage {
       async create(runId, data) {
         const now = new Date();
 
-        const result: Hook = {
+        const result = {
           runId,
           hookId: data.hookId,
           token: data.token,
+          metadata: data.metadata,
           ownerId: 'embedded-owner',
           projectId: 'embedded-project',
           environment: 'embedded',
           createdAt: now,
-        };
+        } as Hook;
 
         const hookPath = path.join(basedir, 'hooks', `${data.hookId}.json`);
         await writeJSON(hookPath, result);

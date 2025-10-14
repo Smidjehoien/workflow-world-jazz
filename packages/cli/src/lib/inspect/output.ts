@@ -626,14 +626,11 @@ export const listHooks = async (world: World, opts: InspectCLIOptions = {}) => {
     resolveData,
   });
 
-  // Add hasResponse computed property
-  const hooksWithHasResponse = hooks.data.map((hook: any) => ({
-    ...hook,
-    hasResponse: hook.response !== undefined,
-  }));
+  // Hydrate hooks
+  const hydratedHooks = hooks.data.map(hydrateResourceIO);
 
   if (opts.json) {
-    showJson({ ...hooks, data: hooksWithHasResponse });
+    showJson({ ...hooks, data: hydratedHooks });
     return;
   }
 
@@ -642,7 +639,7 @@ export const listHooks = async (world: World, opts: InspectCLIOptions = {}) => {
   //   ? HOOK_LISTED_PROPS
   //   : HOOK_LISTED_PROPS.filter((prop) => !HOOK_DATA_PROPS.includes(prop));
 
-  logger.log(showTable(hooksWithHasResponse, HOOK_LISTED_PROPS, opts));
+  logger.log(showTable(hydratedHooks, HOOK_LISTED_PROPS, opts));
   const hint = getCursorHint(hooks);
   if (hint) {
     logger.info(hint);
@@ -665,10 +662,11 @@ export const showHook = async (
   const hook = await world.hooks.get(hookId, {
     resolveData: 'all',
   });
+  const hydratedHook = hydrateResourceIO(hook);
   if (opts.json) {
-    showJson(hook);
+    showJson(hydratedHook);
     return;
   } else {
-    logger.log(hook);
+    logger.log(hydratedHook);
   }
 };

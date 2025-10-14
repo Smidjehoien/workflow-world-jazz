@@ -1,7 +1,24 @@
-import { resumeHook } from '@vercel/workflow/api';
+import { getHookByToken, resumeHook } from '@vercel/workflow/api';
 
 export const POST = async (request: Request) => {
   const { token, data } = await request.json();
-  const hook = await resumeHook(token, data);
-  return Response.json(hook, { status: hook ? 200 : 404 });
+
+  let hook: Awaited<ReturnType<typeof getHookByToken>>;
+  try {
+    hook = await getHookByToken(token);
+    console.log('hook', hook);
+  } catch (error) {
+    console.log('error during getHookByToken', error);
+    // TODO: `WorkflowAPIError` is not exported, so for now
+    // we'll return 404 assuming it's the "invalid" token test case
+    return Response.json(null, { status: 404 });
+  }
+
+  await resumeHook(hook.token, {
+    ...data,
+    // @ts-expect-error metadata is not typed
+    customData: hook.metadata?.customData,
+  });
+
+  return Response.json(hook);
 };

@@ -1,11 +1,30 @@
 import { waitUntil } from '@vercel/functions';
 import type { Hook } from '@vercel/workflow-world';
 import type { WorkflowInvokePayload } from '../schemas.js';
-import { dehydrateStepReturnValue } from '../serialization.js';
+import {
+  dehydrateStepReturnValue,
+  hydrateStepArguments,
+} from '../serialization.js';
 import { WEBHOOK_RESPONSE_WRITABLE } from '../symbols.js';
 import * as Attribute from '../telemetry/semantic-conventions.js';
 import { getSpanContextForTraceCarrier, trace } from '../telemetry.js';
 import { getWorld } from './world.js';
+
+/**
+ * Get the hook by token to find the associated workflow run,
+ * and hydrate the `metadata` property if it was set from within
+ * the workflow run.
+ *
+ * @param token - The unique token identifying the hook
+ */
+export async function getHookByToken(token: string): Promise<Hook> {
+  const world = getWorld();
+  const hook = await world.hooks.getByToken(token);
+  if (typeof hook.metadata !== 'undefined') {
+    hook.metadata = hydrateStepArguments(hook.metadata as any, [], globalThis);
+  }
+  return hook;
+}
 
 /**
  * Resumes a workflow run by sending a payload to a hook identified by its token.
@@ -43,8 +62,7 @@ export async function resumeHook<T = any>(
     const world = getWorld();
 
     try {
-      // Get the hook by token to find the associated workflow run
-      const hook = await world.hooks.getByToken(token);
+      const hook = await getHookByToken(token);
 
       span?.setAttributes({
         ...Attribute.HookToken(token),

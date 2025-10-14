@@ -16,7 +16,7 @@ import {
 // Helper to filter hook data based on resolveData setting
 function filterHookData(hook: any, resolveData: 'none' | 'all'): Hook {
   if (resolveData === 'none') {
-    const { response: _response, ...rest } = hook;
+    const { metadataRef: _metadataRef, ...rest } = hook;
     return rest;
   }
   return hook;
@@ -38,6 +38,10 @@ export async function listHooks(
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
   if (pagination?.sortOrder)
     searchParams.set('sortOrder', pagination.sortOrder);
+
+  // Map resolveData to internal RemoteRefBehavior
+  const remoteRefBehavior = resolveData === 'none' ? 'lazy' : 'resolve';
+  searchParams.set('remoteRefBehavior', remoteRefBehavior);
 
   if (runId) searchParams.set('runId', runId);
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { SerializedData } from './serialization.js';
 import type { PaginationOptions, ResolveData } from './shared.js';
 
 // Hook schemas
@@ -9,6 +10,7 @@ export const HookSchema = z.object({
   ownerId: z.string(),
   projectId: z.string(),
   environment: z.string(),
+  metadata: z.json().optional(),
   createdAt: z.coerce.date(),
 });
 
@@ -19,6 +21,7 @@ export type Hook = z.infer<typeof HookSchema>;
 export interface CreateHookRequest {
   hookId: string;
   token: string;
+  metadata?: SerializedData;
 }
 
 export interface GetHookByTokenParams {

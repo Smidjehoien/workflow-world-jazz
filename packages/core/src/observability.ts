@@ -97,11 +97,24 @@ const hydrateWorkflowIO = <
   };
 };
 
+const hydrateHookIO = <T extends { hookId?: string; metadata?: any }>(
+  hook: T
+): T => {
+  return {
+    ...hook,
+    metadata: hook.metadata
+      ? hydrateStepArguments(hook.metadata, [], globalThis)
+      : hook.metadata,
+  };
+};
+
 export const hydrateResourceIO = <
   T extends {
     stepId?: string;
+    hookId?: string;
     input?: any;
     output?: any;
+    metadata?: any;
     executionContext?: any;
   },
 >(
@@ -113,7 +126,9 @@ export const hydrateResourceIO = <
   const hydrated =
     'stepId' in resource
       ? hydrateStepIO(resource)
-      : hydrateWorkflowIO(resource);
+      : 'hookId' in resource
+        ? hydrateHookIO(resource)
+        : hydrateWorkflowIO(resource);
   if ('executionContext' in hydrated) {
     const { executionContext: _, ...rest } = hydrated;
     return rest as T;

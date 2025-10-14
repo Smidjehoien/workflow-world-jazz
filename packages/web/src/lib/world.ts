@@ -115,11 +115,12 @@ export async function fetchHooks(
     pagination: { cursor, limit, sortOrder },
     resolveData: 'none', // List views don't need full data
   });
+  hooks.data = hooks.data.map(hydrateResourceIO);
   return hooks;
 }
 
 export async function fetchHook(config: WorldConfig, hookId: string) {
   const world = await setupWorld(config);
   const hook = await world.hooks.get(hookId, { resolveData: 'all' });
-  return hook;
+  return hydrateResourceIO(hook);
 }

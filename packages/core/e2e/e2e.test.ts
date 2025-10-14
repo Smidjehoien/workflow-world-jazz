@@ -130,8 +130,9 @@ describe('e2e', () => {
 
   test('hookWorkflow', { timeout: 60_000 }, async () => {
     const token = Math.random().toString(36).slice(2);
+    const customData = Math.random().toString(36).slice(2);
 
-    const run = await triggerWorkflow('hookWorkflow', [token]);
+    const run = await triggerWorkflow('hookWorkflow', [token, customData]);
 
     // Wait a few seconds so that the webhook is registered.
     // TODO: make this more efficient when we add subscription support.
@@ -176,10 +177,13 @@ describe('e2e', () => {
     expect(returnValue).toBeInstanceOf(Array);
     expect(returnValue.length).toBe(3);
     expect(returnValue[0].message).toBe('one');
+    expect(returnValue[0].customData).toBe(customData);
     expect(returnValue[0].done).toBeUndefined();
     expect(returnValue[1].message).toBe('two');
+    expect(returnValue[1].customData).toBe(customData);
     expect(returnValue[1].done).toBeUndefined();
     expect(returnValue[2].message).toBe('three');
+    expect(returnValue[2].customData).toBe(customData);
     expect(returnValue[2].done).toBe(true);
   });
 

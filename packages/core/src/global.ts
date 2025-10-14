@@ -11,6 +11,7 @@ export interface HookInvocationQueueItem {
   type: 'hook';
   correlationId: string;
   token: string;
+  metadata?: Serializable;
 }
 
 export type QueueItem = StepInvocationQueueItem | HookInvocationQueueItem;

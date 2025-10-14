@@ -1,3 +1,5 @@
+import type { Serializable } from './schemas.js';
+
 /**
  * An object that can be awaited to receive a value.
  */
@@ -5,10 +7,18 @@ interface Thenable<T> {
   then: Promise<T>['then'];
 }
 
+/**
+ * A `Request` that can be responded to within a workflow
+ * step function by calling the `respondWith()` method.
+ */
 export interface RequestWithResponse extends Request {
   respondWith: (response: Response) => Promise<void>;
 }
 
+/**
+ * A hook that can be awaited and/or iterated over to receive
+ * a value within a workflow from an external system.
+ */
 export interface Hook<T = any> extends AsyncIterable<T>, Thenable<T> {
   /**
    * The token used to identify this hook.
@@ -50,6 +60,22 @@ export interface HookOptions {
    * ```
    */
   token?: string;
+
+  /**
+   * Additional user-defined data to include with the hook payload.
+   *
+   * @example
+   *
+   * ```ts
+   * const hook = createHook<{ name: string }>({
+   *   metadata: {
+   *     type: "cat",
+   *     color: "orange",
+   *   },
+   * });
+   * ```
+   */
+  metadata?: Serializable;
 }
 
 export interface WebhookOptions extends HookOptions {}
