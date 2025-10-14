@@ -1,7 +1,79 @@
-import type { CreateHookRequest, Hook } from '@vercel/workflow-world';
-import { HookSchema } from '@vercel/workflow-world';
+import type {
+  CreateHookRequest,
+  GetHookParams,
+  Hook,
+  ListHooksParams,
+  PaginatedResponse,
+} from '@vercel/workflow-world';
+import { HookSchema, PaginatedResponseSchema } from '@vercel/workflow-world';
 import type { APIConfig } from './utils.js';
-import { dateToStringReplacer, makeRequest } from './utils.js';
+import {
+  DEFAULT_RESOLVE_DATA_OPTION,
+  dateToStringReplacer,
+  makeRequest,
+} from './utils.js';
+
+// Helper to filter hook data based on resolveData setting
+function filterHookData(hook: any, resolveData: 'none' | 'all'): Hook {
+  if (resolveData === 'none') {
+    const { response: _response, ...rest } = hook;
+    return rest;
+  }
+  return hook;
+}
+
+export async function listHooks(
+  params: ListHooksParams,
+  config?: APIConfig
+): Promise<PaginatedResponse<Hook>> {
+  const {
+    runId,
+    pagination,
+    resolveData = DEFAULT_RESOLVE_DATA_OPTION,
+  } = params;
+
+  const searchParams = new URLSearchParams();
+
+  if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
+  if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
+  if (pagination?.sortOrder)
+    searchParams.set('sortOrder', pagination.sortOrder);
+
+  if (runId) searchParams.set('runId', runId);
+
+  const queryString = searchParams.toString();
+  const endpoint = `/v1/hooks${queryString ? `?${queryString}` : ''}`;
+
+  const response = await makeRequest({
+    endpoint,
+    options: { method: 'GET' },
+    config,
+    schema: PaginatedResponseSchema(HookSchema),
+  });
+
+  return {
+    ...response,
+    data: response.data.map((hook: any) => filterHookData(hook, resolveData)),
+  };
+}
+
+export async function getHook(
+  hookId: string,
+  params?: GetHookParams,
+  config?: APIConfig
+): Promise<Hook> {
+  const resolveData = params?.resolveData || 'all';
+  const endpoint = `/v1/hooks/${hookId}`;
+
+  const hook = await makeRequest({
+    endpoint,
+    options: { method: 'GET' },
+    config,
+    schema: HookSchema,
+  });
+
+  return filterHookData(hook, resolveData);
+}
 
 export async function createHook(
   runId: string,

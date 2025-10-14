@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PaginationOptions, ResolveData } from './shared.js';
 
 // Hook schemas
 export const HookSchema = z.object({
@@ -22,4 +23,14 @@ export interface CreateHookRequest {
 
 export interface GetHookByTokenParams {
   token: string;
+}
+
+export interface ListHooksParams {
+  runId?: string;
+  pagination?: PaginationOptions;
+  resolveData?: ResolveData;
+}
+
+export interface GetHookParams {
+  resolveData?: ResolveData;
 }

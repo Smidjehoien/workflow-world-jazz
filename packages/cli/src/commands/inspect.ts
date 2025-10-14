@@ -5,9 +5,11 @@ import type { InspectCLIOptions } from '../lib/config/types.js';
 import { cliFlags } from '../lib/inspect/flags.js';
 import {
   listEvents,
+  listHooks,
   listRuns,
   listSteps,
   listStreams,
+  showHook,
   showRun,
   showStep,
   showStream,
@@ -24,6 +26,8 @@ export default class Inspect extends BaseCommand {
     '$ workflow inspect runs',
     '$ wf i runs',
     '$ wf i events --step=step_01K5WAJZ8W367CV2RFKDSDNWB8',
+    '$ wf i hooks',
+    '$ wf i hook hook_01K5WAJZ8W367CV2RFKDSDNWB8',
   ];
 
   async catch(error: any) {
@@ -35,7 +39,8 @@ export default class Inspect extends BaseCommand {
 
   static args = {
     resource: Args.string({
-      description: 'what to inspect: run(s) | step(s) | stream(s) | event(s)',
+      description:
+        'what to inspect: run(s) | step(s) | stream(s) | event(s) | hook(s)',
       required: true,
       options: [
         'r',
@@ -50,6 +55,9 @@ export default class Inspect extends BaseCommand {
         'st',
         'stream',
         'streams',
+        'h',
+        'hook',
+        'hooks',
         'w',
         'web',
       ],
@@ -104,7 +112,7 @@ export default class Inspect extends BaseCommand {
     const resource = normalizeResource(args.resource);
     if (!resource) {
       this.logError(
-        `Unknown resource "${args.resource}": must be one of: run(s), step(s), stream(s), event(s)`
+        `Unknown resource "${args.resource}": must be one of: run(s), step(s), stream(s), event(s), hook(s)`
       );
       return;
     }
@@ -153,6 +161,13 @@ export default class Inspect extends BaseCommand {
       return await listEvents(world, options);
     }
 
+    if (resource === 'hook') {
+      if (id) {
+        return await showHook(world, id, options);
+      }
+      return await listHooks(world, options);
+    }
+
     this.logError(
       `Unknown resource: ${resource}. Usage: ${Inspect.examples.join('\n')}`
     );
@@ -174,13 +189,14 @@ function toInspectOptions(flags: any): InspectCLIOptions {
 
 function normalizeResource(
   value?: string
-): 'run' | 'step' | 'stream' | 'event' | 'web' | undefined {
+): 'run' | 'step' | 'stream' | 'event' | 'hook' | 'web' | undefined {
   if (!value) return undefined;
   const v = value.toLowerCase();
   if (v.startsWith('r')) return 'run';
   if (v.startsWith('e')) return 'event';
   if (v.startsWith('str')) return 'stream';
   if (v.startsWith('s')) return 'step';
+  if (v.startsWith('h')) return 'hook';
   if (v.startsWith('w')) return 'web';
   return undefined;
 }

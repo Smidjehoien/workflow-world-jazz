@@ -5,7 +5,12 @@ import type {
   Event,
   ListEventsParams,
 } from './events.js';
-import type { CreateHookRequest, Hook } from './hooks.js';
+import type {
+  CreateHookRequest,
+  GetHookParams,
+  Hook,
+  ListHooksParams,
+} from './hooks.js';
 import type { Queue } from './queue.js';
 import type {
   CancelWorkflowRunParams,
@@ -81,9 +86,15 @@ export interface Storage {
   };
 
   hooks: {
-    create(runId: string, data: CreateHookRequest): Promise<Hook>;
-    getByToken(token: string): Promise<Hook>;
-    dispose(hookId: string): Promise<Hook>;
+    create(
+      runId: string,
+      data: CreateHookRequest,
+      params?: GetHookParams
+    ): Promise<Hook>;
+    get(hookId: string, params?: GetHookParams): Promise<Hook>;
+    getByToken(token: string, params?: GetHookParams): Promise<Hook>;
+    list(params: ListHooksParams): Promise<PaginatedResponse<Hook>>;
+    dispose(hookId: string, params?: GetHookParams): Promise<Hook>;
   };
 }
 

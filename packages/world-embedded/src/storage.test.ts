@@ -659,6 +659,45 @@ describe('Storage', () => {
       });
     });
 
+    describe('get', () => {
+      it('should retrieve an existing hook by hookId', async () => {
+        const created = await storage.hooks.create(testRunId, {
+          hookId: 'hook_123',
+          token: 'test-token-123',
+        });
+
+        const retrieved = await storage.hooks.get('hook_123');
+
+        expect(retrieved).toEqual(created);
+      });
+
+      it('should throw error for non-existent hook', async () => {
+        await expect(storage.hooks.get('nonexistent_hook')).rejects.toThrow(
+          'Hook nonexistent_hook not found'
+        );
+      });
+
+      it('should respect resolveData option', async () => {
+        const created = await storage.hooks.create(testRunId, {
+          hookId: 'hook_with_response',
+          token: 'test-token',
+        });
+
+        // With resolveData: 'all', should include response
+        const withData = await storage.hooks.get('hook_with_response', {
+          resolveData: 'all',
+        });
+        expect(withData).toEqual(created);
+
+        // With resolveData: 'none', should exclude response
+        const withoutData = await storage.hooks.get('hook_with_response', {
+          resolveData: 'none',
+        });
+        expect((withoutData as any).response).toBeUndefined();
+        expect(withoutData.hookId).toBe('hook_with_response');
+      });
+    });
+
     describe('getByToken', () => {
       it('should retrieve an existing hook by token', async () => {
         const created = await storage.hooks.create(testRunId, {
@@ -695,6 +734,134 @@ describe('Storage', () => {
 
         expect(retrieved).toEqual(hook1);
         expect(retrieved.hookId).toBe('hook_1');
+      });
+    });
+
+    describe('list', () => {
+      it('should list all hooks', async () => {
+        const hook1 = await storage.hooks.create(testRunId, {
+          hookId: 'hook_1',
+          token: 'token-1',
+        });
+
+        // Small delay to ensure different timestamps
+        await new Promise((resolve) => setTimeout(resolve, 2));
+
+        const hook2 = await storage.hooks.create(testRunId, {
+          hookId: 'hook_2',
+          token: 'token-2',
+        });
+
+        const result = await storage.hooks.list({});
+
+        expect(result.data).toHaveLength(2);
+        // Should be in descending order (most recent first)
+        expect(result.data[0].hookId).toBe(hook2.hookId);
+        expect(result.data[1].hookId).toBe(hook1.hookId);
+        expect(result.data[0].createdAt.getTime()).toBeGreaterThanOrEqual(
+          result.data[1].createdAt.getTime()
+        );
+      });
+
+      it('should filter hooks by runId', async () => {
+        // Create a second run
+        const run2 = await storage.runs.create({
+          deploymentId: 'deployment-456',
+          workflowName: 'test-workflow-2',
+          input: [],
+        });
+
+        await storage.hooks.create(testRunId, {
+          hookId: 'hook_run1',
+          token: 'token-run1',
+        });
+        const hook2 = await storage.hooks.create(run2.runId, {
+          hookId: 'hook_run2',
+          token: 'token-run2',
+        });
+
+        const result = await storage.hooks.list({ runId: run2.runId });
+
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].hookId).toBe(hook2.hookId);
+        expect(result.data[0].runId).toBe(run2.runId);
+      });
+
+      it('should support pagination', async () => {
+        // Create multiple hooks
+        for (let i = 0; i < 5; i++) {
+          await storage.hooks.create(testRunId, {
+            hookId: `hook_${i}`,
+            token: `token-${i}`,
+          });
+        }
+
+        const page1 = await storage.hooks.list({
+          pagination: { limit: 2 },
+        });
+
+        expect(page1.data).toHaveLength(2);
+        expect(page1.cursor).not.toBeNull();
+        expect(page1.hasMore).toBe(true);
+
+        const page2 = await storage.hooks.list({
+          pagination: { limit: 2, cursor: page1.cursor || undefined },
+        });
+
+        expect(page2.data).toHaveLength(2);
+        expect(page2.data[0].hookId).not.toBe(page1.data[0].hookId);
+      });
+
+      it('should support ascending sort order', async () => {
+        const hook1 = await storage.hooks.create(testRunId, {
+          hookId: 'hook_1',
+          token: 'token-1',
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 2));
+
+        const hook2 = await storage.hooks.create(testRunId, {
+          hookId: 'hook_2',
+          token: 'token-2',
+        });
+
+        const result = await storage.hooks.list({
+          pagination: { sortOrder: 'asc' },
+        });
+
+        expect(result.data).toHaveLength(2);
+        // Should be in ascending order (oldest first)
+        expect(result.data[0].hookId).toBe(hook1.hookId);
+        expect(result.data[1].hookId).toBe(hook2.hookId);
+      });
+
+      it('should respect resolveData option', async () => {
+        await storage.hooks.create(testRunId, {
+          hookId: 'hook_with_response',
+          token: 'token-with-response',
+        });
+
+        // With resolveData: 'all', should include response
+        const withData = await storage.hooks.list({
+          resolveData: 'all',
+        });
+        expect(withData.data).toHaveLength(1);
+
+        // With resolveData: 'none', should exclude response
+        const withoutData = await storage.hooks.list({
+          resolveData: 'none',
+        });
+        expect(withoutData.data).toHaveLength(1);
+        expect((withoutData.data[0] as any).response).toBeUndefined();
+        expect(withoutData.data[0].hookId).toBe('hook_with_response');
+      });
+
+      it('should handle empty result set', async () => {
+        const result = await storage.hooks.list({});
+
+        expect(result.data).toHaveLength(0);
+        expect(result.cursor).toBeNull();
+        expect(result.hasMore).toBe(false);
       });
     });
 

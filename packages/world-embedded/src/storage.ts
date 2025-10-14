@@ -60,6 +60,14 @@ function filterEventData(event: Event, resolveData: 'none' | 'all'): Event {
   return event;
 }
 
+function filterHookData(hook: Hook, resolveData: 'none' | 'all'): Hook {
+  // TODO: Implement this
+  if (resolveData === 'none') {
+    return hook;
+  }
+  return hook;
+}
+
 const getObjectCreatedAt =
   (idPrefix: string) =>
   (filename: string): Date | null => {
@@ -383,6 +391,17 @@ export function createStorage(basedir: string): Storage {
         return result;
       },
 
+      async get(hookId, params) {
+        const hookPath = path.join(basedir, 'hooks', `${hookId}.json`);
+        // Try webhook schema first (which includes response), fall back to HookSchema
+        const hook = await readJSON(hookPath, HookSchema);
+        if (!hook) {
+          throw new Error(`Hook ${hookId} not found`);
+        }
+        const resolveData = params?.resolveData || DEFAULT_RESOLVE_DATA_OPTION;
+        return filterHookData(hook, resolveData);
+      },
+
       async getByToken(token) {
         // Need to search through all hooks to find one with matching token
         const hooksDir = path.join(basedir, 'hooks');
@@ -397,6 +416,41 @@ export function createStorage(basedir: string): Storage {
         }
 
         throw new Error(`Hook with token ${token} not found`);
+      },
+
+      async list(params) {
+        const hooksDir = path.join(basedir, 'hooks');
+        const resolveData = params.resolveData || DEFAULT_RESOLVE_DATA_OPTION;
+
+        const result = await paginatedFileSystemQuery({
+          directory: hooksDir,
+          schema: HookSchema,
+          sortOrder: params.pagination?.sortOrder,
+          limit: params.pagination?.limit,
+          cursor: params.pagination?.cursor,
+          filePrefix: undefined, // Hooks don't have ULIDs, so we can't optimize by filename
+          filter: (hook) => {
+            // Filter by runId if provided
+            if (params.runId && hook.runId !== params.runId) {
+              return false;
+            }
+            return true;
+          },
+          getCreatedAt: () => {
+            // Hook files don't have ULID timestamps in filename
+            // We need to read the file to get createdAt, but that's inefficient
+            // So we return the hook's createdAt directly (item.createdAt will be used for sorting)
+            // Return a dummy date to pass the null check, actual sorting uses item.createdAt
+            return new Date(0);
+          },
+          getId: (hook) => hook.hookId,
+        });
+
+        // Transform the data after pagination
+        return {
+          ...result,
+          data: result.data.map((hook) => filterHookData(hook, resolveData)),
+        };
       },
 
       async dispose(hookId) {

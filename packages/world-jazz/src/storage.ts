@@ -4,8 +4,10 @@ import type {
   CreateStepRequest,
   CreateWorkflowRunRequest,
   Event,
+  GetHookParams,
   Hook,
   ListEventsParams,
+  ListHooksParams,
   ListWorkflowRunStepsParams,
   ListWorkflowRunsParams,
   PaginatedResponse,
@@ -346,6 +348,20 @@ export const createHookStorage = (
       return toHook(jh);
     },
 
+    async get(hookId: string, _params?: GetHookParams): Promise<Hook> {
+      // Find the hook by hookId (iterate through all hooks)
+      const hooks = await loadHooks();
+
+      for (const [_token, ref] of Object.entries(hooks.$jazz.refs)) {
+        const jh = await ref.load();
+        if (jh && jh.hookId === hookId) {
+          return toHook(jh);
+        }
+      }
+
+      throw new Error(`Hook ${hookId} not found`);
+    },
+
     async getByToken(token: string): Promise<Hook> {
       const hooks = await loadHooks();
 
@@ -365,6 +381,42 @@ export const createHookStorage = (
         )[token]!;
 
       return toHook(jh);
+    },
+
+    async list(params: ListHooksParams): Promise<PaginatedResponse<Hook>> {
+      const hooks = await loadHooks();
+      const allHooks: JazzHook[] = [];
+
+      // Load all hooks
+      for (const [_token, ref] of Object.entries(hooks.$jazz.refs)) {
+        const jh = await ref.load();
+        if (jh) {
+          allHooks.push(jh);
+        }
+      }
+
+      // Filter by runId if provided
+      const filteredHooks = params.runId
+        ? allHooks.filter((jh) => jh.runId === params.runId)
+        : allHooks;
+
+      // Sort by createdAt descending by default
+      const sortOrder = params.pagination?.sortOrder || 'desc';
+      const sortedHooks = filteredHooks.sort((a, b) => {
+        const aTime = a.createdAt.getTime();
+        const bTime = b.createdAt.getTime();
+        return sortOrder === 'desc' ? bTime - aTime : aTime - bTime;
+      });
+
+      return paginateItems({
+        items: sortedHooks,
+        cursor: params.pagination?.cursor,
+        limit: params.pagination?.limit,
+        findCursorIndex: (items, cursor) =>
+          items.findIndex((jh) => jh.$jazz.id === cursor),
+        getItemId: (jh) => jh.$jazz.id,
+        transform: toHook,
+      });
     },
 
     async dispose(hookId: string): Promise<Hook> {

@@ -5,7 +5,13 @@ import {
   hydrateResourceIO,
   StreamID,
 } from '@vercel/workflow-core/observability';
-import type { Event, Step, WorkflowRun, World } from '@vercel/workflow-world';
+import type {
+  Event,
+  Hook,
+  Step,
+  WorkflowRun,
+  World,
+} from '@vercel/workflow-world';
 import chalk from 'chalk';
 import { formatDistance } from 'date-fns';
 import Table from 'easy-table';
@@ -50,6 +56,16 @@ const EVENT_LISTED_PROPS: (keyof Event | 'eventData')[] = [
   ...EVENT_IO_PROPS,
 ];
 
+// const HOOK_DATA_PROPS: (keyof Hook | 'hasResponse')[] = ['hasResponse'];
+
+const HOOK_LISTED_PROPS: (keyof Hook | 'hasResponse')[] = [
+  'runId',
+  'hookId',
+  'ownerId',
+  'createdAt',
+  // ...HOOK_DATA_PROPS,
+];
+
 const STATUS_COLORS: Record<
   WorkflowRun['status'] | Step['status'],
   (value: string) => string
@@ -89,6 +105,8 @@ const formatTableValue = (
     return colorFunc(status);
   } else if (prop === 'eventData') {
     return truncateString(JSON.stringify(value));
+  } else if (prop === 'hasResponse') {
+    return value ? chalk.green('true') : chalk.gray('false');
   } else if (value instanceof Date) {
     return formatTableTimestamp(value, opts);
   } else {
@@ -575,5 +593,82 @@ export const listEvents = async (
   const hint = getCursorHint(events);
   if (hint) {
     logger.info(hint);
+  }
+};
+
+export const listHooks = async (world: World, opts: InspectCLIOptions = {}) => {
+  if (opts.workflowName) {
+    logger.warn(
+      'Filtering by workflow-name is not supported for hooks, ignoring filter.'
+    );
+  }
+  if (opts.stepId) {
+    logger.warn(
+      'Filtering by step-id is not supported for hooks, ignoring filter.'
+    );
+  }
+
+  const runId = opts.runId;
+  if (!runId) {
+    logger.debug('Fetching all hooks');
+  } else {
+    logger.debug(`Fetching hooks for run ${runId}`);
+  }
+
+  const resolveData = opts.withData ? 'all' : 'none';
+  const hooks = await world.hooks.list({
+    runId,
+    pagination: {
+      sortOrder: opts.sort || 'desc',
+      cursor: opts.cursor,
+      limit: opts.limit || DEFAULT_PAGE_SIZE,
+    },
+    resolveData,
+  });
+
+  // Add hasResponse computed property
+  const hooksWithHasResponse = hooks.data.map((hook: any) => ({
+    ...hook,
+    hasResponse: hook.response !== undefined,
+  }));
+
+  if (opts.json) {
+    showJson({ ...hooks, data: hooksWithHasResponse });
+    return;
+  }
+
+  // // Determine which props to show based on withData flag
+  // const props = opts.withData
+  //   ? HOOK_LISTED_PROPS
+  //   : HOOK_LISTED_PROPS.filter((prop) => !HOOK_DATA_PROPS.includes(prop));
+
+  logger.log(showTable(hooksWithHasResponse, HOOK_LISTED_PROPS, opts));
+  const hint = getCursorHint(hooks);
+  if (hint) {
+    logger.info(hint);
+  }
+  logger.showBox(
+    'white',
+    'INFO',
+    'To view the details of a hook, use `wf i hook <hook-id>`'
+  );
+};
+
+export const showHook = async (
+  world: World,
+  hookId: string,
+  opts: InspectCLIOptions = {}
+) => {
+  if (opts.withData) {
+    logger.warn('`withData` flag is ignored when showing individual resources');
+  }
+  const hook = await world.hooks.get(hookId, {
+    resolveData: 'all',
+  });
+  if (opts.json) {
+    showJson(hook);
+    return;
+  } else {
+    logger.log(hook);
   }
 };

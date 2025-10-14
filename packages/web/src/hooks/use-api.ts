@@ -1,9 +1,11 @@
-import type { Event, Step, WorkflowRun } from '@vercel/workflow-world';
+import type { Event, Hook, Step, WorkflowRun } from '@vercel/workflow-world';
 import useSWR from 'swr';
 import type { WorldConfig } from '@/lib/config-world';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import {
   fetchEvents,
+  fetchHook,
+  fetchHooks,
   fetchRun,
   fetchRuns,
   fetchStep,
@@ -156,6 +158,54 @@ export function useEvents(
     createKey: (params, cursor) => createEventKey(params, cursor),
     fetcher: (params, cursor) =>
       fetchEvents(
+        params.config,
+        params.runId,
+        cursor,
+        params.sortOrder,
+        params.limit
+      ),
+    params: { config, runId, sortOrder, limit },
+  });
+}
+
+// Single hook hook
+export function useHook(config: WorldConfig, hookId: string) {
+  return useSWR(
+    hookId ? createAPICallKey(config, 'hook', hookId) : null,
+    () => fetchHook(config, hookId),
+    {
+      revalidateOnFocus: false,
+    }
+  );
+}
+
+// Paginated hooks hook
+export function useHooks(
+  config: WorldConfig,
+  runId?: string,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  limit: number = DEFAULT_PAGE_SIZE
+) {
+  return usePaginatedQuery<
+    Hook,
+    {
+      config: WorldConfig;
+      runId?: string;
+      sortOrder: 'asc' | 'desc';
+      limit: number;
+    }
+  >({
+    createKey: (params, cursor) =>
+      createAPICallKey(
+        params.config,
+        'hooks',
+        params.runId,
+        cursor,
+        params.sortOrder,
+        String(params.limit)
+      ),
+    fetcher: (params, cursor) =>
+      fetchHooks(
         params.config,
         params.runId,
         cursor,

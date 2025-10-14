@@ -12,6 +12,7 @@ import { formatDuration } from '@/lib/utils';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
 import { EventsTable } from '../events/events-table';
+import { HooksTable } from '../hooks/hooks-table';
 import { StepDetailSidebar } from '../steps/step-detail-sidebar';
 import { StepsTable } from '../steps/steps-table';
 import { RunDetailSidebar } from './run-detail-sidebar';
@@ -21,8 +22,10 @@ interface RunDetailViewProps {
   runId: string;
   selectedStepId?: string;
   selectedEventId?: string;
+  selectedHookId?: string;
   onStepSelect: (stepId: string | undefined) => void;
   onEventSelect: (eventId: string | undefined) => void;
+  onHookSelect: (hookId: string | undefined) => void;
   onStreamClick: (streamId: string) => void;
 }
 
@@ -31,8 +34,10 @@ export function RunDetailView({
   runId,
   selectedStepId,
   selectedEventId,
+  selectedHookId,
   onStepSelect,
   onEventSelect,
+  onHookSelect,
   onStreamClick,
 }: RunDetailViewProps) {
   const [liveMode, setLiveMode] = useState(false);
@@ -189,6 +194,15 @@ export function RunDetailView({
         onEventClick={onEventSelect}
         selectedEventId={selectedEventId}
         onCloseDetailSidebar={() => onEventSelect(undefined)}
+      />
+
+      {/* Hooks Table */}
+      <HooksTable
+        config={config}
+        runId={runId}
+        onHookClick={onHookSelect}
+        selectedHookId={selectedHookId}
+        onCloseDetailSidebar={() => onHookSelect(undefined)}
       />
     </div>
   );

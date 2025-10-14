@@ -101,3 +101,25 @@ export async function readStream(
   const world = await setupWorld(config);
   return world.readFromStream(streamId, startIndex);
 }
+
+export async function fetchHooks(
+  config: WorldConfig,
+  runId?: string,
+  cursor?: string,
+  sortOrder: 'asc' | 'desc' = 'desc',
+  limit: number = DEFAULT_PAGE_SIZE
+) {
+  const world = await setupWorld(config);
+  const hooks = await world.hooks.list({
+    runId,
+    pagination: { cursor, limit, sortOrder },
+    resolveData: 'none', // List views don't need full data
+  });
+  return hooks;
+}
+
+export async function fetchHook(config: WorldConfig, hookId: string) {
+  const world = await setupWorld(config);
+  const hook = await world.hooks.get(hookId, { resolveData: 'all' });
+  return hook;
+}
