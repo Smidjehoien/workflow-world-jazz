@@ -7,5 +7,5 @@
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["docs", "nextjs-turbopack", "nextjs-webpack", "@workflow/example-app", "world-integration-tests"]
+  "ignore": ["docs", "nextjs-turbopack", "nextjs-webpack", "@workflow/example-app", "@vercel/workflow-world-jazz", "world-integration-tests"]
 }

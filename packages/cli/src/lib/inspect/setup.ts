@@ -1,4 +1,4 @@
-import { getWorld } from '@vercel/workflow-core';
+import { createWorld } from '@vercel/workflow-core';
 import chalk from 'chalk';
 import { logger, setJsonMode, setVerboseMode } from '../config/log.js';
 import {
@@ -29,7 +29,7 @@ export const setupCliWorld = async (
     chalk.yellow('This is an alpha release - commands might change')
   );
 
-  logger.debug('Inferring env vars');
+  logger.debug('Inferring env vars, backend:', flags.backend);
   writeEnvVars({
     DEBUG: flags.verbose ? '1' : '',
     WORKFLOW_TARGET_WORLD: flags.backend,
@@ -42,11 +42,10 @@ export const setupCliWorld = async (
 
   if (flags.backend === 'vercel') {
     await inferVercelEnvVars();
-  } else {
+  } else if (flags.backend === 'embedded') {
     await inferEmbeddedWorldEnvVars();
   }
 
   logger.debug('Initializing world');
-  const world = getWorld();
-  return world;
+  return createWorld();
 };

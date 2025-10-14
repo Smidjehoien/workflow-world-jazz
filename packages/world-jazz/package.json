@@ -1,0 +1,40 @@
+{
+  "name": "@vercel/workflow-world-jazz",
+  "version": "0.0.1-alpha.8",
+  "type": "module",
+  "main": "dist/index.js",
+  "private": true,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean",
+    "test": "vitest run src",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@types/node": "catalog:",
+    "@types/json-schema": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@types/json-schema": "catalog:",
+    "@vercel/workflow-tsconfig": "workspace:*",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@vercel/workflow-world": "workspace:*",
+    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@98ef5d75cc3085a70fbf47060937a4c67f116677",
+    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@98ef5d75cc3085a70fbf47060937a4c67f116677",
+    "zod": "catalog:"
+  }
+}

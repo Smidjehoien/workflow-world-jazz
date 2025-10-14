@@ -21,6 +21,10 @@ export function withWorkflow({
     if (maybePort) {
       process.env.PORT = maybePort.toString();
     }
+  } else {
+    if (!process.env.WORKFLOW_TARGET_WORLD) {
+      process.env.WORKFLOW_TARGET_WORLD = 'vercel';
+    }
   }
 
   // configure the loader if turbopack is being used
