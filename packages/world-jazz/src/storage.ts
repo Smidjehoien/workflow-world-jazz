@@ -338,7 +338,6 @@ export const createHookStorage = (
         projectId: 'jazz-project',
         environment: 'jazz',
         createdAt: now,
-        response: data.response as z.core.util.JSONType | undefined,
       });
 
       const hooks = await loadHooks();
