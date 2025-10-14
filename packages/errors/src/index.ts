@@ -1,6 +1,6 @@
 import ms, { type StringValue } from 'ms';
 
-const BASE_URL = 'https://workflow-docs.vercel.sh/errors';
+const BASE_URL = 'https://useworkflow.dev/errors';
 
 /**
  * All the slugs of the errors.

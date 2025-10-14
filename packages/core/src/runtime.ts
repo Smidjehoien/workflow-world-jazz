@@ -353,7 +353,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
                 // Note: suspensionMessage logged only in debug mode to avoid production noise
                 // console.debug(suspensionMessage);
               }
-              // Process each operation in the queue (steps and webhooks)
+              // Process each operation in the queue (steps and hooks)
               for (const queueItem of err.steps) {
                 if (queueItem.type === 'step') {
                   // Handle step operations

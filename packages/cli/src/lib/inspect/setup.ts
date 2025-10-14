@@ -25,7 +25,7 @@ export const setupCliWorld = async (
   logger.showBox(
     'green',
     `        Workflow CLI v${version}        `,
-    'Docs at https://workflow-docs.vercel.sh/',
+    'Docs at https://useworkflow.dev/',
     chalk.yellow('This is an alpha release - commands might change')
   );
 
