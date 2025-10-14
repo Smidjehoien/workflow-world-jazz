@@ -261,7 +261,7 @@ async function getAllWorkflowRunEvents(runId: string): Promise<Event[]> {
  * functions at the top level.
  * @returns A function that can be used as a Vercel API route.
  */
-export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
+export function workflowEntrypoint(workflowCode: string) {
   return getWorldHandlers().createQueueHandler(
     '__wkf_workflow_',
     async (message_, metadata) => {
@@ -466,7 +466,7 @@ export function vercelAPIWorkflowsEntrypoint(workflowCode: string) {
  * appropriate step function. We may eventually want to create different bundles
  * for each step, this is temporary.
  */
-export const vercelAPIStepsEntrypoint =
+export const stepEntrypoint =
   /* @__PURE__ */ getWorldHandlers().createQueueHandler(
     '__wkf_step_',
     async (message_, metadata) => {

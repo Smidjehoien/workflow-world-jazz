@@ -23,7 +23,8 @@
     "./internal/builtins": "./dist/internal/builtins.js",
     "./internal/private": "./dist/internal/private.js",
     "./next": "./dist/next/index.js",
-    "./next/runtime": "./dist/next/runtime.js"
+    "./next/runtime": "./dist/next/runtime.js",
+    "./runtime": "./dist/runtime.js"
   },
   "scripts": {
     "build": "tsc && chmod +x bin/run.js",

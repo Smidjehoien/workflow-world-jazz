@@ -257,7 +257,7 @@ export abstract class BaseBuilder {
     // User steps
     ${imports}
     // API entrypoint
-    export { vercelAPIStepsEntrypoint as POST } from '@vercel/workflow/api';`;
+    export { stepEntrypoint as POST } from '@vercel/workflow/runtime';`;
 
     // Bundle with esbuild and our custom SWC plugin
     const esbuildCtx = await esbuild.context({
@@ -455,16 +455,16 @@ export abstract class BaseBuilder {
       // Create the workflow function handler with proper linter suppressions
       const workflowFunctionCode = `// biome-ignore-all lint: generated file
 /* eslint-disable */
-import { vercelAPIWorkflowsEntrypoint } from '${
+import { workflowEntrypoint } from '${
         // The runtime import path is configurable so that the Next.js loader
         // runtime path can be resolved. This is to avoid the user needing to
         // add @vercel/workflow-core as a dependency to their Next.js project.
-        this.config.runtimeImportPath || '@vercel/workflow/api'
+        this.config.runtimeImportPath || '@vercel/workflow/runtime'
       }';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
 
-export const POST = vercelAPIWorkflowsEntrypoint(workflowCode);`;
+export const POST = workflowEntrypoint(workflowCode);`;
 
       // we skip the final bundling step for Next.js so it can bundle itself
       if (!bundleFinalOutput) {
