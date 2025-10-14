@@ -8,7 +8,7 @@ export {
   EventTypeSchema,
 } from './events.js';
 export type * from './hooks.js';
-export { HookSchema, WebhookSchema } from './hooks.js';
+export { HookSchema } from './hooks.js';
 export type * from './interfaces.js';
 export type * from './queue.js';
 export { MessageId, QueuePrefix, ValidQueueName } from './queue.js';

@@ -41,18 +41,18 @@ export function once<T>(fn: () => T) {
 }
 
 /**
- * Builds a workflow suspension log message based on the counts of steps and webhooks.
+ * Builds a workflow suspension log message based on the counts of steps and hooks.
  * @param runId - The workflow run ID
  * @param stepCount - Number of steps to be enqueued
- * @param webhookCount - Number of webhooks to be enqueued
+ * @param hookCount - Number of hooks to be enqueued
  * @returns The formatted log message or null if both counts are 0
  */
 export function buildWorkflowSuspensionMessage(
   runId: string,
   stepCount: number,
-  webhookCount: number
+  hookCount: number
 ): string | null {
-  if (stepCount === 0 && webhookCount === 0) {
+  if (stepCount === 0 && hookCount === 0) {
     return null;
   }
 
@@ -60,15 +60,13 @@ export function buildWorkflowSuspensionMessage(
   if (stepCount > 0) {
     parts.push(`${stepCount} ${stepCount === 1 ? 'step' : 'steps'}`);
   }
-  if (webhookCount > 0) {
-    parts.push(
-      `${webhookCount} ${webhookCount === 1 ? 'webhook' : 'webhooks'}`
-    );
+  if (hookCount > 0) {
+    parts.push(`${hookCount} ${hookCount === 1 ? 'hook' : 'hooks'}`);
   }
 
   const resumeMsg =
-    webhookCount > 0
-      ? 'steps are created and webhooks are triggered'
+    hookCount > 0
+      ? 'steps are created and hooks are triggered'
       : 'steps are created';
 
   return `[Workflows] "${runId}" - ${parts.join(' and ')} to be enqueued\n  Workflow will suspend and resume when ${resumeMsg}`;

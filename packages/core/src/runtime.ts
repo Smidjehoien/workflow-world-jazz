@@ -347,7 +347,7 @@ export function workflowEntrypoint(workflowCode: string) {
               const suspensionMessage = buildWorkflowSuspensionMessage(
                 runId,
                 err.stepCount,
-                err.webhookCount
+                err.hookCount
               );
               if (suspensionMessage) {
                 // Note: suspensionMessage logged only in debug mode to avoid production noise

@@ -902,7 +902,7 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 hook has not been received yet');
+      expect(error.message).toEqual('1 hook has not been created yet');
       expect((error as WorkflowSuspension).steps).toHaveLength(1);
       expect((error as WorkflowSuspension).steps[0].type).toEqual('hook');
     });
@@ -1262,7 +1262,7 @@ describe('runWorkflow', () => {
       }
       assert(error);
       expect(error.name).toEqual('WorkflowSuspension');
-      expect(error.message).toEqual('1 hook has not been received yet');
+      expect(error.message).toEqual('1 hook has not been created yet');
       expect((error as WorkflowSuspension).steps).toHaveLength(1);
       expect((error as WorkflowSuspension).steps[0].type).toEqual('hook');
     });
