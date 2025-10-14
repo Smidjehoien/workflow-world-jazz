@@ -221,7 +221,7 @@ export class Run<TResult> {
  * @returns A `Run` object.
  * @throws {@link WorkflowRunNotFoundError} if the run ID is not found.
  */
-export function getRun(runId: string) {
+export function getRun<TResult>(runId: string): Run<TResult> {
   return new Run(runId);
 }
 
