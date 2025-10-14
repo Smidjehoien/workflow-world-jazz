@@ -30,4 +30,4 @@ export {
   getWorkflowMetadata,
   type WorkflowMetadata,
 } from './step/get-workflow-metadata.js';
-export { getWorkflowWritableStream } from './writable-stream.js';
+export { getWritable } from './writable-stream.js';

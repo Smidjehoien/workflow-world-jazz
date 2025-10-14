@@ -1,6 +1,6 @@
 import { getExternalRevivers } from '../serialization.js';
 import { getWorkflowRunStreamId } from '../util.js';
-import type { getWorkflowWritableStream } from '../writable-stream.js';
+import type { getWritable } from '../writable-stream.js';
 
 /**
  * The options for {@link getWorkflowReadableStream}.
@@ -31,7 +31,7 @@ export interface WorkflowReadableStreamOptions {
 
 /**
  * Retrieves the workflow run's default readable stream, which reads chunks
- * written to the corresponding writable stream {@link getWorkflowWritableStream}.
+ * written to the corresponding writable stream {@link getWritable}.
  *
  * @param runId - The workflow run ID.
  * @param options - The options for the readable stream.

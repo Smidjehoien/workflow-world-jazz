@@ -1,7 +1,7 @@
 import type { getWorkflowReadableStream } from './runtime/readable-stream.js';
 
 /**
- * The options for {@link getWorkflowWritableStream}.
+ * The options for {@link getWritable}.
  */
 export interface WorkflowWritableStreamOptions {
   /**
@@ -21,11 +21,11 @@ export interface WorkflowWritableStreamOptions {
  * @note This function can only be called inside a workflow function.
  * @returns The writable stream.
  */
-export function getWorkflowWritableStream<W = any>(
+export function getWritable<W = any>(
   // @ts-expect-error `options` is here for types/docs
   options: WorkflowWritableStreamOptions = {}
 ): WritableStream<W> {
   throw new Error(
-    '`getWorkflowWritableStream()` can only be called inside a workflow function'
+    '`getWritable()` can only be called inside a workflow function'
   );
 }

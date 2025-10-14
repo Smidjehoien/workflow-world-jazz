@@ -3,7 +3,7 @@ import { getWorkflowRunStreamId } from '../util.js';
 import type { WorkflowWritableStreamOptions } from '../writable-stream.js';
 import { getWorkflowMetadata } from './get-workflow-metadata.js';
 
-export function getWorkflowWritableStream<W = any>(
+export function getWritable<W = any>(
   options: WorkflowWritableStreamOptions = {}
 ): WritableStream<W> {
   const ctx = getWorkflowMetadata();

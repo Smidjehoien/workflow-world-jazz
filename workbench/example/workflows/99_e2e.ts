@@ -5,7 +5,7 @@ import {
   fetch,
   getStepMetadata,
   getWorkflowMetadata,
-  getWorkflowWritableStream,
+  getWritable,
   type RequestWithResponse,
   sleep,
 } from '@vercel/workflow';
@@ -237,8 +237,8 @@ async function stepCloseOutputStream(writable: WritableStream) {
 
 export async function outputStreamWorkflow() {
   'use workflow';
-  const writable = getWorkflowWritableStream();
-  const namedWritable = getWorkflowWritableStream({ namespace: 'test' });
+  const writable = getWritable();
+  const namedWritable = getWritable({ namespace: 'test' });
   await sleep('1s');
   await stepWithOutputStreamBinary(writable, 'Hello, world!');
   await sleep('1s');

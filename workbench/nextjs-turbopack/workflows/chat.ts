@@ -1,4 +1,4 @@
-import { getWorkflowWritableStream } from '@vercel/workflow';
+import { getWritable } from '@vercel/workflow';
 import {
   convertToModelMessages,
   type FinishReason,
@@ -160,7 +160,7 @@ export async function chat(messages: UIMessage[]) {
 
   console.log('Starting workflow');
 
-  const writable = getWorkflowWritableStream<UIMessageChunk>();
+  const writable = getWritable<UIMessageChunk>();
 
   // Write the "start" message to the client
   await startStream(writable);

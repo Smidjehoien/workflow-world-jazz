@@ -42,7 +42,7 @@ export function getDirective(
 export const WORKFLOW_HOOKS = [
   'getWorkflowMetadata',
   'getStepMetadata',
-  'getWorkflowWritableStream',
+  'getWritable',
 ];
 
 /**

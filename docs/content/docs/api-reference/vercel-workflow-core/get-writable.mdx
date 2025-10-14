@@ -1,10 +1,10 @@
 ---
-title: getWorkflowWritableStream
+title: getWritable
 ---
 
 import { generateDefinition } from "@/lib/tsdoc"
 
-# `getWorkflowWritableStream()`
+# `getWritable()`
 
 Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using the `readable` property of the [`Run` object](/docs/api-reference/vercel-workflow-core/get-run).
 
@@ -15,12 +15,12 @@ This function can only be called inside a workflow function (functions with `"us
 </Callout>
 
 ```typescript lineNumbers
-import { getWorkflowWritableStream } from '@vercel/workflow';
+import { getWritable } from '@vercel/workflow';
 
 export async function myWorkflow() {
   "use workflow";
   
-  const writable = getWorkflowWritableStream(); // [!code highlight]
+  const writable = getWritable(); // [!code highlight]
   const writer = writable.getWriter();
   
   await writer.write(new TextEncoder().encode('Hello from workflow!'));
@@ -35,8 +35,8 @@ export async function myWorkflow() {
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowWritableStream } from '@vercel/workflow';
-export default getWorkflowWritableStream;`
+import { getWritable } from '@vercel/workflow';
+export default getWritable;`
 })}
 showSections={['parameters']}
 />
@@ -46,8 +46,8 @@ showSections={['parameters']}
 <TSDoc
 definition={generateDefinition({
   code: `
-import { getWorkflowWritableStream } from '@vercel/workflow';
-export default getWorkflowWritableStream;`
+import { getWritable } from '@vercel/workflow';
+export default getWritable;`
 })}
 showSections={['returns']}
 />
@@ -68,12 +68,12 @@ Returns a `WritableStream<W>` where `W` is the type of data you plan to write to
 Here's a simple example streaming text data:
 
 ```typescript lineNumbers
-import { sleep, getWorkflowWritableStream } from '@vercel/workflow';
+import { sleep, getWritable } from '@vercel/workflow';
 
 export async function outputStreamWorkflow() {
   "use workflow";
 
-  const writable = getWorkflowWritableStream(); // [!code highlight]
+  const writable = getWritable(); // [!code highlight]
 
   await sleep("1s");
   await stepWithOutputStream(writable);
@@ -105,14 +105,14 @@ async function stepCloseOutputStream(writable: WritableStream) {
 Here's a more complex example showing how you might stream AI chat responses:
 
 ```typescript lineNumbers
-import { getWorkflowWritableStream } from '@vercel/workflow';
+import { getWritable } from '@vercel/workflow';
 import { generateId, streamText, type UIMessageChunk } from 'ai';
 
 export async function chat(messages: UIMessage[]) {
   'use workflow';
 
   // Get typed writable stream for UI message chunks
-  const writable = getWorkflowWritableStream<UIMessageChunk>(); // [!code highlight]
+  const writable = getWritable<UIMessageChunk>(); // [!code highlight]
 
   // Start the stream
   await startStream(writable);

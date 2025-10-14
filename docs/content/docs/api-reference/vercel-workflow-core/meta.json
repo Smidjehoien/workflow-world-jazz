@@ -11,7 +11,7 @@
     "resume-webhook",
     "sleep",
     "fetch",
-    "get-workflow-writable-stream",
+    "get-writable",
     "start",
     "get-run",
     "fatal-error",
