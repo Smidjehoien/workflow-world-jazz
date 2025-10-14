@@ -23,7 +23,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "tsc --build --clean && rm -r dist ||:",
-    "test": "vitest run src",
+    "test": "WORKFLOW_TARGET_WORLD=embedded vitest run src",
     "test:e2e": "vitest run e2e",
     "typecheck": "tsc --noEmit"
   },

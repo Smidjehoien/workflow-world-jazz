@@ -22,37 +22,44 @@ export function dateToStringReplacer(_key: string, value: unknown): unknown {
   return value;
 }
 
-export const getHttpConfig = (
-  config?: APIConfig
-): { baseUrl: string; headers: RequestInit['headers'] } => {
+export interface HttpConfig {
+  baseUrl: string;
+  headers: Headers;
+}
+
+export async function getHttpConfig(config?: APIConfig): Promise<HttpConfig> {
   const projectConfig = config?.projectConfig;
 
-  const headers: Record<string, string> = {};
+  const headers = new Headers(config?.headers);
   if (projectConfig) {
-    headers['x-vercel-environment'] = projectConfig.environment || 'production';
+    headers.set(
+      'x-vercel-environment',
+      projectConfig.environment || 'production'
+    );
     if (projectConfig.projectId) {
-      headers['x-vercel-project-id'] = projectConfig.projectId;
+      headers.set('x-vercel-project-id', projectConfig.projectId);
     }
     if (projectConfig.teamId) {
-      headers['x-vercel-team-id'] = projectConfig.teamId;
+      headers.set('x-vercel-team-id', projectConfig.teamId);
     }
   }
-  // Merge with config headers
-  Object.assign(headers, config?.headers || {}); // We honor user-provided baseUrl first
-  if (config?.baseUrl) {
-    return { baseUrl: config.baseUrl, headers };
+
+  const token = config?.token ?? (await getVercelOidcToken());
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // If projectConfig is provided (only necessary outside of vercel deployments),
-  // we default the baseUrl to the API proxy
-  const shouldUseProxy = projectConfig?.projectId && projectConfig?.teamId;
-  return {
-    baseUrl: shouldUseProxy
+  let baseUrl = config?.baseUrl;
+  if (!baseUrl) {
+    // If projectConfig is provided (only necessary outside of vercel deployments),
+    // we default the baseUrl to the API proxy
+    const shouldUseProxy = projectConfig?.projectId && projectConfig?.teamId;
+    baseUrl = shouldUseProxy
       ? `https://api.vercel.com/v1/workflow`
-      : 'https://vercel-workflow.com/api',
-    headers,
-  };
-};
+      : 'https://vercel-workflow.com/api';
+  }
+  return { baseUrl, headers };
+}
 
 export async function makeRequest<T>({
   endpoint,
@@ -65,18 +72,8 @@ export async function makeRequest<T>({
   config?: APIConfig;
   schema: z.ZodSchema<T>;
 }): Promise<T> {
-  const { baseUrl, headers: configHeaders } = getHttpConfig(config);
-
-  const headers = new Headers({
-    'Content-Type': 'application/json',
-    ...configHeaders,
-    ...options.headers,
-  });
-
-  const token = config.token ?? (await getVercelOidcToken());
-  if (token) {
-    headers.set('Authorization', `Bearer ${token}`);
-  }
+  const { baseUrl, headers } = await getHttpConfig(config);
+  headers.set('Content-Type', 'application/json');
 
   const url = `${baseUrl}${endpoint}`;
   const response = await fetch(url, {
