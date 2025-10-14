@@ -364,6 +364,6 @@ describe('e2e', () => {
   test('promiseRaceStressTestWorkflow', { timeout: 60_000 }, async () => {
     const run = await triggerWorkflow('promiseRaceStressTestWorkflow', []);
     const returnValue = await getWorkflowReturnValue(run.runId);
-    expect(returnValue).toEqual([4, 3, 2, 1, 0]);
+    expect(returnValue).toEqual([0, 1, 2, 3, 4]);
   });
 });

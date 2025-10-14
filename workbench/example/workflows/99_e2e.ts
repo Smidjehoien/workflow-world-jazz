@@ -54,9 +54,9 @@ async function specificDelay(delay: number, v: string) {
 export async function promiseRaceWorkflow() {
   'use workflow';
   const winner = await Promise.race([
-    specificDelay(2000, 'a'),
+    specificDelay(10000, 'a'),
     specificDelay(100, 'b'), // "b" should always win
-    specificDelay(3000, 'c'),
+    specificDelay(20000, 'c'),
   ]);
   return winner;
 }
@@ -284,7 +284,7 @@ export async function promiseRaceStressTestWorkflow() {
   const done: number[] = [];
   for (let i = 0; i < 5; i++) {
     const resp = i;
-    const dur = 1000 * (10 - i);
+    const dur = 1000 * 5 * i; // 5 seconds apart
     console.log(`sched`, resp, `/`, dur);
     promises.set(i, promiseRaceStressTestDelayStep(dur, resp));
   }
