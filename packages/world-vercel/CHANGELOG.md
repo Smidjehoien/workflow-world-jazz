@@ -1,5 +1,14 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- 7b18141: World config now takes named parameters, and header configuration for vercel was moved into world-vercel
+- 19ab8b2: Add streams endpoint auth
+- Updated dependencies [1cfee6e]
+  - @vercel/workflow-errors@0.0.1-alpha.4
+
 ## 0.0.1-alpha.9
 
 ### Patch Changes

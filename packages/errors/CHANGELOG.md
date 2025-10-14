@@ -1,5 +1,11 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- 1cfee6e: Update to latest website URL
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes

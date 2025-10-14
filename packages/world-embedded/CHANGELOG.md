@@ -1,5 +1,11 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- 7b18141: World config now takes named parameters, and header configuration for vercel was moved into world-vercel
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes

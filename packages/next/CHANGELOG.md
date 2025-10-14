@@ -1,5 +1,15 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.47
+
+### Patch Changes
+
+- 1cfee6e: Update to latest website URL
+- Updated dependencies [1cfee6e]
+- Updated dependencies [7b18141]
+  - @vercel/workflow-core@0.0.1-alpha.36
+  - @vercel/workflow-cli@0.0.1-alpha.46
+
 ## 0.0.1-alpha.46
 
 ### Patch Changes

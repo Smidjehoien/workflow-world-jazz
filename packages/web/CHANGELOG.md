@@ -1,5 +1,14 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.45
+
+### Patch Changes
+
+- 7b18141: World config now takes named parameters, and header configuration for vercel was moved into world-vercel
+- Updated dependencies [1cfee6e]
+- Updated dependencies [7b18141]
+  - @vercel/workflow-core@0.0.1-alpha.36
+
 ## 0.0.1-alpha.44
 
 ### Patch Changes

@@ -1,5 +1,17 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- Updated dependencies [1cfee6e]
+- Updated dependencies [7b18141]
+  - @vercel/workflow-errors@0.0.1-alpha.4
+  - @vercel/workflow-core@0.0.1-alpha.36
+  - @vercel/workflow-next@0.0.1-alpha.47
+  - @vercel/workflow-cli@0.0.1-alpha.46
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.5
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes
