@@ -1,4 +1,8 @@
 import {
+  WorkflowAPIError,
+  WorkflowRunNotFoundError,
+} from '@vercel/workflow-errors';
+import {
   type CancelWorkflowRunParams,
   type CreateWorkflowRunRequest,
   type GetWorkflowRunParams,
@@ -123,16 +127,23 @@ export async function getWorkflowRun(
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${id}${queryString ? `?${queryString}` : ''}`;
 
-  const run = await makeRequest({
-    endpoint,
-    options: { method: 'GET' },
-    config,
-    schema: (remoteRefBehavior === 'lazy'
-      ? WorkflowRunWithRefsSchema
-      : WorkflowRunSchema) as any,
-  });
+  try {
+    const run = await makeRequest({
+      endpoint,
+      options: { method: 'GET' },
+      config,
+      schema: (remoteRefBehavior === 'lazy'
+        ? WorkflowRunWithRefsSchema
+        : WorkflowRunSchema) as any,
+    });
 
-  return filterRunData(run, resolveData);
+    return filterRunData(run, resolveData);
+  } catch (error) {
+    if (error instanceof WorkflowAPIError && error.status === 404) {
+      throw new WorkflowRunNotFoundError(id);
+    }
+    throw error;
+  }
 }
 
 export async function updateWorkflowRun(
@@ -140,15 +151,22 @@ export async function updateWorkflowRun(
   data: UpdateWorkflowRunRequest,
   config?: APIConfig
 ): Promise<WorkflowRun> {
-  return makeRequest({
-    endpoint: `/v1/runs/${id}`,
-    options: {
-      method: 'PUT',
-      body: JSON.stringify(data, dateToStringReplacer),
-    },
-    config,
-    schema: WorkflowRunSchema,
-  });
+  try {
+    return makeRequest({
+      endpoint: `/v1/runs/${id}`,
+      options: {
+        method: 'PUT',
+        body: JSON.stringify(data, dateToStringReplacer),
+      },
+      config,
+      schema: WorkflowRunSchema,
+    });
+  } catch (error) {
+    if (error instanceof WorkflowAPIError && error.status === 404) {
+      throw new WorkflowRunNotFoundError(id);
+    }
+    throw error;
+  }
 }
 
 export async function cancelWorkflowRun(
@@ -165,16 +183,23 @@ export async function cancelWorkflowRun(
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${id}/cancel${queryString ? `?${queryString}` : ''}`;
 
-  const run = await makeRequest({
-    endpoint,
-    options: { method: 'PUT' },
-    config,
-    schema: (remoteRefBehavior === 'lazy'
-      ? WorkflowRunWithRefsSchema
-      : WorkflowRunSchema) as any,
-  });
+  try {
+    const run = await makeRequest({
+      endpoint,
+      options: { method: 'PUT' },
+      config,
+      schema: (remoteRefBehavior === 'lazy'
+        ? WorkflowRunWithRefsSchema
+        : WorkflowRunSchema) as any,
+    });
 
-  return filterRunData(run, resolveData);
+    return filterRunData(run, resolveData);
+  } catch (error) {
+    if (error instanceof WorkflowAPIError && error.status === 404) {
+      throw new WorkflowRunNotFoundError(id);
+    }
+    throw error;
+  }
 }
 
 export async function pauseWorkflowRun(
@@ -191,16 +216,23 @@ export async function pauseWorkflowRun(
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${id}/pause${queryString ? `?${queryString}` : ''}`;
 
-  const run = await makeRequest({
-    endpoint,
-    options: { method: 'PUT' },
-    config,
-    schema: (remoteRefBehavior === 'lazy'
-      ? WorkflowRunWithRefsSchema
-      : WorkflowRunSchema) as any,
-  });
+  try {
+    const run = await makeRequest({
+      endpoint,
+      options: { method: 'PUT' },
+      config,
+      schema: (remoteRefBehavior === 'lazy'
+        ? WorkflowRunWithRefsSchema
+        : WorkflowRunSchema) as any,
+    });
 
-  return filterRunData(run, resolveData);
+    return filterRunData(run, resolveData);
+  } catch (error) {
+    if (error instanceof WorkflowAPIError && error.status === 404) {
+      throw new WorkflowRunNotFoundError(id);
+    }
+    throw error;
+  }
 }
 
 export async function resumeWorkflowRun(
@@ -217,14 +249,21 @@ export async function resumeWorkflowRun(
   const queryString = searchParams.toString();
   const endpoint = `/v1/runs/${id}/resume${queryString ? `?${queryString}` : ''}`;
 
-  const run = await makeRequest({
-    endpoint,
-    options: { method: 'PUT' },
-    config,
-    schema: (remoteRefBehavior === 'lazy'
-      ? WorkflowRunWithRefsSchema
-      : WorkflowRunSchema) as any,
-  });
+  try {
+    const run = await makeRequest({
+      endpoint,
+      options: { method: 'PUT' },
+      config,
+      schema: (remoteRefBehavior === 'lazy'
+        ? WorkflowRunWithRefsSchema
+        : WorkflowRunSchema) as any,
+    });
 
-  return filterRunData(run, resolveData);
+    return filterRunData(run, resolveData);
+  } catch (error) {
+    if (error instanceof WorkflowAPIError && error.status === 404) {
+      throw new WorkflowRunNotFoundError(id);
+    }
+    throw error;
+  }
 }

@@ -6,7 +6,6 @@ import {
   WorkflowRunCancelledError,
   WorkflowRunFailedError,
   WorkflowRunNotCompletedError,
-  WorkflowRunNotFoundError,
   WorkflowRuntimeError,
 } from '@vercel/workflow-errors';
 import type {
@@ -78,27 +77,14 @@ export class Run<TResult> {
    * Cancels the workflow run.
    */
   async cancel(): Promise<void> {
-    await this.world.runs.cancel(this.runId).catch((error) => {
-      if (error instanceof WorkflowAPIError && error.status === 404) {
-        throw new WorkflowRunNotFoundError(this.runId);
-      }
-      throw error;
-    });
+    await this.world.runs.cancel(this.runId);
   }
 
   /**
    * The status of the workflow run.
    */
   get status(): Promise<WorkflowRunStatus> {
-    return this.world.runs
-      .get(this.runId)
-      .then((run) => run.status)
-      .catch((error) => {
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
-        throw error;
-      });
+    return this.world.runs.get(this.runId).then((run) => run.status);
   }
 
   /**
@@ -120,30 +106,14 @@ export class Run<TResult> {
    * The name of the workflow.
    */
   get workflowName(): Promise<string> {
-    return this.world.runs
-      .get(this.runId)
-      .then((run) => run.workflowName)
-      .catch((error) => {
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
-        throw error;
-      });
+    return this.world.runs.get(this.runId).then((run) => run.workflowName);
   }
 
   /**
    * The timestamp when the workflow run was created.
    */
   get createdAt(): Promise<Date> {
-    return this.world.runs
-      .get(this.runId)
-      .then((run) => run.createdAt)
-      .catch((error) => {
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
-        throw error;
-      });
+    return this.world.runs.get(this.runId).then((run) => run.createdAt);
   }
 
   /**
@@ -151,15 +121,7 @@ export class Run<TResult> {
    * Returns undefined if the workflow has not started yet.
    */
   get startedAt(): Promise<Date | undefined> {
-    return this.world.runs
-      .get(this.runId)
-      .then((run) => run.startedAt)
-      .catch((error) => {
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
-        throw error;
-      });
+    return this.world.runs.get(this.runId).then((run) => run.startedAt);
   }
 
   /**
@@ -167,15 +129,7 @@ export class Run<TResult> {
    * Returns undefined if the workflow has not completed yet.
    */
   get completedAt(): Promise<Date | undefined> {
-    return this.world.runs
-      .get(this.runId)
-      .then((run) => run.completedAt)
-      .catch((error) => {
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
-        throw error;
-      });
+    return this.world.runs.get(this.runId).then((run) => run.completedAt);
   }
 
   /**
@@ -209,9 +163,6 @@ export class Run<TResult> {
           await new Promise((resolve) => setTimeout(resolve, 1_000));
           continue;
         }
-        if (error instanceof WorkflowAPIError && error.status === 404) {
-          throw new WorkflowRunNotFoundError(this.runId);
-        }
         throw error;
       }
     }
@@ -223,7 +174,7 @@ export class Run<TResult> {
  *
  * @param runId - The workflow run ID obtained from {@link start}.
  * @returns A `Run` object.
- * @throws {@link WorkflowRunNotFoundError} if the run ID is not found.
+ * @throws WorkflowRunNotFoundError if the run ID is not found.
  */
 export function getRun<TResult>(runId: string): Run<TResult> {
   return new Run(runId);
