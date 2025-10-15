@@ -139,7 +139,7 @@ export abstract class BaseBuilder {
 
     console.log(
       `Discovering workflow directives`,
-      Date.now() - discoverStart + 'ms'
+      `${Date.now() - discoverStart}ms`
     );
 
     this.discoveredEntries.set(inputs, state);
@@ -219,7 +219,7 @@ export abstract class BaseBuilder {
     outfile: string;
     format?: 'cjs' | 'esm';
     externalizeNonSteps?: boolean;
-  }): Promise<void | esbuild.BuildContext> {
+  }): Promise<esbuild.BuildContext | undefined> {
     // These need to handle watching for dev to scan for
     // new entries and changes to existing ones
     const { discoveredSteps: stepFiles } = await this.discoverEntries(
@@ -307,7 +307,7 @@ export abstract class BaseBuilder {
     const stepsResult = await esbuildCtx.rebuild();
 
     this.logEsbuildMessages(stepsResult, 'steps bundle creation');
-    console.log('Created steps bundle', Date.now() - stepsBundleStart + 'ms');
+    console.log('Created steps bundle', `${Date.now() - stepsBundleStart}ms`);
 
     const partialWorkflowManifest = {
       steps: workflowManifest.steps,
@@ -408,7 +408,7 @@ export abstract class BaseBuilder {
     this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');
     console.log(
       'Created intermediate workflow bundle',
-      Date.now() - bundleStartTime + 'ms'
+      `${Date.now() - bundleStartTime}ms`
     );
     const partialWorkflowManifest = {
       workflows: workflowManifest.workflows,
@@ -505,7 +505,7 @@ export const POST = workflowEntrypoint(workflowCode);`;
       this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
       console.log(
         'Created final workflow bundle',
-        Date.now() - bundleStartTime + 'ms'
+        `${Date.now() - bundleStartTime}ms`
       );
     };
     await bundleFinal(interimBundle.outputFiles[0].text);
