@@ -219,52 +219,17 @@ This terminal command sends a `POST` request to your development server at `http
 
 Watch the Next.js development server logs to see your workflow execute as well as the steps that are being processed.
 
-## Observability
-
-The Workflow SDK provides powerful tools to inspect and debug your workflow runs.
-After triggering your workflow, you can use the [CLI or Web UI](/docs/observability/) to view detailed information about runs, steps, and their execution.
-
-To see a list of all workflow runs, ensure `@vercel/workflow-cli` is installed globally or in your project, and run:
+Additionally, you can use the [Workflow CLI](/docs/api-reference/cli) to inspect your workflow runs and steps in detail.
 
 ```bash
-# When installed locally
-npx wf i runs
-# When installed globally
 wf i runs
 ```
-
-This displays information on your most recent runs.
-
-```bash
-runId                       workflowName         status     started        completed
---------------------------  -------------------  ---------  -------------  -------------
-01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
-```
-
-Run `npx wf i --help` for more information on commands and filtering.
-
-### Web UI
-
-The Workflow SDK also provides a web UI for inspecting and debugging your workflow runs.
-
-To start the web UI, add `--web` to any of the inspect commands, like so:
-
-```bash
-npx wf i runs <run-id> --web
-```
-
-This will open the web UI in your browser.
-
-<img src="/o11y-ui.png" alt="Web UI" />
-
-<Callout>
-For more details, see [CLI and Web UI documentation](/docs/observability/).
-</Callout>
 
 ---
 
 ## Next Steps
 
 * Learn more about the [Workflow SDK Concepts](/docs/foundations/concepts).
+* Learn about how to use [Observability](/docs/observability) tools.
 * Explore [Workflow SDK Core](/docs/api-reference/vercel-workflow-core).
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.

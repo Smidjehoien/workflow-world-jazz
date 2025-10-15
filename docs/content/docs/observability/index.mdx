@@ -4,9 +4,11 @@ title: Observability
 
 # Observability
 
-The Workflow SDK provides powerful tools to inspect, monitor, and debug your workflows through the CLI and Web UI.
+Workflow provides powerful tools to inspect, monitor, and debug your workflows through the CLI and Web UI.
 
 ## Installing the CLI
+
+Install the CLI globally:
 
 ```bash
 npm install -g @vercel/workflow-cli@latest
@@ -20,13 +22,13 @@ By default, the CLI and Web UI inspect your local development environment:
 
 ```bash
 # Get started by listing recent workflow runs
-npx wf i runs
+wf i runs
 
 # Launch Web UI for visual exploration, running locally on port 3456
-npx wf i runs --web
+wf i runs --web
 
 # See all available commands
-npx wf i --help
+wf i --help
 ```
 
 See the [API Reference: CLI](/docs/api-reference/cli) for detailed command documentation.
@@ -37,44 +39,49 @@ To inspect workflows running on Vercel, add the `--backend vercel` flag:
 
 ```bash
 # Inspect production workflows
-npx wf i runs --backend vercel
+wf i runs --backend vercel
 
 # Launch Web UI for production
-npx wf i runs --web --backend vercel
+wf i runs --web --backend vercel
 ```
 
 ## Vercel CLI Setup
 
-When inspecting Vercel deployments, you need to be authenticated and have your project linked:
+To inspect a Vercel deployment, you need to be authenticated and [link your Vercel project](https://vercel.com/docs/cli/project-linking):
 
-1. **Login to Vercel CLI:**
+1. **Login to the Vercel CLI:**
+
    ```bash
    npx vercel login
    ```
 
-2. **Link your project:**
+2. **Link your Vercel project:**
+
    ```bash
    npx vercel link
    ```
 
 3. **Inspect workflows:**
+
    ```bash
-   npx wf i runs --backend vercel
+   wf i runs --backend vercel
    ```
 
-The CLI will automatically use your Vercel authentication and project configuration. You can specify a different environment with `--env`:
+The CLI will automatically use your Vercel authentication and project configuration.
+
+Additionally, the `--env` flag is available to specify a different environment.
 
 ```bash
 # Inspect preview environment
-npx wf i runs --backend vercel --env preview
+wf i runs --backend vercel --env preview
 
 # Inspect development environment  
-npx wf i runs --backend vercel --env development
+wf i runs --backend vercel --env development
 ```
 
 ## Custom Backends
 
-The observability tools are compatible with custom world implementations and third-party backends. Follow the configuration instructions for the appropriate backend
+The observability tools are compatible with custom world implementations and third-party backends. Follow the configuration instructions for your appropriate backend.
 
 ## Learn More
 
