@@ -3,9 +3,10 @@ import ms, { type StringValue } from 'ms';
 const BASE_URL = 'https://useworkflow.dev/errors';
 
 /**
- * All the slugs of the errors.
+ * @internal
+ * All the slugs of the errors used for documentation links.
  */
-export const ERROR_SLUGS = {
+const ERROR_SLUGS = {
   START_INVALID_WORKFLOW_FUNCTION: 'start-invalid-workflow-function',
   SERIALIZATION_FAILED: 'serialization-failed',
   WORKFLOW_API_ERROR: 'workflow-api-error',
@@ -31,6 +32,20 @@ interface WorkflowErrorOptions {
 
 /**
  * The base class for all Workflow-related errors.
+ *
+ * This error is thrown by the Workflow SDK when internal operations fail.
+ * You can use this class with `instanceof` to catch any Workflow SDK error.
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await getRun(runId);
+ * } catch (error) {
+ *   if (error instanceof WorkflowError) {
+ *     console.error('Workflow SDK error:', error.message);
+ *   }
+ * }
+ * ```
  */
 export class WorkflowError extends Error {
   readonly cause?: unknown;
@@ -48,6 +63,23 @@ export class WorkflowError extends Error {
   }
 }
 
+/**
+ * Thrown when a Workflow API request fails.
+ *
+ * This error is thrown when HTTP requests to the Workflow backend fail,
+ * typically due to network issues, invalid requests, or server errors.
+ *
+ * @example
+ * ```ts
+ * try {
+ *   await startWorkflow('myWorkflow', input);
+ * } catch (error) {
+ *   if (error instanceof WorkflowAPIError) {
+ *     console.error(`API error (${error.status}):`, error.message);
+ *   }
+ * }
+ * ```
+ */
 export class WorkflowAPIError extends WorkflowError {
   status?: number;
   code?: string;
@@ -68,6 +100,21 @@ export class WorkflowAPIError extends WorkflowError {
   }
 }
 
+/**
+ * Thrown when a workflow run fails during execution.
+ *
+ * This error indicates that the workflow encountered a fatal error
+ * and cannot continue. The `error` property contains details about
+ * what caused the failure.
+ *
+ * @example
+ * ```
+ * const run = await getRun(runId);
+ * if (run.status === 'failed') {
+ *   // WorkflowRunFailedError will be thrown
+ * }
+ * ```
+ */
 export class WorkflowRunFailedError extends WorkflowError {
   runId: string;
   error: string;
@@ -82,6 +129,12 @@ export class WorkflowRunFailedError extends WorkflowError {
   }
 }
 
+/**
+ * Thrown when attempting to get results from an incomplete workflow run.
+ *
+ * This error occurs when you try to access the result of a workflow
+ * that is still running or hasn't completed yet.
+ */
 export class WorkflowRunNotCompletedError extends WorkflowError {
   runId: string;
   status: string;
@@ -96,6 +149,13 @@ export class WorkflowRunNotCompletedError extends WorkflowError {
   }
 }
 
+/**
+ * Thrown when the Workflow runtime encounters an internal error.
+ *
+ * This error indicates an issue with workflow execution, such as
+ * serialization failures, starting an invalid workflow function, or
+ * other runtime problems.
+ */
 export class WorkflowRuntimeError extends WorkflowError {
   constructor(message: string, options?: WorkflowErrorOptions) {
     super(message, {

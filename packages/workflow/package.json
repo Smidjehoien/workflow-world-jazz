@@ -19,6 +19,7 @@
     },
     "./ai": "./dist/ai.js",
     "./api": "./dist/api.js",
+    "./internal/errors": "./dist/internal/errors.js",
     "./internal/serialization": "./dist/internal/serialization.js",
     "./internal/builtins": "./dist/internal/builtins.js",
     "./internal/private": "./dist/internal/private.js",
