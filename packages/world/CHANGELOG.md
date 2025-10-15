@@ -1,5 +1,13 @@
 # @vercel/workflow-world
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- d34c4ac: Finish removal of old Webhook implementation
+- 1ef8597: Add "detail" user data to `Hook`
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

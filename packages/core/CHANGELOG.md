@@ -1,5 +1,27 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.37
+
+### Patch Changes
+
+- 5dd2a38: Rename and re-export workflow and step entrypoints from workflow package
+- 7b6679a: Make `getRun()` generic
+- 6cbb277: Refactor WorkflowRunNotFoundError to be thrown in world-vercel
+- d34c4ac: Finish removal of old Webhook implementation
+- 1ef8597: Add "detail" user data to `Hook`
+- b94f5fc: Use `Attribute` pattern for Hook otel spans
+- 54aaf87: Rename getWorkflowWritableStream to getWritable
+- Updated dependencies [c781ebe]
+- Updated dependencies [6cbb277]
+- Updated dependencies [75da34e]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+- Updated dependencies [38aefe6]
+  - @vercel/workflow-errors@0.0.1-alpha.5
+  - @vercel/workflow-world-vercel@0.0.1-alpha.11
+  - @vercel/workflow-world-embedded@0.0.1-alpha.10
+  - @vercel/workflow-world@0.0.1-alpha.6
+
 ## 0.0.1-alpha.36
 
 ### Patch Changes

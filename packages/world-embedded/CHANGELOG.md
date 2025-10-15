@@ -1,5 +1,15 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- Updated dependencies [75da34e]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+  - @vercel/workflow-world@0.0.1-alpha.6
+
 ## 0.0.1-alpha.9
 
 ### Patch Changes

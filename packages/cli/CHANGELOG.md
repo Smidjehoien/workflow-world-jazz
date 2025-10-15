@@ -1,5 +1,27 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.47
+
+### Patch Changes
+
+- 5dd2a38: Rename and re-export workflow and step entrypoints from workflow package
+- a08d6a5: Add private world-jazz package for testing jazz integration
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- 9dffdfb: Cleanup base builder workflow and step entry point import paths
+- Updated dependencies [5dd2a38]
+- Updated dependencies [7b6679a]
+- Updated dependencies [6cbb277]
+- Updated dependencies [75da34e]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+- Updated dependencies [b94f5fc]
+- Updated dependencies [54aaf87]
+  - @vercel/workflow-core@0.0.1-alpha.37
+  - @vercel/workflow-world-vercel@0.0.1-alpha.11
+  - @vercel/workflow-world-embedded@0.0.1-alpha.10
+  - @vercel/workflow-world@0.0.1-alpha.6
+  - @vercel/workflow-web@0.0.1-alpha.46
+
 ## 0.0.1-alpha.46
 
 ### Patch Changes

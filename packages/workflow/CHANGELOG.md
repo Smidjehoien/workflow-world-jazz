@@ -1,5 +1,30 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- c781ebe: Re-export errors package in workflow package
+- 5dd2a38: Rename and re-export workflow and step entrypoints from workflow package
+- 9dffdfb: Cleanup base builder workflow and step entry point import paths
+- Updated dependencies [c781ebe]
+- Updated dependencies [5dd2a38]
+- Updated dependencies [7b6679a]
+- Updated dependencies [a08d6a5]
+- Updated dependencies [6cbb277]
+- Updated dependencies [75da34e]
+- Updated dependencies [9dffdfb]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+- Updated dependencies [b94f5fc]
+- Updated dependencies [54aaf87]
+- Updated dependencies [38aefe6]
+  - @vercel/workflow-errors@0.0.1-alpha.5
+  - @vercel/workflow-core@0.0.1-alpha.37
+  - @vercel/workflow-cli@0.0.1-alpha.47
+  - @vercel/workflow-next@0.0.1-alpha.48
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
 ## 0.0.1-alpha.7
 
 ### Patch Changes

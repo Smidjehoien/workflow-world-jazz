@@ -1,5 +1,12 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.5
+
+### Patch Changes
+
+- c781ebe: Re-export errors package in workflow package
+- 38aefe6: Fix RetryableError to handle Date object
+
 ## 0.0.1-alpha.4
 
 ### Patch Changes

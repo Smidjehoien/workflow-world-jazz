@@ -1,5 +1,19 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.11
+
+### Patch Changes
+
+- 6cbb277: Refactor WorkflowRunNotFoundError to be thrown in world-vercel
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- Updated dependencies [c781ebe]
+- Updated dependencies [75da34e]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+- Updated dependencies [38aefe6]
+  - @vercel/workflow-errors@0.0.1-alpha.5
+  - @vercel/workflow-world@0.0.1-alpha.6
+
 ## 0.0.1-alpha.10
 
 ### Patch Changes

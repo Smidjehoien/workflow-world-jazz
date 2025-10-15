@@ -1,5 +1,24 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.48
+
+### Patch Changes
+
+- a08d6a5: Add private world-jazz package for testing jazz integration
+- 9dffdfb: Cleanup base builder workflow and step entry point import paths
+- Updated dependencies [5dd2a38]
+- Updated dependencies [7b6679a]
+- Updated dependencies [a08d6a5]
+- Updated dependencies [6cbb277]
+- Updated dependencies [75da34e]
+- Updated dependencies [9dffdfb]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [1ef8597]
+- Updated dependencies [b94f5fc]
+- Updated dependencies [54aaf87]
+  - @vercel/workflow-core@0.0.1-alpha.37
+  - @vercel/workflow-cli@0.0.1-alpha.47
+
 ## 0.0.1-alpha.47
 
 ### Patch Changes

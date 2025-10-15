@@ -1,5 +1,11 @@
 # @vercel/workflow-typescript-plugin
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 54aaf87: Rename getWorkflowWritableStream to getWritable
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes
