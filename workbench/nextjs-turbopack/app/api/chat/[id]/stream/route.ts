@@ -1,4 +1,4 @@
-import { getWorkflowReadableStream } from '@vercel/workflow/api';
+import { getRun } from '@vercel/workflow/api';
 import { createUIMessageStreamResponse, type UIMessageChunk } from 'ai';
 
 // Uncomment to simulate a long running Vercel Function timing
@@ -15,8 +15,10 @@ export async function GET(
   const startIndexParam = searchParams.get('startIndex');
   const startIndex =
     startIndexParam !== null ? parseInt(startIndexParam, 10) : undefined;
+  const run = getRun(id);
+  const stream = run.getReadable({ startIndex });
 
   return createUIMessageStreamResponse({
-    stream: getWorkflowReadableStream<UIMessageChunk>(id, { startIndex }),
+    stream,
   });
 }

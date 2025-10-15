@@ -1,9 +1,5 @@
-import { getWorkflowReadableStream, start } from '@vercel/workflow/api';
-import {
-  createUIMessageStreamResponse,
-  type UIMessage,
-  type UIMessageChunk,
-} from 'ai';
+import { start } from '@vercel/workflow/api';
+import { createUIMessageStreamResponse, type UIMessage } from 'ai';
 import { chat } from '@/workflows/chat';
 
 // Allow streaming responses up to 30 seconds
@@ -14,9 +10,10 @@ export async function POST(req: Request) {
 
   const workflowHandle = await start(chat, [messages]);
   const runId = workflowHandle.runId;
+  const stream = workflowHandle.readable;
 
   return createUIMessageStreamResponse({
-    stream: getWorkflowReadableStream<UIMessageChunk>(runId),
+    stream,
     headers: {
       'x-workflow-run-id': runId,
     },

@@ -5,6 +5,7 @@ import {
   hydrateResourceIO,
   StreamID,
 } from '@vercel/workflow-core/observability';
+import { getRun } from '@vercel/workflow-core/runtime';
 import type {
   Event,
   Hook,
@@ -17,7 +18,6 @@ import { formatDistance } from 'date-fns';
 import Table from 'easy-table';
 import { logger } from '../config/log.js';
 import type { InspectCLIOptions } from '../config/types.js';
-import { getWorkflowReadableStream } from '../runtime.js';
 import { streamToConsole } from './stream.js';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -392,7 +392,8 @@ export const showStream = async (
       'Filtering by run-id or step-id is not supported in get calls, ignoring filter.'
     );
   }
-  const stream = getWorkflowReadableStream(streamId);
+  const run = getRun(streamId);
+  const stream = run.readable;
   logger.info('Streaming to stdout, press CTRL+C to abort.');
   logger.info(
     'Use --json to output the stream as newline-delimited JSON without info logs.\n'

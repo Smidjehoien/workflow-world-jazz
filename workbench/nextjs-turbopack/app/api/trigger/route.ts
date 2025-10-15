@@ -1,4 +1,4 @@
-import { getRun, getWorkflowReadableStream, start } from '@vercel/workflow/api';
+import { getRun, start } from '@vercel/workflow/api';
 import { hydrateWorkflowArguments } from '@vercel/workflow/internal/serialization';
 import * as batchingWorkflow from '@/workflows/6_batching';
 import * as duplicateE2e from '@/workflows/98_duplicate_case';
@@ -63,7 +63,8 @@ export async function GET(req: Request) {
   const outputStreamParam = url.searchParams.get('output-stream');
   if (outputStreamParam) {
     const namespace = outputStreamParam === '1' ? undefined : outputStreamParam;
-    const stream = getWorkflowReadableStream(runId, {
+    const run = getRun(runId);
+    const stream = run.getReadable({
       namespace,
     });
     // Add JSON framing to the stream, wrapping binary data in base64

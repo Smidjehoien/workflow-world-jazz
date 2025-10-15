@@ -1,5 +1,3 @@
-import type { getWorkflowReadableStream } from './runtime/readable-stream.js';
-
 /**
  * The options for {@link getWritable}.
  */
@@ -16,7 +14,7 @@ export interface WorkflowWritableStreamOptions {
  *
  * The writable stream is intended to be passed as an argument to steps which can
  * write to it. Chunks written to this stream can be read outside the workflow
- * by using {@link getWorkflowReadableStream}.
+ * by using readable method of getRun.
  *
  * @note This function can only be called inside a workflow function.
  * @returns The writable stream.

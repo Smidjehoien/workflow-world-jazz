@@ -18,7 +18,6 @@ import { WorkflowSuspension } from './global.js';
 import { runtimeLogger } from './logger.js';
 import { getStepFunction } from './private.js';
 import { getWorld, getWorldHandlers } from './runtime/world.js';
-import { getWorkflowReadableStream } from './runtime.js';
 import {
   type Serializable,
   type StepInvokePayload,
@@ -29,6 +28,7 @@ import {
 import {
   dehydrateStepArguments,
   dehydrateStepReturnValue,
+  getExternalRevivers,
   hydrateStepArguments,
   hydrateWorkflowReturnValue,
 } from './serialization.js';
@@ -37,21 +37,47 @@ import { contextStorage } from './step/context-storage.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { serializeTraceCarrier, trace, withTraceContext } from './telemetry.js';
 import { getErrorName, getErrorStack, isInstanceOf } from './types.js';
-import { buildWorkflowSuspensionMessage } from './util.js';
+import {
+  buildWorkflowSuspensionMessage,
+  getWorkflowRunStreamId,
+} from './util.js';
 import { runWorkflow } from './workflow.js';
 
 export type { Event, WorkflowRun };
 export { WorkflowSuspension } from './global.js';
-export {
-  getWorkflowReadableStream,
-  type WorkflowReadableStreamOptions,
-} from './runtime/readable-stream.js';
 export {
   getHookByToken,
   resumeHook,
   resumeWebhook,
 } from './runtime/resume-hook.js';
 export { type StartOptions, start } from './runtime/start.js';
+
+/**
+ * Options for configuring a workflow's readable stream.
+ */
+export interface WorkflowReadableStreamOptions {
+  /**
+   * An optional namespace to distinguish between multiple streams associated
+   * with the same workflow run.
+   */
+  namespace?: string;
+  /**
+   * The index number of the starting chunk to begin reading the stream from.
+   */
+  startIndex?: number;
+  /**
+   * Any asynchronous operations that need to be performed before the execution
+   * environment is paused / terminated
+   * (i.e. using [`waitUntil()`](https://developer.mozilla.org/docs/Web/API/ExtendableEvent/waitUntil) or similar).
+   */
+  ops?: Promise<any>[];
+  /**
+   * The global object to use for hydrating types from the global scope.
+   *
+   * Defaults to {@link [`globalThis`](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/globalThis)}.
+   */
+  global?: Record<string, any>;
+}
 
 /**
  * A handler class for a workflow run.
@@ -96,13 +122,6 @@ export class Run<TResult> {
   }
 
   /**
-   * The readable stream of the workflow run.
-   */
-  get readable(): ReadableStream {
-    return getWorkflowReadableStream(this.runId);
-  }
-
-  /**
    * The name of the workflow.
    */
   get workflowName(): Promise<string> {
@@ -130,6 +149,31 @@ export class Run<TResult> {
    */
   get completedAt(): Promise<Date | undefined> {
     return this.world.runs.get(this.runId).then((run) => run.completedAt);
+  }
+
+  /**
+   * The readable stream of the workflow run.
+   */
+  get readable(): ReadableStream {
+    return this.getReadable();
+  }
+
+  /**
+   * Retrieves the workflow run's default readable stream, which reads chunks
+   * written to the corresponding writable stream {@link getWritable}.
+   *
+   * @param options - The options for the readable stream.
+   * @returns The `ReadableStream` for the workflow run.
+   */
+  getReadable<R = any>(
+    options: WorkflowReadableStreamOptions = {}
+  ): ReadableStream<R> {
+    const { ops = [], global = globalThis, startIndex, namespace } = options;
+    const name = getWorkflowRunStreamId(this.runId, namespace);
+    return getExternalRevivers(global, ops).ReadableStream({
+      name,
+      startIndex,
+    }) as ReadableStream<R>;
   }
 
   /**
