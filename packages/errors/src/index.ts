@@ -105,6 +105,30 @@ export class WorkflowRuntimeError extends WorkflowError {
   }
 }
 
+export class WorkflowRunNotFoundError extends WorkflowError {
+  runId: string;
+
+  constructor(runId: string) {
+    super(`Workflow run "${runId}" not found`, {
+      slug: ERROR_SLUGS.WORKFLOW_RUN_NOT_FOUND_ERROR,
+    });
+    this.name = 'WorkflowRunNotFoundError';
+    this.runId = runId;
+  }
+}
+
+export class WorkflowRunCancelledError extends WorkflowError {
+  runId: string;
+
+  constructor(runId: string) {
+    super(`Workflow run "${runId}" cancelled`, {
+      slug: ERROR_SLUGS.WORKFLOW_RUN_CANCELLED_ERROR,
+    });
+    this.name = 'WorkflowRunCancelledError';
+    this.runId = runId;
+  }
+}
+
 /**
  * A fatal error is an error that cannot be retried.
  * It will cause the step to fail and the error will
@@ -146,33 +170,11 @@ export class RetryableError extends Error {
       retryAfterSeconds = ms(options.retryAfter as StringValue) / 1000;
     } else if (typeof options.retryAfter === 'number') {
       retryAfterSeconds = options.retryAfter;
+    } else if (options.retryAfter instanceof Date) {
+      retryAfterSeconds = (options.retryAfter.getTime() - Date.now()) / 1000;
     } else {
       retryAfterSeconds = 1;
     }
     this.retryAfter = new Date(Date.now() + retryAfterSeconds * 1000);
-  }
-}
-
-export class WorkflowRunNotFoundError extends WorkflowError {
-  runId: string;
-
-  constructor(runId: string) {
-    super(`Workflow run "${runId}" not found`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_NOT_FOUND_ERROR,
-    });
-    this.name = 'WorkflowRunNotFoundError';
-    this.runId = runId;
-  }
-}
-
-export class WorkflowRunCancelledError extends WorkflowError {
-  runId: string;
-
-  constructor(runId: string) {
-    super(`Workflow run "${runId}" cancelled`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_CANCELLED_ERROR,
-    });
-    this.name = 'WorkflowRunCancelledError';
-    this.runId = runId;
   }
 }
