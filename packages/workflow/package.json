@@ -22,8 +22,7 @@
     "./internal/serialization": "./dist/internal/serialization.js",
     "./internal/builtins": "./dist/internal/builtins.js",
     "./internal/private": "./dist/internal/private.js",
-    "./next": "./dist/next/index.js",
-    "./next/runtime": "./dist/next/runtime.js",
+    "./next": "./dist/next.js",
     "./runtime": "./dist/runtime.js"
   },
   "scripts": {

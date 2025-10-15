@@ -30,7 +30,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new NextBuilder(config);
@@ -75,7 +74,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new NextBuilder(config);
@@ -108,7 +106,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new NextBuilder(config);
@@ -142,7 +139,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new VercelBuildOutputAPIBuilder(config);
@@ -182,7 +178,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new VercelBuildOutputAPIBuilder(config);
@@ -224,7 +219,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new VercelBuildOutputAPIBuilder(config);
@@ -262,7 +256,6 @@ describe('Webhook route generation', () => {
         workflowsBundlePath: '',
         watch: false,
         externalPackages: [],
-        runtimeImportPath: '@vercel/workflow-core/runtime',
       };
 
       const builder = new VercelBuildOutputAPIBuilder(config);

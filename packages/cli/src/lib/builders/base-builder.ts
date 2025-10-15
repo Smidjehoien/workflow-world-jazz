@@ -455,12 +455,7 @@ export abstract class BaseBuilder {
       // Create the workflow function handler with proper linter suppressions
       const workflowFunctionCode = `// biome-ignore-all lint: generated file
 /* eslint-disable */
-import { workflowEntrypoint } from '${
-        // The runtime import path is configurable so that the Next.js loader
-        // runtime path can be resolved. This is to avoid the user needing to
-        // add @vercel/workflow-core as a dependency to their Next.js project.
-        this.config.runtimeImportPath || '@vercel/workflow/runtime'
-      }';
+import { workflowEntrypoint } from '@vercel/workflow/runtime';
 
 const workflowCode = \`${workflowBundleCode.replace(/[\\`$]/g, '\\$&')}\`;
 

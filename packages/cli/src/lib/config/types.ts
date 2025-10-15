@@ -21,7 +21,6 @@ export interface WorkflowConfig {
   watch?: boolean;
   dirs: string[];
   workingDir: string;
-  runtimeImportPath?: string;
   buildTarget: BuildTarget;
   stepsBundlePath: string;
   workflowsBundlePath: string;
