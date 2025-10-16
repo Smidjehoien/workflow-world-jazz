@@ -56,6 +56,7 @@ vercel deploy
 ```
 
 No additional configuration is needed—Vercel automatically:
+
 - Selects the Vercel World backend
 - Sets up authentication
 - Configures project and team IDs
@@ -64,11 +65,13 @@ No additional configuration is needed—Vercel automatically:
 ### Deployment Workflow
 
 1. **Build your application:**
+
    ```bash
    npm run build
    ```
 
 2. **Deploy to Vercel:**
+
    ```bash
    vercel deploy --prod
    ```
@@ -173,6 +176,7 @@ function createVercelWorld(
 ```
 
 **Parameters:**
+
 - `config.token` - Authentication token
 - `config.headers` - Custom headers including:
   - `x-vercel-environment` - Environment name
@@ -181,9 +185,11 @@ function createVercelWorld(
 - `config.baseUrl` - API base URL (default: `https://api.vercel.com/v1/workflow`)
 
 **Returns:**
+
 - `World` - A world instance implementing the World interface
 
 **Example:**
+
 ```typescript
 import { createVercelWorld } from '@vercel/workflow-world-vercel';
 
@@ -222,12 +228,11 @@ If workflows don't work after deployment:
 1. Verify `withWorkflow()` is wrapping your Next.js config
 2. Check build logs for errors
 3. Ensure workflow files are in the correct directory
-4. Test locally first with [Embedded World](/docs/api-reference/world/world-embedded)
+4. Test locally first with [Embedded World](/docs/self-hosting/world/world-embedded)
 
 ## Learn More
 
-- [World Interface](/docs/api-reference/world) - Understanding the World interface
-- [Embedded World](/docs/api-reference/world/world-embedded) - For local development
+- [World Interface](/docs/self-hosting/world) - Understanding the World interface
+- [Embedded World](/docs/self-hosting/world/world-embedded) - For local development
 - [Observability](/docs/observability) - Monitoring and debugging tools
 - [Vercel Deployment Documentation](https://vercel.com/docs/deployments/overview)
-

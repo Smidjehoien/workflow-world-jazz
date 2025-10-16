@@ -66,11 +66,13 @@ Since it's for local development, no authentication is required or enforced.
 By default, workflow data is stored in `.workflow-data/` in your project root. You can customize this:
 
 **Environment variable:**
+
 ```bash
 export WORKFLOW_EMBEDDED_DATA_DIR=./custom-workflow-data
 ```
 
 **Programmatically:**
+
 ```typescript
 import { createEmbeddedWorld } from '@vercel/workflow-world-embedded';
 
@@ -121,11 +123,13 @@ npm run dev
 A typical development workflow with embedded world:
 
 1. **Start your dev server:**
+
    ```bash
    npm run dev
    ```
 
 2. **Trigger a workflow:**
+
    ```bash
    curl -X POST --json '{"email":"test@example.com"}' http://localhost:3000/api/signup
    ```
@@ -160,7 +164,7 @@ The embedded world is designed for development, not production:
 - **Single instance** - Cannot handle distributed deployments
 - **No authentication** - Suitable only for local development
 
-For production deployments, use the [Vercel World](/docs/api-reference/world/world-vercel).
+For production deployments, use the [Vercel World](/docs/self-hosting/world/world-vercel).
 
 ## API Reference
 
@@ -176,13 +180,16 @@ function createEmbeddedWorld(
 ```
 
 **Parameters:**
+
 - `dataDir` - Directory for storing workflow data (default: `.workflow-data/`)
 - `port` - Server port for queue transport (default: from `PORT` env var)
 
 **Returns:**
+
 - `World` - A world instance implementing the World interface
 
 **Example:**
+
 ```typescript
 import { createEmbeddedWorld } from '@vercel/workflow-world-embedded';
 
@@ -191,7 +198,6 @@ const world = createEmbeddedWorld('./my-data', 3000);
 
 ## Learn More
 
-- [World Interface](/docs/api-reference/world) - Understanding the World interface
-- [Vercel World](/docs/api-reference/world/world-vercel) - For production deployments
+- [World Interface](/docs/self-hosting/world) - Understanding the World interface
+- [Vercel World](/docs/self-hosting/world/world-vercel) - For production deployments
 - [Observability](/docs/observability) - Monitoring and debugging tools
-
