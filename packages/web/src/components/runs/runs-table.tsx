@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useRuns } from '@/hooks/use-api';
 import type { WorldConfig } from '@/lib/config-world';
+import { get403ErrorMessage } from '@/lib/errors';
 import { getResourceName } from '@/lib/resource-name';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
@@ -42,6 +43,14 @@ interface RunsTableProps {
   onStreamClick?: (runId: string, streamId: string) => void;
 }
 
+/**
+ * RunsTable - Displays workflow runs with server-side pagination.
+ * Uses the PaginatingTable pattern: fetches data for each page as needed from the server.
+ * The table and fetching behavior are intertwined - pagination controls trigger new API calls.
+ *
+ * This is in contrast to LocalPaginatingTable (used by StepsTable and EventsTable),
+ * which fetches all data upfront and paginates client-side.
+ */
 export function RunsTable({
   config,
   onRunClick,
@@ -162,9 +171,7 @@ export function RunsTable({
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error loading runs</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error ? error.message : 'An error occurred'}
-            </AlertDescription>
+            <AlertDescription>{get403ErrorMessage(error)}</AlertDescription>
           </Alert>
         ) : !data || data.data.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">

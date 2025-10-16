@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx';
 import { formatDistanceStrict } from 'date-fns';
 import { twMerge } from 'tailwind-merge';
 
-export const DEFAULT_PAGE_SIZE = 5;
+export const DEFAULT_PAGE_SIZE = 10;
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

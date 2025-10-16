@@ -41,6 +41,7 @@
     "@vercel/workflow-world": "workspace:*",
     "@vercel/workflow-world-embedded": "workspace:*",
     "@vercel/workflow-world-vercel": "workspace:*",
+    "boxen": "^8.0.1",
     "builtin-modules": "^5.0.0",
     "chalk": "^5.6.2",
     "chokidar": "^4.0.3",

@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { HooksTable } from '@/components/hooks/hooks-table';
+import { ErrorBoundary } from '@/components/error-boundary';
+import { HooksTableWithData } from '@/components/hooks/hooks-table-with-data';
 import { RunsTable } from '@/components/runs/runs-table';
 import { buildUrlWithConfig, useQueryParamConfig } from '@/lib/config';
 
@@ -39,18 +40,28 @@ export default function Home() {
 
   return (
     <div className="space-y-6">
-      <RunsTable
-        config={config}
-        onRunClick={handleRunClick}
-        onStreamClick={handleRunClick}
-      />
+      <ErrorBoundary
+        title="Runs Error"
+        description="Failed to load workflow runs. Please try refreshing the page."
+      >
+        <RunsTable
+          config={config}
+          onRunClick={handleRunClick}
+          onStreamClick={handleRunClick}
+        />
+      </ErrorBoundary>
 
-      <HooksTable
-        config={config}
-        onHookClick={handleHookSelect}
-        selectedHookId={selectedHookId}
-        onCloseDetailSidebar={() => handleHookSelect(undefined)}
-      />
+      <ErrorBoundary
+        title="Hooks Error"
+        description="Failed to load hooks. Please try refreshing the page."
+      >
+        <HooksTableWithData
+          config={config}
+          onHookClick={handleHookSelect}
+          selectedHookId={selectedHookId}
+          onCloseDetailSidebar={() => handleHookSelect(undefined)}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

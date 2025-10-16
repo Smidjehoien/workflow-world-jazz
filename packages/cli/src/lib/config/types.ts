@@ -15,6 +15,7 @@ export type InspectCLIOptions = {
   limit?: number;
   workflowName?: string;
   withData?: boolean;
+  backend?: string;
 };
 
 export interface WorkflowConfig {

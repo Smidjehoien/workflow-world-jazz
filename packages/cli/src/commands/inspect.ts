@@ -31,10 +31,15 @@ export default class Inspect extends BaseCommand {
   ];
 
   async catch(error: any) {
-    if (LOGGING_CONFIG.VERBOSE_MODE) {
+    // Check if this is a 403 error from the Vercel backend
+    if (error?.status === 403) {
+      const message =
+        'Your current vercel account does not have access to this workflow run. Please use `vercel login` to login, or use `vercel switch` to ensure you can access the correct team.';
+      console.error(message);
+    } else if (LOGGING_CONFIG.VERBOSE_MODE) {
       console.error(error);
     }
-    throw error;
+    process.exit(1);
   }
 
   static args = {
@@ -107,70 +112,86 @@ export default class Inspect extends BaseCommand {
   } as const;
 
   public async run(): Promise<void> {
-    const { args, flags } = await this.parse(Inspect);
+    try {
+      const { args, flags } = await this.parse(Inspect);
 
-    const resource = normalizeResource(args.resource);
-    if (!resource) {
-      this.logError(
-        `Unknown resource "${args.resource}": must be one of: run(s), step(s), stream(s), event(s), hook(s)`
-      );
-      return;
-    }
-
-    const id = args.id;
-
-    const world = await setupCliWorld(flags, this.config.version);
-
-    // Handle web UI mode
-    if (flags.web || resource === 'web') {
-      const actualResource = resource === 'web' ? 'run' : resource;
-      return await launchWebUI(actualResource, id, flags, this.config.version);
-    }
-
-    // Convert flags to InspectCLIOptions with proper typing
-    const options = toInspectOptions(flags);
-
-    if (resource === 'run') {
-      if (id) {
-        return await showRun(world, id, options);
-      }
-      return await listRuns(world, options);
-    }
-
-    if (resource === 'step') {
-      if (id) {
-        return await showStep(world, id, options);
-      }
-      return await listSteps(world, options);
-    }
-
-    if (resource === 'stream') {
-      if (id) {
-        return await showStream(world, id, options);
-      }
-      return await listStreams(world, options);
-    }
-
-    if (resource === 'event') {
-      if (id) {
+      const resource = normalizeResource(args.resource);
+      if (!resource) {
         this.logError(
-          'Event-ID is not supported for events. Filter by run-id or step-id instead. Usage: `wf i events --runId=<id>`'
+          `Unknown resource "${args.resource}": must be one of: run(s), step(s), stream(s), event(s), hook(s)`
         );
-        return;
+        process.exit(1);
       }
-      return await listEvents(world, options);
-    }
 
-    if (resource === 'hook') {
-      if (id) {
-        return await showHook(world, id, options);
+      const id = args.id;
+
+      const world = await setupCliWorld(flags, this.config.version);
+
+      // Handle web UI mode
+      if (flags.web || resource === 'web') {
+        const actualResource = resource === 'web' ? 'run' : resource;
+        await launchWebUI(actualResource, id, flags, this.config.version);
+        process.exit(0);
       }
-      return await listHooks(world, options);
-    }
 
-    this.logError(
-      `Unknown resource: ${resource}. Usage: ${Inspect.examples.join('\n')}`
-    );
+      // Convert flags to InspectCLIOptions with proper typing
+      const options = toInspectOptions(flags);
+
+      if (resource === 'run') {
+        if (id) {
+          await showRun(world, id, options);
+        } else {
+          await listRuns(world, options);
+        }
+        process.exit(0);
+      }
+
+      if (resource === 'step') {
+        if (id) {
+          await showStep(world, id, options);
+        } else {
+          await listSteps(world, options);
+        }
+        process.exit(0);
+      }
+
+      if (resource === 'stream') {
+        if (id) {
+          await showStream(world, id, options);
+        } else {
+          await listStreams(world, options);
+        }
+        process.exit(0);
+      }
+
+      if (resource === 'event') {
+        if (id) {
+          this.logError(
+            'Event-ID is not supported for events. Filter by run-id or step-id instead. Usage: `wf i events --runId=<id>`'
+          );
+          process.exit(1);
+        }
+        await listEvents(world, options);
+        process.exit(0);
+      }
+
+      if (resource === 'hook') {
+        if (id) {
+          await showHook(world, id, options);
+        } else {
+          await listHooks(world, options);
+        }
+        process.exit(0);
+      }
+
+      this.logError(
+        `Unknown resource: ${resource}. Usage: ${Inspect.examples.join('\n')}`
+      );
+      process.exit(1);
+    } catch (error) {
+      // Let the catch handler deal with it, but ensure we exit
+      throw error;
+    }
   }
 }
 
@@ -184,6 +205,7 @@ function toInspectOptions(flags: any): InspectCLIOptions {
     limit: flags.limit,
     workflowName: flags.workflowName,
     withData: flags.withData,
+    backend: flags.backend,
   };
 }
 
