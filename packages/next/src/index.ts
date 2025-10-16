@@ -27,6 +27,8 @@ export function withWorkflow({
     }
   }
 
+  const loaderPath = require.resolve('./loader');
+
   // configure the loader if turbopack is being used
   if (!nextConfig.turbopack) {
     nextConfig.turbopack = {};
@@ -39,28 +41,16 @@ export function withWorkflow({
   nextConfig.turbopack.rules = {
     ...existingRules,
     '*.tsx': {
-      loaders: [
-        ...(existingRules['*.tsx']?.loaders || []),
-        '@vercel/workflow-next/loader',
-      ],
+      loaders: [...(existingRules['*.tsx']?.loaders || []), loaderPath],
     },
     '*.ts': {
-      loaders: [
-        ...(existingRules['*.ts']?.loaders || []),
-        '@vercel/workflow-next/loader',
-      ],
+      loaders: [...(existingRules['*.ts']?.loaders || []), loaderPath],
     },
     '*.jsx': {
-      loaders: [
-        ...(existingRules['*.jsx']?.loaders || []),
-        '@vercel/workflow-next/loader',
-      ],
+      loaders: [...(existingRules['*.jsx']?.loaders || []), loaderPath],
     },
     '*.js': {
-      loaders: [
-        ...(existingRules['*.js']?.loaders || []),
-        '@vercel/workflow-next/loader',
-      ],
+      loaders: [...(existingRules['*.js']?.loaders || []), loaderPath],
     },
   };
 
@@ -78,7 +68,7 @@ export function withWorkflow({
     // ours comes before the default swc transform
     webpackConfig.module.rules.push({
       test: /.*\.(mjs|cjs|cts|ts|tsx|js|jsx)$/,
-      loader: '@vercel/workflow-next/loader',
+      loader: loaderPath,
     });
 
     return existingWebpackModify
