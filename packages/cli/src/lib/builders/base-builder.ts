@@ -594,13 +594,14 @@ async function handler(request) {
     return new Response('Missing token', { status: 400 });
   }
 
-  const response = await resumeWebhook(token, request);
-
-  if (!response) {
+  try {
+    const response = await resumeWebhook(token, request);
+    return response;
+  } catch (error) {
+    // TODO: differentiate between invalid token and other errors
+    console.error('Error during resumeWebhook', error);
     return new Response(null, { status: 404 });
   }
-
-  return response;
 }
 
 export const GET = handler;

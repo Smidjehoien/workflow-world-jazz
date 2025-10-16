@@ -33,7 +33,7 @@ export interface Hook<T = any> extends AsyncIterable<T>, Thenable<T> {
  * @see {@link createWebhook}
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Request
  */
-export interface Webhook extends Hook<RequestWithResponse> {
+export interface Webhook<T extends Request> extends Hook<T> {
   /**
    * The URL that external systems can call to send data to the workflow.
    */
@@ -78,7 +78,20 @@ export interface HookOptions {
   metadata?: Serializable;
 }
 
-export interface WebhookOptions extends HookOptions {}
+export interface WebhookOptions extends HookOptions {
+  /**
+   * If set to a `Response` object, the webhook will automatically
+   * respond with the specified response.
+   *
+   * If set to `"manual"`, each individual request will need to
+   * be responded to manually from within the workflow by calling the
+   * `respondWith()` method.
+   *
+   * If not set then the webhook will automatically respond with
+   * a `202 Accepted` response.
+   */
+  respondWith?: Response | 'manual';
+}
 
 /**
  * Creates a {@link Hook} that can be used to suspend and resume the workflow run with a payload.
@@ -117,9 +130,13 @@ export function createHook<T = any>(options?: HookOptions): Hook<T> {
  * that can be inteteracted with in workflow functions.
  */
 export function createWebhook(
+  options: WebhookOptions & { respondWith: 'manual' }
+): Webhook<RequestWithResponse>;
+export function createWebhook(options?: WebhookOptions): Webhook<Request>;
+export function createWebhook(
   // @ts-expect-error `options` is here for types/docs
   options?: WebhookOptions
-): Webhook {
+): Webhook<Request> | Webhook<RequestWithResponse> {
   throw new Error(
     '`createWebhook()` can only be called inside a workflow function'
   );

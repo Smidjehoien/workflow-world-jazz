@@ -10,6 +10,8 @@ export const ERROR_SLUGS = {
   NODE_JS_MODULE_IN_WORKFLOW: 'node-js-module-in-workflow',
   START_INVALID_WORKFLOW_FUNCTION: 'start-invalid-workflow-function',
   SERIALIZATION_FAILED: 'serialization-failed',
+  WEBHOOK_INVALID_RESPOND_WITH_VALUE: 'webhook-invalid-respond-with-value',
+  WEBHOOK_RESPONSE_NOT_SENT: 'webhook-response-not-sent',
 } as const;
 
 type ErrorSlug = (typeof ERROR_SLUGS)[keyof typeof ERROR_SLUGS];

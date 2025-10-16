@@ -188,33 +188,92 @@ describe('e2e', () => {
 
   test('webhookWorkflow', { timeout: 60_000 }, async () => {
     const token = Math.random().toString(36).slice(2);
+    const token2 = Math.random().toString(36).slice(2);
+    const token3 = Math.random().toString(36).slice(2);
 
-    const run = await triggerWorkflow('webhookWorkflow', [token]);
+    const run = await triggerWorkflow('webhookWorkflow', [
+      token,
+      token2,
+      token3,
+    ]);
 
-    // Wait a few seconds so that the webhook is registered.
+    // Wait a few seconds so that the webhooks are registered.
     // TODO: make this more efficient when we add subscription support.
     await new Promise((resolve) => setTimeout(resolve, 5_000));
 
-    const webhookUrl = new URL(
-      `/.well-known/workflow/v1/webhook/${encodeURIComponent(token)}`,
-      deploymentUrl
+    // Webhook with default response
+    const res = await fetch(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token)}`,
+        deploymentUrl
+      ),
+      {
+        method: 'POST',
+        body: JSON.stringify({ message: 'one' }),
+      }
     );
-
-    const res = await fetch(webhookUrl, {
-      method: 'PUT',
-      body: JSON.stringify({ message: 'one' }),
-    });
     expect(res.status).toBe(202);
     const body = await res.text();
-    expect(body).toBe('Hello from webhook!');
+    expect(body).toBe('');
+
+    // Webhook with static response
+    const res2 = await fetch(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token2)}`,
+        deploymentUrl
+      ),
+      {
+        method: 'POST',
+        body: JSON.stringify({ message: 'two' }),
+      }
+    );
+    expect(res2.status).toBe(402);
+    const body2 = await res2.text();
+    expect(body2).toBe('Hello from static response!');
+
+    // Webhook with manual response
+    const res3 = await fetch(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token3)}`,
+        deploymentUrl
+      ),
+      {
+        method: 'POST',
+        body: JSON.stringify({ message: 'three' }),
+      }
+    );
+    expect(res3.status).toBe(200);
+    const body3 = await res3.text();
+    expect(body3).toBe('Hello from webhook!');
 
     const returnValue = await getWorkflowReturnValue(run.runId);
-    expect(returnValue).toMatchObject({
-      token,
-      url: expect.any(String),
-      method: 'PUT',
-      body: '{"message":"one"}',
-    });
+    expect(returnValue).toHaveLength(3);
+    expect(returnValue[0].url).toBe(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token)}`,
+        deploymentUrl
+      ).href
+    );
+    expect(returnValue[0].method).toBe('POST');
+    expect(returnValue[0].body).toBe('{"message":"one"}');
+
+    expect(returnValue[1].url).toBe(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token2)}`,
+        deploymentUrl
+      ).href
+    );
+    expect(returnValue[1].method).toBe('POST');
+    expect(returnValue[1].body).toBe('{"message":"two"}');
+
+    expect(returnValue[2].url).toBe(
+      new URL(
+        `/.well-known/workflow/v1/webhook/${encodeURIComponent(token3)}`,
+        deploymentUrl
+      ).href
+    );
+    expect(returnValue[2].method).toBe('POST');
+    expect(returnValue[2].body).toBe('{"message":"three"}');
   });
 
   test('webhook route with invalid token', { timeout: 60_000 }, async () => {

@@ -1,4 +1,5 @@
 import { waitUntil } from '@vercel/functions';
+import { ERROR_SLUGS, WorkflowRuntimeError } from '@vercel/workflow-errors';
 import type { Hook } from '@vercel/workflow-world';
 import type { WorkflowInvokePayload } from '../schemas.js';
 import {
@@ -77,7 +78,6 @@ export async function resumeHook<T = any>(
         ops,
         globalThis
       );
-      //console.log('dehydratedPayload', dehydratedPayload);
       waitUntil(Promise.all(ops));
 
       // Create a hook_received event with the payload
@@ -165,21 +165,54 @@ export async function resumeHook<T = any>(
 export async function resumeWebhook(
   token: string,
   request: Request
-): Promise<Response | null> {
-  const { readable, writable } = new TransformStream<Response, Response>();
+): Promise<Response> {
+  const hook = await getHookByToken(token);
 
-  // The request instance includes the writable stream which will be used
-  // to write the response to the client from within the workflow run
-  (request as any)[WEBHOOK_RESPONSE_WRITABLE] = writable;
+  let response: Response | undefined;
+  let responseReadable: ReadableStream<Response> | undefined;
+  if (
+    hook.metadata &&
+    typeof hook.metadata === 'object' &&
+    'respondWith' in hook.metadata
+  ) {
+    if (hook.metadata.respondWith === 'manual') {
+      const { readable, writable } = new TransformStream<Response, Response>();
+      responseReadable = readable;
 
-  const hook = await resumeHook(token, request);
-  if (!hook) return null;
+      // The request instance includes the writable stream which will be used
+      // to write the response to the client from within the workflow run
+      (request as any)[WEBHOOK_RESPONSE_WRITABLE] = writable;
+    } else if (hook.metadata.respondWith instanceof Response) {
+      response = hook.metadata.respondWith;
+    } else {
+      throw new WorkflowRuntimeError(
+        `Invalid \`respondWith\` value: ${hook.metadata.respondWith}`,
+        { slug: ERROR_SLUGS.WEBHOOK_INVALID_RESPOND_WITH_VALUE }
+      );
+    }
+  } else {
+    // No `respondWith` value implies the default behavior of returning a 202
+    response = new Response(null, { status: 202 });
+  }
 
-  // Wait for the readable stream to emit one chunk,
-  // which is the Response object
-  const reader = readable.getReader();
-  const response = await reader.read();
-  if (response.done) return null;
-  reader.cancel();
-  return response.value;
+  await resumeHook(hook.token, request);
+
+  if (responseReadable) {
+    // Wait for the readable stream to emit one chunk,
+    // which is the `Response` object
+    const reader = responseReadable.getReader();
+    const chunk = await reader.read();
+    if (chunk.value) {
+      response = chunk.value;
+    }
+    reader.cancel();
+  }
+
+  if (!response) {
+    throw new WorkflowRuntimeError('Workflow run did not send a response', {
+      slug: ERROR_SLUGS.WEBHOOK_RESPONSE_NOT_SENT,
+    });
+  }
+
+  return response;
 }

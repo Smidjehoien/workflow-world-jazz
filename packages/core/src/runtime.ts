@@ -406,7 +406,7 @@ export function workflowEntrypoint(workflowCode: string) {
                         ? undefined
                         : dehydrateStepArguments(
                             queueItem.metadata,
-                            globalThis
+                            err.globalThis
                           );
                     await world.hooks.create(runId, {
                       hookId: queueItem.correlationId,
