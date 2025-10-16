@@ -6,8 +6,6 @@ title: Vercel World
 
 The **Vercel World** (`@vercel/workflow-world-vercel`) is a production-ready workflow backend integrated with Vercel's infrastructure. It provides scalable storage, robust queuing, and secure authentication for workflow deployments on the Vercel platform.
 
-## Overview
-
 The Vercel world is designed for production deployments and provides:
 
 - **Scalable storage** - Cloud-based workflow data persistence
@@ -52,10 +50,10 @@ The Vercel world uses token-based authentication:
 When you deploy to Vercel, the world is configured automatically:
 
 ```bash
-vercel deploy
+npx vercel deploy
 ```
 
-No additional configuration is needed—Vercel automatically:
+No additional configuration is needed, Vercel automatically:
 
 - Selects the Vercel World backend
 - Sets up authentication
@@ -64,22 +62,17 @@ No additional configuration is needed—Vercel automatically:
 
 ### Deployment Workflow
 
-1. **Build your application:**
+Deploy your application to Vercel using the Vercel CLI:
 
-   ```bash
-   npm run build
-   ```
+```bash
+npx vercel deploy --prod
+```
 
-2. **Deploy to Vercel:**
+Workflows run automatically:
 
-   ```bash
-   vercel deploy --prod
-   ```
-
-3. **Workflows run automatically:**
-   - Use Vercel World in production
-   - Data stored in Vercel's infrastructure
-   - Steps queued and executed on Vercel's serverless functions
+- Use Vercel World in production
+- Data stored in Vercel's infrastructure
+- Steps queued and executed on Vercel's serverless functions
 
 ## Multi-Environment Support
 

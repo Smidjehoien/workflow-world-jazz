@@ -6,8 +6,6 @@ title: Embedded World
 
 The **Embedded World** (`@vercel/workflow-world-embedded`) is a filesystem-based workflow backend designed for local development and testing. It stores workflow data as JSON files on disk and provides in-memory queuing.
 
-## Overview
-
 The embedded world is perfect for local development because it:
 
 - Requires no external services or configuration
@@ -49,7 +47,7 @@ The queue automatically detects your development server's port and adjusts the q
 
 ### Authentication
 
-The embedded world provides a simple authentication implementation:
+The embedded world provides a simple authentication implementation since no authentication is required or enforced in local development.
 
 ```typescript
 getAuthHeaders(): Promise<Record<string, string>> {
@@ -57,13 +55,11 @@ getAuthHeaders(): Promise<Record<string, string>> {
 }
 ```
 
-Since it's for local development, no authentication is required or enforced.
-
 ## Configuration
 
 ### Data Directory
 
-By default, workflow data is stored in `.workflow-data/` in your project root. You can customize this:
+By default, workflow data is stored in `.workflow-data/` in your project root. This can be customized through environment variables or programmatically.
 
 **Environment variable:**
 
@@ -85,6 +81,7 @@ The embedded world automatically detects your server port from the `PORT` enviro
 
 ```bash
 export PORT=3000
+
 npm run dev
 ```
 
@@ -111,10 +108,11 @@ npm run dev
 
 ### Manual
 
-You can explicitly set the embedded world:
+You can explicitly set the embedded world through environment variables:
 
 ```bash
 export WORKFLOW_TARGET_WORLD=embedded
+
 npm run dev
 ```
 
@@ -137,7 +135,7 @@ A typical development workflow with embedded world:
 3. **Inspect the results:**
    - Use the [CLI](/docs/api-reference/cli) or [Web UI](/docs/observability)
    - Check JSON files in `.workflow-data/`
-   - View dev server logs
+   - View development server logs
 
 ## Inspecting Data
 
@@ -168,7 +166,7 @@ For production deployments, use the [Vercel World](/docs/self-hosting/world/worl
 
 ## API Reference
 
-### createEmbeddedWorld
+### `createEmbeddedWorld`
 
 Creates an embedded world instance:
 

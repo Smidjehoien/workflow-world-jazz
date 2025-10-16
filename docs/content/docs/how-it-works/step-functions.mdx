@@ -53,8 +53,14 @@ A step's error exit strategy (whether to fail or retry) can also be customized d
 Steps are automatically retried on transient errors (throwing an `Error`).
 
 ```ts lineNumbers
+import { FatalError, RetryableError } from '@vercel/workflow';
+
 async function chargePayment(order: Order) {
   "use step";
+
+  if (!order) {
+    throw new FatalError('Order not found'); // Step will not retry [!code highlight]
+  }
   
   const stripe = new Stripe(process.env.STRIPE_KEY);
   
@@ -63,6 +69,10 @@ async function chargePayment(order: Order) {
     currency: 'usd',
     source: order.paymentToken
   });
+
+  if (charge.status === 'failed') {
+    throw new RetryableError('Charge failed', { retryAfter: '10m' }); // Step will retry after 10 minutes [!code highlight]
+  }
   
   return { chargeId: charge.id };
 }

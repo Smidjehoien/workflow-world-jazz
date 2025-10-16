@@ -5,10 +5,10 @@ title: Getting Started
 # Getting Started
 
 <Callout type="warn">
-Currently, Workflow SDK works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
+Currently, Workflow works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
 </Callout>
 
-This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the SDK in your own projects.
+This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the development kit in your own projects.
 
 ---
 
@@ -17,7 +17,7 @@ This guide will walk through setting up your first workflow in a Next.js app. Al
 Start by creating a new Next.js project. This command will create a new directory named `my-workflow-app` and setup a Next.js project inside it.
 
 ```bash
-pnpm create next-app@latest my-workflow-app
+npm create next-app@latest my-workflow-app
 ```
 
 Enter the newly made directory:
@@ -28,19 +28,19 @@ cd my-workflow-app
 
 ### Install Dependencies
 
-Install `@vercel/workflow` to get started with the Workflow SDK.
+Install `@vercel/workflow` to get started with Workflow.
 
 <BaseUrl>
   {(baseUrl) => (
-    <Tabs items={['pnpm', 'npm', 'yarn']}>
-      <Tab value="pnpm">
-        <CodeBlock>
-            pnpm i {baseUrl}/vercel-workflow.tgz
-        </CodeBlock>
-      </Tab>
+    <Tabs items={['npm', 'pnpm', 'yarn']}>
       <Tab value="npm">
         <CodeBlock>
             npm i {baseUrl}/vercel-workflow.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow.tgz
         </CodeBlock>
       </Tab>
       <Tab value="yarn">
@@ -54,7 +54,7 @@ Install `@vercel/workflow` to get started with the Workflow SDK.
 
 ### Configure Next.js
 
-For workflows to work, you'll have to wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
+Wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
 
 ```typescript title="next.config.ts" lineNumbers
 import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
@@ -73,15 +73,15 @@ To enhance your development experience with workflow-specific diagnostics and au
 
 <BaseUrl>
   {(baseUrl) => (
-    <Tabs items={['pnpm', 'npm', 'yarn']}>
-      <Tab value="pnpm">
-        <CodeBlock>
-            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
+    <Tabs items={['npm', 'pnpm', 'yarn']}>
       <Tab value="npm">
         <CodeBlock>
             npm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
         </CodeBlock>
       </Tab>
       <Tab value="yarn">
@@ -229,7 +229,7 @@ npx wf i runs
 
 ## Next Steps
 
-* Learn more about the [Workflow SDK Concepts](/docs/foundations/concepts).
+* Learn more about the [Workflow Concepts](/docs/foundations/concepts).
 * Learn about how to use [Observability](/docs/observability) tools.
-* Explore [Workflow SDK Core](/docs/api-reference/vercel-workflow-core).
+* Explore [Workflow Core](/docs/api-reference/vercel-workflow-core).
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.

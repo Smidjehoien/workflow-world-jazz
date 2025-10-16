@@ -269,7 +269,7 @@ export function Header({
       </Navbar>
       <Banner>
         <Workflow />
-        Workflow SDK is experimental.
+        Workflow is in active development.
       </Banner>
     </>
   );

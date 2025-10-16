@@ -1,4 +1,4 @@
 {
   "title": "World",
-  "pages": ["world", "world-embedded", "world-vercel", "world-postgres"]
+  "pages": ["world", "embedded-world", "vercel-world", "postgres-world"]
 }
