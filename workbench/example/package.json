@@ -16,7 +16,7 @@
     "esbuild": "catalog:"
   },
   "dependencies": {
-    "@vercel/functions": "^2.2.12",
+    "@vercel/functions": "catalog:",
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow": "workspace:*",
     "ai": "catalog:",

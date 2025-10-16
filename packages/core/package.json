@@ -31,7 +31,7 @@
     "@aws-sdk/credential-provider-web-identity": "3.609.0",
     "@types/json-schema": "catalog:",
     "@types/ms": "^2.1.0",
-    "@vercel/functions": "^2.2.12",
+    "@vercel/functions": "catalog:",
     "@vercel/workflow-errors": "workspace:*",
     "@vercel/workflow-vm": "workspace:*",
     "@vercel/workflow-world": "workspace:*",

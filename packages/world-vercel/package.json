@@ -20,8 +20,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@vercel/oidc": "^2.0.2",
-    "@vercel/queue": "0.0.0-alpha.23",
+    "@vercel/oidc": "catalog:",
+    "@vercel/queue": "0.0.0-alpha.24",
     "@vercel/workflow-errors": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "zod": "catalog:"
