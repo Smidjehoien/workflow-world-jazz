@@ -1,5 +1,20 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.48
+
+### Patch Changes
+
+- eed8227: Misc biome lint suggestions
+- 4effcbd: Add "getReadable" method to Run object
+- Updated dependencies [62c6f6b]
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [5924311]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.12
+  - @vercel/workflow-core@0.0.1-alpha.38
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.7
+  - @vercel/workflow-web@0.0.1-alpha.47
+
 ## 0.0.1-alpha.47
 
 ### Patch Changes

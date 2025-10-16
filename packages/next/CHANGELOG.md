@@ -1,5 +1,17 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.49
+
+### Patch Changes
+
+- Updated dependencies [eed8227]
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [5924311]
+  - @vercel/workflow-cli@0.0.1-alpha.48
+  - @vercel/workflow-core@0.0.1-alpha.38
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.7
+
 ## 0.0.1-alpha.48
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.38
+
+### Patch Changes
+
+- 4effcbd: Add "getReadable" method to Run object
+- b0e8a6b: nit: Better error message
+- 5924311: make workflow name machine readable
+- Updated dependencies [62c6f6b]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.12
+
 ## 0.0.1-alpha.37
 
 ### Patch Changes

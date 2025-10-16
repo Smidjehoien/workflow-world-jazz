@@ -1,5 +1,11 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- 62c6f6b: Update OIDC dep for token auto-refresh
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

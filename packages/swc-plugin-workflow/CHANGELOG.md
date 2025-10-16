@@ -1,5 +1,11 @@
 # @vercel/swc-plugin-workflow
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- 5924311: make workflow name machine readable
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes
