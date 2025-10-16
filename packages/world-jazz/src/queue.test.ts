@@ -227,7 +227,7 @@ describe('Jazz Queue', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coValueId: jazzQueue.messages?.$jazz.id,
-          updates: 1,
+          txID: jazzQueue.messages.$jazz.raw.editAt(0)!.tx,
         }),
       });
       const response = await queueHandler(request);
