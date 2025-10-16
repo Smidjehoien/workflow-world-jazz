@@ -1,10 +1,12 @@
+mod naming;
+
 use serde::Deserialize;
 use std::collections::HashSet;
 use swc_core::{
-    common::{DUMMY_SP, SyntaxContext, errors::HANDLER},
+    common::{errors::HANDLER, SyntaxContext, DUMMY_SP},
     ecma::{
         ast::*,
-        visit::{VisitMut, VisitMutWith, noop_visit_mut_type},
+        visit::{noop_visit_mut_type, VisitMut, VisitMutWith},
     },
 };
 
@@ -271,28 +273,12 @@ impl StepTransform {
                 name.to_string()
             }
             Some(name) => {
-                // Replace non-alphanumeric characters in filename with dashes
-                // to follow queues naming rule
-                let sanitized_filename = self
-                    .filename
-                    .chars()
-                    .map(|c| if c.is_alphanumeric() { c } else { '-' })
-                    .collect::<String>();
-
                 let prefix = if is_workflow { "workflow" } else { "step" };
-                format!("{}-{}-{}", prefix, sanitized_filename, name)
+                naming::format_name(prefix, &self.filename, name)
             }
             None => {
-                // Replace non-alphanumeric characters in filename with dashes
-                // to follow queues naming rule
-                let sanitized_filename = self
-                    .filename
-                    .chars()
-                    .map(|c| if c.is_alphanumeric() { c } else { '-' })
-                    .collect::<String>();
-
                 let prefix = if is_workflow { "workflow" } else { "step" };
-                format!("{}-{}-{}", prefix, sanitized_filename, span.lo.0)
+                naming::format_name(prefix, &self.filename, span.lo.0)
             }
         }
     }

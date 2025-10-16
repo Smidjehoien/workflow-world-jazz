@@ -80,7 +80,6 @@ describe('e2e', () => {
     expect(returnValue).toBe(133);
 
     const { json } = await cliInspectJson(`runs ${run.runId} --withData`);
-    const workflowName = `${workflow.workflowFile.replace(/(\/|\.|_)/g, '-')}-${workflow.workflowFn}`;
     expect(json).toMatchObject({
       runId: run.runId,
       workflowName: expect.any(String),
@@ -91,8 +90,8 @@ describe('e2e', () => {
     // In local vs. vercel backends, the workflow name is different, so we check for either,
     // since this test runs against both.
     expect(json.workflowName).toBeOneOf([
-      `workflow-example-${workflowName}`,
-      `workflow-${workflowName}`,
+      `workflow//example/${workflow.workflowFile}//${workflow.workflowFn}`,
+      `workflow//${workflow.workflowFile}//${workflow.workflowFn}`,
     ]);
   });
 
