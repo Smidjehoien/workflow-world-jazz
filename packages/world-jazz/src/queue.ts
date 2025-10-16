@@ -183,6 +183,8 @@ export const createQueue = (
 
         const message = await JazzQueueMessage.load(messageInsert.value);
 
+        console.log('message', txID, message);
+
         if (!message) {
           return Response.json(
             { error: 'No messages to process' },
