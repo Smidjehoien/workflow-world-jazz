@@ -11,7 +11,11 @@ import {
   hydrateWorkflowArguments,
 } from './serialization.js';
 import { createUseStep } from './step.js';
-import { WORKFLOW_CREATE_HOOK, WORKFLOW_USE_STEP } from './symbols.js';
+import {
+  BODY_INIT_SYMBOL,
+  WORKFLOW_CREATE_HOOK,
+  WORKFLOW_USE_STEP,
+} from './symbols.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
 import { withResolvers } from './util.js';
@@ -98,9 +102,6 @@ export async function runWorkflow(
     // `Request` and `Response` are special built-in classes that invoke steps
     // for the `json()`, `text()` and `arrayBuffer()` instance methods
     class Request implements globalThis.Request {
-      constructor(_url: string, _options: RequestInit) {
-        ENOTSUP();
-      }
       cache!: globalThis.Request['cache'];
       credentials!: globalThis.Request['credentials'];
       destination!: globalThis.Request['destination'];
@@ -115,10 +116,173 @@ export async function runWorkflow(
       keepalive!: boolean;
       signal!: AbortSignal;
       duplex!: 'half';
+      body!: ReadableStream<any> | null;
+
+      constructor(input: any, init?: RequestInit) {
+        // Handle URL input
+        if (typeof input === 'string' || input instanceof vmGlobalThis.URL) {
+          const urlString = String(input);
+          // Validate URL format
+          try {
+            new vmGlobalThis.URL(urlString);
+            this.url = urlString;
+          } catch (cause) {
+            throw new TypeError(`Failed to parse URL from ${urlString}`, {
+              cause,
+            });
+          }
+        } else {
+          // Input is a Request object - clone its properties
+          this.url = input.url;
+          if (!init) {
+            this.method = input.method;
+            this.headers = new vmGlobalThis.Headers(input.headers);
+            this.body = input.body;
+            this.mode = input.mode;
+            this.credentials = input.credentials;
+            this.cache = input.cache;
+            this.redirect = input.redirect;
+            this.referrer = input.referrer;
+            this.referrerPolicy = input.referrerPolicy;
+            this.integrity = input.integrity;
+            this.keepalive = input.keepalive;
+            this.signal = input.signal;
+            this.duplex = input.duplex;
+            this.destination = input.destination;
+            return;
+          }
+          // If init is provided, merge: use source properties, then override with init
+          // Copy all properties from the source Request first
+          this.method = input.method;
+          this.headers = new vmGlobalThis.Headers(input.headers);
+          this.body = input.body;
+          this.mode = input.mode;
+          this.credentials = input.credentials;
+          this.cache = input.cache;
+          this.redirect = input.redirect;
+          this.referrer = input.referrer;
+          this.referrerPolicy = input.referrerPolicy;
+          this.integrity = input.integrity;
+          this.keepalive = input.keepalive;
+          this.signal = input.signal;
+          this.duplex = input.duplex;
+          this.destination = input.destination;
+        }
+
+        // Override with init options if provided
+        // Set method
+        if (init?.method) {
+          this.method = init.method.toUpperCase();
+        } else if (typeof this.method !== 'string') {
+          // Fallback to default for string input case
+          this.method = 'GET';
+        }
+
+        // Set headers
+        if (init?.headers) {
+          this.headers = new vmGlobalThis.Headers(init.headers);
+        } else if (
+          typeof input === 'string' ||
+          input instanceof vmGlobalThis.URL
+        ) {
+          // For string/URL input, create empty headers
+          this.headers = new vmGlobalThis.Headers();
+        }
+
+        // Set other properties with init values or defaults
+        if (init?.mode !== undefined) {
+          this.mode = init.mode;
+        } else if (typeof this.mode !== 'string') {
+          this.mode = 'cors';
+        }
+
+        if (init?.credentials !== undefined) {
+          this.credentials = init.credentials;
+        } else if (typeof this.credentials !== 'string') {
+          this.credentials = 'same-origin';
+        }
+
+        if (init?.cache !== undefined) {
+          this.cache = init.cache;
+        } else if (typeof this.cache !== 'string') {
+          this.cache = 'default';
+        }
+
+        if (init?.redirect !== undefined) {
+          this.redirect = init.redirect;
+        } else if (typeof this.redirect !== 'string') {
+          this.redirect = 'follow';
+        }
+
+        if (init?.referrer !== undefined) {
+          this.referrer = init.referrer;
+        } else if (typeof this.referrer !== 'string') {
+          this.referrer = 'about:client';
+        }
+
+        if (init?.referrerPolicy !== undefined) {
+          this.referrerPolicy = init.referrerPolicy;
+        } else if (typeof this.referrerPolicy !== 'string') {
+          this.referrerPolicy = '';
+        }
+
+        if (init?.integrity !== undefined) {
+          this.integrity = init.integrity;
+        } else if (typeof this.integrity !== 'string') {
+          this.integrity = '';
+        }
+
+        if (init?.keepalive !== undefined) {
+          this.keepalive = init.keepalive;
+        } else if (typeof this.keepalive !== 'boolean') {
+          this.keepalive = false;
+        }
+
+        if (init?.signal !== undefined) {
+          // @ts-expect-error - AbortSignal stub
+          this.signal = init.signal;
+        } else if (!this.signal) {
+          // @ts-expect-error - AbortSignal stub
+          this.signal = { aborted: false };
+        }
+
+        if (!this.duplex) {
+          this.duplex = 'half';
+        }
+
+        if (!this.destination) {
+          this.destination = 'document';
+        }
+
+        const body = init?.body;
+
+        // Validate that GET/HEAD methods don't have a body
+        if (
+          body !== null &&
+          body !== undefined &&
+          (this.method === 'GET' || this.method === 'HEAD')
+        ) {
+          throw new TypeError(`Request with GET/HEAD method cannot have body.`);
+        }
+
+        // Store the original BodyInit for serialization
+        if (body !== null && body !== undefined) {
+          // Create a "fake" ReadableStream that stores the original body
+          // This avoids doing async work during workflow replay
+          this.body = Object.create(vmGlobalThis.ReadableStream.prototype, {
+            [BODY_INIT_SYMBOL]: {
+              value: body,
+              writable: false,
+            },
+          });
+        } else {
+          this.body = null;
+        }
+      }
+
       clone(): Request {
         ENOTSUP();
       }
-      body!: ReadableStream<any> | null;
 
       get bodyUsed() {
         return false;
@@ -156,9 +320,44 @@ export async function runWorkflow(
       url!: string;
       status!: number;
       statusText!: string;
-      body!: ReadableStream<Uint8Array>;
+      body!: ReadableStream<Uint8Array> | null;
       headers!: Headers;
       redirected!: boolean;
+
+      constructor(body?: any, init?: ResponseInit) {
+        this.status = init?.status ?? 200;
+        this.statusText = init?.statusText ?? '';
+        this.headers = new vmGlobalThis.Headers(init?.headers);
+        this.type = 'default';
+        this.url = '';
+        this.redirected = false;
+
+        // Validate that null-body status codes don't have a body
+        // Per HTTP spec: 204 (No Content), 205 (Reset Content), and 304 (Not Modified)
+        if (
+          body !== null &&
+          body !== undefined &&
+          (this.status === 204 || this.status === 205 || this.status === 304)
+        ) {
+          throw new TypeError(
+            `Response constructor: Invalid response status code ${this.status}`
+          );
+        }
+
+        // Store the original BodyInit for serialization
+        if (body !== null && body !== undefined) {
+          // Create a "fake" ReadableStream that stores the original body
+          // This avoids doing async work during workflow replay
+          this.body = Object.create(vmGlobalThis.ReadableStream.prototype, {
+            [BODY_INIT_SYMBOL]: {
+              value: body,
+              writable: false,
+            },
+          });
+        } else {
+          this.body = null;
+        }
+      }
 
       // TODO: implement these
       clone!: () => Response;
@@ -185,8 +384,13 @@ export async function runWorkflow(
         return resJson(this);
       }
 
-      static json(): Response {
-        ENOTSUP();
+      static json(data: any, init?: ResponseInit): Response {
+        const body = JSON.stringify(data);
+        const headers = new vmGlobalThis.Headers(init?.headers);
+        if (!headers.has('content-type')) {
+          headers.set('content-type', 'application/json');
+        }
+        return new Response(body, { ...init, headers });
       }
 
       async text() {

@@ -2,6 +2,7 @@ import { WorkflowRuntimeError } from '@vercel/workflow-errors';
 import * as devalue from 'devalue';
 import { getWorld } from './runtime/world.js';
 import {
+  BODY_INIT_SYMBOL,
   STREAM_NAME_SYMBOL,
   STREAM_TYPE_SYMBOL,
   WEBHOOK_RESPONSE_WRITABLE,
@@ -145,16 +146,18 @@ export interface SerializableSpecial {
   Int16Array: string; // base64 string
   Int32Array: string; // base64 string
   Map: [any, any][];
-  ReadableStream: { name: string; type?: 'bytes'; startIndex?: number };
+  ReadableStream:
+    | { name: string; type?: 'bytes'; startIndex?: number }
+    | { bodyInit: any };
   RegExp: { source: string; flags: string };
   Request: {
     method: string;
     url: string;
     headers: Headers;
-    body: ReadableStream;
+    body: Request['body'];
     duplex: Request['duplex'];
 
-    // This is specifially for the `RequestWithResponse` type which is used for webhooks
+    // This is specifically for the `RequestWithResponse` type which is used for webhooks
     responseWritable?: WritableStream<Response>;
   };
   Response: {
@@ -163,7 +166,7 @@ export interface SerializableSpecial {
     status: number;
     statusText: string;
     headers: Headers;
-    body: ReadableStream;
+    body: Response['body'];
     redirected: boolean;
   };
   Set: any[];
@@ -350,6 +353,15 @@ export function getWorkflowReducers(
     // are simply "handles" that can be passed around to other steps.
     ReadableStream: (value) => {
       if (!(value instanceof global.ReadableStream)) return false;
+
+      // Check if this is a fake stream storing BodyInit from Request/Response constructor
+      const bodyInit = value[BODY_INIT_SYMBOL];
+      if (bodyInit !== undefined) {
+        // This is a fake stream - serialize the BodyInit directly
+        // devalue will handle serializing strings, Uint8Array, etc.
+        return { bodyInit };
+      }
+
       const name = value[STREAM_NAME_SYMBOL];
       if (!name) {
         throw new Error('ReadableStream `name` is not set');
@@ -531,16 +543,24 @@ export function getExternalRevivers(
       });
     },
     Response: (value) => {
+      // Note: Response constructor only accepts status, statusText, and headers
+      // The type, url, and redirected properties are read-only and set by the constructor
       return new global.Response(value.body, {
-        type: value.type,
-        url: value.url,
-        redirected: value.redirected,
         status: value.status,
         statusText: value.statusText,
         headers: new global.Headers(value.headers),
       });
     },
     ReadableStream: (value) => {
+      // If this has bodyInit, it came from a Response constructor
+      // Convert it to a REAL stream now that we're outside the workflow
+      if ('bodyInit' in value) {
+        const bodyInit = value.bodyInit;
+        // Use the native Response constructor to properly convert BodyInit to ReadableStream
+        const response = new global.Response(bodyInit);
+        return response.body;
+      }
+
       const readable = new WorkflowServerReadableStream(
         value.name,
         value.startIndex
@@ -597,6 +617,18 @@ export function getWorkflowRevivers(
       return value;
     },
     ReadableStream: (value) => {
+      // Check if this is a BodyInit that should be wrapped in a fake stream
+      if ('bodyInit' in value) {
+        // Recreate the fake stream with the BodyInit
+        return Object.create(global.ReadableStream.prototype, {
+          [BODY_INIT_SYMBOL]: {
+            value: value.bodyInit,
+            writable: false,
+          },
+        });
+      }
+
+      // Regular stream handling
       return Object.create(global.ReadableStream.prototype, {
         [STREAM_NAME_SYMBOL]: {
           value: value.name,
@@ -652,16 +684,24 @@ function getStepRevivers(
       return request;
     },
     Response: (value) => {
+      // Note: Response constructor only accepts status, statusText, and headers
+      // The type, url, and redirected properties are read-only and set by the constructor
       return new global.Response(value.body, {
-        type: value.type,
-        url: value.url,
-        redirected: value.redirected,
         status: value.status,
         statusText: value.statusText,
         headers: new global.Headers(value.headers),
       });
     },
     ReadableStream: (value) => {
+      // If this has bodyInit, it came from a Response constructor
+      // Convert it to a REAL stream now that we're in the step environment
+      if ('bodyInit' in value) {
+        const bodyInit = value.bodyInit;
+        // Use the native Response constructor to properly convert BodyInit to ReadableStream
+        const response = new global.Response(bodyInit);
+        return response.body;
+      }
+
       const readable = new WorkflowServerReadableStream(value.name);
       if (value.type === 'bytes') {
         return readable;

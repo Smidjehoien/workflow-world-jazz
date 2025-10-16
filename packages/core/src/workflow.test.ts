@@ -1309,4 +1309,467 @@ describe('runWorkflow', () => {
       });
     });
   });
+
+  describe('Response', () => {
+    it('should support new Response with body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Response('Hello, world!', { status: 201 });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const res = hydrateWorkflowReturnValue(result as any, ops);
+      expect(res).toBeInstanceOf(Response);
+      expect(res.status).toEqual(201);
+      expect(res.body).toBeInstanceOf(ReadableStream);
+
+      // Verify body can be consumed
+      const text = await res.text();
+      expect(text).toEqual('Hello, world!');
+    });
+
+    it('should support Response.json() static method', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return Response.json({ message: 'success', count: 42 }, { status: 201 });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const res = hydrateWorkflowReturnValue(result as any, ops);
+      expect(res).toBeInstanceOf(Response);
+      expect(res.status).toEqual(201);
+      expect(res.headers.get('content-type')).toEqual('application/json');
+
+      // Verify body can be parsed as JSON
+      const json = await res.json();
+      expect(json).toEqual({ message: 'success', count: 42 });
+    });
+
+    it('should support Response with custom headers', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Response('test', {
+          status: 202,
+          headers: { 'X-Custom-Header': 'custom-value', 'Content-Type': 'text/plain' }
+        });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const res = hydrateWorkflowReturnValue(result as any, ops);
+      expect(res).toBeInstanceOf(Response);
+      expect(res.status).toEqual(202);
+      expect(res.headers.get('X-Custom-Header')).toEqual('custom-value');
+      expect(res.headers.get('Content-Type')).toEqual('text/plain');
+    });
+
+    it('should support Response with 204 No Content', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Response(null, { status: 204 });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const res = hydrateWorkflowReturnValue(result as any, ops);
+      expect(res).toBeInstanceOf(Response);
+      expect(res.status).toEqual(204);
+      expect(res.body).toBeNull();
+    });
+
+    it('should support Response with Uint8Array body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        const data = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
+        return new Response(data, { status: 200 });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const res = hydrateWorkflowReturnValue(result as any, ops);
+      expect(res).toBeInstanceOf(Response);
+      expect(res.status).toEqual(200);
+      expect(res.body).toBeInstanceOf(ReadableStream);
+
+      // Verify body can be consumed
+      const text = await res.text();
+      expect(text).toEqual('Hello');
+    });
+
+    it('should throw error when creating Response with body and status 204', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      await expect(
+        runWorkflow(
+          `async function workflow() {
+          return new Response('hello', { status: 204 });
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        )
+      ).rejects.toThrow(
+        'Response constructor: Invalid response status code 204'
+      );
+    });
+  });
+
+  describe('Request', () => {
+    it('should support new Request with GET method', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Request('https://example.com/api');
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const req = hydrateWorkflowReturnValue(result as any, ops);
+      expect(req).toBeInstanceOf(Request);
+      expect(req.method).toEqual('GET');
+      expect(req.url).toEqual('https://example.com/api');
+      expect(req.body).toBeNull();
+    });
+
+    it('should support Request with POST method and body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Request('https://example.com/api', {
+          method: 'POST',
+          body: JSON.stringify({ name: 'test' })
+        });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const req = hydrateWorkflowReturnValue(result as any, ops);
+      expect(req).toBeInstanceOf(Request);
+      expect(req.method).toEqual('POST');
+      expect(req.url).toEqual('https://example.com/api');
+      expect(req.body).toBeInstanceOf(ReadableStream);
+
+      // Verify body can be consumed
+      const text = await req.text();
+      expect(text).toEqual(JSON.stringify({ name: 'test' }));
+    });
+
+    it('should support Request with custom headers', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        return new Request('https://example.com/api', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Custom-Header': 'custom-value'
+          },
+          body: 'test'
+        });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const req = hydrateWorkflowReturnValue(result as any, ops);
+      expect(req).toBeInstanceOf(Request);
+      expect(req.headers.get('Content-Type')).toEqual('application/json');
+      expect(req.headers.get('X-Custom-Header')).toEqual('custom-value');
+    });
+
+    it('should support Request with Uint8Array body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        const data = new Uint8Array([72, 101, 108, 108, 111]); // "Hello"
+        return new Request('https://example.com/api', {
+          method: 'PUT',
+          body: data
+        });
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+      const req = hydrateWorkflowReturnValue(result as any, ops);
+      expect(req).toBeInstanceOf(Request);
+      expect(req.method).toEqual('PUT');
+      expect(req.body).toBeInstanceOf(ReadableStream);
+
+      // Verify body can be consumed
+      const text = await req.text();
+      expect(text).toEqual('Hello');
+    });
+
+    it('should throw error when creating GET Request with body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      await expect(
+        runWorkflow(
+          `async function workflow() {
+          return new Request('https://example.com/api', {
+            method: 'GET',
+            body: 'test'
+          });
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        )
+      ).rejects.toThrow('Request with GET/HEAD method cannot have body.');
+    });
+
+    it('should throw error when creating HEAD Request with body', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      await expect(
+        runWorkflow(
+          `async function workflow() {
+          return new Request('https://example.com/api', {
+            method: 'HEAD',
+            body: 'test'
+          });
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        )
+      ).rejects.toThrow('Request with GET/HEAD method cannot have body.');
+    });
+
+    it('should throw error when creating Request with invalid URL', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-run-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      await expect(
+        runWorkflow(
+          `async function workflow() {
+          return new Request('/');
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        )
+      ).rejects.toThrow('Failed to parse URL from /');
+    });
+
+    it('should preserve Request properties when cloning with init override', async () => {
+      const ops: Promise<any>[] = [];
+      const workflowRun: WorkflowRun = {
+        runId: 'test-clone-bug-123',
+        workflowName: 'workflow',
+        status: 'running',
+        input: dehydrateWorkflowArguments([], ops),
+        createdAt: new Date('2024-01-01T00:00:00.000Z'),
+        updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+        startedAt: new Date('2024-01-01T00:00:00.000Z'),
+        deploymentId: 'test-deployment',
+      };
+
+      const events: Event[] = [];
+
+      const result = await runWorkflow(
+        `async function workflow() {
+        // Create a Request with specific properties
+        const req1 = new Request('https://api.example.com', {
+          mode: 'no-cors',
+          cache: 'no-cache',
+          credentials: 'include',
+          method: 'GET'
+        });
+
+        // Clone the Request with only method override
+        const req2 = new Request(req1, { method: 'POST' });
+
+        // Return the properties that were inherited
+        return {
+          url: req2.url,
+          method: req2.method,
+          mode: req2.mode,
+          cache: req2.cache,
+          credentials: req2.credentials,
+          redirect: req2.redirect
+        };
+      }${getWorkflowTransformCode('workflow')}`,
+        workflowRun,
+        events
+      );
+
+      const result_obj = hydrateWorkflowReturnValue(result as any, ops);
+
+      // According to MDN, the req1 properties should be inherited
+      // and only the method should be overridden by the init options
+      expect(result_obj.url).toEqual('https://api.example.com');
+      expect(result_obj.method).toEqual('POST'); // overridden by init
+      expect(result_obj.mode).toEqual('no-cors'); // from req1, NOT default
+      expect(result_obj.cache).toEqual('no-cache'); // from req1, NOT default 'default'
+      expect(result_obj.credentials).toEqual('include'); // from req1, NOT default 'same-origin'
+      expect(result_obj.redirect).toEqual('follow'); // default, since not set in req1
+    });
+  });
 });
