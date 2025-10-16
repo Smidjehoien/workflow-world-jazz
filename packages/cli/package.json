@@ -36,6 +36,7 @@
     "@swc/core": "1.11.24",
     "@types/watchpack": "2.4.4",
     "@vercel/swc-plugin-workflow": "workspace:*",
+    "@vercel/workflow-errors": "workspace:*",
     "@vercel/workflow-core": "workspace:*",
     "@vercel/workflow-web": "workspace:*",
     "@vercel/workflow-world": "workspace:*",

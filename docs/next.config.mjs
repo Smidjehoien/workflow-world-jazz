@@ -23,6 +23,11 @@ const config = {
         destination: '/docs/introduction',
         permanent: true,
       },
+      {
+        source: '/err/:slug',
+        destination: '/docs/troubleshooting/errors/:slug',
+        permanent: true,
+      },
     ];
   },
 };

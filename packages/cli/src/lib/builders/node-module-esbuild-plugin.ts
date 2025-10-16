@@ -1,3 +1,4 @@
+import { ERROR_SLUGS } from '@vercel/workflow-errors';
 import builtinModules from 'builtin-modules';
 import type * as esbuild from 'esbuild';
 
@@ -15,7 +16,7 @@ export function createNodeModuleErrorPlugin(): esbuild.Plugin {
           path: args.path,
           errors: [
             {
-              text: `Cannot use Node.js module "${args.path}" in workflow functions. Move this module to a step function.`,
+              text: `Cannot use Node.js module "${args.path}" in workflow functions. Move this module to a step function.\n\nLearn more: https://useworkflow.dev/err/${ERROR_SLUGS.NODE_JS_MODULE_IN_WORKFLOW}`,
             },
           ],
         };

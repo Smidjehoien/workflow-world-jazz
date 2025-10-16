@@ -1,20 +1,15 @@
 import ms, { type StringValue } from 'ms';
 
-const BASE_URL = 'https://useworkflow.dev/errors';
+const BASE_URL = 'https://useworkflow.dev/err';
 
 /**
  * @internal
  * All the slugs of the errors used for documentation links.
  */
-const ERROR_SLUGS = {
+export const ERROR_SLUGS = {
+  NODE_JS_MODULE_IN_WORKFLOW: 'node-js-module-in-workflow',
   START_INVALID_WORKFLOW_FUNCTION: 'start-invalid-workflow-function',
   SERIALIZATION_FAILED: 'serialization-failed',
-  WORKFLOW_API_ERROR: 'workflow-api-error',
-  WORKFLOW_RUN_CANCELLED_ERROR: 'workflow-run-cancelled-error',
-  WORKFLOW_RUN_FAILED_ERROR: 'workflow-run-failed-error',
-  WORKFLOW_RUN_NOT_COMPLETED_ERROR: 'workflow-run-not-completed-error',
-  WORKFLOW_RUN_NOT_FOUND_ERROR: 'workflow-run-not-found-error',
-  WORKFLOW_RUNTIME_ERROR: 'workflow-runtime-error',
 } as const;
 
 type ErrorSlug = (typeof ERROR_SLUGS)[keyof typeof ERROR_SLUGS];
@@ -90,7 +85,6 @@ export class WorkflowAPIError extends WorkflowError {
     options?: { status?: number; url?: string; code?: string; cause?: unknown }
   ) {
     super(message, {
-      slug: ERROR_SLUGS.WORKFLOW_API_ERROR,
       cause: options?.cause,
     });
     this.name = 'WorkflowAPIError';
@@ -120,9 +114,7 @@ export class WorkflowRunFailedError extends WorkflowError {
   error: string;
 
   constructor(runId: string, error: string) {
-    super(`Workflow run "${runId}" failed: ${error}`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_FAILED_ERROR,
-    });
+    super(`Workflow run "${runId}" failed: ${error}`, {});
     this.name = 'WorkflowRunFailedError';
     this.runId = runId;
     this.error = error;
@@ -140,9 +132,7 @@ export class WorkflowRunNotCompletedError extends WorkflowError {
   status: string;
 
   constructor(runId: string, status: string) {
-    super(`Workflow run "${runId}" has not completed`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_NOT_COMPLETED_ERROR,
-    });
+    super(`Workflow run "${runId}" has not completed`, {});
     this.name = 'WorkflowRunNotCompletedError';
     this.runId = runId;
     this.status = status;
@@ -169,9 +159,7 @@ export class WorkflowRunNotFoundError extends WorkflowError {
   runId: string;
 
   constructor(runId: string) {
-    super(`Workflow run "${runId}" not found`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_NOT_FOUND_ERROR,
-    });
+    super(`Workflow run "${runId}" not found`, {});
     this.name = 'WorkflowRunNotFoundError';
     this.runId = runId;
   }
@@ -181,9 +169,7 @@ export class WorkflowRunCancelledError extends WorkflowError {
   runId: string;
 
   constructor(runId: string) {
-    super(`Workflow run "${runId}" cancelled`, {
-      slug: ERROR_SLUGS.WORKFLOW_RUN_CANCELLED_ERROR,
-    });
+    super(`Workflow run "${runId}" cancelled`, {});
     this.name = 'WorkflowRunCancelledError';
     this.runId = runId;
   }

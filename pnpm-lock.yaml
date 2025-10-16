@@ -411,6 +411,9 @@ importers:
       '@vercel/workflow-core':
         specifier: workspace:*
         version: link:../core
+      '@vercel/workflow-errors':
+        specifier: workspace:*
+        version: link:../errors
       '@vercel/workflow-web':
         specifier: workspace:*
         version: link:../web
