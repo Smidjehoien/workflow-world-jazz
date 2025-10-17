@@ -9,21 +9,19 @@ export const createStreamer = (
     const root = (await ensureLoaded({ root: true })).root;
 
     const unique = `stream/${name}`;
-    let js = await JazzStream.loadUnique(unique, root.$jazz.owner.$jazz.id, {
-      resolve: {
-        stream: true,
-      },
-    });
-    if (js) {
-      return js.stream;
+    let js = await JazzStream.loadUnique(unique, root.$jazz.owner.$jazz.id);
+    if (!js) {
+      const stream = co.fileStream().create();
+      stream.start({ mimeType: 'application/octet-stream' });
+      js = JazzStream.create(
+        { name, stream },
+        { unique, owner: root.$jazz.owner }
+      );
     }
 
-    js = JazzStream.create(
-      { name, stream: co.fileStream().create() },
-      { unique, owner: root.$jazz.owner }
-    );
-    js.stream.start({ mimeType: 'application/octet-stream' });
-    return js.stream;
+    const stream = (await js.$jazz.ensureLoaded({ resolve: { stream: true } }))
+      .stream;
+    return stream;
   };
 
   return {
