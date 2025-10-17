@@ -5,7 +5,19 @@ import { type JazzStorageAccountResolver, JazzStream } from './types.js';
 export const createStreamer = (
   ensureLoaded: JazzStorageAccountResolver
 ): Streamer => {
+  // TODO: Remove this cache once loadUnique is safe for concurrent use.
+  const streamCache = new Map<string, Promise<FileStream>>();
   const loadOrCreateStream = async (name: string): Promise<FileStream> => {
+    let streamPromise = streamCache.get(name);
+    if (streamPromise) {
+      return streamPromise;
+    }
+    streamPromise = loadOrCreateStreamRaw(name);
+    streamCache.set(name, streamPromise);
+    return streamPromise;
+  };
+
+  const loadOrCreateStreamRaw = async (name: string): Promise<FileStream> => {
     const root = (await ensureLoaded({ root: true })).root;
 
     const unique = `stream/${name}`;
