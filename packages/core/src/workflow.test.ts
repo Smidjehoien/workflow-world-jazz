@@ -1495,6 +1495,125 @@ describe('runWorkflow', () => {
         'Response constructor: Invalid response status code 204'
       );
     });
+
+    describe('Response.redirect()', () => {
+      it('should create redirect response with default 302 status', async () => {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          deploymentId: 'test-deployment',
+        };
+
+        const events: Event[] = [];
+
+        const result = await runWorkflow(
+          `async function workflow() {
+          return Response.redirect('https://example.com/redirect');
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        );
+        const res = hydrateWorkflowReturnValue(result as any, ops);
+        expect(res).toBeInstanceOf(Response);
+        expect(res.status).toEqual(302);
+        expect(res.headers.get('Location')).toEqual(
+          'https://example.com/redirect'
+        );
+        expect(res.body).toBeNull();
+      });
+
+      it('should create redirect response with custom status', async () => {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          deploymentId: 'test-deployment',
+        };
+
+        const events: Event[] = [];
+
+        const result = await runWorkflow(
+          `async function workflow() {
+          return Response.redirect('https://example.com/moved', 301);
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        );
+        const res = hydrateWorkflowReturnValue(result as any, ops);
+        expect(res).toBeInstanceOf(Response);
+        expect(res.status).toEqual(301);
+        expect(res.headers.get('Location')).toEqual(
+          'https://example.com/moved'
+        );
+      });
+
+      it('should support all valid redirect status codes', async () => {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          deploymentId: 'test-deployment',
+        };
+
+        const events: Event[] = [];
+
+        const result = await runWorkflow(
+          `async function workflow() {
+          return [301, 302, 303, 307, 308].map(status =>
+            Response.redirect('https://example.com', status).status
+          );
+        }${getWorkflowTransformCode('workflow')}`,
+          workflowRun,
+          events
+        );
+        const statuses = hydrateWorkflowReturnValue(result as any, ops);
+        expect(statuses).toEqual([301, 302, 303, 307, 308]);
+      });
+
+      it('should throw error for invalid redirect status code', async () => {
+        const ops: Promise<any>[] = [];
+        const workflowRun: WorkflowRun = {
+          runId: 'test-run-123',
+          workflowName: 'workflow',
+          status: 'running',
+          input: dehydrateWorkflowArguments([], ops),
+          createdAt: new Date('2024-01-01T00:00:00.000Z'),
+          updatedAt: new Date('2024-01-01T00:00:00.000Z'),
+          startedAt: new Date('2024-01-01T00:00:00.000Z'),
+          deploymentId: 'test-deployment',
+        };
+
+        const events: Event[] = [];
+
+        await expect(
+          runWorkflow(
+            `async function workflow() {
+            return Response.redirect('https://example.com', 200);
+          }${getWorkflowTransformCode('workflow')}`,
+            workflowRun,
+            events
+          )
+        ).rejects.toThrow(
+          'Invalid redirect status code: 200. Must be one of: 301, 302, 303, 307, 308'
+        );
+      });
+    });
   });
 
   describe('Request', () => {

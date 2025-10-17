@@ -401,8 +401,28 @@ export async function runWorkflow(
         ENOTSUP();
       }
 
-      static redirect(_url: string, _status: number = 302): Response {
-        ENOTSUP();
+      static redirect(url: string | URL, status: number = 302): Response {
+        // Validate status code - only specific redirect codes are allowed
+        if (![301, 302, 303, 307, 308].includes(status)) {
+          throw new RangeError(
+            `Invalid redirect status code: ${status}. Must be one of: 301, 302, 303, 307, 308`
+          );
+        }
+
+        // Create response with Location header
+        const headers = new vmGlobalThis.Headers();
+        headers.set('Location', String(url));
+
+        const response = Object.create(Response.prototype);
+        response.status = status;
+        response.statusText = '';
+        response.headers = headers;
+        response.body = null;
+        response.type = 'default';
+        response.url = '';
+        response.redirected = false;
+
+        return response;
       }
     }
     vmGlobalThis.Response = Response;
