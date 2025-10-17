@@ -1,8 +1,8 @@
 {
   "name": "@vercel/workflow",
   "version": "0.0.1-alpha.12",
+  "main": "dist/index.cjs",
   "type": "module",
-  "main": "dist/index.js",
   "bin": {
     "workflow": "./bin/run.js",
     "wf": "./bin/run.js"

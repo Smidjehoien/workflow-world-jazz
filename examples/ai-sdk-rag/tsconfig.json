@@ -17,7 +17,7 @@
         "name": "next"
       },
       {
-        "name": "@vercel/workflow-typescript-plugin"
+        "name": "@vercel/workflow"
       }
     ],
     "paths": {

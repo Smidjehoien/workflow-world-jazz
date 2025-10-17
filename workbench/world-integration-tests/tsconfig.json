@@ -18,7 +18,7 @@
     },
     "plugins": [
       {
-        "name": "@vercel/workflow-typescript-plugin"
+        "name": "@vercel/workflow"
       }
     ]
   },

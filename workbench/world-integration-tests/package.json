@@ -15,7 +15,6 @@
     "@types/node": "catalog:",
     "@vercel/workflow-cli": "workspace:*",
     "@vercel/workflow": "workspace:*",
-    "@vercel/workflow-typescript-plugin": "workspace:*",
     "@vercel/workflow-world": "workspace:*",
     "chalk": "^5.6.2",
     "hono": "^4.9.10",
