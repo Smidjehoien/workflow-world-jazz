@@ -1,5 +1,18 @@
 # @vercel/workflow-next
 
+## 0.0.1-alpha.50
+
+### Patch Changes
+
+- 5f59e7e: Update next loader for single package
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [5cb48ec]
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-cli@0.0.1-alpha.49
+  - @vercel/workflow-core@0.0.1-alpha.39
+
 ## 0.0.1-alpha.49
 
 ### Patch Changes

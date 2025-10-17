@@ -1,5 +1,12 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 1853724: Add docs slug to error message in node module plugin and errors package
+- b15a64f: Add new webhook related error slugs
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

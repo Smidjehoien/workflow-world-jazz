@@ -1,5 +1,11 @@
 # @vercel/workflow-world
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- b15a64f: Type `hook.metadata` as `unknown`
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes

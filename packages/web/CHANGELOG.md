@@ -1,5 +1,14 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.48
+
+### Patch Changes
+
+- 5cb48ec: Overhaul design of CLI and Web UI table and trace views
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-core@0.0.1-alpha.39
+
 ## 0.0.1-alpha.47
 
 ### Patch Changes

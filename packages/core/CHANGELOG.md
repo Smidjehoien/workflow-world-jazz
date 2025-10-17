@@ -1,5 +1,19 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.39
+
+### Patch Changes
+
+- b15a64f: Add webhook response customization options
+- 2ff07d8: Support `Request` and `Response` constructors in workflow functions
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [b15a64f]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.7
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.13
+
 ## 0.0.1-alpha.38
 
 ### Patch Changes

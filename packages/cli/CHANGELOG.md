@@ -1,5 +1,25 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.49
+
+### Patch Changes
+
+- 1853724: Add docs slug to error message in node module plugin and errors package
+- b15a64f: Add try/catch to webhook API route to handle token not found
+- 5cb48ec: Overhaul design of CLI and Web UI table and trace views
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [b15a64f]
+- Updated dependencies [5cb48ec]
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.7
+  - @vercel/workflow-web@0.0.1-alpha.48
+  - @vercel/workflow-core@0.0.1-alpha.39
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.13
+
 ## 0.0.1-alpha.48
 
 ### Patch Changes
