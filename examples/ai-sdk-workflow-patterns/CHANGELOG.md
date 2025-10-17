@@ -1,5 +1,13 @@
 # ai-sdk-workflow-patterns
 
+## 0.1.1-alpha.20
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow@0.0.1-alpha.12
+
 ## 0.1.1-alpha.19
 
 ### Patch Changes

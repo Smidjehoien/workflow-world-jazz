@@ -1,7 +1,7 @@
 {
   "name": "@vercel/workflow-web",
   "description": "Workflow Observability UI",
-  "version": "0.0.1-alpha.49",
+  "version": "0.0.1-alpha.50",
   "private": false,
   "files": [
     ".next",

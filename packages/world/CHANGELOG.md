@@ -1,5 +1,11 @@
 # @vercel/workflow-world
 
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+
 ## 0.0.1-alpha.7
 
 ### Patch Changes

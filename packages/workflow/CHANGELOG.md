@@ -1,5 +1,18 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-ai@0.0.1-alpha.3
+  - @vercel/workflow-cli@0.0.1-alpha.51
+  - @vercel/workflow-core@0.0.1-alpha.41
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-next@0.0.1-alpha.52
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

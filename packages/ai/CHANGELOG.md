@@ -1,5 +1,11 @@
 # @vercel/workflow-ai
 
+## 0.0.1-alpha.3
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+
 ## 0.0.1-alpha.2
 
 ### Patch Changes

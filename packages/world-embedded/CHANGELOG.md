@@ -1,5 +1,13 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-world@0.0.1-alpha.8
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

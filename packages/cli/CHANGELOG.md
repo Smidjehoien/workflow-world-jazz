@@ -1,5 +1,18 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.51
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-core@0.0.1-alpha.41
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-web@0.0.1-alpha.50
+  - @vercel/workflow-world@0.0.1-alpha.8
+  - @vercel/workflow-world-embedded@0.0.1-alpha.12
+  - @vercel/workflow-world-vercel@0.0.1-alpha.15
+
 ## 0.0.1-alpha.50
 
 ### Patch Changes
