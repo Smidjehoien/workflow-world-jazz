@@ -1,19 +1,36 @@
-import Link from 'next/link';
+import type { Metadata } from 'next';
+import { CTA } from './components/cta';
+import { Features } from './components/features';
+import { Frameworks } from './components/frameworks';
+import { Hero } from './components/hero';
+import { Implementation } from './components/implementation';
+import { Intro } from './components/intro';
+import { Observability } from './components/observability';
+import { Templates } from './components/templates';
+import { UseCases } from './components/use-cases';
 
-export default function HomePage() {
-  return (
-    <main className="flex flex-1 flex-col justify-center text-center">
-      <h1 className="mb-4 text-2xl font-bold">Hello World</h1>
-      <p className="text-fd-muted-foreground">
-        You can open{' '}
-        <Link
-          href="/docs"
-          className="text-fd-foreground font-semibold underline"
-        >
-          /docs
-        </Link>{' '}
-        and see the documentation.
-      </p>
-    </main>
-  );
-}
+export const metadata: Metadata = {
+  title: 'The TypeScript Framework for Durable Execution | Workflow SDK',
+  description:
+    'The Workflow SDK brings durability and reliability to async JavaScript. Mark functions with directives to make them automatically persistent, resumable, and observable.',
+};
+
+const Home = () => (
+  <>
+    <Hero />
+    <div className="grid divide-y border-y sm:border-x">
+      <Intro />
+      <Implementation />
+      <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x">
+        <Observability />
+        <Frameworks />
+      </div>
+      <Features />
+      <UseCases />
+      <Templates />
+      <CTA />
+    </div>
+  </>
+);
+
+export default Home;
