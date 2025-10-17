@@ -1,5 +1,6 @@
 'use client';
 
+import { parseWorkflowName } from '@vercel/workflow-core/parse-name';
 import type { Event, Hook, Step } from '@vercel/workflow-world';
 import { ChevronRight, Radio } from 'lucide-react';
 import { useEffect, useId, useState } from 'react';
@@ -9,7 +10,6 @@ import { Switch } from '@/components/ui/switch';
 import { createAPICallKey, useRun } from '@/hooks/use-api';
 import { useExhaustiveList } from '@/hooks/use-exhaustive-list';
 import type { WorldConfig } from '@/lib/config-world';
-import { getResourceName } from '@/lib/resource-name';
 import { formatDuration } from '@/lib/utils';
 import { fetchEvents, fetchHooks, fetchSteps } from '@/lib/world';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -196,7 +196,7 @@ export function RunDetailView({
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Workflow</div>
-              <div>{getResourceName(run.workflowName)}</div>
+              <div>{parseWorkflowName(run.workflowName)?.shortName || '?'}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Status</div>

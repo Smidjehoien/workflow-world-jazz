@@ -172,7 +172,7 @@ export async function setupListPagination<TData>(
     pageIndex = index;
 
     // Clear screen for subsequent pages in interactive mode
-    if (isInteractive() && index > 0) {
+    if (isInteractive()) {
       console.clear();
     }
 

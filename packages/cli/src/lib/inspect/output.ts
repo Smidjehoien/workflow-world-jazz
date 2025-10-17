@@ -1,3 +1,4 @@
+import { parseStepName, parseWorkflowName } from '@vercel/workflow-core';
 import {
   hydrateResourceIO,
   StreamID,
@@ -102,10 +103,6 @@ const showStatusLegend = () => {
 
   logger.log(`  ${legendItems.join('  ')}`);
   logger.log('');
-};
-
-const getNonUniqueName = (dashSeparatedId: string) => {
-  return dashSeparatedId.split('-').pop() ?? dashSeparatedId;
 };
 
 const isSleepStep = (stepName: string) => {
@@ -250,7 +247,7 @@ const formatTableValue = (
 
   // Handle names with truncation
   if (prop === 'stepName') {
-    const nameNonUnique = getNonUniqueName(String(value));
+    const nameNonUnique = parseStepName(String(value))?.shortName || '?';
     return formatNameField(
       nameNonUnique,
       namesTruncate,
@@ -259,7 +256,7 @@ const formatTableValue = (
   }
 
   if (prop === 'workflowName') {
-    const nameNonUnique = getNonUniqueName(String(value));
+    const nameNonUnique = parseWorkflowName(String(value))?.shortName || '?';
     const truncatedName = truncateNameIfNeeded(nameNonUnique, namesTruncate);
     return chalk.blue.blueBright(truncatedName);
   }

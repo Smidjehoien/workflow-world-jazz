@@ -6,20 +6,28 @@
 function parseName(
   tag: string,
   name: string
-): null | { path: string; functionName: string } {
+): { shortName: string; path: string; functionName: string } | null {
+  if (typeof name !== 'string') {
+    return null;
+  }
   const [prefix, path, ...functionNameParts] = name.split('//');
   if (prefix !== tag || !path || functionNameParts.length === 0) {
     return null;
   }
 
-  return { path, functionName: functionNameParts.join('//') };
+  return {
+    shortName: functionNameParts.at(-1) ?? '',
+    path,
+    functionName: functionNameParts.join('//'),
+  };
 }
 
 /**
  * Parse a workflow name into its components.
  *
  * @param name - The workflow name to parse.
- * @returns An object with `path` and `functionName` properties, or `null` if the name is invalid.
+ * @returns An object with `shortName`, `path`, and `functionName` properties.
+ * When the name is invalid, returns `null`.
  */
 export function parseWorkflowName(name: string) {
   return parseName('workflow', name);
@@ -29,7 +37,8 @@ export function parseWorkflowName(name: string) {
  * Parse a step name into its components.
  *
  * @param name - The step name to parse.
- * @returns An object with `path` and `functionName` properties, or `null` if the name is invalid.
+ * @returns An object with `shortName`, `path`, and `functionName` properties.
+ * When the name is invalid, returns `null`.
  */
 export function parseStepName(name: string) {
   return parseName('step', name);

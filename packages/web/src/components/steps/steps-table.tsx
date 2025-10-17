@@ -1,7 +1,7 @@
 'use client';
 
+import { parseStepName } from '@vercel/workflow-core/parse-name';
 import type { Event, Hook, Step } from '@vercel/workflow-world';
-import { getResourceName } from '@/lib/resource-name';
 import type { ColumnDefinition } from '../display-utils/local-paginating-table';
 import { LocalPaginatingTable } from '../display-utils/local-paginating-table';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -58,7 +58,7 @@ export function StepsTable({
     {
       key: 'stepName',
       header: 'Step Name',
-      render: (step) => getResourceName(step.stepName),
+      render: (step) => parseStepName(step.stepName)?.shortName || '?',
     },
     {
       key: 'status',

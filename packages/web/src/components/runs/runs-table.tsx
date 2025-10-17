@@ -1,5 +1,6 @@
 'use client';
 
+import { parseWorkflowName } from '@vercel/workflow-core/parse-name';
 import {
   AlertCircle,
   ArrowDownAZ,
@@ -30,7 +31,6 @@ import {
 import { useRuns } from '@/hooks/use-api';
 import type { WorldConfig } from '@/lib/config-world';
 import { get403ErrorMessage } from '@/lib/errors';
-import { getResourceName } from '@/lib/resource-name';
 import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
 import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -205,7 +205,9 @@ export function RunsTable({
                       onRunClick(run.runId);
                     }}
                   >
-                    <TableCell>{getResourceName(run.workflowName)}</TableCell>
+                    <TableCell>
+                      {parseWorkflowName(run.workflowName)?.shortName || '?'}
+                    </TableCell>
                     <TableCell className="font-mono text-xs">
                       {run.runId}
                     </TableCell>

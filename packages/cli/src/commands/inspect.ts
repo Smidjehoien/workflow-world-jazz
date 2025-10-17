@@ -1,6 +1,6 @@
 import { Args, Flags } from '@oclif/core';
 import { BaseCommand } from '../base.js';
-import { LOGGING_CONFIG } from '../lib/config/log.js';
+import { LOGGING_CONFIG, logger } from '../lib/config/log.js';
 import type { InspectCLIOptions } from '../lib/config/types.js';
 import { cliFlags } from '../lib/inspect/flags.js';
 import {
@@ -35,9 +35,12 @@ export default class Inspect extends BaseCommand {
     if (error?.status === 403) {
       const message =
         'Your current vercel account does not have access to this workflow run. Please use `vercel login` to login, or use `vercel switch` to ensure you can access the correct team.';
-      console.error(message);
+      logger.error(message);
     } else if (LOGGING_CONFIG.VERBOSE_MODE) {
-      console.error(error);
+      logger.error(error);
+    } else {
+      const errorMessage = error?.message || String(error) || 'Unknown error';
+      logger.error(`Error: ${errorMessage}`);
     }
     process.exit(1);
   }

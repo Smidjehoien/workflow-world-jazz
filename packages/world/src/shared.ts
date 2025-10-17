@@ -1,5 +1,16 @@
 import { z } from 'zod';
 
+export const zodJsonSchema: z.ZodType<unknown> = z.lazy(() => {
+  return z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(zodJsonSchema),
+    z.record(z.string(), zodJsonSchema),
+  ]);
+});
+
 /**
  * Options for paginated queries.
  * Provides control over page size and cursor-based navigation.

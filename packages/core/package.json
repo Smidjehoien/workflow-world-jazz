@@ -17,6 +17,7 @@
     "./builtins": "./dist/builtins.js",
     "./serialization": "./dist/serialization.js",
     "./observability": "./dist/observability.js",
+    "./parse-name": "./dist/parse-name.js",
     "./_workflow": "./dist/workflow/index.js"
   },
   "scripts": {

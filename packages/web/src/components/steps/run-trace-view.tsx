@@ -1,5 +1,6 @@
 'use client';
 
+import { parseStepName } from '@vercel/workflow-core/parse-name';
 import type { Event, Hook, Step } from '@vercel/workflow-world';
 import { Download, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
@@ -8,7 +9,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { getResourceName } from '@/lib/resource-name';
 import { cn, formatDuration } from '@/lib/utils';
 import { StatusBadge } from '../display-utils/status-badge';
 
@@ -368,7 +368,7 @@ export function RunTraceView({
       return {
         id: step.stepId,
         type: isSleep ? 'sleep' : 'step',
-        name: getResourceName(step.stepName),
+        name: parseStepName(step.stepName)?.shortName || '?',
         status: step.status,
         createdTime: stepCreated,
         startTime: stepStart,
