@@ -28,6 +28,9 @@ import {
   JazzWorkflowRun,
 } from './types.js';
 
+const RUN_ID_PREFIX = 'wrun_';
+const EVENT_ID_PREFIX = 'evnt_';
+
 export const createStorage = (
   ensureLoaded: JazzStorageAccountResolver
 ): Storage => ({
@@ -75,7 +78,10 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const jwr = await JazzWorkflowRun.load(id, {
+      const covalueId = id.startsWith(RUN_ID_PREFIX)
+        ? id.slice(RUN_ID_PREFIX.length)
+        : id;
+      const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
         },
@@ -94,7 +100,10 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const jwr = await JazzWorkflowRun.load(id, {
+      const covalueId = id.startsWith(RUN_ID_PREFIX)
+        ? id.slice(RUN_ID_PREFIX.length)
+        : id;
+      const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
         },
@@ -563,7 +572,7 @@ function paginateItems<T, TItem>({
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
-    runId: jwr.$jazz.id,
+    runId: RUN_ID_PREFIX + jwr.$jazz.id,
     deploymentId: jwr.deploymentId,
     status: jwr.status,
     workflowName: jwr.workflowName,
@@ -602,7 +611,7 @@ function toStep(js: JazzStep): Step {
 function toEvent(je: JazzEvent): Event {
   return {
     runId: je.runId,
-    eventId: je.$jazz.id,
+    eventId: EVENT_ID_PREFIX + je.$jazz.id,
     eventType: je.eventType,
     eventData: je.eventData,
     correlationId: je.correlationId,
