@@ -1,5 +1,17 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.40
+
+### Patch Changes
+
+- 0146cb9: Add default fetch in workflow vm to throw error
+- b0641ee: Fix step/run name display after convention change
+- cdfb910: Implement `Response.redirect()` inside the workflow context
+- Updated dependencies [0146cb9]
+  - @vercel/workflow-errors@0.0.1-alpha.7
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.14
+
 ## 0.0.1-alpha.39
 
 ### Patch Changes

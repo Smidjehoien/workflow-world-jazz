@@ -1,5 +1,11 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- 0146cb9: Add default fetch in workflow vm to throw error
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes

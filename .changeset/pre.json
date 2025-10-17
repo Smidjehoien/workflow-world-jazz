@@ -23,7 +23,8 @@
     "@vercel/workflow-errors": "0.0.1-alpha.0",
     "world-integration-tests": "1.0.0",
     "@vercel/workflow": "0.0.1-alpha.1",
-    "@vercel/workflow-world-jazz": "0.0.1-alpha.8"
+    "@vercel/workflow-world-jazz": "0.0.1-alpha.8",
+    "flight-booking-app": "0.0.0"
   },
   "changesets": [
     "all-lands-write",
@@ -74,6 +75,7 @@
     "eight-steaks-remain",
     "eighty-eyes-rhyme",
     "eighty-terms-mate",
+    "eleven-fans-film",
     "empty-lands-add",
     "esbuild-logging-improvements",
     "evil-bags-cheer",
@@ -120,6 +122,7 @@
     "khaki-suns-pump",
     "late-ravens-argue",
     "legal-coats-fix",
+    "lemon-guests-find",
     "light-jars-watch",
     "little-apples-invite",
     "loud-moons-reply",
@@ -165,6 +168,7 @@
     "silly-signs-melt",
     "six-books-wear",
     "sixty-flies-begin",
+    "sixty-spiders-bow",
     "slick-lamps-go",
     "small-bats-jump",
     "smart-ghosts-shake",

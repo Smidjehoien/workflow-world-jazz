@@ -1,5 +1,15 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.49
+
+### Patch Changes
+
+- b0641ee: Fix step/run name display after convention change
+- Updated dependencies [0146cb9]
+- Updated dependencies [b0641ee]
+- Updated dependencies [cdfb910]
+  - @vercel/workflow-core@0.0.1-alpha.40
+
 ## 0.0.1-alpha.48
 
 ### Patch Changes
