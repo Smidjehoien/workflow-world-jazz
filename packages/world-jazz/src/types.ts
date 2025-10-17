@@ -51,7 +51,6 @@ export type JazzEvent = co.loaded<typeof JazzEvent>;
 
 export const JazzHook = co.map({
   ...HookSchema.shape,
-  response: z.json().optional(),
 });
 
 export type JazzHook = co.loaded<typeof JazzHook>;
