@@ -205,7 +205,15 @@ export const createQueue = (
             typeof response === 'undefined' ? null : response.timeoutSeconds;
 
           if (retryIn) {
-            return Response.json({ retryIn }, { status: 503 });
+            return Response.json(
+              {},
+              {
+                status: 503,
+                headers: {
+                  'Retry-After': retryIn.toString(),
+                },
+              }
+            );
           }
 
           processedMessages.add(message.$jazz.id);
