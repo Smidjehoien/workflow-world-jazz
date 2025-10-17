@@ -15,7 +15,15 @@ import {
 
 const JazzWebhookPayload = z.object({
   coValueId: z.string(),
-  updates: z.number(),
+  txID: z.object({
+    sessionID: z.string(),
+    txIndex: z.number(),
+  }),
+});
+
+const InsertOp = z.object({
+  op: z.literal('app'),
+  value: z.string(),
 });
 
 export const createQueue = (
@@ -112,20 +120,18 @@ export const createQueue = (
     ): (req: Request) => Promise<Response> {
       return async (req) => {
         let coValueId: string;
+        let txID: { sessionID: string; txIndex: number };
         try {
           const body = await req.json();
           const webhookPayload = JazzWebhookPayload.parse(body);
           coValueId = webhookPayload.coValueId;
+          txID = webhookPayload.txID;
         } catch (error) {
           console.error('Failed to parse webhook payload:', error);
           return new Response('Bad Request', { status: 400 });
         }
 
-        const messages = await JazzQueueMessages.load(coValueId, {
-          resolve: {
-            $each: true,
-          },
-        });
+        const messages = await JazzQueueMessages.load(coValueId);
         if (!messages) {
           console.error('Queue messages not found for coValueId', coValueId);
           return Response.json(
@@ -134,10 +140,51 @@ export const createQueue = (
           );
         }
 
-        // Temporary: find an unprocessed message
-        const message = messages.find(
-          (msg) => !msg.processedAt && !processedMessages.has(msg.$jazz.id)
-        );
+        let verifiedTx;
+
+        for (
+          let i = messages.$jazz.raw.core.verifiedTransactions.length - 1;
+          i >= 0;
+          i--
+        ) {
+          const tx = messages.$jazz.raw.core.verifiedTransactions[i];
+          if (
+            tx.txID.sessionID === txID.sessionID &&
+            tx.txID.txIndex === txID.txIndex
+          ) {
+            verifiedTx = tx;
+            break;
+          }
+        }
+
+        if (
+          !verifiedTx ||
+          !verifiedTx.changes ||
+          verifiedTx.changes.length !== 1
+        ) {
+          return Response.json(
+            {
+              error:
+                'Transaction not found, not decrypted, or has no or multiple changes',
+            },
+            { status: 404 }
+          );
+        }
+
+        let messageInsert;
+        try {
+          messageInsert = InsertOp.parse(verifiedTx.changes[0]!);
+        } catch (error) {
+          return Response.json(
+            { error: "Transaction doesn't contain an insert operation" },
+            { status: 503 }
+          );
+        }
+
+        const message = await JazzQueueMessage.load(messageInsert.value);
+
+        console.log('message', txID, message);
+
         if (!message) {
           return Response.json(
             { error: 'No messages to process' },
@@ -158,7 +205,15 @@ export const createQueue = (
             typeof response === 'undefined' ? null : response.timeoutSeconds;
 
           if (retryIn) {
-            return Response.json({ retryIn }, { status: 503 });
+            return Response.json(
+              {},
+              {
+                status: 503,
+                headers: {
+                  'Retry-After': retryIn.toString(),
+                },
+              }
+            );
           }
 
           processedMessages.add(message.$jazz.id);

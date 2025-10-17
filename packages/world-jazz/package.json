@@ -21,20 +21,20 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@types/node": "catalog:",
     "@types/json-schema": "catalog:",
+    "@types/node": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
     "@types/json-schema": "catalog:",
+    "@types/node": "catalog:",
     "@vercel/workflow-tsconfig": "workspace:*",
     "vitest": "^3.2.4"
   },
   "dependencies": {
     "@vercel/workflow-world": "workspace:*",
-    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@98ef5d75cc3085a70fbf47060937a4c67f116677",
-    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@98ef5d75cc3085a70fbf47060937a4c67f116677",
+    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@e0ddd47e42ac3848ec3db794bbf390375513f180",
+    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@e0ddd47e42ac3848ec3db794bbf390375513f180",
     "zod": "catalog:"
   }
 }

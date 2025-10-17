@@ -339,6 +339,7 @@ export const createHookStorage = (
         ownerId: 'jazz-owner',
         projectId: 'jazz-project',
         environment: 'jazz',
+        metadata: undefined,
         createdAt: now,
       });
 
@@ -610,6 +611,7 @@ function toHook(jh: JazzHook): Hook {
     ownerId: jh.ownerId,
     projectId: jh.projectId,
     environment: jh.environment,
+    metadata: jh.metadata,
     createdAt: jh.createdAt,
   };
 }

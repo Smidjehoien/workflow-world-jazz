@@ -227,7 +227,7 @@ describe('Jazz Queue', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           coValueId: jazzQueue.messages?.$jazz.id,
-          updates: 1,
+          txID: jazzQueue.messages.$jazz.raw.editAt(0)!.tx,
         }),
       });
       const response = await queueHandler(request);
@@ -310,14 +310,56 @@ describe('Jazz Queue', () => {
       expect(typeof queueHandler).toBe('function');
     });
 
-    it('should return 503 when handler returns timeout', async () => {
-      const queueNamePrefix = '__wkf_step_' as QueuePrefix;
-      const handler = vi.fn().mockResolvedValue({ timeoutSeconds: 30 });
+    it.each([
+      { timeoutSeconds: 0.1, description: 'very small sub-second timeout' },
+      { timeoutSeconds: 0.5, description: 'half second timeout' },
+      { timeoutSeconds: 1.5, description: 'one and half second timeout' },
+      { timeoutSeconds: 5, description: 'five second timeout' },
+      { timeoutSeconds: 60, description: 'one minute timeout' },
+      { timeoutSeconds: 300, description: 'five minute timeout' },
+      { timeoutSeconds: 3600, description: 'one hour timeout' },
+    ])(
+      'should return 503 with correct Retry-After header for $description ($timeoutSeconds seconds)',
+      async ({ timeoutSeconds }) => {
+        // Enqueue a message
+        const queueName = createQueueName(`test-queue-${timeoutSeconds}`);
+        const message = { data: `test message ${timeoutSeconds}` };
+        await queue.queue(queueName, message);
 
-      const queueHandler = queue.createQueueHandler(queueNamePrefix, handler);
+        // Get the queue that was created
+        const root = (await ensureLoaded({ root: true })).root;
+        // biome-ignore lint/style/noNonNullAssertion: the queue will exist
+        const jazzQueue = (await JazzQueue.loadUnique(
+          `queue/${queueName}`,
+          root.$jazz.owner.$jazz.id,
+          { resolve: { messages: true } }
+        ))!;
 
-      expect(typeof queueHandler).toBe('function');
-    });
+        // Create a queue handler that returns the specific timeout
+        const queueNamePrefix = '__wkf_step_' as QueuePrefix;
+        const handler = vi.fn().mockResolvedValue({ timeoutSeconds });
+        const queueHandler = queue.createQueueHandler(queueNamePrefix, handler);
+
+        const request = new Request('http://localhost/webhook', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            coValueId: jazzQueue.messages?.$jazz.id,
+            txID: jazzQueue.messages.$jazz.raw.editAt(0)!.tx,
+          }),
+        });
+
+        const response = await queueHandler(request);
+
+        expect(response.status).toBe(503);
+        expect(response.headers.get('Retry-After')).toBe(
+          timeoutSeconds.toString()
+        );
+
+        const responseBody = await response.json();
+        expect(responseBody).toEqual({});
+      }
+    );
 
     it('should return 500 when handler throws error', async () => {
       const queueNamePrefix = '__wkf_step_' as QueuePrefix;

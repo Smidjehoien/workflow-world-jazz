@@ -19,9 +19,7 @@ export const HookSchema = z.object({
 });
 
 // Inferred types
-export type Hook = Omit<z.infer<typeof HookSchema>, 'metadata'> & {
-  metadata?: unknown;
-};
+export type Hook = z.infer<typeof HookSchema>;
 
 // Request types
 export interface CreateHookRequest {
