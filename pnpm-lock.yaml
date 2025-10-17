@@ -3864,23 +3864,23 @@ packages:
 
   cojson-core-wasm@https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-core-wasm@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   cojson-storage-indexeddb@https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-indexeddb@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   cojson-storage-sqlite@https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-storage-sqlite@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   cojson-transport-ws@https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson-transport-ws@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   cojson@https://pkg.pr.new/garden-co/jazz/cojson@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/cojson@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
@@ -4689,7 +4689,7 @@ packages:
 
   jazz-tools@https://pkg.pr.new/garden-co/jazz/jazz-tools@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-tools@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
     peerDependencies:
       '@bam.tech/react-native-image-resizer': '*'
       '@op-engineering/op-sqlite': '*'
@@ -4743,7 +4743,7 @@ packages:
 
   jazz-webhook@https://pkg.pr.new/garden-co/jazz/jazz-webhook@191e2663d48de4845e03844274e5fddabcd5bed3:
     resolution: {tarball: https://pkg.pr.new/garden-co/jazz/jazz-webhook@191e2663d48de4845e03844274e5fddabcd5bed3}
-    version: 0.18.21
+    version: 0.18.27
 
   jiti@2.5.1:
     resolution: {integrity: sha512-twQoecYPiVA5K/h6SxtORw/Bs3ar+mLUtoPSc7iMXzQzK8d7eJ/R09wmTwAjiamETn1cXYPGfNnu7DMoHgu12w==}

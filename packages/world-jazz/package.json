@@ -21,13 +21,13 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "@types/node": "catalog:",
     "@types/json-schema": "catalog:",
+    "@types/node": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@types/node": "catalog:",
     "@types/json-schema": "catalog:",
+    "@types/node": "catalog:",
     "@vercel/workflow-tsconfig": "workspace:*",
     "vitest": "^3.2.4"
   },
