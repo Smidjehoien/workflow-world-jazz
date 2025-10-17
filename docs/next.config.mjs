@@ -11,39 +11,13 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  transpilePackages: [
-    '@vercel/geist',
-    '@vercel/geist-test-utils',
-    '@vercel/trace-viewer',
-    '@vercel/next-themes',
-  ],
-  modularizeImports: {
-    '@vercel/geist/components': {
-      transform: '@vercel/geist/components/{{ kebabCase member }}',
-      skipDefaultConversion: true,
-    },
-    '@vercel/geist/icons': {
-      transform: '@vercel/geist/icons/{{ kebabCase member }}',
-      skipDefaultConversion: true,
-    },
-    '@vercel/geist/logos': {
-      transform: '@vercel/geist/logos/{{ kebabCase member }}',
-      skipDefaultConversion: true,
-    },
-    'geist/core': {
-      transform: '@vercel/geist/core',
-      skipDefaultConversion: true,
-    },
-    'geist/icons': {
-      transform: '@vercel/geist/icons/{{ kebabCase member }}',
-      skipDefaultConversion: true,
-    },
-  },
-  experimental: {
-    optimizePackageImports: ['@vercel/geist', '@vercel/geist-test-utils'],
-  },
   redirects: () => {
     return [
+      {
+        source: '/',
+        destination: '/docs/introduction',
+        permanent: false,
+      },
       {
         source: '/docs',
         destination: '/docs/introduction',

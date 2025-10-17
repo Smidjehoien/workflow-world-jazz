@@ -12,8 +12,9 @@ export function baseOptions(): BaseLayoutProps {
     nav: {
       title: (
         <div className="hover:opacity-75 transition-opacity ease-out text-foreground">
-          <span className="text-foreground font-semibold">Workflow</span>{' '}
-          <span className="text-muted-foreground">Development Kit</span>
+          <span className="text-foreground font-semibold text-lg">
+            Workflows
+          </span>
         </div>
       ),
     },

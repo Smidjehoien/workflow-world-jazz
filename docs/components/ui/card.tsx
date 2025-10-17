@@ -1,92 +1,58 @@
-import * as React from 'react';
+import Link from 'next/link';
+import type { ReactNode } from 'react';
 
-import { cn } from '@/lib/utils';
+interface CardProps {
+  children?: ReactNode;
+  href?: string;
+  title?: string;
+  description?: string;
+  icon?: ReactNode;
+  className?: string;
+}
 
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card"
-      className={cn(
-        'bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm',
-        className
+interface CardsProps {
+  children: ReactNode;
+  className?: string;
+}
+
+export function Card({
+  children,
+  href,
+  title,
+  description,
+  icon,
+  className,
+}: CardProps) {
+  const cardContent = (
+    <>
+      {icon && (
+        <div className="mb-2 text-foreground [&_svg]:fill-current">{icon}</div>
       )}
-      {...props}
-    />
-  );
-}
-
-function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-header"
-      className={cn(
-        '@container/card-header grid auto-rows-min grid-rows-[auto_auto] items-start gap-2 px-6 has-data-[slot=card-action]:grid-cols-[1fr_auto] [.border-b]:pb-6',
-        className
+      {title && <h3 className="font-semibold mb-1">{title}</h3>}
+      {description && (
+        <p className="text-sm text-muted-foreground">{description}</p>
       )}
-      {...props}
-    />
+      {children}
+    </>
   );
+
+  const cardClassName = `hover:opacity-100 no-underline block p-4 border hover:bg-secondary/50 rounded-lg transition ease-out [&_h3]:m-0 [&_h3]:!text-base [&_h3]:!font-medium [&_p]:font-normal [&_p]:text-sm [&_p]:mt-2 [&_p]:text-muted-foreground [&_p]:m-0 ${className || ''}`;
+
+  if (href) {
+    return (
+      <Link href={href} className={cardClassName}>
+        {cardContent}
+      </Link>
+    );
+  }
+
+  return <div className={cardClassName}>{cardContent}</div>;
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
+export function Cards({ children, className }: CardsProps) {
   return (
-    <div
-      data-slot="card-title"
-      className={cn('leading-none font-semibold', className)}
-      {...props}
-    />
+    <div className={`grid gap-4 md:grid-cols-2 ${className || ''}`}>
+      {children}
+    </div>
   );
 }
-
-function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-description"
-      className={cn('text-muted-foreground text-sm', className)}
-      {...props}
-    />
-  );
-}
-
-function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-action"
-      className={cn(
-        'col-start-2 row-span-2 row-start-1 self-start justify-self-end',
-        className
-      )}
-      {...props}
-    />
-  );
-}
-
-function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn('px-6', className)}
-      {...props}
-    />
-  );
-}
-
-function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-footer"
-      className={cn('flex items-center px-6 [.border-t]:pt-6', className)}
-      {...props}
-    />
-  );
-}
-
-export {
-  Card,
-  CardHeader,
-  CardFooter,
-  CardTitle,
-  CardAction,
-  CardDescription,
-  CardContent,
-};

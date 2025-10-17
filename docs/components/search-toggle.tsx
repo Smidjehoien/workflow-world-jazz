@@ -1,8 +1,8 @@
 'use client';
-import { useI18n } from 'fumadocs-ui/contexts/i18n';
-import { useSearchContext } from 'fumadocs-ui/contexts/search';
-import { Search } from 'lucide-react';
 import type { ComponentProps } from 'react';
+import { Search } from 'lucide-react';
+import { useSearchContext } from 'fumadocs-ui/contexts/search';
+import { useI18n } from 'fumadocs-ui/contexts/i18n';
 import { cn } from '../lib/cn';
 import { type ButtonProps, buttonVariants } from './ui/button';
 
@@ -23,7 +23,7 @@ export function SearchToggle({
 
   return (
     <button
-      aria-label="Open Search"
+      type="button"
       className={cn(
         buttonVariants({
           size,
@@ -32,10 +32,10 @@ export function SearchToggle({
         props.className
       )}
       data-search=""
+      aria-label="Open Search"
       onClick={() => {
         setOpenSearch(true);
       }}
-      type="button"
     >
       <Search className="size-4" />
     </button>
@@ -54,11 +54,11 @@ export function LargeSearchToggle({
 
   return (
     <button
-      data-search-full=""
       type="button"
+      data-search-full=""
       {...props}
       className={cn(
-        'inline-flex items-center gap-2 rounded-lg border p-1.5 ps-2 text-fd-muted-foreground text-sm transition-colors hover:text-fd-accent-foreground',
+        'inline-flex items-center gap-2 rounded-sm border p-1.5 ps-2 text-sm text-fd-muted-foreground transition-colors hover:text-fd-accent-foreground',
         props.className
       )}
       onClick={() => {
@@ -66,9 +66,9 @@ export function LargeSearchToggle({
       }}
     >
       {text.search}...
-      <div className="ms-auto inline-flex rounded-md border bg-background px-1">
+      <div className="ms-auto inline-flex gap-0.5 border rounded px-1">
         {hotKey.map((k, i) => (
-          <kbd className="px-0.5" key={i}>
+          <kbd key={i} className="px-0.5">
             {k.display}
           </kbd>
         ))}
