@@ -12,6 +12,7 @@ export const ERROR_SLUGS = {
   SERIALIZATION_FAILED: 'serialization-failed',
   WEBHOOK_INVALID_RESPOND_WITH_VALUE: 'webhook-invalid-respond-with-value',
   WEBHOOK_RESPONSE_NOT_SENT: 'webhook-response-not-sent',
+  FETCH_IN_WORKFLOW_FUNCTION: 'fetch-in-workflow',
 } as const;
 
 type ErrorSlug = (typeof ERROR_SLUGS)[keyof typeof ERROR_SLUGS];

@@ -1,4 +1,5 @@
 import { runInContext } from 'node:vm';
+import { ERROR_SLUGS } from '@vercel/workflow-errors';
 import { createContext } from '@vercel/workflow-vm';
 import type { Event, WorkflowRun } from '@vercel/workflow-world';
 import * as nanoid from 'nanoid';
@@ -96,8 +97,12 @@ export async function runWorkflow(
     vmGlobalThis[WORKFLOW_CONTEXT_SYMBOL] = ctx;
 
     // NOTE: Will have a config override to use the custom fetch step.
-    //       For now `fetch` must be explicitly imported from `@vercel/workflow-core`.
-    // vmGlobalThis.fetch = useStep<any[], Response>('__builtin_fetch');
+    //       For now `fetch` must be explicitly imported from `@vercel/workflow`.
+    vmGlobalThis.fetch = () => {
+      throw new vmGlobalThis.Error(
+        `Global "fetch" is unavailable in workflow functions. Use the "fetch" step function from "@vercel/workflow" to make HTTP requests.\n\nLearn more: https://useworkflow.dev/err/${ERROR_SLUGS.FETCH_IN_WORKFLOW_FUNCTION}`
+      );
+    };
 
     // `Request` and `Response` are special built-in classes that invoke steps
     // for the `json()`, `text()` and `arrayBuffer()` instance methods
