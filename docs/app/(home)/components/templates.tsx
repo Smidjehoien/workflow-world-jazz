@@ -1,13 +1,12 @@
 const data = [
   {
-    title: 'Birthday Card Generator',
-    description:
-      'A template for generating birthday cards with AI, built with Vercel AI SDK and Vercel Workflow SDK.',
+    title: 'Story Generator Slackbot',
+    description: 'TBD.',
     image: '/images/zero-config.png',
     link: 'https://vercel.com/templates/x/x',
   },
   {
-    title: 'Durable AI SDK',
+    title: 'Streaming AI Agent',
     description:
       'Common AI agent patterns using the Vercel Workflow SDK to make agents more durable and reliable.',
     image: '/images/observable.png',

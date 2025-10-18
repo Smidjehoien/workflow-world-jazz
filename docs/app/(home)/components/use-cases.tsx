@@ -187,7 +187,7 @@ export const UseCases = () => {
           code={currentCase.code}
           lang="ts"
           codeblock={{
-            className: 'shadow-none bg-background dark:bg-sidebar',
+            className: 'shadow-none bg-background dark:bg-sidebar rounded-md',
           }}
         />
       </div>

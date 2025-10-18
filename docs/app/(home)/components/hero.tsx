@@ -6,7 +6,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
 export const Hero = () => {
   const [copied, setCopied] = useState(false);
@@ -33,17 +32,17 @@ export const Hero = () => {
   return (
     <section className="mt-[var(--fd-nav-height)] space-y-6 px-4 pt-24 pb-16 text-center">
       <div className="mx-auto w-full max-w-3xl space-y-4">
-        <Badge variant="secondary">
+        <Badge variant="secondary" className="rounded-full">
           <div className="size-2 rounded-full bg-muted-foreground" />
           <p className="tracking-tight">Workflow SDK is in beta</p>
         </Badge>
         <h1 className="flex flex-col items-center justify-center text-center font-semibold text-4xl! leading-tighter tracking-tight lg:font-semibold lg:leading-[1.1] lg:text-5xl! xl:text-6xl! xl:tracking-tighter">
-          <p>The TypeScript Framework for "Long Running" Execution</p>
+          <p>The TypeScript Framework for Durable Execution</p>
         </h1>
         <p className="text-balance text-muted-foreground text-xl">
           The Workflow Development Kit brings durability and reliability to
-          async JavaScript. Mark functions with directives to make them
-          automatically persistent, resumable, and observable.
+          async JavaScript. Build apps and AI agents that can suspend, resume,
+          and maintain state with ease.
         </p>
       </div>
       <div className="inline-flex w-fit mx-auto items-center gap-3">
@@ -51,11 +50,9 @@ export const Hero = () => {
           <Link href="/docs/introduction">Get Started</Link>
         </Button>
         <div className="relative bg-background border rounded-md overflow-hidden py-3 pl-4 pr-12 mx-auto inline-flex w-fit">
-          <Input
-            value="npm install workflow"
-            disabled
-            className="bg-transparent p-0 text-foreground h-auto border-none font-mono disabled:opacity-100 outline-none shadow-none"
-          />
+          <pre className="text-sm">
+            <code>npm i workflow</code>
+          </pre>
           <Button
             onClick={handleCopy}
             size="icon"

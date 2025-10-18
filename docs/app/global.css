@@ -166,6 +166,10 @@
   @apply hidden!;
 }
 
+#nd-nav {
+  @apply bg-sidebar!;
+}
+
 #nd-subnav [data-active="true"] {
   @apply font-medium text-fd-foreground;
 }
@@ -206,4 +210,21 @@ table th {
 
 table td {
   @apply !bg-background border-none px-4.5 py-3;
+}
+
+/* Reset the counter for each code block */
+.with-line-numbers {
+  counter-reset: line-number;
+}
+
+/* Style each line within the code block */
+.with-line-numbers code .line {
+  @apply relative pl-12!;
+  counter-increment: line-number; /* Increment the counter for each line */
+}
+
+/* Display the line number using a pseudo-element */
+.with-line-numbers code .line::before {
+  @apply absolute left-0 w-8! text-right text-muted-foreground;
+  content: counter(line-number); /* Display the current counter value */
 }

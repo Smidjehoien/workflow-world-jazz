@@ -19,7 +19,7 @@ export const Intro = () => (
       </h2>
       <p className="text-balance text-lg max-w-sm text-muted-foreground">
         Move from fragile queues and custom retries to durable, resumable code
-        with a single directive.
+        with simple directives.
       </p>
     </div>
     <div className="flex items-center justify-center">

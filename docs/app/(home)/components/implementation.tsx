@@ -63,7 +63,8 @@ export const Implementation = () => (
             code={item.code}
             lang="ts"
             codeblock={{
-              className: 'shadow-none bg-background dark:bg-sidebar',
+              className:
+                'shadow-none bg-background dark:bg-sidebar rounded-md with-line-numbers',
             }}
           />
         </div>
