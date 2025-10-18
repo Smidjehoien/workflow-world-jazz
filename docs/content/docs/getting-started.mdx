@@ -67,55 +67,6 @@ const nextConfig: NextConfig = {
 export default withWorkflow(nextConfig); // [!code highlight]
 ```
 
-### Configure TypeScript
-
-To enhance your development experience with workflow-specific diagnostics and auto-completions, install the TypeScript plugin as a dev dependency:
-
-<BaseUrl>
-  {(baseUrl) => (
-    <Tabs items={['npm', 'pnpm', 'yarn']}>
-      <Tab value="npm">
-        <CodeBlock>
-            npm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-      <Tab value="pnpm">
-        <CodeBlock>
-            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-      <Tab value="yarn">
-        <CodeBlock>
-            yarn add -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-    </Tabs>
-  )}
-</BaseUrl>
-
-Then, add the plugin to your `tsconfig.json`:
-
-```json title="tsconfig.json" lineNumbers
-{
-  "compilerOptions": {
-    // … rest of your TypeScript config
-    "plugins": [ // [!code highlight]
-      { // [!code highlight]
-        "name": "@vercel/workflow-typescript-plugin" // [!code highlight]
-      } // [!code highlight]
-    ] // [!code highlight]
-  }
-}
-```
-
-After adding the plugin, restart your TypeScript server in your editor (in VS Code/Cursor: `cmd+shift+P` → "TypeScript: Restart TS Server").
-
-The TypeScript plugin provides:
-
-* **Workflow/Step validation**: Errors when workflow or step functions are not async
-* **Disallowed API detection**: Errors when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
-* **Workflow API completions**: Auto-suggestions for workflow-specific APIs like `createHook()`, `getWorkflowMetadata()`, etc.
-
 ## Create Your First Workflow
 
 To create your first workflow, create a new `workflows` directory inside your project root (if using `src` folder then it would be `src/workflows`).
@@ -230,6 +181,7 @@ npx wf i runs
 ## Next Steps
 
 * Learn more about the [Workflow Concepts](/docs/foundations/concepts).
+* Set up [TypeScript editor support](/docs/configuration/typescript).
 * Learn about how to use [Observability](/docs/observability) tools.
-* Explore [Workflow Core](/docs/api-reference/vercel-workflow-core).
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.
+* Explore the [API Reference](/docs/api-reference).
