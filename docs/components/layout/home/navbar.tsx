@@ -1,9 +1,13 @@
 'use client';
-import { type ComponentProps, useState } from 'react';
+import type {
+  NavigationMenuContentProps,
+  NavigationMenuTriggerProps,
+} from '@radix-ui/react-navigation-menu';
 import { cva, type VariantProps } from 'class-variance-authority';
 import Link, { type LinkProps } from 'fumadocs-core/link';
+import { useNav } from 'fumadocs-ui/contexts/layout';
+import { type ComponentProps, useState } from 'react';
 import { cn } from '../../../lib/cn';
-import { BaseLinkItem } from '../shared/index';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -13,12 +17,8 @@ import {
   NavigationMenuTrigger,
   NavigationMenuViewport,
 } from '../../navigation-menu';
-import { useNav } from 'fumadocs-ui/contexts/layout';
-import type {
-  NavigationMenuContentProps,
-  NavigationMenuTriggerProps,
-} from '@radix-ui/react-navigation-menu';
 import { buttonVariants } from '../../ui/button';
+import { BaseLinkItem } from '../shared/index';
 
 const navItemVariants = cva(
   'inline-flex items-center gap-1 p-2 text-fd-muted-foreground transition-colors hover:text-fd-accent-foreground data-[active=true]:text-foreground [&_svg]:size-4'
@@ -29,20 +29,20 @@ export function Navbar(props: ComponentProps<'div'>) {
   const { isTransparent } = useNav();
 
   return (
-    <NavigationMenu value={value} onValueChange={setValue} asChild>
+    <NavigationMenu asChild onValueChange={setValue} value={value}>
       <header
         id="nd-nav"
         {...props}
         className={cn(
-          'fixed top-(--fd-banner-height) z-40 left-0 right-(--removed-body-scroll-bar-size,0) backdrop-blur-lg border-b transition-colors *:mx-auto *:max-w-fd-container',
-          value.length > 0 && 'max-lg:shadow-lg max-lg:rounded-b-2xl',
-          (!isTransparent || value.length > 0) && 'bg-fd-background/80',
+          'fixed top-(--fd-banner-height) right-(--removed-body-scroll-bar-size,0) left-0 z-40 border-b backdrop-blur-lg transition-colors',
+          value.length > 0 && 'max-lg:rounded-b-2xl max-lg:shadow-lg',
+          (!isTransparent || value.length > 0) && 'bg-background/80',
           props.className
         )}
       >
         <NavigationMenuList
-          className="flex h-14 w-full items-center px-4"
           asChild
+          className="flex h-14 w-full items-center px-4"
         >
           <nav>{props.children}</nav>
         </NavigationMenuList>
@@ -125,8 +125,8 @@ export function NavbarLink({
       <NavigationMenuLink asChild>
         <BaseLinkItem
           {...props}
-          item={item}
           className={cn(linkVariants({ variant }), props.className)}
+          item={item}
         >
           {props.children}
         </BaseLinkItem>

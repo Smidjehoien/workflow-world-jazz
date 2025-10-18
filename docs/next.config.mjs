@@ -14,11 +14,6 @@ const config = {
   redirects: () => {
     return [
       {
-        source: '/',
-        destination: '/docs/introduction',
-        permanent: false,
-      },
-      {
         source: '/docs',
         destination: '/docs/introduction',
         permanent: true,

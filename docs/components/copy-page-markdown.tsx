@@ -1,8 +1,8 @@
 'use client';
 
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/cn';
 
 export function CopyPageAsMarkdown() {
