@@ -1,5 +1,16 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- 77749ca: Add typescript plugin main export in workflow package
+- Updated dependencies [1214755]
+  - @vercel/workflow-cli@0.0.1-alpha.52
+  - @vercel/workflow-core@0.0.1-alpha.42
+  - @vercel/workflow-next@0.0.1-alpha.53
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
 ## 0.0.1-alpha.12
 
 ### Patch Changes

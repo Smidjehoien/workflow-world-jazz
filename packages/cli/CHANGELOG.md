@@ -1,5 +1,18 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.52
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- Updated dependencies [1214755]
+- Updated dependencies [314f0fe]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.13
+  - @vercel/workflow-world-vercel@0.0.1-alpha.16
+  - @vercel/workflow-world@0.0.1-alpha.9
+  - @vercel/workflow-web@0.0.1-alpha.51
+  - @vercel/workflow-core@0.0.1-alpha.42
+
 ## 0.0.1-alpha.51
 
 ### Patch Changes

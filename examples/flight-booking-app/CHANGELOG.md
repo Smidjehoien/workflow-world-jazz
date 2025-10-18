@@ -1,5 +1,12 @@
 # flight-booking-app
 
+## 0.0.1-alpha.2
+
+### Patch Changes
+
+- Updated dependencies [77749ca]
+  - @vercel/workflow@0.0.1-alpha.13
+
 ## 0.0.1-alpha.1
 
 ### Patch Changes

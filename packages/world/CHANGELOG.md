@@ -1,5 +1,12 @@
 # @vercel/workflow-world
 
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- 314f0fe: Simplify hook type inference
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes
