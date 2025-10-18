@@ -1,7 +1,7 @@
 const data = [
   {
     title: 'Story Generator Slackbot',
-    description: 'TBD.',
+    description: 'Slackbot that generates children's stories from collaborative input.',
     image: '/images/zero-config.png',
     link: 'https://vercel.com/templates/x/x',
   },
