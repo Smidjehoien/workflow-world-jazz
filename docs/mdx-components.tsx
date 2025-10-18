@@ -28,7 +28,8 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
     h6: (props) => <Heading as="h6" {...props} />,
     li: ({ ref: _ref, ...props }) => (
       <li {...props} className="prose">
-        {props.children}
+        {' '}
+        {props.children}{' '}
       </li>
     ),
     p: ({ ref: _ref, ...props }) => (
@@ -49,7 +50,7 @@ export function getMDXComponents(components?: MDXComponents): MDXComponents {
           <Link
             {...props}
             className={cn(
-              'no-underline text-primary-foreground font-normal',
+              'no-underline text-primary-blue font-normal',
               className
             )}
           >

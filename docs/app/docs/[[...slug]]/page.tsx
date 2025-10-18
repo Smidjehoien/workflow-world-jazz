@@ -22,7 +22,7 @@ function Card({ title, href, children }: CardProps) {
   return (
     <a
       href={href}
-      className="block rounded-lg border border-border p-6 transition-colors hover:border-primary hover:bg-accent"
+      className="block rounded-lg border border-border p-6 transition-colors hover:border-primary hover:bg-accent no-underline"
     >
       <div className="font-semibold text-lg mb-1">{title}</div>
       <div className="text-muted-foreground text-sm">{children}</div>
