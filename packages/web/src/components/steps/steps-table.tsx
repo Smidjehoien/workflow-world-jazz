@@ -16,6 +16,7 @@ interface StepsTableProps {
   loading: boolean;
   error?: Error;
   hasHitLimit: boolean;
+  hasReachedEnd?: boolean;
   initialLoadComplete: boolean;
   onStepClick: (stepId: string) => void;
   onRunClick?: () => void;
@@ -37,6 +38,7 @@ export function StepsTable({
   loading,
   error,
   hasHitLimit,
+  hasReachedEnd = false,
   initialLoadComplete,
   onStepClick,
   onRunClick,
@@ -118,6 +120,8 @@ export function StepsTable({
             ? 'Showing first 1000 steps only. There may be more steps that are not displayed.'
             : undefined
         }
+        hasHitLimit={hasHitLimit}
+        hasReachedEnd={hasReachedEnd}
       />
     </div>
   );

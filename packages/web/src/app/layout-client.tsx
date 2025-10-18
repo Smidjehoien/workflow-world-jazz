@@ -19,11 +19,42 @@ export function LayoutClient({ children }: LayoutClientProps) {
 
   const id = searchParams.get('id');
   const runId = searchParams.get('runId');
+  const stepId = searchParams.get('stepId');
+  const hookId = searchParams.get('hookId');
   const resource = searchParams.get('resource');
 
-  // If initialized with a resource/id, we navigate to the appropriate page
+  // If initialized with a resource/id or direct ID params, we navigate to the appropriate page
   useEffect(() => {
-    if (!resource || !id) {
+    // Handle direct ID parameters (runId, stepId, hookId) without resource
+    if (!resource) {
+      if (runId) {
+        // If we have a runId, open that run's detail view
+        let targetUrl: string;
+        if (stepId) {
+          // Open run with step sidebar
+          targetUrl = buildUrlWithConfig(`/run/${runId}`, config, {
+            sidebar: 'step',
+            stepId,
+          });
+        } else if (hookId) {
+          // Open run with hook sidebar
+          targetUrl = buildUrlWithConfig(`/run/${runId}`, config, {
+            sidebar: 'hook',
+            hookId,
+          });
+        } else {
+          // Just open the run
+          targetUrl = buildUrlWithConfig(`/run/${runId}`, config);
+        }
+        router.push(targetUrl);
+        return;
+      }
+      // No resource and no direct params, nothing to do
+      return;
+    }
+
+    // Handle resource-based navigation
+    if (!id) {
       return;
     }
 
@@ -45,13 +76,24 @@ export function LayoutClient({ children }: LayoutClientProps) {
         sidebar: 'event',
         eventId: id,
       });
+    } else if (resource === 'hook' && runId) {
+      targetUrl = buildUrlWithConfig(`/run/${runId}`, config, {
+        sidebar: 'hook',
+        hookId: id,
+      });
+    } else if (resource === 'hook' && !runId) {
+      // Hook without runId - go to home page with hook sidebar
+      targetUrl = buildUrlWithConfig('/', config, {
+        sidebar: 'hook',
+        hookId: id,
+      });
     } else {
       console.warn(`Can't deep-link to ${resource} ${id}.`);
       return;
     }
 
     router.push(targetUrl);
-  }, [resource, id, runId, router, config]);
+  }, [resource, id, runId, stepId, hookId, router, config]);
 
   return (
     <div className="min-h-screen p-8">

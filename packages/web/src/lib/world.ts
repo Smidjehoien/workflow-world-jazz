@@ -124,3 +124,19 @@ export async function fetchHook(config: WorldConfig, hookId: string) {
   const hook = await world.hooks.get(hookId, { resolveData: 'all' });
   return hydrateResourceIO(hook);
 }
+
+export async function fetchEventsByCorrelationId(
+  config: WorldConfig,
+  correlationId: string,
+  cursor?: string,
+  sortOrder: 'asc' | 'desc' = 'asc',
+  limit: number = 100
+) {
+  const world = await setupWorld(config);
+  const events = await world.events.listByCorrelationId({
+    correlationId,
+    pagination: { cursor, limit, sortOrder },
+    resolveData: 'none',
+  });
+  return events;
+}

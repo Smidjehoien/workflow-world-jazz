@@ -31,6 +31,8 @@ export function HooksTableWithData({
     items: hooks,
     loading,
     error,
+    hasHitLimit,
+    hasReachedEnd,
     initialLoadComplete,
   } = useExhaustiveList<Hook, { config: WorldConfig; runId?: string }>({
     createKey: (params, cursor) =>
@@ -47,7 +49,6 @@ export function HooksTableWithData({
     params: { config, runId },
     live: false,
   });
-
   return (
     <HooksTable
       config={config}
@@ -56,6 +57,8 @@ export function HooksTableWithData({
       loading={loading}
       error={error || undefined}
       initialLoadComplete={initialLoadComplete}
+      hasHitLimit={hasHitLimit}
+      hasReachedEnd={hasReachedEnd}
       onHookClick={onHookClick}
       selectedHookId={selectedHookId}
       onCloseDetailSidebar={onCloseDetailSidebar}

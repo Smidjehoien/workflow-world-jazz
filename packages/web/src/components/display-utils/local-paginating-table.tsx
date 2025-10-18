@@ -49,6 +49,10 @@ interface LocalPaginatingTableProps<T> {
   headerActions?: React.ReactNode;
   /** Warning message to show at the top (e.g., when limit exceeded) */
   warningMessage?: string;
+  /** Whether the 1000 item limit was hit */
+  hasHitLimit?: boolean;
+  /** Whether all available data has been reached */
+  hasReachedEnd?: boolean;
 }
 
 /**
@@ -71,6 +75,8 @@ export function LocalPaginatingTable<T>({
   emptyMessage = 'No items found',
   headerActions,
   warningMessage,
+  hasHitLimit = false,
+  hasReachedEnd = false,
 }: LocalPaginatingTableProps<T>) {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = useState(1);
@@ -181,34 +187,46 @@ export function LocalPaginatingTable<T>({
               </TableBody>
             </Table>
 
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                Showing {startIndex + 1}-{endIndex} of {items.length}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between mt-4">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{endIndex} of {items.length}
+                  {hasHitLimit && ' (limit reached)'}
+                </div>
+                <div className="flex gap-2 items-center">
+                  <PageSizeDropdown
+                    value={pageSize}
+                    onChange={handlePageSizeChange}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage >= totalPages}
+                  >
+                    Next
+                    <ChevronRight />
+                  </Button>
+                </div>
               </div>
-              <div className="flex gap-2 items-center">
-                <PageSizeDropdown
-                  value={pageSize}
-                  onChange={handlePageSizeChange}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={currentPage >= totalPages}
-                >
-                  Next
-                  <ChevronRight />
-                </Button>
-              </div>
+
+              {/* Show info message on last page when limit hit or more data might be available */}
+              {currentPage === totalPages && !hasReachedEnd && (
+                <div className="text-xs text-muted-foreground text-center py-2 bg-muted/30 rounded">
+                  {hasHitLimit
+                    ? 'Displaying first 1,000 items. More data may be available but cannot be fetched due to the item limit.'
+                    : 'More data might be available but cannot currently be fetched.'}
+                </div>
+              )}
             </div>
           </>
         )}

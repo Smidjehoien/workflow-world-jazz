@@ -21,6 +21,7 @@ export {
   type WebhookOptions,
 } from './create-hook.js';
 export { defineHook } from './define-hook.js';
+export { hydrateResourceIO, StreamID } from './observability.js';
 export { parseStepName, parseWorkflowName } from './parse-name.js';
 export { createWorld, getWorld, setWorld } from './runtime/world.js';
 export {

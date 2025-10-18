@@ -14,6 +14,8 @@ interface EventsTableProps {
   loading: boolean;
   error?: Error;
   initialLoadComplete: boolean;
+  hasHitLimit?: boolean;
+  hasReachedEnd?: boolean;
   onEventClick: (eventId: string) => void;
   selectedEventId?: string;
   onCloseDetailSidebar: () => void;
@@ -30,6 +32,8 @@ export function EventsTable({
   loading,
   error,
   initialLoadComplete,
+  hasHitLimit = false,
+  hasReachedEnd = false,
   onEventClick,
   selectedEventId,
   onCloseDetailSidebar,
@@ -87,6 +91,8 @@ export function EventsTable({
         onRowClick={(event) => onEventClick(event.eventId)}
         isRowSelected={(event) => event.eventId === selectedEventId}
         emptyMessage="No events found"
+        hasHitLimit={hasHitLimit}
+        hasReachedEnd={hasReachedEnd}
       />
     </>
   );

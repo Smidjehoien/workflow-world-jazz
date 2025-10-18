@@ -3,6 +3,7 @@ import {
   type CreateEventRequest,
   type Event,
   EventSchema,
+  type ListEventsByCorrelationIdParams,
   type ListEventsParams,
   type PaginatedResponse,
   PaginatedResponseSchema,
@@ -25,24 +26,35 @@ function filterEventData(event: any, resolveData: 'none' | 'all'): Event {
 
 // Functions
 export async function getWorkflowRunEvents(
-  params: ListEventsParams,
+  params: ListEventsParams | ListEventsByCorrelationIdParams,
   config?: APIConfig
 ): Promise<PaginatedResponse<Event>> {
   const searchParams = new URLSearchParams();
 
-  const {
-    runId,
-    pagination,
-    resolveData = DEFAULT_RESOLVE_DATA_OPTION,
-  } = params;
+  const { pagination, resolveData = DEFAULT_RESOLVE_DATA_OPTION } = params;
+  let runId: string | undefined;
+  let correlationId: string | undefined;
+  if ('runId' in params) {
+    runId = params.runId;
+  } else {
+    correlationId = params.correlationId;
+  }
+
+  if (!runId && !correlationId) {
+    throw new Error('Either runId or correlationId must be provided');
+  }
 
   if (pagination?.limit) searchParams.set('limit', pagination.limit.toString());
   if (pagination?.cursor) searchParams.set('cursor', pagination.cursor);
   if (pagination?.sortOrder)
     searchParams.set('sortOrder', pagination.sortOrder);
+  if (correlationId) searchParams.set('correlationId', correlationId);
 
   const queryString = searchParams.toString();
-  const endpoint = `/v1/runs/${runId}/events${queryString ? `?${queryString}` : ''}`;
+  const query = queryString ? `?${queryString}` : '';
+  const endpoint = correlationId
+    ? `/v1/events${query}`
+    : `/v1/runs/${runId}/events${query}`;
 
   const response = await makeRequest({
     endpoint,

@@ -78,7 +78,7 @@ export default class Inspect extends BaseCommand {
 
   static flags = {
     runId: Flags.string({
-      description: 'run ID to filter by',
+      description: 'run ID to filter by (only for steps, events, and hooks',
       required: false,
       char: 'r',
       aliases: ['run'],
@@ -87,7 +87,7 @@ export default class Inspect extends BaseCommand {
       helpValue: 'RUN_ID',
     }),
     stepId: Flags.string({
-      description: 'step ID to filter by',
+      description: 'step ID to filter by (only for events)',
       required: false,
       char: 's',
       aliases: ['step'],
@@ -95,8 +95,16 @@ export default class Inspect extends BaseCommand {
       helpLabel: '-s, --stepId',
       helpValue: 'STEP_ID',
     }),
+    hookId: Flags.string({
+      description: 'hook ID to filter by (only for events)',
+      required: false,
+      aliases: ['hook'],
+      helpGroup: 'Filtering',
+      helpLabel: '--hookId',
+      helpValue: 'HOOK_ID',
+    }),
     workflowName: Flags.string({
-      description: 'workflow name to filter by',
+      description: 'workflow name to filter by (only for runs)',
       required: false,
       char: 'n',
       aliases: ['workflow'],

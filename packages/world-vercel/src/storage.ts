@@ -51,6 +51,7 @@ export function createStorage(config?: APIConfig): Storage & AuthProvider {
       create: (runId, data, params) =>
         createWorkflowRunEvent(runId, data, params, config),
       list: (params) => getWorkflowRunEvents(params, config),
+      listByCorrelationId: (params) => getWorkflowRunEvents(params, config),
     },
     hooks: {
       create: (runId, data) => createHook(runId, data, config),

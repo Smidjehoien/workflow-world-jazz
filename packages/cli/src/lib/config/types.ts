@@ -10,6 +10,7 @@ export type InspectCLIOptions = {
   watch?: boolean;
   runId?: string;
   stepId?: string;
+  hookId?: string;
   cursor?: string;
   sort?: 'asc' | 'desc';
   limit?: number;

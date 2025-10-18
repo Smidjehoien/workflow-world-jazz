@@ -1,8 +1,8 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { StreamDetailView } from '@/components/detail-views';
 import { ErrorBoundary } from '@/components/error-boundary';
+import { StreamDetailView } from '@/components/stream-detail-view';
 import { useQueryParamConfig } from '@/lib/config';
 
 export default function StreamDetailPage() {

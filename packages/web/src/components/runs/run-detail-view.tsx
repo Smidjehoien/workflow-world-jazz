@@ -62,6 +62,7 @@ export function RunDetailView({
     loading: stepsLoading,
     error: stepsError,
     hasHitLimit: stepsHitLimit,
+    hasReachedEnd: stepsHasReachedEnd,
     initialLoadComplete: stepsInitialLoadComplete,
   } = useExhaustiveList<Step, { config: WorldConfig; runId: string }>({
     createKey: (params, cursor) =>
@@ -84,6 +85,8 @@ export function RunDetailView({
     items: allEvents,
     loading: eventsLoading,
     error: eventsError,
+    hasHitLimit: eventsHitLimit,
+    hasReachedEnd: eventsHasReachedEnd,
     initialLoadComplete: eventsInitialLoadComplete,
   } = useExhaustiveList<Event, { config: WorldConfig; runId: string }>({
     createKey: (params, cursor) =>
@@ -106,6 +109,8 @@ export function RunDetailView({
     items: allHooks,
     loading: hooksLoading,
     error: hooksError,
+    hasHitLimit: hooksHitLimit,
+    hasReachedEnd: hooksHasReachedEnd,
     initialLoadComplete: hooksInitialLoadComplete,
   } = useExhaustiveList<Hook, { config: WorldConfig; runId: string }>({
     createKey: (params, cursor) =>
@@ -281,6 +286,7 @@ export function RunDetailView({
           loading={stepsLoading}
           error={stepsError || undefined}
           hasHitLimit={stepsHitLimit}
+          hasReachedEnd={stepsHasReachedEnd}
           initialLoadComplete={stepsInitialLoadComplete}
           onStepClick={onStepSelect}
           onRunClick={() => setShowRunDetails(true)}
@@ -319,6 +325,8 @@ export function RunDetailView({
           loading={eventsLoading}
           error={eventsError || undefined}
           initialLoadComplete={eventsInitialLoadComplete}
+          hasHitLimit={eventsHitLimit}
+          hasReachedEnd={eventsHasReachedEnd}
           onEventClick={onEventSelect}
           selectedEventId={selectedEventId}
           onCloseDetailSidebar={() => onEventSelect(undefined)}
@@ -337,6 +345,8 @@ export function RunDetailView({
           loading={hooksLoading}
           error={hooksError || undefined}
           initialLoadComplete={hooksInitialLoadComplete}
+          hasHitLimit={hooksHitLimit}
+          hasReachedEnd={hooksHasReachedEnd}
           onHookClick={onHookSelect}
           selectedHookId={selectedHookId}
           onCloseDetailSidebar={() => onHookSelect(undefined)}

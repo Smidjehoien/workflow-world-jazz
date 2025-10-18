@@ -7,6 +7,8 @@ import { getRun } from '@vercel/workflow-core/runtime';
 import type {
   Event,
   Hook,
+  ListEventsParams,
+  PaginationOptions,
   Step,
   WorkflowRun,
   World,
@@ -903,29 +905,38 @@ export const listEvents = async (
       'Filtering by workflow-name is not supported for events, ignoring filter.'
     );
   }
-  if (opts.stepId) {
-    try {
-      const step = await world.steps.get(undefined, opts.stepId, {
-        resolveData: 'none',
-      });
-      const runId = step.runId;
-      opts.runId = runId;
-    } catch (error) {
-      if (handleApiError(error, opts.backend)) {
-        process.exit(1);
-      }
-      throw error;
+
+  let filterId: string | undefined = opts.hookId || opts.stepId || opts.runId;
+  if (!filterId) {
+    filterId = (await getRecentRun(world, opts))?.runId;
+    if (!filterId) {
+      logger.error('No run found.');
+      return;
     }
   }
-  const runId = opts.runId
-    ? opts.runId
-    : (await getRecentRun(world, opts))?.runId;
-  if (!runId) {
-    logger.error('No run found.');
-    return;
-  }
 
-  const resolveData = opts.withData ? 'all' : 'none';
+  const isCorrelationId = Boolean(opts.hookId || opts.stepId);
+  const params: Omit<ListEventsParams, 'runId'> = {
+    pagination: {
+      sortOrder: opts.sort || 'desc',
+      cursor: opts.cursor,
+      limit: opts.limit || DEFAULT_PAGE_SIZE,
+    },
+    resolveData: opts.withData ? 'all' : 'none',
+  };
+  const listCall = isCorrelationId
+    ? (correlationId: string, pagination: PaginationOptions) =>
+        world.events.listByCorrelationId({
+          ...params,
+          correlationId,
+          pagination: { ...params.pagination, ...pagination },
+        })
+    : (runId: string, pagination: PaginationOptions) =>
+        world.events.list({
+          ...params,
+          runId,
+          pagination: { ...params.pagination, ...pagination },
+        });
 
   // Determine which props to show based on withData flag
   const props = opts.withData
@@ -934,24 +945,10 @@ export const listEvents = async (
 
   // For JSON output, just fetch once and return
   if (opts.json) {
-    logger.debug(`Fetching events for run ${runId}`);
+    logger.debug(`Fetching events for run ${filterId}`);
     try {
-      const events = await world.events.list({
-        runId,
-        pagination: {
-          sortOrder: opts.sort || 'desc',
-          cursor: opts.cursor,
-          limit: opts.limit || DEFAULT_PAGE_SIZE,
-        },
-        resolveData,
-      });
-      let filteredData = events.data;
-      if (opts.stepId) {
-        filteredData = filteredData.filter(
-          (event) => event.correlationId === opts.stepId
-        );
-      }
-      showJson(filteredData);
+      const events = await listCall(filterId, {});
+      showJson(events.data);
       return;
     } catch (error) {
       if (handleApiError(error, opts.backend)) {
@@ -964,25 +961,11 @@ export const listEvents = async (
   await setupListPagination<Event>({
     initialCursor: opts.cursor,
     fetchPage: async (cursor) => {
-      logger.debug(`Fetching events for run ${runId}`);
+      logger.debug(`Fetching events for run ${filterId}`);
       try {
-        const events = await world.events.list({
-          runId,
-          pagination: {
-            sortOrder: opts.sort || 'desc',
-            cursor,
-            limit: opts.limit || DEFAULT_PAGE_SIZE,
-          },
-          resolveData,
-        });
-        let filteredData = events.data;
-        if (opts.stepId) {
-          filteredData = filteredData.filter(
-            (event) => event.correlationId === opts.stepId
-          );
-        }
+        const events = await listCall(filterId, { cursor });
         return {
-          data: filteredData,
+          data: events.data,
           cursor: events.cursor,
           hasMore: events.hasMore,
         };

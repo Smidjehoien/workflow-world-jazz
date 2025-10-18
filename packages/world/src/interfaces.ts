@@ -3,6 +3,7 @@ import type {
   CreateEventParams,
   CreateEventRequest,
   Event,
+  ListEventsByCorrelationIdParams,
   ListEventsParams,
 } from './events.js';
 import type {
@@ -83,6 +84,9 @@ export interface Storage {
       params?: CreateEventParams
     ): Promise<Event>;
     list(params: ListEventsParams): Promise<PaginatedResponse<Event>>;
+    listByCorrelationId(
+      params: ListEventsByCorrelationIdParams
+    ): Promise<PaginatedResponse<Event>>;
   };
 
   hooks: {

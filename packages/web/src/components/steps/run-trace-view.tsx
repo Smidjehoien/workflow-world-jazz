@@ -226,7 +226,8 @@ function TimelineBar({
             'cursor-pointer hover:brightness-110 hover:scale-y-110 hover:z-10',
           !onClick && 'cursor-default',
           (isSelected || isHovered) && 'ring-2 ring-primary ring-offset-1 z-10',
-          isRunning && 'animate-pulse',
+          // Only apply pulse animation to non-hook items
+          isRunning && item.type !== 'hook' && 'animate-pulse',
           statusToColor(
             item.status,
             item.type === 'sleep',
@@ -383,14 +384,20 @@ export function RunTraceView({
   // Create markers for hook_received and step_retrying events
   const markers: TimelineMarker[] = [];
 
-  // Add hook_received markers
+  // Add hook_received markers - only for hook-related events
   events
-    .filter((e) => e.eventType === 'hook_received' && e.correlationId)
+    .filter(
+      (e) =>
+        (e.eventType === 'hook_received' ||
+          e.eventType === 'hook_created' ||
+          e.eventType === 'hook_disposed') &&
+        e.correlationId
+    )
     .forEach((event) => {
       const hookId = event.correlationId;
       if (!hookId) return;
       const hookItem = items.find((item) => item.hookId === hookId);
-      if (hookItem) {
+      if (hookItem && event.eventType === 'hook_received') {
         markers.push({
           id: event.eventId,
           type: 'hook_received',
