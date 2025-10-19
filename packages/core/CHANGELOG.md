@@ -1,5 +1,11 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.44
+
+### Patch Changes
+
+- 743923c: Fix core/observability and core/parse-name export for node compatibility
+
 ## 0.0.1-alpha.43
 
 ### Patch Changes

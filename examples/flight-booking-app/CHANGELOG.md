@@ -1,5 +1,11 @@
 # flight-booking-app
 
+## 0.0.1-alpha.4
+
+### Patch Changes
+
+- @vercel/workflow@0.0.1-alpha.15
+
 ## 0.0.1-alpha.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-core",
-  "version": "0.0.1-alpha.43",
+  "version": "0.0.1-alpha.44",
   "type": "module",
   "main": "dist/index.js",
   "files": [
