@@ -160,8 +160,8 @@ export const UseCases = () => {
     useCases.find((uc) => uc.id === selectedCase) || useCases[0];
 
   return (
-    <div className="grid sm:grid-cols-3 sm:divide-x">
-      <div className="text-balance flex flex-col gap-2 p-12">
+    <div className="grid sm:grid-cols-3 sm:divide-x p-8 sm:p-0 gap-12 sm:gap-0">
+      <div className="text-balance flex flex-col gap-2 sm:p-12">
         <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl">
           Patterns for
           <Select value={selectedCase} onValueChange={setSelectedCase}>
@@ -182,7 +182,7 @@ export const UseCases = () => {
           persistence, and observability built in.
         </p>
       </div>
-      <div className="col-span-2 p-12">
+      <div className="col-span-2 sm:p-12">
         <DynamicCodeBlock
           code={currentCase.code}
           lang="ts"

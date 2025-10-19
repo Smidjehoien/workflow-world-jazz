@@ -36,7 +36,7 @@ export const Hero = () => {
           <div className="size-2 rounded-full bg-muted-foreground" />
           <p className="tracking-tight">Workflow SDK is in beta</p>
         </Badge>
-        <h1 className="flex flex-col items-center justify-center text-center font-semibold text-4xl! leading-tighter tracking-tight lg:font-semibold lg:leading-[1.1] lg:text-5xl! xl:text-6xl! xl:tracking-tighter">
+        <h1 className="flex flex-col items-center justify-center text-center font-semibold text-4xl! leading-tighter tracking-tight lg:font-semibold sm:text-5xl! xl:text-6xl! xl:tracking-tighter text-balance">
           <p>The TypeScript Framework for Durable Execution</p>
         </h1>
         <p className="text-balance text-muted-foreground text-xl">

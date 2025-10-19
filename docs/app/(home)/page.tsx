@@ -4,7 +4,7 @@ import { Features } from './components/features';
 import { Frameworks } from './components/frameworks';
 import { Hero } from './components/hero';
 import { Implementation } from './components/implementation';
-import { Intro } from './components/intro';
+import { Intro } from './components/intro/intro';
 import { Observability } from './components/observability';
 import { Templates } from './components/templates';
 import { UseCases } from './components/use-cases';
@@ -21,7 +21,7 @@ const Home = () => (
     <div className="grid divide-y border-y sm:border-x">
       <Intro />
       <Implementation />
-      <div className="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x">
+      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
         <Observability />
         <Frameworks />
       </div>

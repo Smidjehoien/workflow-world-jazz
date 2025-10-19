@@ -12,7 +12,7 @@ const rows = [
 ];
 
 export const Observability = () => (
-  <div className="grid gap-12 p-12">
+  <div className="grid gap-12 p-8 sm:p-12">
     <div className="text-balance flex flex-col gap-2">
       <h2 className="font-medium text-xl tracking-tight sm:text-2xl text-muted-foreground">
         <span className="text-foreground">Observability</span>. Inspect every

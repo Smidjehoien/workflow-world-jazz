@@ -3,16 +3,18 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const tabs = [
   {
     id: 'without',
+    smallLabel: 'Without WDK',
     label: 'Without Workflow SDK',
   },
   {
     id: 'with',
+    smallLabel: 'With WDK',
     label: 'With Workflow SDK',
   },
 ];
 
 export const Intro = () => (
-  <div className="grid gap-8 p-12">
+  <div className="grid gap-8 p-8 sm:p-12">
     <div className="text-balance flex flex-col gap-2">
       <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
         Reliability as code
@@ -31,7 +33,8 @@ export const Intro = () => (
               value={tab.id}
               key={tab.id}
             >
-              {tab.label}
+              <span className="hidden md:block">{tab.label}</span>
+              <span className="block md:hidden">{tab.smallLabel}</span>
             </TabsTrigger>
           ))}
         </TabsList>

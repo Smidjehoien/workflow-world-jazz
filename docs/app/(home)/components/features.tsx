@@ -17,7 +17,7 @@ const data = [
 ];
 
 export const Features = () => (
-  <div className="p-12 grid grid-cols-3 gap-8">
+  <div className="p-8 sm:p-12 grid md:grid-cols-3 gap-8">
     {data.map((item) => (
       <div key={item.title}>
         <h3 className="mt-4 mb-2 font-semibold text-lg tracking-tight">

@@ -23,7 +23,7 @@ const data = [
 ];
 
 export const Templates = () => (
-  <div className="p-12 grid gap-12">
+  <div className="p-8 sm:p-12 grid gap-12">
     <div className="max-w-3xl text-balance grid gap-2">
       <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl">
         Get started quickly
@@ -32,7 +32,7 @@ export const Templates = () => (
         See workflows in action with one of our templates.
       </p>
     </div>
-    <div className="grid grid-cols-3 gap-8">
+    <div className="grid md:grid-cols-3 gap-8">
       {data.map((item) => (
         <div key={item.title}>
           <div className="aspect-video bg-background rounded-lg border flex items-center justify-center">

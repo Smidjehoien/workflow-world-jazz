@@ -41,7 +41,7 @@ async function sendWelcomeEmail(userId: string) {
 ];
 
 export const Implementation = () => (
-  <div className="p-12 grid gap-12">
+  <div className="p-8 sm:p-12 grid gap-12">
     <div className="max-w-3xl text-balance grid gap-2">
       <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
         Effortless setup
@@ -50,7 +50,7 @@ export const Implementation = () => (
         With a simple declarative API to define and use your workflows.
       </p>
     </div>
-    <div className="grid grid-cols-2 gap-8">
+    <div className="grid md:grid-cols-2 gap-8">
       {data.map((item) => (
         <div
           key={item.caption}

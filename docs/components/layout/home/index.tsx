@@ -77,7 +77,7 @@ export function HomeLayout(
             />
           ))}
         {props.children}
-        <footer className="mx-auto mt-[90px] flex w-full max-w-[1080px] items-center justify-between gap-8 py-[90px]">
+        <footer className="px-4 mx-auto mt-[90px] flex w-full max-w-[1080px] items-center justify-between gap-8 py-[90px]">
           <Link href="https://vercel.com">
             <svg
               fill="none"
