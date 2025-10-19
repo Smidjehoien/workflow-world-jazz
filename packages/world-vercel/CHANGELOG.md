@@ -1,5 +1,12 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.17
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world@0.0.1-alpha.10
+
 ## 0.0.1-alpha.16
 
 ### Patch Changes

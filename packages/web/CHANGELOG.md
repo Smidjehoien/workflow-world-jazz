@@ -1,5 +1,12 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.52
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-core@0.0.1-alpha.43
+
 ## 0.0.1-alpha.51
 
 ### Patch Changes

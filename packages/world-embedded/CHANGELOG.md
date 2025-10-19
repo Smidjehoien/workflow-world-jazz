@@ -1,5 +1,13 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world@0.0.1-alpha.10
+
 ## 0.0.1-alpha.13
 
 ### Patch Changes
