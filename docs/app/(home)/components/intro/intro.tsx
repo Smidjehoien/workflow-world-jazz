@@ -2,17 +2,21 @@
 
 import { track } from '@vercel/analytics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { NonWorkflowExample } from './non-workflow-example';
+import { WorkflowExample } from './workflow-example';
 
 const tabs = [
   {
     id: 'without',
     smallLabel: 'Without WDK',
     label: 'Without Workflow SDK',
+    children: <NonWorkflowExample />,
   },
   {
     id: 'with',
     smallLabel: 'With WDK',
     label: 'With Workflow SDK',
+    children: <WorkflowExample />,
   },
 ];
 
@@ -36,7 +40,7 @@ export const Intro = () => (
         <TabsList className="w-fit bg-background mx-auto border p-1 rounded-full h-auto">
           {tabs.map((tab) => (
             <TabsTrigger
-              className="basis-0 data-[state=active]:bg-secondary data-[state=active]:shadow-none rounded-full py-2.5 px-4 h-auto"
+              className="flex-auto data-[state=active]:bg-secondary data-[state=active]:shadow-none rounded-full py-2.5 px-4 h-auto"
               value={tab.id}
               key={tab.id}
             >
@@ -51,9 +55,7 @@ export const Intro = () => (
             key={tab.id}
             className="[&_figure]:rounded-lg [&_figure]:shadow-none"
           >
-            <div className="aspect-video bg-background rounded-lg border flex items-center justify-center">
-              {tab.label} code-based animation
-            </div>
+            {tab.children}
           </TabsContent>
         ))}
       </Tabs>

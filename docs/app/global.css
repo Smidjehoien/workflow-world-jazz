@@ -228,3 +228,11 @@ table td {
   @apply absolute left-0 w-8! text-right text-muted-foreground;
   content: counter(line-number); /* Display the current counter value */
 }
+
+.with-line-numbers.with-checks code .line {
+  @apply pl-17!;
+}
+
+.with-checks.with-line-numbers code .line::before {
+  @apply left-5!;
+}
