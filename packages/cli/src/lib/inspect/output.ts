@@ -1,8 +1,11 @@
-import { parseStepName, parseWorkflowName } from '@vercel/workflow-core';
 import {
   hydrateResourceIO,
   StreamID,
 } from '@vercel/workflow-core/observability';
+import {
+  parseStepName,
+  parseWorkflowName,
+} from '@vercel/workflow-core/parse-name';
 import { getRun } from '@vercel/workflow-core/runtime';
 import type {
   Event,

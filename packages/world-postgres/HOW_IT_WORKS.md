@@ -41,7 +41,7 @@ In **Next.js**, the `world.setup()` function needs to be added to `instrumentati
 // instrumentation.ts
 
 if (process.env.NEXT_RUNTIME !== "edge") {
-  import("@vercel/workflow").then(async ({ getWorld }) => {
+  import("@vercel/workflow/runtime").then(async ({ getWorld }) => {
     // start listening to the jobs.
     await getWorld().start?.();
   });

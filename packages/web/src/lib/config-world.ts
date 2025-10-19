@@ -2,7 +2,7 @@
 
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { createWorld } from '@vercel/workflow-core';
+import { createWorld } from '@vercel/workflow-core/runtime';
 import type { SearchParams } from 'next/dist/server/request/search-params';
 
 export interface WorldConfig {

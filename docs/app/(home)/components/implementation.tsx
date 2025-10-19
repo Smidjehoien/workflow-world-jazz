@@ -2,35 +2,35 @@ import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 
 const data = [
   {
-    code: `import { sleep } from "@vercel/workflow-core";
- 
+    code: `import { sleep } from "@vercel/workflow";
+
 export async function userSignupWorkflow(email: string) {
-  "use workflow"; 
- 
+  "use workflow";
+
   const user = await createUser(email);
   await sendWelcomeEmail(user.id);
- 
+
   await sleep("30s"); // Pause for 30s - doesn't consume any resources
   await sendOnboardingEmail(user.id);
- 
+
   return { userId: user.id, status: "onboarded" };
 }`,
     caption: 'Creating a workflow',
   },
   {
     code: `async function createUser(email: string) {
-  "use step"; 
- 
+  "use step";
+
   // Full Node.js access - database calls, APIs, etc.
   console.log(\`Creating user with email: \${email}\`);
   return { id: crypto.randomUUID(), email };
 }
 
 async function sendWelcomeEmail(userId: string) {
-  "use step"; 
- 
+  "use step";
+
   console.log(\`Sending welcome email to user: \${userId}\`);
- 
+
   if (Math.random() < 0.3) {
     // By default, steps will be retried 3 times for unhandled errors
     throw new Error("Retryable!"); // [!code highlight]

@@ -1,4 +1,4 @@
-import { createWorld } from '@vercel/workflow-core';
+import { createWorld } from '@vercel/workflow-core/runtime';
 import chalk from 'chalk';
 import terminalLink from 'terminal-link';
 import { logger, setJsonMode, setVerboseMode } from '../config/log.js';
