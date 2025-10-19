@@ -23,7 +23,7 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
   return (
     <TreeContextProvider tree={tree}>
       <main
-        className="mt-8 flex flex-1 flex-row [--fd-nav-height:56px]"
+        className="mt-14 flex flex-1 flex-row [--fd-nav-height:56px]"
         id="nd-docs-layout"
       >
         <Sidebar />
@@ -91,7 +91,7 @@ function Sidebar() {
       )}
       <aside
         className={cn(
-          'fixed top-14 z-20 flex shrink-0 flex-col overflow-auto px-4 pt-12 pb-4 text-sm md:sticky md:h-[calc(100dvh-56px)] md:w-[300px]',
+          'fixed top-[var(--fd-nav-height)] z-20 flex shrink-0 flex-col overflow-auto px-4 pb-4 pt-[var(--fd-nav-height)] text-sm md:sticky md:h-[calc(100dvh-var(--fd-nav-height))] md:w-[300px]',
           'max-md:inset-x-0 max-md:bottom-0 max-md:bg-fd-background',
           !open && 'max-md:invisible'
         )}

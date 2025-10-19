@@ -6,6 +6,8 @@ title: Errors & Retries [WIP]
 
 In addition to the default `Error` you can throw in step functions, Workflow provides two new types of errors you can use to further customize the error exit strategy when a step errors. These include [`FatalError`](/docs/api-reference/vercel-workflow-core/fatal-error) and [`RetryableError`](/docs/api-reference/vercel-workflow-core/retryable-error).
 
+---
+
 ## Retrying Step Functions
 
 When an `Error` or a `RetryableError` is thrown inside a step function, the step is automatically re-enqueued to be executed at a later time. This allows step functions to be *durable*.
@@ -35,6 +37,8 @@ async function callAPI(endpoint: string) {
 ```
 
 To learn more about `RetryableError`, refer to [API Reference: `RetryableError`](/docs/api-reference/vercel-workflow-core/retryable-error).
+
+---
 
 ## Failing Step Functions
 

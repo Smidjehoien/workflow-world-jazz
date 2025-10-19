@@ -14,6 +14,8 @@ Provides detailed views into your workflow runs, steps, and streams.
 npx workflow inspect <resource>
 ```
 
+---
+
 ## Inspecting Runs
 
 View all workflow runs:
@@ -24,6 +26,8 @@ npx workflow inspect runs
 npx wf i runs
 ```
 
+---
+
 And an example output:
 
 ```
@@ -32,6 +36,8 @@ runId                       workflowName         status     started        compl
 01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
 ```
 
+---
+
 ## Inspecting Steps
 
 View all steps in a workflow run:
@@ -39,6 +45,8 @@ View all steps in a workflow run:
 ```bash
 npx workflow inspect steps <run-id>
 ```
+
+---
 
 ## Inspecting Streams
 
@@ -51,6 +59,8 @@ npx workflow inspect streams -r <run-id>
 <Callout>
 The `-r` flag is used to filter by run-id.
 </Callout>
+
+---
 
 ## Filtering a Resource
 

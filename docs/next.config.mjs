@@ -11,11 +11,19 @@ const config = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/docs/:path*.mdx',
+        destination: '/llms.mdx/:path*',
+      },
+    ];
+  },
   redirects: () => {
     return [
       {
         source: '/docs',
-        destination: '/docs/introduction',
+        destination: '/docs/getting-started',
         permanent: true,
       },
       {

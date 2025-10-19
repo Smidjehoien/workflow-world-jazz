@@ -6,11 +6,15 @@ title: webhook-invalid-respond-with-value
 
 This error occurs when you provide an invalid value for the `respondWith` option when creating a webhook. The `respondWith` option must be either `"manual"` or a `Response` object.
 
+---
+
 ## Error Message
 
 ```
 Invalid `respondWith` value: [value]
 ```
+
+---
 
 ## Why This Happens
 
@@ -19,6 +23,8 @@ When creating a webhook with `createWebhook()`, you can specify how the webhook 
 1. `"manual"` - Allows you to manually send a response from within the workflow
 2. A `Response` object - A pre-defined response to send immediately
 3. `undefined` (default) - Returns a `202 Accepted` response
+
+---
 
 ## Common Causes
 
@@ -79,6 +85,8 @@ export async function webhookWorkflow() {
 }
 ```
 
+---
+
 ## Valid Usage Examples
 
 ### Default Behavior (202 Response)
@@ -123,6 +131,8 @@ const webhook = await createWebhook({
 const request = await webhook;
 // Response already sent
 ```
+
+---
 
 ## Learn More
 

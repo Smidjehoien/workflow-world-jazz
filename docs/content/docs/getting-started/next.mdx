@@ -1,17 +1,16 @@
 ---
-title: Getting Started
+title: Next.js
 ---
 
-# Getting Started
-
-<Callout type="warn">
-Currently, Workflow works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
-</Callout>
+# Next.js
 
 This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the development kit in your own projects.
 
 ---
 
+<Steps>
+
+<Step>
 ## Create Your Next.js Project
 
 Start by creating a new Next.js project. This command will create a new directory named `my-workflow-app` and setup a Next.js project inside it.
@@ -54,7 +53,7 @@ Install `@vercel/workflow` to get started with Workflow.
 
 ### Configure Next.js
 
-Wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
+Wrap your `next.config.ts` with `withWorkflow()`. This enables usage of the `"use workflow"` and `"use step"` directives needed by Workflow during local development.
 
 ```typescript title="next.config.ts" lineNumbers
 import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
@@ -67,9 +66,17 @@ const nextConfig: NextConfig = {
 export default withWorkflow(nextConfig); // [!code highlight]
 ```
 
+</Step>
+
+<Step>
+
 ## Create Your First Workflow
 
 To create your first workflow, create a new `workflows` directory inside your project root (if using `src` folder then it would be `src/workflows`).
+
+<Callout type="info">
+We use the `workflows` directory name as a convention. You can use a different directory name if needed.
+</Callout>
 
 Create a new file inside the `workflows` directory and add the following code:
 
@@ -126,6 +133,10 @@ Taking a look at this code:
 We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs/foundations/concepts).
 </Callout>
 
+</Step>
+
+<Step>
+
 ## Create Your Route Handler
 
 To invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
@@ -152,6 +163,10 @@ This Route Handler creates a `POST` request endpoint at `/api/signup` that will 
 Workflows can be triggered from API routes, Server Actions, or any server-side code.
 </Callout>
 
+</Step>
+
+<Step>
+
 ## Run in Development
 
 To start your development server, run the following command in your terminal in the Next.js root directory:
@@ -175,6 +190,10 @@ Additionally, you can use the [Workflow CLI](/docs/api-reference/cli) to inspect
 ```bash
 npx wf i runs
 ```
+
+</Step>
+
+</Steps>
 
 ---
 

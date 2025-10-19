@@ -1,4 +1,6 @@
 import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
+import Image from 'next/image';
+import WorkflowLogo from '../public/workflow.svg';
 
 /**
  * Shared layout configurations
@@ -11,9 +13,12 @@ export function baseOptions(): BaseLayoutProps {
   return {
     nav: {
       title: (
-        <div className="hover:opacity-75 transition-opacity ease-out text-foreground">
-          <span className="text-foreground font-semibold">Workflow</span>{' '}
-          <span className="text-muted-foreground">Development Kit</span>
+        <div className="hover:opacity-75 transition-opacity ease-out">
+          <Image
+            src={WorkflowLogo}
+            alt="Workflow Logo"
+            className="size-32 dark:invert"
+          />
         </div>
       ),
     },

@@ -236,3 +236,9 @@ table td {
 .with-checks.with-line-numbers code .line::before {
   @apply left-5!;
 }
+
+/* Fix padding for code blocks inside tabs */
+[data-radix-tabs-content] figure:only-child .shiki .line {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}

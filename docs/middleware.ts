@@ -1,8 +1,10 @@
 import { get } from '@vercel/edge-config';
+import { isMarkdownPreferred, rewritePath } from 'fumadocs-core/negotiation';
 import { cookies } from 'next/headers';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { checkTeamMembership } from './lib/check-membership';
+
+const { rewrite: rewriteLLM } = rewritePath('/docs/*path', '/llms.mdx/*path');
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -42,6 +44,13 @@ export async function middleware(request: NextRequest) {
   } catch (error) {
     console.error('Error checking team membership:', error);
     return NextResponse.redirect(new URL('/coming-soon', request.url));
+  }
+
+  if (isMarkdownPreferred(request)) {
+    const result = rewriteLLM(request.nextUrl.pathname);
+    if (result) {
+      return NextResponse.rewrite(new URL(result, request.nextUrl));
+    }
   }
 
   return response;

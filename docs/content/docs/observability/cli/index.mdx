@@ -6,11 +6,15 @@ title: Workflow CLI
 
 The Workflow CLI (`@vercel/workflow-cli`) is a command-line tool for building, inspecting, and managing workflows. It provides both `workflow` and `wf` (shorthand) commands.
 
+---
+
 ## Installation
 
 ```bash
 npm install @vercel/workflow-cli
 ```
+
+---
 
 ## Quick Start
 
@@ -42,6 +46,8 @@ npx wf i runs --backend vercel
 # Launch Web UI for production
 npx wf i runs --web --backend vercel
 ```
+
+---
 
 ## Vercel CLI Setup
 
@@ -77,6 +83,8 @@ npx wf i runs --backend vercel --env preview
 npx wf i runs --backend vercel --env development
 ```
 
+---
+
 ## Environment Variables
 
 Configuration can also be provided via environment variables:
@@ -104,6 +112,8 @@ export WORKFLOW_EMBEDDED_DATA_DIR=./.workflow-data
 export PORT=3456
 ```
 
+---
+
 ## Configuration
 
 The CLI looks for workflow files in the `./workflows/` directory by default:
@@ -114,6 +124,8 @@ workflows/
 ├── email-campaign.ts
 └── utils/
 ```
+
+---
 
 ## Examples
 

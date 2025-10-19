@@ -5,7 +5,7 @@ import type { ComponentProps } from 'react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
-const Nitro = (props: ComponentProps<'svg'>) => (
+export const Nitro = (props: ComponentProps<'svg'>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
@@ -94,7 +94,7 @@ const Nitro = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-const Svelte = (props: ComponentProps<'svg'>) => (
+export const Svelte = (props: ComponentProps<'svg'>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -117,7 +117,7 @@ const Svelte = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-const Nuxt = (props: ComponentProps<'svg'>) => (
+export const Nuxt = (props: ComponentProps<'svg'>) => (
   <svg
     viewBox="0 0 424 283"
     fill="none"
@@ -132,7 +132,7 @@ const Nuxt = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-const Hono = (props: ComponentProps<'svg'>) => (
+export const Hono = (props: ComponentProps<'svg'>) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 98" {...props}>
     <title>Hono</title>
     <path
@@ -149,7 +149,7 @@ const Hono = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-const Bun = (props: ComponentProps<'svg'>) => (
+export const Bun = (props: ComponentProps<'svg'>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     id="Bun"
@@ -250,7 +250,7 @@ const Bun = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-const Next = (props: ComponentProps<'svg'>) => (
+export const Next = (props: ComponentProps<'svg'>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     xmlnsXlink="http://www.w3.org/1999/xlink"

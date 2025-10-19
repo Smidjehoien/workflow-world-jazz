@@ -52,7 +52,7 @@ export const Hero = ({ title, description }: HeroProps) => {
       </div>
       <div className="inline-flex w-fit mx-auto items-center gap-3">
         <Button asChild size="lg" className="h-[46px]">
-          <Link href="/docs/introduction">Get Started</Link>
+          <Link href="/docs/getting-started">Get Started</Link>
         </Button>
         <div className="relative bg-background border rounded-md overflow-hidden py-3 pl-4 pr-12 mx-auto inline-flex w-fit">
           <pre className="text-sm">
