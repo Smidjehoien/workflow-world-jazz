@@ -49,6 +49,8 @@ export async function getWorkflowRunEvents(
   if (pagination?.sortOrder)
     searchParams.set('sortOrder', pagination.sortOrder);
   if (correlationId) searchParams.set('correlationId', correlationId);
+  const remoteRefBehavior = resolveData === 'none' ? 'lazy' : 'resolve';
+  searchParams.set('remoteRefBehavior', remoteRefBehavior);
 
   const queryString = searchParams.toString();
   const query = queryString ? `?${queryString}` : '';
