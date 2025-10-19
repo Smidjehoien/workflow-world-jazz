@@ -16,8 +16,14 @@
     "./private": "./dist/private.js",
     "./builtins": "./dist/builtins.js",
     "./serialization": "./dist/serialization.js",
-    "./observability": "./dist/observability.js",
-    "./parse-name": "./dist/parse-name.js",
+    "./observability": {
+      "types": "./dist/observability.d.ts",
+      "default": "./dist/observability.js"
+    },
+    "./parse-name": {
+      "types": "./dist/parse-name.d.ts",
+      "default": "./dist/parse-name.js"
+    },
     "./_workflow": "./dist/workflow/index.js"
   },
   "scripts": {
