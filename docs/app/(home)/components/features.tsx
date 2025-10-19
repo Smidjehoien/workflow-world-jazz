@@ -10,9 +10,8 @@ const data = [
       'Inspect every run end‑to‑end. Pause, replay, and time‑travel through steps with traces, logs, and metrics automatically captured — no extra services or setup.',
   },
   {
-    title: 'Run Anywhere, No Lock‑In',
-    description:
-      'The same code runs locally on your laptop, in Docker, on Vercel or any other cloud. Open source and portable by design.',
+    title: 'TBD',
+    description: 'Your description here',
   },
 ];
 

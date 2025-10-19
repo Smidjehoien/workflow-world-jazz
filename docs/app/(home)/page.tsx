@@ -6,18 +6,19 @@ import { Hero } from './components/hero';
 import { Implementation } from './components/implementation';
 import { Intro } from './components/intro/intro';
 import { Observability } from './components/observability';
+import { RunAnywhere } from './components/run-anywhere';
 import { Templates } from './components/templates';
 import { UseCases } from './components/use-cases';
 
-export const metadata: Metadata = {
-  title: 'The TypeScript Framework for Durable Execution | Workflow SDK',
-  description:
-    'The Workflow SDK brings durability and reliability to async JavaScript. Mark functions with directives to make them automatically persistent, resumable, and observable.',
-};
+const title = 'Make any Typescript Function Durable';
+const description =
+  '"use workflow" brings durability, reliability, and observability to async JavaScript. Build apps and AI Agents that can suspend, resume, and maintain state with ease.';
+
+export const metadata: Metadata = { title, description };
 
 const Home = () => (
   <>
-    <Hero />
+    <Hero title={title} description={description} />
     <div className="grid divide-y border-y sm:border-x">
       <Intro />
       <Implementation />
@@ -26,6 +27,7 @@ const Home = () => (
         <Frameworks />
       </div>
       <Features />
+      <RunAnywhere />
       <UseCases />
       <Templates />
       <CTA />

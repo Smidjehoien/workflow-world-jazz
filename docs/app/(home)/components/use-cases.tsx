@@ -1,5 +1,6 @@
 'use client';
 
+import { track } from '@vercel/analytics';
 import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
 import { useState } from 'react';
 import {
@@ -159,12 +160,17 @@ export const UseCases = () => {
   const currentCase =
     useCases.find((uc) => uc.id === selectedCase) || useCases[0];
 
+  const handleCaseChange = (value: string) => {
+    setSelectedCase(value);
+    track('Use case changed', { case: value });
+  };
+
   return (
     <div className="grid sm:grid-cols-3 sm:divide-x p-8 sm:p-0 gap-12 sm:gap-0">
       <div className="text-balance flex flex-col gap-2 sm:p-12">
         <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl">
           Patterns for
-          <Select value={selectedCase} onValueChange={setSelectedCase}>
+          <Select value={selectedCase} onValueChange={handleCaseChange}>
             <SelectTrigger className="font-semibold bg-background text-xl tracking-tight sm:text-2xl md:text-3xl mt-1 data-[size=default]:h-auto py-1">
               <SelectValue />
             </SelectTrigger>

@@ -1,3 +1,6 @@
+'use client';
+
+import { track } from '@vercel/analytics';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const tabs = [
@@ -25,7 +28,11 @@ export const Intro = () => (
       </p>
     </div>
     <div className="flex items-center justify-center">
-      <Tabs defaultValue={tabs[1].id} className="w-full gap-8">
+      <Tabs
+        defaultValue={tabs[1].id}
+        className="w-full gap-8"
+        onValueChange={(value) => track('Intro tab changed', { tab: value })}
+      >
         <TabsList className="w-fit bg-background mx-auto border p-1 rounded-full h-auto">
           {tabs.map((tab) => (
             <TabsTrigger

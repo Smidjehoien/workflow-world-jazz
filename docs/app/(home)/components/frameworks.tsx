@@ -1,4 +1,8 @@
+'use client';
+
+import { track } from '@vercel/analytics';
 import type { ComponentProps } from 'react';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
 const Nitro = (props: ComponentProps<'svg'>) => (
@@ -265,38 +269,62 @@ const Next = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
-export const Frameworks = () => (
-  <div className="grid gap-12 p-8 sm:p-12 items-start">
-    <div className="text-balance flex flex-col gap-2">
-      <h2 className="font-medium text-xl tracking-tight sm:text-2xl text-muted-foreground">
-        <span className="text-foreground">Universally compatible</span>. Works
-        with the frameworks you already use with more coming soon.
-      </h2>
-    </div>
-    <div className="grid gap-8">
-      <div className="col-span-2 grid grid-cols-2 gap-4">
-        <Badge
-          variant="secondary"
-          className="rounded-full py-0.5 px-2 col-span-2"
-        >
-          Available now
-        </Badge>
-        <Next className="size-[60px]" />
-        <Nitro className="size-[60px]" />
-      </div>
+export const Frameworks = () => {
+  const handleRequest = (framework: string) => {
+    track('Framework requested', { framework: framework.toLowerCase() });
+    toast.success('Request received', {
+      description: `Thanks for expressing interest in ${framework}. We will be adding support for it soon.`,
+    });
+  };
 
-      <div className="col-span-4 grid grid-cols-4 gap-4">
-        <Badge
-          variant="secondary"
-          className="rounded-full py-0.5 px-2 col-span-4"
-        >
-          Coming soon
-        </Badge>
-        <Svelte className="size-[60px]" />
-        <Nuxt className="size-[60px]" />
-        <Hono className="size-[60px]" />
-        <Bun className="size-[60px]" />
+  return (
+    <div className="grid gap-12 p-8 sm:p-12 items-start">
+      <div className="text-balance flex flex-col gap-2">
+        <h2 className="font-medium text-xl tracking-tight sm:text-2xl text-muted-foreground">
+          <span className="text-foreground">Universally compatible</span>. Works
+          with the frameworks you already use with more coming soon.
+        </h2>
+      </div>
+      <div className="grid gap-8">
+        <div className="col-span-2 grid grid-cols-2 gap-4">
+          <Badge
+            variant="secondary"
+            className="rounded-full py-0.5 px-2 col-span-2"
+          >
+            Available now
+          </Badge>
+          <Next className="size-[60px]" />
+          <Nitro className="size-[60px]" />
+        </div>
+
+        <div className="col-span-4 grid grid-cols-4 gap-4">
+          <Badge
+            variant="secondary"
+            className="rounded-full py-0.5 px-2 col-span-4"
+          >
+            Coming soon
+          </Badge>
+          <Svelte
+            className="size-[60px] cursor-pointer"
+            onClick={() => handleRequest('Svelte')}
+          />
+          <Nuxt
+            className="size-[60px] cursor-pointer"
+            onClick={() => handleRequest('Nuxt')}
+          />
+          <Hono
+            className="size-[60px] cursor-pointer"
+            onClick={() => handleRequest('Hono')}
+          />
+          <Bun
+            className="size-[60px] cursor-pointer"
+            onClick={() => handleRequest('Bun')}
+          />
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Click on a framework to request support for it.
+        </p>
       </div>
     </div>
-  </div>
-);
+  );
+};
