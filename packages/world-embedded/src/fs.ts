@@ -7,7 +7,7 @@ import { z } from 'zod';
 
 const ulid = monotonicFactory(() => Math.random());
 
-const Ulid = z.ulid();
+const Ulid = z.string().ulid();
 
 export function ulidToDate(maybeUlid: string): Date | null {
   const ulid = Ulid.safeParse(maybeUlid);
