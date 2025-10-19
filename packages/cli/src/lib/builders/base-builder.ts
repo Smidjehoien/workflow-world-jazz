@@ -15,6 +15,9 @@ import { createSwcPlugin } from './swc-esbuild-plugin.js';
 
 const enhancedResolve = promisify(enhancedResolveOriginal);
 
+const EMIT_SOURCEMAPS_FOR_DEBUGGING =
+  process.env.WORKFLOW_EMIT_SOURCEMAPS_FOR_DEBUGGING === '1';
+
 export abstract class BaseBuilder {
   protected config: WorkflowConfig;
 
@@ -131,7 +134,7 @@ export abstract class BaseBuilder {
         write: false,
         outdir,
         bundle: true,
-        sourcemap: false,
+        sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
         absWorkingDir: this.config.workingDir,
         logLevel: 'silent',
       });
@@ -283,7 +286,7 @@ export abstract class BaseBuilder {
       minify: false,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       // TODO: investigate proper source map support
-      sourcemap: false,
+      sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
       plugins: [
         createSwcPlugin({
           mode: 'step',
@@ -389,7 +392,7 @@ export abstract class BaseBuilder {
       keepNames: true,
       minify: false,
       // TODO: investigate proper source map support
-      sourcemap: false,
+      sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [
         createSwcPlugin({
@@ -490,7 +493,7 @@ export const POST = workflowEntrypoint(workflowCode);`;
         },
         outfile,
         // TODO: investigate proper source map support
-        sourcemap: false,
+        sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
         absWorkingDir: this.config.workingDir,
         bundle: true,
         format,

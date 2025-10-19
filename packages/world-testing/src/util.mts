@@ -1,13 +1,11 @@
 import cp from 'node:child_process';
-import path from 'node:path';
+import { existsSync } from 'node:fs';
 import { WorkflowRunSchema } from '@vercel/workflow-world';
 import chalk, { type ChalkInstance } from 'chalk';
 import jsonlines from 'jsonlines';
 import { assert, onTestFailed, onTestFinished } from 'vitest';
 import * as z from 'zod';
-import manifest from '../.well-known/workflow/v1/manifest.debug.json' with {
-  type: 'json',
-};
+import type manifest from '../.well-known/workflow/v1/manifest.debug.json';
 
 export const Control = z.object({
   state: z.literal('listening'),
@@ -20,12 +18,23 @@ type Control = z.infer<typeof Control>;
 type Files = keyof typeof manifest.workflows;
 type Workflows<F extends Files> = keyof (typeof manifest.workflows)[F];
 
-export async function startServer() {
-  const proc = cp.spawn('node', [path.join(__dirname, '../src/server.mts')], {
+export const Worlds = {
+  embedded: 'embedded',
+  postgres: '@vercel/workflow-world-postgres',
+};
+
+export async function startServer(opts: { world: string }) {
+  let serverPath = new URL('./server.mts', import.meta.url).pathname;
+
+  if (!existsSync(serverPath)) {
+    serverPath = new URL('./server.mjs', import.meta.url).pathname;
+  }
+
+  const proc = cp.spawn('node', [serverPath], {
     stdio: ['ignore', 'pipe', 'pipe', 'pipe'],
     env: {
       ...process.env,
-      WORKFLOW_TARGET_WORLD: 'embedded',
+      WORKFLOW_TARGET_WORLD: opts.world,
       CONTROL_FD: '3',
     },
   });
@@ -60,6 +69,8 @@ export async function startServer() {
   throw new Error('Server did not start correctly');
 }
 
+const Invoke = z.object({ runId: z.coerce.string() });
+
 export function createFetcher(control: Control) {
   return {
     async invoke<F extends Files, W extends Workflows<F>>(
@@ -74,7 +85,7 @@ export function createFetcher(control: Control) {
         },
         body: JSON.stringify({ file, workflow, args }),
       });
-      const data = await x.json();
+      const data = await x.json().then(Invoke.parse);
       return data;
     },
     async getRun(id: string) {

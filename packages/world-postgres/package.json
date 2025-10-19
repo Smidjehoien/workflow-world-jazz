@@ -1,0 +1,48 @@
+{
+  "name": "@vercel/workflow-world-postgres",
+  "version": "0.0.1-alpha.6",
+  "description": "A reference World implementation based on PostgreSQL",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "tsc --build --clean",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "db:push": "pnpm exec drizzle-kit --version && drizzle-kit push"
+  },
+  "dependencies": {
+    "@vercel/queue": "0.0.0-alpha.23",
+    "@vercel/workflow-errors": "workspace:*",
+    "@vercel/workflow-world": "workspace:*",
+    "@vercel/workflow-world-embedded": "workspace:*",
+    "drizzle-orm": "^0.31.2",
+    "pg-boss": "^11.0.7",
+    "postgres": "^3.4.7",
+    "ulid": "^3.0.1",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@testcontainers/postgresql": "^11.7.1",
+    "@types/node": "catalog:",
+    "@vercel/workflow-errors": "workspace:*",
+    "@vercel/workflow-tsconfig": "workspace:*",
+    "@vercel/workflow-world-testing": "workspace:*",
+    "drizzle-kit": "^0.22.7",
+    "vitest": "catalog:"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.1"
+}

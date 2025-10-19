@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src", "workflows"],
-      "outputs": [".well-known"]
+      "outputs": [".well-known", "dist"]
     },
     "test": {
       "dependsOn": ["build"]

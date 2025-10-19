@@ -106,4 +106,10 @@ export interface Storage {
  * The "World" interface represents how Workflows are able to communicate with the outside world.
  * This means persistence, queuing and serialization.
  */
-export interface World extends Queue, Storage, AuthProvider, Streamer {}
+export interface World extends Queue, Storage, AuthProvider, Streamer {
+  /**
+   * A function that will be called to start any background tasks needed by the World implementation.
+   * For example, in the case of a queue backed World, this would start the queue processing.
+   */
+  start?(): Promise<void>;
+}
