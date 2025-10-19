@@ -1,5 +1,62 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.53
+
+### Patch Changes
+
+- Updated dependencies [743923c]
+  - @vercel/workflow-core@0.0.1-alpha.44
+
+## 0.0.1-alpha.52
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-core@0.0.1-alpha.43
+
+## 0.0.1-alpha.51
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+  - @vercel/workflow-core@0.0.1-alpha.42
+
+## 0.0.1-alpha.50
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-core@0.0.1-alpha.41
+
+## 0.0.1-alpha.49
+
+### Patch Changes
+
+- b0641ee: Fix step/run name display after convention change
+- Updated dependencies [0146cb9]
+- Updated dependencies [b0641ee]
+- Updated dependencies [cdfb910]
+  - @vercel/workflow-core@0.0.1-alpha.40
+
+## 0.0.1-alpha.48
+
+### Patch Changes
+
+- 5cb48ec: Overhaul design of CLI and Web UI table and trace views
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-core@0.0.1-alpha.39
+
+## 0.0.1-alpha.47
+
+### Patch Changes
+
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [5924311]
+  - @vercel/workflow-core@0.0.1-alpha.38
+
 ## 0.0.1-alpha.46
 
 ### Patch Changes

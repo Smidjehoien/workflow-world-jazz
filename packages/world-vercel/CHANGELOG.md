@@ -1,5 +1,53 @@
 # @vercel/workflow-world-vercel
 
+## 0.0.1-alpha.17
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world@0.0.1-alpha.10
+
+## 0.0.1-alpha.16
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- Updated dependencies [1214755]
+- Updated dependencies [314f0fe]
+  - @vercel/workflow-world@0.0.1-alpha.9
+
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-world@0.0.1-alpha.8
+
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- Updated dependencies [0146cb9]
+  - @vercel/workflow-errors@0.0.1-alpha.7
+
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [b15a64f]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.7
+
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- 62c6f6b: Update OIDC dep for token auto-refresh
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

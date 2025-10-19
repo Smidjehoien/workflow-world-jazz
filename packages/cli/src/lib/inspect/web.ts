@@ -304,9 +304,9 @@ function envToQueryParams(
       params.set(paramName, String(value));
     }
   }
-  // We only take the runId/stepId flags directly, the rest are set via env vars,
+  // We only take the runId/stepId/hookId flags directly, the rest are set via env vars,
   // which are internally already influenced by the CLI flags
-  for (const flagName of ['runId', 'stepId'] as const) {
+  for (const flagName of ['runId', 'stepId', 'hookId'] as const) {
     const value = flags[flagName];
     if (value !== undefined && value !== '' && value !== false) {
       params.set(flagName, String(value));

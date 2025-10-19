@@ -1,0 +1,70 @@
+---
+title: TypeScript
+---
+
+# TypeScript
+
+Workflow comes with a TypeScript plugin out of the box to enhance your development experience with workflow-specific diagnostics, validation, and auto-completions directly in your editor.
+
+The TypeScript plugin provides:
+
+* **Workflow/Step validation**: Errors when workflow or step functions are not async
+* **Disallowed API detection**: Errors when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
+* **Workflow API completions**: Auto-suggestions for workflow-specific APIs like `createHook()`, `getWorkflowMetadata()`, etc.
+
+<Callout>
+The plugin enhances your editor experience but is not required for building or running workflows.
+</Callout>
+
+## Installation
+
+Install the TypeScript plugin as a dev dependency:
+
+<BaseUrl>
+  {(baseUrl) => (
+    <Tabs items={['npm', 'pnpm', 'yarn']}>
+      <Tab value="npm">
+        <CodeBlock>
+            npm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="yarn">
+        <CodeBlock>
+            yarn add -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
+        </CodeBlock>
+      </Tab>
+    </Tabs>
+  )}
+</BaseUrl>
+
+## Configuration
+
+Add the plugin to your `tsconfig.json`:
+
+```json title="tsconfig.json" lineNumbers
+{
+  "compilerOptions": {
+    // ... rest of your TypeScript config
+    "plugins": [ // [!code highlight]
+      { // [!code highlight]
+        "name": "@vercel/workflow-typescript-plugin" // [!code highlight]
+      } // [!code highlight]
+    ] // [!code highlight]
+  }
+}
+```
+
+After adding the plugin, you will need to restart your TypeScript server in your editor to enable it.
+
+In VS Code/Cursor, you can enable the plugin by:
+
+1. Opening the command palette (`Ctrl/⌘` + `Shift` + `P`)
+2. Search for "TypeScript: Select TypeScript Version"
+3. Select "Use Workspace Version"
+
+Now, the custom plugin will be enabled when editing files.

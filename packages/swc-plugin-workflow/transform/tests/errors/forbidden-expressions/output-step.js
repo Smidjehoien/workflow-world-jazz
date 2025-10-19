@@ -1,5 +1,5 @@
 import { registerStepFunction } from "@vercel/workflow/internal/private";
-/**__internal_workflows{"steps":{"input.js":{"stepWithArguments":{"stepId":"step-input-js-stepWithArguments"},"stepWithThis":{"stepId":"step-input-js-stepWithThis"}}}}*/;
+/**__internal_workflows{"steps":{"input.js":{"stepWithArguments":{"stepId":"step//input.js//stepWithArguments"},"stepWithThis":{"stepId":"step//input.js//stepWithThis"}}}}*/;
 export async function stepWithThis() {
     // Error: this is not allowed
     return this.value;
@@ -15,5 +15,5 @@ class TestClass extends BaseClass {
         return super.method();
     }
 }
-registerStepFunction("step-input-js-stepWithThis", stepWithThis);
-registerStepFunction("step-input-js-stepWithArguments", stepWithArguments);
+registerStepFunction("step//input.js//stepWithThis", stepWithThis);
+registerStepFunction("step//input.js//stepWithArguments", stepWithArguments);

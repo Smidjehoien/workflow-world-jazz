@@ -1,5 +1,92 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- Updated dependencies [743923c]
+  - @vercel/workflow-core@0.0.1-alpha.44
+  - @vercel/workflow-cli@0.0.1-alpha.54
+  - @vercel/workflow-next@0.0.1-alpha.55
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-core@0.0.1-alpha.43
+  - @vercel/workflow-cli@0.0.1-alpha.53
+  - @vercel/workflow-next@0.0.1-alpha.54
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- 77749ca: Add typescript plugin main export in workflow package
+- Updated dependencies [1214755]
+  - @vercel/workflow-cli@0.0.1-alpha.52
+  - @vercel/workflow-core@0.0.1-alpha.42
+  - @vercel/workflow-next@0.0.1-alpha.53
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-ai@0.0.1-alpha.3
+  - @vercel/workflow-cli@0.0.1-alpha.51
+  - @vercel/workflow-core@0.0.1-alpha.41
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-next@0.0.1-alpha.52
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.11
+
+### Patch Changes
+
+- Updated dependencies [0146cb9]
+- Updated dependencies [b0641ee]
+- Updated dependencies [cdfb910]
+  - @vercel/workflow-errors@0.0.1-alpha.7
+  - @vercel/workflow-core@0.0.1-alpha.40
+  - @vercel/workflow-cli@0.0.1-alpha.50
+  - @vercel/workflow-next@0.0.1-alpha.51
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [5f59e7e]
+- Updated dependencies [b15a64f]
+- Updated dependencies [5cb48ec]
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-cli@0.0.1-alpha.49
+  - @vercel/workflow-next@0.0.1-alpha.50
+  - @vercel/workflow-core@0.0.1-alpha.39
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- Updated dependencies [eed8227]
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [5924311]
+  - @vercel/workflow-cli@0.0.1-alpha.48
+  - @vercel/workflow-core@0.0.1-alpha.38
+  - @vercel/workflow-next@0.0.1-alpha.49
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes

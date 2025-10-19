@@ -1,5 +1,6 @@
-import { createWorld } from '@vercel/workflow-core';
+import { createWorld } from '@vercel/workflow-core/runtime';
 import chalk from 'chalk';
+import terminalLink from 'terminal-link';
 import { logger, setJsonMode, setVerboseMode } from '../config/log.js';
 import {
   inferEmbeddedWorldEnvVars,
@@ -22,10 +23,15 @@ export const setupCliWorld = async (
   setJsonMode(Boolean(flags.json));
   setVerboseMode(Boolean(flags.verbose));
 
+  const withAnsiLinks = flags.json ? false : true;
+  const docsUrl = withAnsiLinks
+    ? terminalLink('https://useworkflow.dev/', 'https://useworkflow.dev/')
+    : 'https://useworkflow.dev/';
+
   logger.showBox(
     'green',
     `        Workflow CLI v${version}        `,
-    'Docs at https://useworkflow.dev/',
+    `        Docs at ${docsUrl}          `,
     chalk.yellow('This is an alpha release - commands might change')
   );
 

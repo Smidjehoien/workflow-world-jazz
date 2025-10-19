@@ -16,6 +16,7 @@
     "@vercel/otel": "^1.13.0",
     "@vercel/workflow": "workspace:*",
     "@vercel/workflow-cli": "workspace:*",
+    "@vercel/workflow-world-postgres": "workspace:*",
     "ai": "catalog:",
     "lodash.chunk": "^4.2.0",
     "next": "15.5.3",
@@ -30,7 +31,6 @@
     "@types/node": "catalog:",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vercel/workflow-typescript-plugin": "workspace:*",
     "tailwindcss": "^4",
     "typescript": "catalog:"
   }

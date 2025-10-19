@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import type { SerializedData } from './serialization.js';
-import type { PaginationOptions, ResolveData } from './shared.js';
+import {
+  type PaginationOptions,
+  type ResolveData,
+  zodJsonSchema,
+} from './shared.js';
 
 // Hook schemas
 export const HookSchema = z.object({
@@ -10,7 +14,7 @@ export const HookSchema = z.object({
   ownerId: z.string(),
   projectId: z.string(),
   environment: z.string(),
-  metadata: z.json().optional(),
+  metadata: zodJsonSchema.optional(),
   createdAt: z.coerce.date(),
 });
 

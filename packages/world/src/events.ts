@@ -129,3 +129,9 @@ export interface ListEventsParams {
   pagination?: PaginationOptions;
   resolveData?: ResolveData;
 }
+
+export interface ListEventsByCorrelationIdParams {
+  correlationId: string;
+  pagination?: PaginationOptions;
+  resolveData?: ResolveData;
+}

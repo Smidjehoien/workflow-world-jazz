@@ -34,7 +34,7 @@ This project shows common AI agent patterns using the Vercel Workflow SDK to mak
 3. Start the development server:
 
    ```bash
-   pnpm dev
+   pnpm turbo dev
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) to see the app

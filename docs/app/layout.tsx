@@ -1,7 +1,9 @@
 import '@/app/global.css';
+import { Analytics } from '@vercel/analytics/next';
 import { RootProvider } from 'fumadocs-ui/provider';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { HomeLayout } from '@/components/layout/home';
+import { Toaster } from '@/components/ui/sonner';
 import { baseOptions } from '@/lib/layout.shared';
 
 const geistSans = Geist({
@@ -48,7 +50,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               },
               {
                 text: 'Examples',
-                url: '/examples',
+                url: 'https://github.com/vercel/workflow/tree/main/examples',
                 secondary: false,
               },
             ]}
@@ -56,6 +58,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {children}
           </HomeLayout>
         </RootProvider>
+        <Toaster />
+        <Analytics />
       </body>
     </html>
   );

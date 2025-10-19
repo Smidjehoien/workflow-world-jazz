@@ -1,5 +1,5 @@
 import { runStep as __private_run_step } from "@vercel/workflow/api";
-/**__internal_workflows{"steps":{"input.js":{"badStep":{"stepId":"step-input-js-badStep"}}}}*/;
+/**__internal_workflows{"steps":{"input.js":{"badStep":{"stepId":"step//input.js//badStep"}}}}*/;
 export async function badStep() {
     return __private_run_step("badStep", {
         arguments: []

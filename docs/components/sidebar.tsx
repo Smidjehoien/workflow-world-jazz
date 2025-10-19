@@ -1,6 +1,19 @@
 'use client';
-import { ChevronDown, ExternalLink } from 'lucide-react';
+import type {
+  CollapsibleContentProps,
+  CollapsibleTriggerProps,
+} from '@radix-ui/react-collapsible';
+import { Presence } from '@radix-ui/react-presence';
+import type { ScrollAreaProps } from '@radix-ui/react-scroll-area';
+import { cva } from 'class-variance-authority';
 import { usePathname } from 'fumadocs-core/framework';
+import Link, { type LinkProps } from 'fumadocs-core/link';
+import type { PageTree } from 'fumadocs-core/server';
+import { useMediaQuery } from 'fumadocs-core/utils/use-media-query';
+import { useOnChange } from 'fumadocs-core/utils/use-on-change';
+import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
+import { useTreeContext, useTreePath } from 'fumadocs-ui/contexts/tree';
+import { ChevronDown, ExternalLink } from 'lucide-react';
 import {
   type ComponentProps,
   createContext,
@@ -12,27 +25,14 @@ import {
   useRef,
   useState,
 } from 'react';
-import Link, { type LinkProps } from 'fumadocs-core/link';
-import { useOnChange } from 'fumadocs-core/utils/use-on-change';
 import { cn } from '../lib/cn';
-import { ScrollArea, ScrollViewport } from './ui/scroll-area';
 import { isActive } from '../lib/is-active';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from './ui/collapsible';
-import { type ScrollAreaProps } from '@radix-ui/react-scroll-area';
-import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
-import { cva } from 'class-variance-authority';
-import type {
-  CollapsibleContentProps,
-  CollapsibleTriggerProps,
-} from '@radix-ui/react-collapsible';
-import type { PageTree } from 'fumadocs-core/server';
-import { useTreeContext, useTreePath } from 'fumadocs-ui/contexts/tree';
-import { useMediaQuery } from 'fumadocs-core/utils/use-media-query';
-import { Presence } from '@radix-ui/react-presence';
+import { ScrollArea, ScrollViewport } from './ui/scroll-area';
 
 export interface SidebarProps {
   /**

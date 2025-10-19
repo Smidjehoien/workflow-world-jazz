@@ -1,5 +1,24 @@
 # @vercel/workflow-errors
 
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- 0146cb9: Add default fetch in workflow vm to throw error
+
+## 0.0.1-alpha.6
+
+### Patch Changes
+
+- 1853724: Add docs slug to error message in node module plugin and errors package
+- b15a64f: Add new webhook related error slugs
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

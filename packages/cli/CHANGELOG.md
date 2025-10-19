@@ -1,5 +1,99 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.54
+
+### Patch Changes
+
+- Updated dependencies [743923c]
+  - @vercel/workflow-core@0.0.1-alpha.44
+  - @vercel/workflow-web@0.0.1-alpha.53
+
+## 0.0.1-alpha.53
+
+### Patch Changes
+
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.14
+  - @vercel/workflow-core@0.0.1-alpha.43
+  - @vercel/workflow-world@0.0.1-alpha.10
+  - @vercel/workflow-web@0.0.1-alpha.52
+  - @vercel/workflow-world-vercel@0.0.1-alpha.17
+
+## 0.0.1-alpha.52
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- Updated dependencies [1214755]
+- Updated dependencies [314f0fe]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.13
+  - @vercel/workflow-world-vercel@0.0.1-alpha.16
+  - @vercel/workflow-world@0.0.1-alpha.9
+  - @vercel/workflow-web@0.0.1-alpha.51
+  - @vercel/workflow-core@0.0.1-alpha.42
+
+## 0.0.1-alpha.51
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-core@0.0.1-alpha.41
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-web@0.0.1-alpha.50
+  - @vercel/workflow-world@0.0.1-alpha.8
+  - @vercel/workflow-world-embedded@0.0.1-alpha.12
+  - @vercel/workflow-world-vercel@0.0.1-alpha.15
+
+## 0.0.1-alpha.50
+
+### Patch Changes
+
+- b0641ee: Fix step/run name display after convention change
+- Updated dependencies [0146cb9]
+- Updated dependencies [b0641ee]
+- Updated dependencies [cdfb910]
+  - @vercel/workflow-errors@0.0.1-alpha.7
+  - @vercel/workflow-core@0.0.1-alpha.40
+  - @vercel/workflow-web@0.0.1-alpha.49
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.14
+
+## 0.0.1-alpha.49
+
+### Patch Changes
+
+- 1853724: Add docs slug to error message in node module plugin and errors package
+- b15a64f: Add try/catch to webhook API route to handle token not found
+- 5cb48ec: Overhaul design of CLI and Web UI table and trace views
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [b15a64f]
+- Updated dependencies [5cb48ec]
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.7
+  - @vercel/workflow-web@0.0.1-alpha.48
+  - @vercel/workflow-core@0.0.1-alpha.39
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.13
+
+## 0.0.1-alpha.48
+
+### Patch Changes
+
+- eed8227: Misc biome lint suggestions
+- 4effcbd: Add "getReadable" method to Run object
+- Updated dependencies [62c6f6b]
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [5924311]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.12
+  - @vercel/workflow-core@0.0.1-alpha.38
+  - @vercel/swc-plugin-workflow@0.0.1-alpha.7
+  - @vercel/workflow-web@0.0.1-alpha.47
+
 ## 0.0.1-alpha.47
 
 ### Patch Changes

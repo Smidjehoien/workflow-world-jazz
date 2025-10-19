@@ -55,7 +55,7 @@ export async function start<TArgs extends unknown[], TResult>(
 
   if (!workflowName) {
     throw new WorkflowRuntimeError(
-      `The function passed to start() is not a workflow function. Ensure it includes the 'use workflow' directive.`,
+      `'start' received an invalid workflow function. Ensure the Workflow Development Kit is configured correctly and the function includes a 'use workflow' directive.`,
       { slug: 'start-invalid-workflow-function' }
     );
   }

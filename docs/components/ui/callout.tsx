@@ -10,7 +10,7 @@ export function Callout({ children, type = 'info' }: CalloutProps) {
   return (
     <div
       className={cn(
-        `${type === 'info' ? 'bg-fd-primary/75 text-fd-primary-foreground border border-fd-primary-foreground/30' : type === 'warn' ? 'bg-amber-600/25 text-amber-600 border border-amber-600/30' : 'bg-fd-error/25 text-fd-error border border-fd-error/20'}`,
+        `${type === 'info' ? 'bg-primary-blue/15 text-primary-blue border border-primary-blue/25' : type === 'warn' ? 'bg-amber-600/15 text-amber-600 border border-amber-600/30' : 'bg-fd-error/25 text-fd-error border border-fd-error/20'}`,
         'rounded-md px-4 py-2 [&_p]:m-0 [&_p]:text-current flex items-start gap-2'
       )}
     >
@@ -23,7 +23,7 @@ export function Callout({ children, type = 'info' }: CalloutProps) {
           <X />
         )}
       </div>
-      <div className="flex-1 text-[15px] [&_a]:underline [&_a]:decoration-primary-foreground/75">
+      <div className="flex-1 text-[15px] [&_a]:underline [&_a]:decoration-primary-blue/50">
         {children}
       </div>
     </div>

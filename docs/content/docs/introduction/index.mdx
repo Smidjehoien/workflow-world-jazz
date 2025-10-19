@@ -1,22 +1,22 @@
 ---
-title: Workflow SDK
+title: Workflow
 ---
 
-# Workflow SDK
+# Workflow
 
-The Workflow SDK is a TypeScript framework to easily build durable, reliable, and observable applications and AI agents.
+Workflow is a TypeScript framework to easily build durable, reliable, and observable applications and AI agents.
 
 Workflows are a powerful primitive to power anything from data pipelines, AI agents, media processing jobs, billing and subscriptions, CI/CD flows, and everything in between.
 
-Check out the [examples](/examples) for more inspiration.
+Check out the [examples](https://github.com/vercel/workflow/tree/main/examples) for more inspiration.
 
 ---
 
-## Why use Workflow SDK?
+## Why use Workflow?
 
 Building reliable long-running processes is hard. You'll need to handle failures, manage retries, persist state, wire up queues, coordinate distributed operations, and deal with timeouts. Traditional approaches require complex infrastructure and careful state management.
 
-The Workflow SDK eliminates these complexities by providing durable functions that automatically persist progress, retry failures, and track progress for observability. This allows developers to write resilient workflows using **familiar async/await patterns**, without worrying about infrastructure details.
+Workflow eliminates these complexities by providing durable functions that automatically persist progress, retry failures, and track progress for observability. This allows developers to write resilient workflows using **familiar async/await patterns**, without worrying about infrastructure details.
 
 For example, here's a simple order processing workflow powered by workflow.
 
@@ -45,7 +45,7 @@ async function deliverOrder(orderId: string) {
   "use step";
 
   // Steps are run on separate serverless functions and
-  // represents a single unit of work
+  // represent a single unit of work
 
   // Uncaught errors (ex. network errors) are automatically retried
   if (Math.random() < 0.5) {
@@ -60,4 +60,4 @@ async function deliverOrder(orderId: string) {
 
 The key takeaway is that we can easily define workflows through workflow functions and step functions with both `"use workflow"` and `"use step"` directives. You can learn more about both in [Concepts](/docs/foundations/concepts).
 
-In the next section, you'll create a simple project that shows how easy it is for you to get started with the Workflow SDK.
+In the next section, you'll create a simple project that shows how easy it is for you to get started with Workflow.

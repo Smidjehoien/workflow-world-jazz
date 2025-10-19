@@ -1,18 +1,18 @@
 'use client';
-import type { PageTree } from 'fumadocs-core/server';
-import { type ComponentProps, type ReactNode, useMemo, useState } from 'react';
-import { cn } from '../../lib/cn';
-import { TreeContextProvider, useTreeContext } from 'fumadocs-ui/contexts/tree';
-import Link from 'next/link';
-import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
 import { cva } from 'class-variance-authority';
-import { usePathname } from 'next/navigation';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import type { PageTree } from 'fumadocs-core/server';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from 'fumadocs-ui/components/ui/collapsible';
+import { useSidebar } from 'fumadocs-ui/contexts/sidebar';
+import { TreeContextProvider, useTreeContext } from 'fumadocs-ui/contexts/tree';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { type ComponentProps, type ReactNode, useMemo, useState } from 'react';
+import { cn } from '../../lib/cn';
 
 export interface DocsLayoutProps {
   tree: PageTree.Root;
@@ -23,8 +23,8 @@ export function DocsLayout({ tree, children }: DocsLayoutProps) {
   return (
     <TreeContextProvider tree={tree}>
       <main
+        className="mt-8 flex flex-1 flex-row [--fd-nav-height:56px]"
         id="nd-docs-layout"
-        className="flex flex-1 flex-row [--fd-nav-height:56px] mt-8"
       >
         <Sidebar />
         {children}
@@ -39,26 +39,26 @@ export function NavbarSidebarTrigger(props: ComponentProps<'button'>) {
   return (
     <button
       {...props}
+      aria-label="Toggle Sidebar"
       className={cn(
-        'inline-flex items-center justify-center p-2 rounded-md text-fd-muted-foreground hover:opacity-60 transition-opacity',
+        'inline-flex items-center justify-center rounded-md p-2 text-fd-muted-foreground transition-opacity hover:opacity-60',
         props.className
       )}
       onClick={() => setOpen(!open)}
-      aria-label="Toggle Sidebar"
     >
       <svg
-        width="20"
-        height="20"
-        viewBox="0 0 24 24"
         fill="none"
+        height="20"
         stroke="currentColor"
-        strokeWidth="2"
         strokeLinecap="round"
         strokeLinejoin="round"
+        strokeWidth="2"
+        viewBox="0 0 24 24"
+        width="20"
       >
-        <line x1="3" y1="12" x2="21" y2="12" />
-        <line x1="3" y1="6" x2="21" y2="6" />
-        <line x1="3" y1="18" x2="21" y2="18" />
+        <line x1="3" x2="21" y1="12" y2="12" />
+        <line x1="3" x2="21" y1="6" y2="6" />
+        <line x1="3" x2="21" y1="18" y2="18" />
       </svg>
     </button>
   );
@@ -71,7 +71,7 @@ function Sidebar() {
   const children = useMemo(() => {
     function renderItems(items: PageTree.Node[]) {
       return items.map((item) => (
-        <SidebarItem key={item.$id} item={item}>
+        <SidebarItem item={item} key={item.$id}>
           {item.type === 'folder' ? renderItems(item.children) : null}
         </SidebarItem>
       ));
@@ -91,7 +91,7 @@ function Sidebar() {
       )}
       <aside
         className={cn(
-          'fixed flex flex-col shrink-0 px-4 pb-4 pt-12 top-14 z-20 text-sm overflow-auto md:sticky md:h-[calc(100dvh-56px)] md:w-[300px]',
+          'fixed top-14 z-20 flex shrink-0 flex-col overflow-auto px-4 pt-12 pb-4 text-sm md:sticky md:h-[calc(100dvh-56px)] md:w-[300px]',
           'max-md:inset-x-0 max-md:bottom-0 max-md:bg-fd-background',
           !open && 'max-md:invisible'
         )}
@@ -103,11 +103,11 @@ function Sidebar() {
 }
 
 const linkVariants = cva(
-  'flex items-center gap-2 w-full py-1.5 rounded-lg text-fd-foreground/80 [&_svg]:size-4',
+  'flex w-full items-center gap-2 rounded-lg py-1.5 text-fd-foreground/80 [&_svg]:size-4',
   {
     variants: {
       active: {
-        true: 'text-primary-foreground',
+        true: 'text-primary-blue',
         false: 'hover:text-fd-accent-foreground',
       },
     },
@@ -138,10 +138,10 @@ function SidebarItem({
   if (item.type === 'page') {
     return (
       <Link
-        href={item.url}
         className={linkVariants({
           active: pathname === item.url,
         })}
+        href={item.url}
         onClick={handleLinkClick}
       >
         {item.icon}
@@ -152,7 +152,7 @@ function SidebarItem({
 
   if (item.type === 'separator') {
     return (
-      <p className="text-fd-muted-foreground my-2 first:mt-0">
+      <p className="my-2 text-fd-muted-foreground first:mt-0">
         {item.icon}
         {item.name}
       </p>
@@ -166,10 +166,10 @@ function SidebarItem({
   if (!hasChildren && item.index) {
     return (
       <Link
-        href={item.index.url}
         className={linkVariants({
           active: pathname === item.index.url,
         })}
+        href={item.index.url}
         onClick={handleLinkClick}
       >
         {item.index.icon}
@@ -180,7 +180,7 @@ function SidebarItem({
 
   // folder with children - make it collapsible
   return (
-    <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible onOpenChange={setIsOpen} open={isOpen}>
       <div>
         {item.index ? (
           <div className="flex items-center gap-1">
@@ -210,7 +210,7 @@ function SidebarItem({
           <CollapsibleTrigger
             className={cn(
               linkVariants(),
-              'text-start w-full flex items-center justify-between'
+              'flex w-full items-center justify-between text-start'
             )}
           >
             <span className="flex items-center gap-2">
@@ -226,7 +226,7 @@ function SidebarItem({
           </CollapsibleTrigger>
         )}
         <CollapsibleContent>
-          <div className="pl-4 border-l flex flex-col mt-1">{children}</div>
+          <div className="mt-1 flex flex-col border-l pl-4">{children}</div>
         </CollapsibleContent>
       </div>
     </Collapsible>

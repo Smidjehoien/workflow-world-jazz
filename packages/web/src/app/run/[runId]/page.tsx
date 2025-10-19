@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { RunDetailView } from '@/components/runs/run-detail-view';
 import { buildUrlWithConfig, useQueryParamConfig } from '@/lib/config';
 
@@ -63,16 +64,21 @@ export default function RunDetailPage() {
   };
 
   return (
-    <RunDetailView
-      config={config}
-      runId={runId}
-      selectedStepId={selectedStepId}
-      selectedEventId={selectedEventId}
-      selectedHookId={selectedHookId}
-      onStepSelect={handleStepSelect}
-      onEventSelect={handleEventSelect}
-      onHookSelect={handleHookSelect}
-      onStreamClick={handleStreamClick}
-    />
+    <ErrorBoundary
+      title="Run Detail Error"
+      description="Failed to load run details. Please try navigating back to the home page."
+    >
+      <RunDetailView
+        config={config}
+        runId={runId}
+        selectedStepId={selectedStepId}
+        selectedEventId={selectedEventId}
+        selectedHookId={selectedHookId}
+        onStepSelect={handleStepSelect}
+        onEventSelect={handleEventSelect}
+        onHookSelect={handleHookSelect}
+        onStreamClick={handleStreamClick}
+      />
+    </ErrorBoundary>
   );
 }

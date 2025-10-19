@@ -1,5 +1,37 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.14
+
+### Patch Changes
+
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world@0.0.1-alpha.10
+
+## 0.0.1-alpha.13
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- Updated dependencies [1214755]
+- Updated dependencies [314f0fe]
+  - @vercel/workflow-world@0.0.1-alpha.9
+
+## 0.0.1-alpha.12
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-world@0.0.1-alpha.8
+
+## 0.0.1-alpha.11
+
+### Patch Changes
+
+- Updated dependencies [b15a64f]
+  - @vercel/workflow-world@0.0.1-alpha.7
+
 ## 0.0.1-alpha.10
 
 ### Patch Changes

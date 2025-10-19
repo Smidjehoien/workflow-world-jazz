@@ -5,10 +5,10 @@ title: Getting Started
 # Getting Started
 
 <Callout type="warn">
-Currently, Workflow SDK works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
+Currently, Workflow works best with Next.js. We're actively working on improving support and docs to use workflow by itself or with other frameworks.
 </Callout>
 
-This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the SDK in your own projects.
+This guide will walk through setting up your first workflow in a Next.js app. Along the way, you'll learn more about the concepts that are fundamental to using the development kit in your own projects.
 
 ---
 
@@ -17,7 +17,7 @@ This guide will walk through setting up your first workflow in a Next.js app. Al
 Start by creating a new Next.js project. This command will create a new directory named `my-workflow-app` and setup a Next.js project inside it.
 
 ```bash
-pnpm create next-app@latest my-workflow-app
+npm create next-app@latest my-workflow-app
 ```
 
 Enter the newly made directory:
@@ -28,19 +28,19 @@ cd my-workflow-app
 
 ### Install Dependencies
 
-Install `@vercel/workflow` to get started with the Workflow SDK.
+Install `@vercel/workflow` to get started with Workflow.
 
 <BaseUrl>
   {(baseUrl) => (
-    <Tabs items={['pnpm', 'npm', 'yarn']}>
-      <Tab value="pnpm">
-        <CodeBlock>
-            pnpm i {baseUrl}/vercel-workflow.tgz
-        </CodeBlock>
-      </Tab>
+    <Tabs items={['npm', 'pnpm', 'yarn']}>
       <Tab value="npm">
         <CodeBlock>
             npm i {baseUrl}/vercel-workflow.tgz
+        </CodeBlock>
+      </Tab>
+      <Tab value="pnpm">
+        <CodeBlock>
+            pnpm i {baseUrl}/vercel-workflow.tgz
         </CodeBlock>
       </Tab>
       <Tab value="yarn">
@@ -54,7 +54,7 @@ Install `@vercel/workflow` to get started with the Workflow SDK.
 
 ### Configure Next.js
 
-For workflows to work, you'll have to wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
+Wrap your `next.config.ts` with `withWorkflow()`. This enables the directives `"use workflow"` and `"use step"` to use workflows in both local development and when deployed on Vercel.
 
 ```typescript title="next.config.ts" lineNumbers
 import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
@@ -66,55 +66,6 @@ const nextConfig: NextConfig = {
 
 export default withWorkflow(nextConfig); // [!code highlight]
 ```
-
-### Configure TypeScript
-
-To enhance your development experience with workflow-specific diagnostics and auto-completions, install the TypeScript plugin as a dev dependency:
-
-<BaseUrl>
-  {(baseUrl) => (
-    <Tabs items={['pnpm', 'npm', 'yarn']}>
-      <Tab value="pnpm">
-        <CodeBlock>
-            pnpm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-      <Tab value="npm">
-        <CodeBlock>
-            npm i -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-      <Tab value="yarn">
-        <CodeBlock>
-            yarn add -D {baseUrl}/vercel-workflow-typescript-plugin.tgz
-        </CodeBlock>
-      </Tab>
-    </Tabs>
-  )}
-</BaseUrl>
-
-Then, add the plugin to your `tsconfig.json`:
-
-```json title="tsconfig.json" lineNumbers
-{
-  "compilerOptions": {
-    // … rest of your TypeScript config
-    "plugins": [ // [!code highlight]
-      { // [!code highlight]
-        "name": "@vercel/workflow-typescript-plugin" // [!code highlight]
-      } // [!code highlight]
-    ] // [!code highlight]
-  }
-}
-```
-
-After adding the plugin, restart your TypeScript server in your editor (in VS Code/Cursor: `cmd+shift+P` → "TypeScript: Restart TS Server").
-
-The TypeScript plugin provides:
-
-* **Workflow/Step validation**: Errors when workflow or step functions are not async
-* **Disallowed API detection**: Errors when Node.js APIs (like `fs`, `http`, etc.) are used in workflow functions
-* **Workflow API completions**: Auto-suggestions for workflow-specific APIs like `createHook()`, `getWorkflowMetadata()`, etc.
 
 ## Create Your First Workflow
 
@@ -219,52 +170,18 @@ This terminal command sends a `POST` request to your development server at `http
 
 Watch the Next.js development server logs to see your workflow execute as well as the steps that are being processed.
 
-## Observability
-
-The Workflow SDK provides powerful tools to inspect and debug your workflow runs.
-After triggering your workflow, you can use the [CLI or Web UI](/docs/observability/) to view detailed information about runs, steps, and their execution.
-
-To see a list of all workflow runs, ensure `@vercel/workflow-cli` is installed globally or in your project, and run:
+Additionally, you can use the [Workflow CLI](/docs/api-reference/cli) to inspect your workflow runs and steps in detail.
 
 ```bash
-# When installed locally
 npx wf i runs
-# When installed globally
-wf i runs
 ```
-
-This displays information on your most recent runs.
-
-```bash
-runId                       workflowName         status     started        completed
---------------------------  -------------------  ---------  -------------  -------------
-01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
-```
-
-Run `npx wf i --help` for more information on commands and filtering.
-
-### Web UI
-
-The Workflow SDK also provides a web UI for inspecting and debugging your workflow runs.
-
-To start the web UI, add `--web` to any of the inspect commands, like so:
-
-```bash
-npx wf i runs <run-id> --web
-```
-
-This will open the web UI in your browser.
-
-<img src="/o11y-ui.png" alt="Web UI" />
-
-<Callout>
-For more details, see [CLI and Web UI documentation](/docs/observability/).
-</Callout>
 
 ---
 
 ## Next Steps
 
-* Learn more about the [Workflow SDK Concepts](/docs/foundations/concepts).
-* Explore [Workflow SDK Core](/docs/api-reference/vercel-workflow-core).
+* Learn more about the [Workflow Concepts](/docs/foundations/concepts).
+* Set up [TypeScript editor support](/docs/configuration/typescript).
+* Learn about how to use [Observability](/docs/observability) tools.
 * Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.
+* Explore the [API Reference](/docs/api-reference).

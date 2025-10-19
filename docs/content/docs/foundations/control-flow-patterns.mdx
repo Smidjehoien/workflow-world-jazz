@@ -6,11 +6,11 @@ title: Control Flow Patterns
 
 Control flows are an important part of building great applications. It allows you to control the flow of events throughout your application, ensuring careful resource management.
 
-There are many different ways to manage the control flow of your workflow. The difference between these methods is the way that the **step functions** are orchestrated. Learn about the ways you can manage the order of events for your workflow.
+There are many different ways to manage the control flow of your workflow. The difference between these methods is the way that the [step functions](/docs/how-it-works/step-functions) are orchestrated.
 
 ## Sequential Execution
 
-Executes steps one after another.
+The simplest way to orchestrate steps is to execute them one after another, where each step can be dependent on the previous step.
 
 ```typescript
 export async function dataPipelineWorkflow(data: any) {
@@ -26,7 +26,7 @@ export async function dataPipelineWorkflow(data: any) {
 
 ## Parallel Execution
 
-Execute multiple steps simultaneously.
+When needing to execute multiple steps in parallel, you can use `Promise.all` to run them all at the same time.
 
 ```typescript
 export async function fetchUserData(userId: string) {
@@ -44,7 +44,7 @@ export async function fetchUserData(userId: string) {
 
 ## Race Conditions
 
-Whichever step completes first wins.
+When needing to execute multiple steps and only care about the result of the first step to complete, you can use `Promise.race`.
 
 ```typescript
 import { sleep } from "@vercel/workflow"

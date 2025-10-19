@@ -1,8 +1,8 @@
 'use client';
 
-import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard';
 import { cn } from '@/lib/cn';
 
 export function CopyPageAsMarkdown() {
@@ -143,7 +143,7 @@ export function CopyPageAsMarkdown() {
       type="button"
       disabled={isCopied}
       className={cn(
-        isCopied && '[&_svg]:text-primary-foreground',
+        isCopied && '[&_svg]:text-primary-blue',
         'shrink-0 items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-muted/50 transition-colors hidden sm:flex'
       )}
     >

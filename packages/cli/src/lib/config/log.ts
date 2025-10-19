@@ -1,3 +1,4 @@
+import boxen from 'boxen';
 import chalk from 'chalk';
 
 export const LOGGING_CONFIG = {
@@ -100,28 +101,15 @@ class Logger {
     color: 'yellow' | 'green' | 'white',
     ...lines: (string | undefined)[]
   ) => {
-    const maxLength = Math.max(
-      ...lines.map((line) => {
-        // biome-ignore lint/suspicious/noControlCharactersInRegex: Ignore coloring characters
-        const visibleLine = line?.replace(/\x1b\[[0-9;]*m/g, '');
-        return visibleLine?.length ?? 0;
-      })
-    );
-    const border = `┌${'─'.repeat(maxLength + 2)}┐`;
-    const footer = `└${'─'.repeat(maxLength + 2)}┘`;
-    const colorFunc =
-      color === 'yellow'
-        ? chalk.yellow
-        : color === 'green'
-          ? chalk.green
-          : chalk.white;
-    this.logPlain(colorFunc(border));
-    for (const line of lines) {
-      if (line) {
-        this.logPlain(colorFunc(`│ ${line.padEnd(maxLength)} │`));
-      }
-    }
-    this.logPlain(colorFunc(footer));
+    const borderColor =
+      color === 'yellow' ? 'yellow' : color === 'green' ? 'green' : 'white';
+    const content = lines.filter((line) => line !== undefined).join('\n');
+    const box = boxen(content, {
+      padding: 1,
+      borderColor: borderColor as any,
+      textAlignment: 'center',
+    });
+    this.logPlain(box);
   };
 }
 

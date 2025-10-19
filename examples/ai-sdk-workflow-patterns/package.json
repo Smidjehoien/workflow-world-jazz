@@ -1,6 +1,6 @@
 {
   "name": "ai-sdk-workflow-patterns",
-  "version": "0.1.1-alpha.16",
+  "version": "0.1.1-alpha.23",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -30,7 +30,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@vercel/workflow-typescript-plugin": "workspace:*",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.8",
     "typescript": "^5"

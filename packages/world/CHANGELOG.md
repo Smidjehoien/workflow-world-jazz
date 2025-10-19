@@ -1,5 +1,30 @@
 # @vercel/workflow-world
 
+## 0.0.1-alpha.10
+
+### Patch Changes
+
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+
+## 0.0.1-alpha.9
+
+### Patch Changes
+
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- 314f0fe: Simplify hook type inference
+
+## 0.0.1-alpha.8
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+
+## 0.0.1-alpha.7
+
+### Patch Changes
+
+- b15a64f: Type `hook.metadata` as `unknown`
+
 ## 0.0.1-alpha.6
 
 ### Patch Changes

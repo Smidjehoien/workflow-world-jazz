@@ -1,9 +1,14 @@
 @import "tailwindcss";
-@import "fumadocs-ui/css/shadcn.css";
-@import "fumadocs-ui/css/preset.css";
 @import "tw-animate-css";
 
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
+
 @custom-variant dark (&:is(.dark *));
+
+@source '../../node_modules/fumadocs-ui/dist/**/*.js';
+@source '../../node_modules/@repo/components/src/**/*.{js,jsx,ts,tsx}';
+@source '../../node_modules/@repo/shadcn-ui/components/**/*.{js,jsx,ts,tsx}';
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -41,7 +46,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-fd-card: var(--background);
+
+  --color-primary-blue: var(--primary-blue);
 }
 
 :root {
@@ -52,8 +58,8 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #f0f7ff;
-  --primary-foreground: #006bff;
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
@@ -64,7 +70,7 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-1: oklch(0.66 0.2298 34.95);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
@@ -77,17 +83,19 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  --primary-blue: oklch(57.61% 0.2508 258.23);
 }
 
 .dark {
-  --background: #000;
+  --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #081c3c;
-  --primary-foreground: #006ffe;
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -114,8 +122,11 @@
 }
 
 @layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-sidebar text-foreground dark:bg-background;
   }
 }
 
@@ -146,60 +157,17 @@
   }
 }
 
-/* @layer utilities {
-  .bg-dashed {
-    background-image: linear-gradient(
-      45deg,
-      var(--border) 12.50%,
-      transparent 12.50%,
-      transparent 50%,
-      var(--border) 50%,
-      var(--border) 62.50%,
-      transparent 62.50%,
-      transparent 100%
-    );
-    background-size: 0.25rem 0.25rem;
-  }
-} */
-
-@keyframes move-x {
-  0% {
-    transform: translateX(var(--move-x-from));
-  }
-  100% {
-    transform: translateX(var(--move-x-to));
-  }
-}
-
-h1,
-h2,
-h3 {
-  @apply tracking-tight font-semibold;
-}
-
-h1 {
-  @apply !text-4xl;
-}
-
-h2 {
-  @apply !text-3xl;
-}
-
-h3 {
-  @apply !text-2xl
-}
-
-h4 {
-  @apply !text-xl;
-}
-
-li {
-  @apply text-muted-foreground;
-}
-
 /* Fix Fumadocs theme toggle icons */
 [data-theme-toggle] svg {
   @apply fill-none;
+}
+
+#nd-subnav {
+  @apply hidden!;
+}
+
+#nd-nav {
+  @apply bg-sidebar!;
 }
 
 #nd-subnav [data-active="true"] {
@@ -232,30 +200,39 @@ li {
   @apply hidden;
 }
 
-.dark {
-  --color-fd-border: oklch(1 0 0 / 15%);
-}
-
 table {
   @apply rounded-sm bg-none !border-none;
 }
 
 table th {
-  @apply !bg-background border-b border-x-0 p-2 px-4.5 [&:first-child]:pl-0 [&:last-child]:pr-0;
+  @apply !bg-background border-b border-x-0 px-4.5 py-2;
 }
 
 table td {
-  @apply !bg-background border-none px-4.5 py-3 [&:first-child]:pl-0 [&:last-child]:pr-0;
+  @apply !bg-background border-none px-4.5 py-3;
 }
 
-div[role="dialog"] {
-  @apply bg-background !rounded-md;
+/* Reset the counter for each code block */
+.with-line-numbers {
+  counter-reset: line-number;
 }
 
-div[role="dialog"] button {
-  @apply hover:!bg-muted/75 !rounded-sm;
+/* Style each line within the code block */
+.with-line-numbers code .line {
+  @apply relative pl-12!;
+  counter-increment: line-number; /* Increment the counter for each line */
 }
 
-div[role="dialog"] span {
-  @apply !text-primary-foreground;
+/* Display the line number using a pseudo-element */
+.with-line-numbers code .line::before {
+  @apply absolute left-0 w-8! text-right text-muted-foreground;
+  content: counter(line-number); /* Display the current counter value */
+}
+
+.with-line-numbers.with-checks code .line {
+  @apply pl-17!;
+}
+
+.with-checks.with-line-numbers code .line::before {
+  @apply left-5!;
 }

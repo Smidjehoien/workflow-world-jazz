@@ -1,242 +1,128 @@
 'use client';
 
-import {
-  AlertCircle,
-  ArrowDownAZ,
-  ArrowUpAZ,
-  ChevronLeft,
-  ChevronRight,
-  RefreshCw,
-} from 'lucide-react';
-import { useState } from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { useStepsWithPreload } from '@/hooks/use-steps-with-preload';
-import type { WorldConfig } from '@/lib/config-world';
-import { getResourceName } from '@/lib/resource-name';
-import { DEFAULT_PAGE_SIZE } from '@/lib/utils';
-import { PageSizeDropdown } from '../display-utils/page-size-dropdown';
+import { parseStepName } from '@vercel/workflow-core/parse-name';
+import type { Event, Hook, Step } from '@vercel/workflow-world';
+import type { ColumnDefinition } from '../display-utils/local-paginating-table';
+import { LocalPaginatingTable } from '../display-utils/local-paginating-table';
 import { RelativeTime } from '../display-utils/relative-time';
 import { StatusBadge } from '../display-utils/status-badge';
-import { TableSkeleton } from '../display-utils/table-skeleton';
-import { StepsTimeline } from './steps-timeline';
-import { StepsTimelineLoadingSkeleton } from './steps-timeline-skeleton';
+import { RunTraceView } from './run-trace-view';
+import { RunTraceViewLoadingSkeleton } from './run-trace-view-skeleton';
 
 interface StepsTableProps {
-  config: WorldConfig;
-  runId: string;
+  steps: Step[];
+  events: Event[];
+  hooks: Hook[];
+  loading: boolean;
+  error?: Error;
+  hasHitLimit: boolean;
+  hasReachedEnd?: boolean;
+  initialLoadComplete: boolean;
   onStepClick: (stepId: string) => void;
+  onRunClick?: () => void;
+  onHookClick?: (hookId: string) => void;
   selectedStepId?: string;
   runStartTime?: string;
   runEndTime?: string;
+  runCreatedAt?: string;
 }
 
+/**
+ * StepsTable - Displays steps with local pagination.
+ * Receives pre-fetched steps, events, and hooks data from parent component.
+ */
 export function StepsTable({
-  config,
-  runId,
+  steps,
+  events,
+  hooks,
+  loading,
+  error,
+  hasHitLimit,
+  hasReachedEnd = false,
+  initialLoadComplete,
   onStepClick,
+  onRunClick,
+  onHookClick,
   selectedStepId,
   runStartTime,
   runEndTime,
+  runCreatedAt,
 }: StepsTableProps) {
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  const [limit, setLimit] = useState<number>(DEFAULT_PAGE_SIZE);
-
-  const {
-    data,
-    error,
-    loading,
-    currentPageNumber,
-    maxPagesVisited,
-    paginationDisplay,
-    lastRefreshTime,
-    handleNextPage,
-    handlePrevPage,
-    handleRefresh,
-    canGoNext,
-    canGoPrev,
-    allSteps,
-  } = useStepsWithPreload(config, runId, sortOrder, limit);
-
-  const toggleSortOrder = () => {
-    setSortOrder((prev) => (prev === 'desc' ? 'asc' : 'desc'));
-  };
-
-  // Show skeleton for initial load
-  if (loading && !data) {
-    return <TableSkeleton title="Steps" />;
-  }
+  // Define table columns
+  const columns: ColumnDefinition<Step>[] = [
+    {
+      key: 'stepId',
+      header: 'Step ID',
+      render: (step) => (
+        <span className="font-mono text-xs">{step.stepId}</span>
+      ),
+    },
+    {
+      key: 'stepName',
+      header: 'Step Name',
+      render: (step) => parseStepName(step.stepName)?.shortName || '?',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (step) => <StatusBadge status={step.status} context={step} />,
+    },
+    {
+      key: 'startedAt',
+      header: 'Started',
+      render: (step) =>
+        step.startedAt ? <RelativeTime date={step.startedAt} /> : '-',
+    },
+    {
+      key: 'completedAt',
+      header: 'Completed',
+      render: (step) =>
+        step.completedAt ? <RelativeTime date={step.completedAt} /> : '-',
+    },
+  ];
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Steps</CardTitle>
-          <div className="flex items-center gap-4">
-            {lastRefreshTime && (
-              <RelativeTime
-                date={lastRefreshTime}
-                className="text-sm text-muted-foreground"
-                type="distance"
-              />
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleRefresh}
-              disabled={loading}
-            >
-              <RefreshCw className={loading ? 'animate-spin' : ''} />
-              Refresh
-            </Button>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleSortOrder}
-                  disabled={loading}
-                >
-                  {sortOrder === 'desc' ? (
-                    <ArrowDownAZ className="h-4 w-4" />
-                  ) : (
-                    <ArrowUpAZ className="h-4 w-4" />
-                  )}
-                  {sortOrder === 'desc' ? 'Newest' : 'Oldest'}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {sortOrder === 'desc'
-                  ? 'Showing newest first'
-                  : 'Showing oldest first'}
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {error ? (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error loading steps</AlertTitle>
-            <AlertDescription>
-              {error instanceof Error ? error.message : 'An error occurred'}
-            </AlertDescription>
-          </Alert>
-        ) : !data || data.data.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            No steps found
-          </div>
+    <div className="space-y-6">
+      {/* Timeline Chart */}
+      <div className="bg-card rounded-lg border p-6">
+        {loading && !initialLoadComplete ? (
+          <RunTraceViewLoadingSkeleton />
         ) : (
-          <>
-            {/* Timeline Chart */}
-            <div className="mb-6">
-              {loading ? (
-                <StepsTimelineLoadingSkeleton />
-              ) : (
-                <StepsTimeline
-                  steps={allSteps}
-                  hasMore={
-                    currentPageNumber === maxPagesVisited && data.hasMore
-                  }
-                  onStepClick={onStepClick}
-                  onLoadMore={handleNextPage}
-                  selectedStepId={selectedStepId}
-                  runStartTime={runStartTime}
-                  runEndTime={runEndTime}
-                />
-              )}
-            </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Step ID</TableHead>
-                  <TableHead>Step Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Started</TableHead>
-                  <TableHead>Completed</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.data.map((step) => (
-                  <TableRow
-                    key={step.stepId}
-                    className={`cursor-pointer ${
-                      selectedStepId === step.stepId
-                        ? 'bg-accent'
-                        : 'hover:bg-accent/50'
-                    }`}
-                    onClick={() => onStepClick(step.stepId)}
-                  >
-                    <TableCell className="font-mono text-xs">
-                      {step.stepId}
-                    </TableCell>
-                    <TableCell>{getResourceName(step.stepName)}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={step.status} context={step} />
-                    </TableCell>
-                    <TableCell>
-                      {step.startedAt ? (
-                        <RelativeTime date={step.startedAt} />
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {step.completedAt ? (
-                        <RelativeTime date={step.completedAt} />
-                      ) : (
-                        '-'
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-muted-foreground">
-                {paginationDisplay}
-              </div>
-              <div className="flex gap-2 items-center">
-                <PageSizeDropdown value={limit} onChange={setLimit} />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handlePrevPage}
-                  disabled={!canGoPrev}
-                >
-                  <ChevronLeft />
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleNextPage}
-                  disabled={!canGoNext}
-                >
-                  Next
-                  <ChevronRight />
-                </Button>
-              </div>
-            </div>
-          </>
+          <RunTraceView
+            steps={steps}
+            events={events}
+            hooks={hooks}
+            hasMore={false} // We fetch all steps exhaustively
+            onStepClick={onStepClick}
+            selectedStepId={selectedStepId}
+            runStartTime={runStartTime}
+            runEndTime={runEndTime}
+            runCreatedAt={runCreatedAt}
+            onRunClick={onRunClick}
+            onHookClick={onHookClick}
+          />
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Steps Table */}
+      <LocalPaginatingTable
+        items={steps}
+        columns={columns}
+        title="Steps"
+        loading={loading && !initialLoadComplete}
+        error={error}
+        getItemKey={(step) => step.stepId}
+        onRowClick={(step) => onStepClick(step.stepId)}
+        isRowSelected={(step) => step.stepId === selectedStepId}
+        emptyMessage="No steps found"
+        warningMessage={
+          hasHitLimit
+            ? 'Showing first 1000 steps only. There may be more steps that are not displayed.'
+            : undefined
+        }
+        hasHitLimit={hasHitLimit}
+        hasReachedEnd={hasReachedEnd}
+      />
+    </div>
   );
 }

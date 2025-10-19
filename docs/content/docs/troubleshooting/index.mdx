@@ -4,136 +4,34 @@ title: Troubleshooting
 
 # Troubleshooting
 
-Fix common mistakes when creating and executing workflows in the Workflow SDK.
+Fix common mistakes when creating and executing workflows in the Workflow Development Kit.
 
 <Callout type="info">
-This troubleshooting guide is actively being expanded as Workflow SDK matures during the beta period.
+The troubleshooting guide is actively being expanded as Workflow matures during the beta period.
 </Callout>
 
-## Build Issues
+## Common Errors
 
-### Workflows Not Detected
+If you're encountering specific error messages, check these guides for solutions:
 
-When workflows aren't being invoked or built during local development or in a production environment, verify that you are using the `"use workflow"` and `"use step"` directives appropriately.
-
-For workflow functions:
-
-```ts lineNumbers
-// Correct - includes directive
-export async function orderWorkflow(orderId: string) {
-  "use workflow"; // [!code highlight]
-  // workflow logic
-}
-
-// Wrong - missing directive
-export async function orderWorkflow(orderId: string) {
-  // workflow logic
-}
-```
-
-For step functions:
-
-```typescript lineNumbers
-// Correct - includes directive
-export async function emailOrder(orderId: string, email: string) {
-  "use step"; // [!code highlight]
-  // step logic
-}
-
-// Wrong - missing directive
-export async function emailOrder(orderId: string, email: string) {
-  // step logic
-}
-```
-
-Make sure you've wrapped the Next.js configuration with the `withWorkflow` plugin:
-
-```ts lineNumbers title="next.config.ts"
-import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
-
-const nextConfig = {
-  // your config
-};
-
-export default withWorkflow(nextConfig); // [!code highlight]
-```
+<Cards>
+  <Card href="/docs/troubleshooting/errors/fetch-in-workflow" title="fetch-in-workflow">
+    Calling fetch() in workflow functions
+  </Card>
+  <Card href="/docs/troubleshooting/errors/node-js-module-in-workflow" title="node-js-module-in-workflow">
+    Cannot use Node.js modules in workflow functions
+  </Card>
+  <Card href="/docs/troubleshooting/errors/serialization-failed" title="serialization-failed">
+    Failed to serialize workflow arguments or return values
+  </Card>
+  <Card href="/docs/troubleshooting/errors/start-invalid-workflow-function" title="start-invalid-workflow-function">
+    Invalid workflow function passed to start()
+  </Card>
+</Cards>
 
 ---
 
-## Runtime Issues
-
-### Context Function Errors
-
-Functions like `getStepMetadata`, and `sleep` from the Workflow SDK Core package depend on the execution context (i.e. *where* the function is executed).
-
-#### Accessing Context
-
-Workflow SDK Core provides the following functions for accessing context:
-
-* [`getWorkflowMetadata`](/docs/api-reference/vercel-workflow-core/get-workflow-metadata)
-* [`getStepMetadata`](/docs/api-reference/vercel-workflow-core/get-step-metadata).
-
-Trying to call `getStepMetadata` inside a workflow function isn't possible since no current executing step exists.
-
-```ts
-import { getWorkflowMetadata, getStepMetadata } from "@vercel/workflow"
-
-// getWorkflowMetadata() - available in workflow and step functions
-export async function myWorkflow() {
-    "use workflow";
-
-    const metadata = getWorkflowMetadata();
-    console.log(metadata.workflowRunId) // Valid
-
-    await testStep();
-
-    const stepMetadata = getStepMetadata() // Invalid, outside execution context
-}
-
-async function testStep() {
-    "use step"
-
-    const metadata = getStepMetadata()
-    console.log(metadata.stepId)        // Valid, within scope of a step function
-}
-```
-
-### Violating Determinism in Workflows
-
-Workflow functions must contain deterministic behavior in order for the workflow to precisely resume state after some interruption (e.g. through errors, or suspending through `sleep`).
-
-Using non-deterministic functions inside workflow functions directly can have un-predictable behavior.
-
-If non-deterministic behavior is intended, it's important to move that to step functions.
-
-```typescript lineNumbers
-// Bad - in workflow
-export async function myWorkflow() {
-  "use workflow";
-  const id = Math.random(); // Seeded per workflow
-  const now = Date.now();   // Fixed (then incremented)
-}
-
-// Good - in step
-async function generateId() {
-  "use step";
-  return Math.random(); // Unseeded, normal behavior
-}
-
-export async function myWorkflow() {
-  "use workflow";
-  const id = await generateId();
-}
-```
-
-From this example:
-
-* `Math.random()` is seeded per workflow in order to ensure determinism.
-* `Date.now()` is fixed then incremented throughout the lifetime of the workflow after completed steps.
-
----
-
-## Resources
+## Learn More
 
 * [API Reference](/docs/api-reference) - Complete API documentation
 * [Concepts](/docs/foundations/concepts) - Architecture and core concepts

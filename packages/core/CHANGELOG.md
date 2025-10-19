@@ -1,5 +1,78 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.44
+
+### Patch Changes
+
+- 743923c: Fix core/observability and core/parse-name export for node compatibility
+
+## 0.0.1-alpha.43
+
+### Patch Changes
+
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- Updated dependencies [e81f3ce]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.14
+  - @vercel/workflow-world@0.0.1-alpha.10
+  - @vercel/workflow-world-vercel@0.0.1-alpha.17
+
+## 0.0.1-alpha.42
+
+### Patch Changes
+
+- Updated dependencies [1214755]
+- Updated dependencies [314f0fe]
+  - @vercel/workflow-world-embedded@0.0.1-alpha.13
+  - @vercel/workflow-world-vercel@0.0.1-alpha.16
+  - @vercel/workflow-world@0.0.1-alpha.9
+
+## 0.0.1-alpha.41
+
+### Patch Changes
+
+- ad9bdbd: Align versions across packages
+- Updated dependencies [ad9bdbd]
+  - @vercel/workflow-errors@0.0.1-alpha.8
+  - @vercel/workflow-world@0.0.1-alpha.8
+  - @vercel/workflow-world-embedded@0.0.1-alpha.12
+  - @vercel/workflow-world-vercel@0.0.1-alpha.15
+
+## 0.0.1-alpha.40
+
+### Patch Changes
+
+- 0146cb9: Add default fetch in workflow vm to throw error
+- b0641ee: Fix step/run name display after convention change
+- cdfb910: Implement `Response.redirect()` inside the workflow context
+- Updated dependencies [0146cb9]
+  - @vercel/workflow-errors@0.0.1-alpha.7
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.14
+
+## 0.0.1-alpha.39
+
+### Patch Changes
+
+- b15a64f: Add webhook response customization options
+- 2ff07d8: Support `Request` and `Response` constructors in workflow functions
+- Updated dependencies [1853724]
+- Updated dependencies [b15a64f]
+- Updated dependencies [b15a64f]
+  - @vercel/workflow-errors@0.0.1-alpha.6
+  - @vercel/workflow-world@0.0.1-alpha.7
+  - @vercel/workflow-world-embedded@0.0.1-alpha.11
+  - @vercel/workflow-world-vercel@0.0.1-alpha.13
+
+## 0.0.1-alpha.38
+
+### Patch Changes
+
+- 4effcbd: Add "getReadable" method to Run object
+- b0e8a6b: nit: Better error message
+- 5924311: make workflow name machine readable
+- Updated dependencies [62c6f6b]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.12
+
 ## 0.0.1-alpha.37
 
 ### Patch Changes

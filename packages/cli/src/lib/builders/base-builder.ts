@@ -15,6 +15,9 @@ import { createSwcPlugin } from './swc-esbuild-plugin.js';
 
 const enhancedResolve = promisify(enhancedResolveOriginal);
 
+const EMIT_SOURCEMAPS_FOR_DEBUGGING =
+  process.env.WORKFLOW_EMIT_SOURCEMAPS_FOR_DEBUGGING === '1';
+
 export abstract class BaseBuilder {
   protected config: WorkflowConfig;
 
@@ -131,7 +134,7 @@ export abstract class BaseBuilder {
         write: false,
         outdir,
         bundle: true,
-        sourcemap: false,
+        sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
         absWorkingDir: this.config.workingDir,
         logLevel: 'silent',
       });
@@ -139,7 +142,7 @@ export abstract class BaseBuilder {
 
     console.log(
       `Discovering workflow directives`,
-      Date.now() - discoverStart + 'ms'
+      `${Date.now() - discoverStart}ms`
     );
 
     this.discoveredEntries.set(inputs, state);
@@ -219,7 +222,7 @@ export abstract class BaseBuilder {
     outfile: string;
     format?: 'cjs' | 'esm';
     externalizeNonSteps?: boolean;
-  }): Promise<void | esbuild.BuildContext> {
+  }): Promise<esbuild.BuildContext | undefined> {
     // These need to handle watching for dev to scan for
     // new entries and changes to existing ones
     const { discoveredSteps: stepFiles } = await this.discoverEntries(
@@ -283,7 +286,7 @@ export abstract class BaseBuilder {
       minify: false,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       // TODO: investigate proper source map support
-      sourcemap: false,
+      sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
       plugins: [
         createSwcPlugin({
           mode: 'step',
@@ -307,7 +310,7 @@ export abstract class BaseBuilder {
     const stepsResult = await esbuildCtx.rebuild();
 
     this.logEsbuildMessages(stepsResult, 'steps bundle creation');
-    console.log('Created steps bundle', Date.now() - stepsBundleStart + 'ms');
+    console.log('Created steps bundle', `${Date.now() - stepsBundleStart}ms`);
 
     const partialWorkflowManifest = {
       steps: workflowManifest.steps,
@@ -389,7 +392,7 @@ export abstract class BaseBuilder {
       keepNames: true,
       minify: false,
       // TODO: investigate proper source map support
-      sourcemap: false,
+      sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
       resolveExtensions: ['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs'],
       plugins: [
         createSwcPlugin({
@@ -408,7 +411,7 @@ export abstract class BaseBuilder {
     this.logEsbuildMessages(interimBundle, 'intermediate workflow bundle');
     console.log(
       'Created intermediate workflow bundle',
-      Date.now() - bundleStartTime + 'ms'
+      `${Date.now() - bundleStartTime}ms`
     );
     const partialWorkflowManifest = {
       workflows: workflowManifest.workflows,
@@ -490,7 +493,7 @@ export const POST = workflowEntrypoint(workflowCode);`;
         },
         outfile,
         // TODO: investigate proper source map support
-        sourcemap: false,
+        sourcemap: EMIT_SOURCEMAPS_FOR_DEBUGGING,
         absWorkingDir: this.config.workingDir,
         bundle: true,
         format,
@@ -505,7 +508,7 @@ export const POST = workflowEntrypoint(workflowCode);`;
       this.logEsbuildMessages(finalWorkflowResult, 'final workflow bundle');
       console.log(
         'Created final workflow bundle',
-        Date.now() - bundleStartTime + 'ms'
+        `${Date.now() - bundleStartTime}ms`
       );
     };
     await bundleFinal(interimBundle.outputFiles[0].text);
@@ -594,13 +597,14 @@ async function handler(request) {
     return new Response('Missing token', { status: 400 });
   }
 
-  const response = await resumeWebhook(token, request);
-
-  if (!response) {
+  try {
+    const response = await resumeWebhook(token, request);
+    return response;
+  } catch (error) {
+    // TODO: differentiate between invalid token and other errors
+    console.error('Error during resumeWebhook', error);
     return new Response(null, { status: 404 });
   }
-
-  return response;
 }
 
 export const GET = handler;

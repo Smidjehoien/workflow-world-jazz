@@ -1,11 +1,11 @@
 'use client';
 
+import { parseStepName } from '@vercel/workflow-core/parse-name';
 import { Radio } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useStep } from '@/hooks/use-api';
 import type { WorldConfig } from '@/lib/config-world';
-import { getResourceName } from '@/lib/resource-name';
 import { formatDuration } from '@/lib/utils';
 import { JsonView } from '../display-utils/json-view';
 import { RelativeTime } from '../display-utils/relative-time';
@@ -62,7 +62,7 @@ export function StepDetailSidebar({
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Step Name</div>
-                <div>{getResourceName(step.stepName)}</div>
+                <div>{parseStepName(step.stepName)?.shortName || '?'}</div>
               </div>
               <div>
                 <div className="text-sm text-muted-foreground">Status</div>

@@ -1,8 +1,8 @@
 'use client';
-import type { ComponentProps } from 'react';
-import { usePathname } from 'next/navigation';
-import { isActive } from '../../../lib/is-active';
 import Link from 'fumadocs-core/link';
+import { usePathname } from 'next/navigation';
+import type { ComponentProps } from 'react';
+import { isActive } from '../../../lib/is-active';
 import type { BaseLinkType } from './index';
 
 export function BaseLinkItem({

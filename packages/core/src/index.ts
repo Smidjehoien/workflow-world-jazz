@@ -4,6 +4,10 @@
  * into the final user bundles. Logic for running/handling steps/workflows
  * should live in runtime. Eventually these might be separate packages
  * `workflow` and `workflow/runtime`?
+ *
+ * Everything here will get re-exported under the 'workflow' top level package.
+ * This should be a minimal set of APIs so **do not anything here** unless it's
+ * needed for userland workflow code.
  */
 
 export {
@@ -21,7 +25,6 @@ export {
   type WebhookOptions,
 } from './create-hook.js';
 export { defineHook } from './define-hook.js';
-export { createWorld, getWorld, setWorld } from './runtime/world.js';
 export {
   getStepMetadata,
   type StepMetadata,

@@ -8,17 +8,22 @@ import { chat } from '@/workflows/chat';
 //export const maxDuration = 8;
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  try {
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
-  const run = await start(chat, [messages]);
-  const workflowStream = run.readable;
+    const run = await start(chat, [messages]);
+    const workflowStream = run.readable;
 
-  return createUIMessageStreamResponse({
-    stream: workflowStream,
-    headers: {
-      // The workflow run ID is stored into `localStorage` on the client side,
-      // which influences the `resume` flag in the `useChat` hook.
-      'x-workflow-run-id': run.runId,
-    },
-  });
+    return createUIMessageStreamResponse({
+      stream: workflowStream,
+      headers: {
+        // The workflow run ID is stored into `localStorage` on the client side,
+        // which influences the `resume` flag in the `useChat` hook.
+        'x-workflow-run-id': run.runId,
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
 }

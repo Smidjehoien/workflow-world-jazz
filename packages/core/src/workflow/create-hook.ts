@@ -1,6 +1,7 @@
 import type {
   Hook,
   HookOptions,
+  RequestWithResponse,
   Webhook,
   WebhookOptions,
 } from '../create-hook.js';
@@ -20,9 +21,25 @@ export function createHook<T = any>(options?: HookOptions): Hook<T> {
   return createHookFn(options);
 }
 
-export function createWebhook(options?: WebhookOptions): Webhook {
+export function createWebhook(
+  options: WebhookOptions & { respondWith: 'manual' }
+): Webhook<RequestWithResponse>;
+export function createWebhook(options?: WebhookOptions): Webhook<Request>;
+export function createWebhook(
+  options?: WebhookOptions
+): Webhook<Request> | Webhook<RequestWithResponse> {
+  const { respondWith, ...rest } = options ?? {};
+  let metadata: Pick<WebhookOptions, 'respondWith'> | undefined;
+  if (typeof respondWith !== 'undefined') {
+    metadata = { respondWith };
+  }
+
+  const hook = createHook({ ...rest, metadata }) as
+    | Webhook<Request>
+    | Webhook<RequestWithResponse>;
+
   const { url } = getWorkflowMetadata();
-  const hook = createHook(options) as Webhook;
   hook.url = `${url}/.well-known/workflow/v1/webhook/${encodeURIComponent(hook.token)}`;
+
   return hook;
 }
