@@ -1723,7 +1723,7 @@ describe('Jazz Storage', () => {
         const created = await storage.hooks.create(testRunId, {
           hookId: 'lifecycle-hook',
           token: 'lifecycle-token',
-          response: { message: 'Initial response' },
+          metadata: { response: { message: 'Initial response' } },
         });
 
         expect(created.hookId).toBe('lifecycle-hook');
@@ -1783,11 +1783,13 @@ describe('Jazz Storage', () => {
         const complexHook = await storage.hooks.create(testRunId, {
           hookId: 'complex-hook',
           token: 'complex-token',
-          response: {
-            nested: {
-              deeply: {
-                value: 42,
-                array: [1, 2, { mixed: 'content' }],
+          metadata: {
+            response: {
+              nested: {
+                deeply: {
+                  value: 42,
+                  array: [1, 2, { mixed: 'content' }],
+                },
               },
             },
           },

@@ -307,7 +307,7 @@ describe('Storage', () => {
         expect(step.output).toBeUndefined();
         expect(step.error).toBeUndefined();
         expect(step.errorCode).toBeUndefined();
-        expect(step.attempt).toBe(1);
+        expect(step.attempt).toBe(0);
         expect(step.startedAt).toBeUndefined();
         expect(step.completedAt).toBeUndefined();
         expect(step.createdAt).toBeInstanceOf(Date);
@@ -419,7 +419,6 @@ describe('Storage', () => {
         });
 
         const updated = await storage.steps.update(testRunId, 'step_123', {
-          // @ts-expect-error - attempt is not typed
           attempt: 2,
         });
 
@@ -731,7 +730,7 @@ describe('Storage', () => {
         await storage.events.create(testRunId, {
           eventType: 'step_retrying' as const,
           correlationId,
-          eventData: { error: 'timeout', attempt: 1 },
+          eventData: { attempt: 1 },
         });
 
         await new Promise((resolve) => setTimeout(resolve, 2));

@@ -117,12 +117,24 @@ export function createRunsStorage(drizzle: Drizzle): Storage['runs'] {
       return compact(value);
     },
     async update(id, data) {
+      // Fetch current run to check if startedAt is already set
+      const [currentRun] = await drizzle
+        .select()
+        .from(runs)
+        .where(eq(runs.runId, id))
+        .limit(1);
+
+      if (!currentRun) {
+        throw new WorkflowAPIError(`Run not found: ${id}`, { status: 404 });
+      }
+
       const updates: Partial<typeof runs._.inferInsert> = {
         ...data,
         output: data.output as SerializedContent,
       };
 
-      if (data.status === 'running') {
+      // Only set startedAt the first time transitioning to 'running'
+      if (data.status === 'running' && !currentRun.startedAt) {
         updates.startedAt = new Date();
       }
       if (
@@ -364,12 +376,26 @@ export function createStepsStorage(drizzle: Drizzle): Storage['steps'] {
       return compact(value);
     },
     async update(runId, stepId, data) {
+      // Fetch current step to check if startedAt is already set
+      const [currentStep] = await drizzle
+        .select()
+        .from(steps)
+        .where(and(eq(steps.stepId, stepId), eq(steps.runId, runId)))
+        .limit(1);
+
+      if (!currentStep) {
+        throw new WorkflowAPIError(`Step not found: ${stepId}`, {
+          status: 404,
+        });
+      }
+
       const updates: Partial<typeof steps._.inferInsert> = {
         ...data,
         output: data.output as SerializedContent,
       };
       const now = new Date();
-      if (data.status === 'running') {
+      // Only set startedAt the first time the step transitions to 'running'
+      if (data.status === 'running' && !currentStep.startedAt) {
         updates.startedAt = now;
       }
       if (data.status === 'completed' || data.status === 'failed') {
