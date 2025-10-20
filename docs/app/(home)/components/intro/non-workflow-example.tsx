@@ -2,7 +2,7 @@
 
 import NumberFlow from '@number-flow/react';
 import { DynamicCodeBlock } from 'fumadocs-ui/components/dynamic-codeblock';
-import { CheckIcon, Loader2Icon, XIcon } from 'lucide-react';
+import { CheckIcon, Loader2Icon, XIcon, RefreshCwIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -21,12 +21,12 @@ const Loading = (
 );
 const Success = (
   <div className="bg-green-500 size-[13px] rounded-full flex items-center justify-center">
-    <CheckIcon className="size-[10px] text-white" />
+    <CheckIcon className="size-[10px] text-[var(--background)]" />
   </div>
 );
 const Error = (
   <div className="bg-red-500 size-[13px] rounded-full flex items-center justify-center">
-    <XIcon className="size-[10px] text-white" />
+    <XIcon className="size-[10px] text-[var(--background)]" />
   </div>
 );
 
@@ -160,12 +160,12 @@ export const NonWorkflowExample = () => {
             onClick={handleRetry}
             disabled={lineStates[2] !== 'error'}
             variant="outline"
-            size="sm"
+            size="lg"
           >
-            Retry
+            <RefreshCwIcon className="size-[16px]" /> Retry
           </Button>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="text-base text-foreground">
           <NumberFlow value={totalTokens} suffix=" tokens" />
         </div>
       </div>

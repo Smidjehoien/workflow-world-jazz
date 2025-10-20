@@ -166,10 +166,6 @@
   @apply hidden!;
 }
 
-#nd-nav {
-  @apply bg-sidebar!;
-}
-
 #nd-subnav [data-active="true"] {
   @apply font-medium text-fd-foreground;
 }
@@ -179,7 +175,7 @@
 }
 
 #nd-docs-layout {
-  @apply container mx-auto p-0;
+  @apply mx-0 sm:mx-6 xl:mx-auto p-0 max-w-[1400px];
 }
 
 #nd-tocnav {

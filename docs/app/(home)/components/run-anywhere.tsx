@@ -1,7 +1,7 @@
 export const RunAnywhere = () => (
   <div className="p-8 sm:p-12 grid gap-12">
     <div className="max-w-3xl text-balance grid gap-2">
-      <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
+      <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-[40px]">
         Run Anywhere, No Lock‑In
       </h2>
       <p className="text-balance text-lg text-muted-foreground">

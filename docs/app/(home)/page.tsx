@@ -22,7 +22,7 @@ const Home = () => (
     <div className="grid divide-y border-y sm:border-x">
       <Intro />
       <Implementation />
-      <div className="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
+      <div className="grid lg:grid-cols-2 divide-y md:divide-y-0 md:divide-x">
         <Observability />
         <Frameworks />
       </div>

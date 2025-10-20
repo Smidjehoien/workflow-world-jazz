@@ -117,6 +117,29 @@ export const Svelte = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
+export const SvelteGray = (props: ComponentProps<'svg'>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    xmlnsXlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    x="0px"
+    y="0px"
+    viewBox="0 0 98.1 118"
+    xmlSpace="preserve"
+    {...props}
+  >
+    <title>Svelte</title>
+    <path
+      fill="var(--color-muted-foreground)"
+      d="M91.8,15.6C80.9-0.1,59.2-4.7,43.6,5.2L16.1,22.8C8.6,27.5,3.4,35.2,1.9,43.9c-1.3,7.3-0.2,14.8,3.3,21.3  c-2.4,3.6-4,7.6-4.7,11.8c-1.6,8.9,0.5,18.1,5.7,25.4c11,15.7,32.6,20.3,48.2,10.4l27.5-17.5c7.5-4.7,12.7-12.4,14.2-21.1  c1.3-7.3,0.2-14.8-3.3-21.3c2.4-3.6,4-7.6,4.7-11.8C99.2,32.1,97.1,22.9,91.8,15.6"
+    />
+    <path
+      fill="var(--color-background)"
+      d="M40.9,103.9c-8.9,2.3-18.2-1.2-23.4-8.7c-3.2-4.4-4.4-9.9-3.5-15.3c0.2-0.9,0.4-1.7,0.6-2.6l0.5-1.6l1.4,1  c3.3,2.4,6.9,4.2,10.8,5.4l1,0.3l-0.1,1c-0.1,1.4,0.3,2.9,1.1,4.1c1.6,2.3,4.4,3.4,7.1,2.7c0.6-0.2,1.2-0.4,1.7-0.7L65.5,72  c1.4-0.9,2.3-2.2,2.6-3.8c0.3-1.6-0.1-3.3-1-4.6c-1.6-2.3-4.4-3.3-7.1-2.6c-0.6,0.2-1.2,0.4-1.7,0.7l-10.5,6.7  c-1.7,1.1-3.6,1.9-5.6,2.4c-8.9,2.3-18.2-1.2-23.4-8.7c-3.1-4.4-4.4-9.9-3.4-15.3c0.9-5.2,4.1-9.9,8.6-12.7l27.5-17.5  c1.7-1.1,3.6-1.9,5.6-2.5c8.9-2.3,18.2,1.2,23.4,8.7c3.2,4.4,4.4,9.9,3.5,15.3c-0.2,0.9-0.4,1.7-0.7,2.6l-0.5,1.6l-1.4-1  c-3.3-2.4-6.9-4.2-10.8-5.4l-1-0.3l0.1-1c0.1-1.4-0.3-2.9-1.1-4.1c-1.6-2.3-4.4-3.3-7.1-2.6c-0.6,0.2-1.2,0.4-1.7,0.7L32.4,46.1  c-1.4,0.9-2.3,2.2-2.6,3.8s0.1,3.3,1,4.6c1.6,2.3,4.4,3.3,7.1,2.6c0.6-0.2,1.2-0.4,1.7-0.7l10.5-6.7c1.7-1.1,3.6-1.9,5.6-2.5  c8.9-2.3,18.2,1.2,23.4,8.7c3.2,4.4,4.4,9.9,3.5,15.3c-0.9,5.2-4.1,9.9-8.6,12.7l-27.5,17.5C44.8,102.5,42.9,103.3,40.9,103.9"
+    />
+  </svg>
+);
+
 export const Nuxt = (props: ComponentProps<'svg'>) => (
   <svg
     viewBox="0 0 424 283"
@@ -128,6 +151,21 @@ export const Nuxt = (props: ComponentProps<'svg'>) => (
     <path
       d="M237.44 282.667H394.32C399.326 282.667 404.118 280.908 408.453 278.427C412.789 275.946 417.258 272.831 419.76 268.533C422.262 264.236 424.002 259.36 424 254.399C423.998 249.437 422.266 244.563 419.76 240.268L313.76 57.947C311.258 53.65 308.201 50.534 303.867 48.053C299.532 45.573 293.325 43.813 288.32 43.813C283.315 43.813 278.521 45.573 274.187 48.053C269.852 50.534 266.795 53.65 264.293 57.947L237.44 104.587L183.733 14.13C181.229 9.834 178.176 5.307 173.84 2.827C169.504 0.346004 164.713 0 159.707 0C154.701 0 149.909 0.346004 145.573 2.827C141.238 5.307 136.771 9.834 134.267 14.13L2.8267 240.268C0.320798 244.563 0.00219952 249.437 -4.78655e-07 254.399C-0.00220048 259.36 0.324598 264.235 2.8267 268.533C5.3288 272.83 9.7979 275.946 14.1333 278.427C18.4688 280.908 23.2603 282.667 28.2667 282.667H127.2C166.401 282.667 194.934 265.082 214.827 231.787L262.88 148.4L288.32 104.587L366.053 237.44H262.88L237.44 282.667ZM125.787 237.44H56.533L159.707 59.36L212 148.4L177.361 208.784C164.151 230.387 149.089 237.44 125.787 237.44Z"
       fill="#00DC82"
+    />
+  </svg>
+);
+
+export const NuxtGray = (props: ComponentProps<'svg'>) => (
+  <svg
+    viewBox="0 0 424 283"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    {...props}
+  >
+    <title>Nuxt</title>
+    <path
+      d="M237.44 282.667H394.32C399.326 282.667 404.118 280.908 408.453 278.427C412.789 275.946 417.258 272.831 419.76 268.533C422.262 264.236 424.002 259.36 424 254.399C423.998 249.437 422.266 244.563 419.76 240.268L313.76 57.947C311.258 53.65 308.201 50.534 303.867 48.053C299.532 45.573 293.325 43.813 288.32 43.813C283.315 43.813 278.521 45.573 274.187 48.053C269.852 50.534 266.795 53.65 264.293 57.947L237.44 104.587L183.733 14.13C181.229 9.834 178.176 5.307 173.84 2.827C169.504 0.346004 164.713 0 159.707 0C154.701 0 149.909 0.346004 145.573 2.827C141.238 5.307 136.771 9.834 134.267 14.13L2.8267 240.268C0.320798 244.563 0.00219952 249.437 -4.78655e-07 254.399C-0.00220048 259.36 0.324598 264.235 2.8267 268.533C5.3288 272.83 9.7979 275.946 14.1333 278.427C18.4688 280.908 23.2603 282.667 28.2667 282.667H127.2C166.401 282.667 194.934 265.082 214.827 231.787L262.88 148.4L288.32 104.587L366.053 237.44H262.88L237.44 282.667ZM125.787 237.44H56.533L159.707 59.36L212 148.4L177.361 208.784C164.151 230.387 149.089 237.44 125.787 237.44Z"
+      fill="var(--color-muted-foreground)"
     />
   </svg>
 );
@@ -144,6 +182,26 @@ export const Hono = (props: ComponentProps<'svg'>) => (
       <linearGradient id="a" x2="0%" y2="100%">
         <stop stopColor="#F84" />
         <stop offset="100%" stopColor="#F30" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
+export const HonoGray = (props: ComponentProps<'svg'>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 76 98" {...props}>
+    <title>Hono</title>
+    <path
+      fill="url(#agray)"
+      d="m11 25 7 9s9-18 22-34c17 20 36 48 36 64 0 20-19 34-37 34C17 98 0 81 0 61c0-6 3-24 11-36Z"
+    />
+    <path
+      fill="var(--color-background)"
+      d="M39 21c47 51 14 66 0 66-11 0-51-11 0-66Z"
+    />
+    <defs>
+      <linearGradient id="agray" x2="0%" y2="100%">
+        <stop stopColor="var(--color-muted-foreground)" />
+        <stop offset="100%" stopColor="var(--color-muted-foreground)" />
       </linearGradient>
     </defs>
   </svg>
@@ -250,6 +308,118 @@ export const Bun = (props: ComponentProps<'svg'>) => (
   </svg>
 );
 
+export const BunGray = (props: ComponentProps<'svg'>) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    id="Bun"
+    viewBox="0 0 80 70"
+    {...props}
+  >
+    <title>Bun</title>
+    <path
+      fill="var(--color-muted-foreground)"
+      id="Shadow"
+      d="M71.09,20.74c-.16-.17-.33-.34-.5-.5s-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5-.33-.34-.5-.5A26.46,26.46,0,0,1,75.5,35.7c0,16.57-16.82,30.05-37.5,30.05-11.58,0-21.94-4.23-28.83-10.86l.5.5.5.5.5.5.5.5.5.5.5.5.5.5C19.55,65.3,30.14,69.75,42,69.75c20.68,0,37.5-13.48,37.5-30C79.5,32.69,76.46,26,71.09,20.74Z"
+    />
+    <g id="Body">
+      <path
+        id="Background"
+        d="M73,35.7c0,15.21-15.67,27.54-35,27.54S3,50.91,3,35.7C3,26.27,9,17.94,18.22,13S33.18,3,38,3s8.94,4.13,19.78,10C67,17.94,73,26.27,73,35.7Z"
+        fill="var(--color-background)"
+      />
+      <path
+        id="Bottom_Shadow"
+        data-name="Bottom Shadow"
+        d="M73,35.7a21.67,21.67,0,0,0-.8-5.78c-2.73,33.3-43.35,34.9-59.32,24.94A40,40,0,0,0,38,63.24C57.3,63.24,73,50.89,73,35.7Z"
+        fill="var(--color-muted-foreground)"
+        opacity={0.1}
+      />
+      <path
+        id="Light_Shine"
+        data-name="Light Shine"
+        d="M24.53,11.17C29,8.49,34.94,3.46,40.78,3.45A9.29,9.29,0,0,0,38,3c-2.42,0-5,1.25-8.25,3.13-1.13.66-2.3,1.39-3.54,2.15-2.33,1.44-5,3.07-8,4.7C8.69,18.13,3,26.62,3,35.7c0,.4,0,.8,0,1.19C9.06,15.48,20.07,13.85,24.53,11.17Z"
+        fill="var(--color-muted-foreground)"
+        opacity={0.1}
+      />
+      <path
+        id="Top"
+        d="M35.12,5.53A16.41,16.41,0,0,1,29.49,18c-.28.25-.06.73.3.59,3.37-1.31,7.92-5.23,6-13.14C35.71,5,35.12,5.12,35.12,5.53Zm2.27,0A16.24,16.24,0,0,1,39,19c-.12.35.31.65.55.36C41.74,16.56,43.65,11,37.93,5,37.64,4.74,37.19,5.14,37.39,5.49Zm2.76-.17A16.42,16.42,0,0,1,47,17.12a.33.33,0,0,0,.65.11c.92-3.49.4-9.44-7.17-12.53C40.08,4.54,39.82,5.08,40.15,5.32ZM21.69,15.76a16.94,16.94,0,0,0,10.47-9c.18-.36.75-.22.66.18-1.73,8-7.52,9.67-11.12,9.45C21.32,16.4,21.33,15.87,21.69,15.76Z"
+        fill="var(--color-background)"
+        style={{ fillRule: 'evenodd' }}
+      />
+      <path
+        id="Outline"
+        d="M38,65.75C17.32,65.75.5,52.27.5,35.7c0-10,6.18-19.33,16.53-24.92,3-1.6,5.57-3.21,7.86-4.62,1.26-.78,2.45-1.51,3.6-2.19C32,1.89,35,.5,38,.5s5.62,1.2,8.9,3.14c1,.57,2,1.19,3.07,1.87,2.49,1.54,5.3,3.28,9,5.27C69.32,16.37,75.5,25.69,75.5,35.7,75.5,52.27,58.68,65.75,38,65.75ZM38,3c-2.42,0-5,1.25-8.25,3.13-1.13.66-2.3,1.39-3.54,2.15-2.33,1.44-5,3.07-8,4.7C8.69,18.13,3,26.62,3,35.7,3,50.89,18.7,63.25,38,63.25S73,50.89,73,35.7C73,26.62,67.31,18.13,57.78,13,54,11,51.05,9.12,48.66,7.64c-1.09-.67-2.09-1.29-3-1.84C42.63,4,40.42,3,38,3Z"
+        fill="var(--color-muted-foreground)"
+      />
+    </g>
+    <g id="Mouth">
+      <g id="Background-2" data-name="Background">
+        <path
+          d="M45.05,43a8.93,8.93,0,0,1-2.92,4.71,6.81,6.81,0,0,1-4,1.88A6.84,6.84,0,0,1,34,47.71,8.93,8.93,0,0,1,31.12,43a.72.72,0,0,1,.8-.81H44.26A.72.72,0,0,1,45.05,43Z"
+          fill="var(--color-muted-foreground)"
+          opacity={0.5}
+        />
+      </g>
+      <g id="Tongue">
+        <path
+          id="Background-3"
+          data-name="Background"
+          d="M34,47.79a6.91,6.91,0,0,0,4.12,1.9,6.91,6.91,0,0,0,4.11-1.9,10.63,10.63,0,0,0,1-1.07,6.83,6.83,0,0,0-4.9-2.31,6.15,6.15,0,0,0-5,2.78C33.56,47.4,33.76,47.6,34,47.79Z"
+          fill="var(--color-muted-foreground)"
+          opacity={0.5}
+        />
+        <path
+          id="Outline-2"
+          data-name="Outline"
+          d="M34.16,47a5.36,5.36,0,0,1,4.19-2.08,6,6,0,0,1,4,1.69c.23-.25.45-.51.66-.77a7,7,0,0,0-4.71-1.93,6.36,6.36,0,0,0-4.89,2.36A9.53,9.53,0,0,0,34.16,47Z"
+          fill="var(--color-muted-foreground)"
+        />
+      </g>
+      <path
+        id="Outline-3"
+        data-name="Outline"
+        d="M38.09,50.19a7.42,7.42,0,0,1-4.45-2,9.52,9.52,0,0,1-3.11-5.05,1.2,1.2,0,0,1,.26-1,1.41,1.41,0,0,1,1.13-.51H44.26a1.44,1.44,0,0,1,1.13.51,1.19,1.19,0,0,1,.25,1h0a9.52,9.52,0,0,1-3.11,5.05A7.42,7.42,0,0,1,38.09,50.19Zm-6.17-7.4c-.16,0-.2.07-.21.09a8.29,8.29,0,0,0,2.73,4.37A6.23,6.23,0,0,0,38.09,49a6.28,6.28,0,0,0,3.65-1.73,8.3,8.3,0,0,0,2.72-4.37.21.21,0,0,0-.2-.09Z"
+        fill="var(--color-muted-foreground)"
+      />
+    </g>
+    <g id="Face">
+      <ellipse
+        id="Right_Blush"
+        data-name="Right Blush"
+        cx="53.22"
+        cy="40.18"
+        rx="5.85"
+        ry="3.44"
+        fill="var(--color-muted-foreground)"
+        opacity={0.3}
+      />
+      <ellipse
+        id="Left_Bluch"
+        data-name="Left Bluch"
+        cx="22.95"
+        cy="40.18"
+        rx="5.85"
+        ry="3.44"
+        fill="var(--color-muted-foreground)"
+        opacity={0.3}
+      />
+      <path
+        id="Eyes"
+        d="M25.7,38.8a5.51,5.51,0,1,0-5.5-5.51A5.51,5.51,0,0,0,25.7,38.8Zm24.77,0A5.51,5.51,0,1,0,45,33.29,5.5,5.5,0,0,0,50.47,38.8Z"
+        style={{ fillRule: 'evenodd' }}
+        fill="var(--color-muted-foreground)"
+      />
+      <path
+        id="Iris"
+        d="M24,33.64a2.07,2.07,0,1,0-2.06-2.07A2.07,2.07,0,0,0,24,33.64Zm24.77,0a2.07,2.07,0,1,0-2.06-2.07A2.07,2.07,0,0,0,48.75,33.64Z"
+        style={{ fillRule: 'evenodd' }}
+        fill="var(--color-background)"
+      />
+    </g>
+  </svg>
+);
+
 export const Next = (props: ComponentProps<'svg'>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -279,51 +449,53 @@ export const Frameworks = () => {
 
   return (
     <div className="grid gap-12 p-8 sm:p-12 items-start">
-      <div className="text-balance flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         <h2 className="font-medium text-xl tracking-tight sm:text-2xl text-muted-foreground">
           <span className="text-foreground">Universally compatible</span>. Works
           with the frameworks you already use with more coming soon.
         </h2>
       </div>
-      <div className="grid gap-8">
-        <div className="col-span-2 grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-4 gap-3 place-items-center">
+        <div className="col-span-4 w-full">
           <Badge
             variant="secondary"
             className="rounded-full py-0.5 px-2 col-span-2"
           >
             Available now
           </Badge>
-          <Next className="size-[60px]" />
-          <Nitro className="size-[60px]" />
         </div>
+        <Next className="size-[56px]" />
+        <Nitro className="size-[56px]" />
 
-        <div className="col-span-4 grid grid-cols-4 gap-4">
-          <Badge
-            variant="secondary"
-            className="rounded-full py-0.5 px-2 col-span-4"
-          >
-            Coming soon
-          </Badge>
-          <Svelte
-            className="size-[60px] cursor-pointer"
-            onClick={() => handleRequest('Svelte')}
-          />
-          <Nuxt
-            className="size-[60px] cursor-pointer"
-            onClick={() => handleRequest('Nuxt')}
-          />
-          <Hono
-            className="size-[60px] cursor-pointer"
-            onClick={() => handleRequest('Hono')}
-          />
-          <Bun
-            className="size-[60px] cursor-pointer"
-            onClick={() => handleRequest('Bun')}
-          />
+        <div className="col-span-4 w-full pt-6">
+          <div className="flex flex-row items-center gap-2">
+            <Badge
+              variant="secondary"
+              className="rounded-full py-0.5 px-2 col-span-4"
+            >
+              Coming soon
+            </Badge>
+            <span className="text-xs text-muted-foreground/80 w-full">
+              Click on a framework to request support for it
+            </span>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Click on a framework to request support for it.
-        </p>
+        <div className="group" onClick={() => handleRequest('Svelte')}>
+          <SvelteGray className="size-[48px] cursor-pointer group-hover:hidden opacity-70" />
+          <Svelte className="size-[48px] cursor-pointer hidden group-hover:block" />
+        </div>
+        <div className="group" onClick={() => handleRequest('Nuxt')}>
+          <NuxtGray className="size-[60px] cursor-pointer group-hover:hidden opacity-70" />
+          <Nuxt className="size-[60px] cursor-pointer hidden group-hover:block" />
+        </div>
+        <div className="group" onClick={() => handleRequest('Hono')}>
+          <HonoGray className="size-[48px] cursor-pointer group-hover:hidden opacity-70" />
+          <Hono className="size-[48px] cursor-pointer hidden group-hover:block" />
+        </div>
+        <div className="group" onClick={() => handleRequest('Bun')}>
+          <BunGray className="size-[52px] cursor-pointer group-hover:hidden opacity-70" />
+          <Bun className="size-[52px] cursor-pointer hidden group-hover:block" />
+        </div>
       </div>
     </div>
   );
