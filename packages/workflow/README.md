@@ -2,7 +2,7 @@
   <a href="https://nextjs.org">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="https://placehold.co/128">
-      <img alt="Next.js logo" src="https://placehold.co/128" height="128">
+      <img alt="Workflow DevKit logo" src="https://placehold.co/128" height="128">
     </picture>
   </a>
   <h1>Workflow Development Kit</h1>
@@ -46,6 +46,6 @@ The initial core contributing engineers are
 
 ## Security
 
-If you believe you have found a security vulnerability in Next.js, we encourage you to **_responsibly disclose this and NOT open a public issue_**.
+If you believe you have found a security vulnerability in Workflow DevKit, we encourage you to **_responsibly disclose this and NOT open a public issue_**.
 
 To participate in our Open Source Software Bug Bounty program, please email [responsible.disclosure@vercel.com](mailto:responsible.disclosure@vercel.com). We will add you to the program and provide further instructions for submitting your report.
