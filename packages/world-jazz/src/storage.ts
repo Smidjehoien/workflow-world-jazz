@@ -498,7 +498,7 @@ export const createEventStorage = (
         },
       });
       const eligibleEvents = loadedEvents.filter((je) => je !== null);
-      return paginateItems({
+      const result = paginateItems({
         items: eligibleEvents,
         cursor: params?.pagination?.cursor,
         limit: params?.pagination?.limit,
@@ -506,15 +506,75 @@ export const createEventStorage = (
           items.findIndex((je) => je.$jazz.id === cursor),
         getItemId: (je) => je.$jazz.id,
         transform: toEvent,
+        // Events in chronological order (oldest first) by default,
+        // different from the default for other list calls.
         sortBy: (je) => je.createdAt,
-        sortOrder: params?.pagination?.sortOrder || 'desc',
+        sortOrder: params?.pagination?.sortOrder || 'asc',
       });
+
+      // If resolveData is "none", remove eventData from events
+      if (params.resolveData === 'none') {
+        return {
+          ...result,
+          data: result.data.map((event) => {
+            const { eventData: _eventData, ...rest } = event as any;
+            return rest;
+          }),
+        };
+      }
+
+      return result;
     },
 
     async listByCorrelationId(
-      _params: ListEventsByCorrelationIdParams
+      params: ListEventsByCorrelationIdParams
     ): Promise<PaginatedResponse<Event>> {
-      throw new Error('Not implemented');
+      // We need to inspect all events across all runs
+      const allEvents = (
+        await ensureLoaded({
+          root: {
+            events: {
+              $each: true,
+            },
+          },
+        })
+      ).root.events;
+
+      const eligibleEvents: JazzEvent[] = [];
+      for (const runEvents of Object.values(allEvents)) {
+        for (const je of runEvents) {
+          if (je !== null && je.correlationId === params.correlationId) {
+            eligibleEvents.push(je);
+          }
+        }
+      }
+
+      const result = paginateItems({
+        items: eligibleEvents,
+        cursor: params?.pagination?.cursor,
+        limit: params?.pagination?.limit,
+        findCursorIndex: (items, cursor) =>
+          items.findIndex((je) => je.$jazz.id === cursor),
+        getItemId: (je) => je.$jazz.id,
+        transform: toEvent,
+        // Events in chronological order (oldest first) by default,
+        // different from the default for other list calls.
+        sortBy: (je) => je.createdAt,
+        sortOrder: params?.pagination?.sortOrder || 'asc',
+      });
+
+      // If resolveData is "none", remove eventData from events
+      if (params.resolveData === 'none') {
+        return {
+          ...result,
+          data: result.data.map((event) => {
+            const { eventData: _eventData, ...rest } = event as any;
+            return rest;
+          }),
+        };
+      }
+
+      return result;
     },
   };
 };
