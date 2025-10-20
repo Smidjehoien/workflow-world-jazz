@@ -1,5 +1,24 @@
 # @vercel/workflow-world
 
+## 0.0.1
+
+### Patch Changes
+
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- 689621a: Add initial `Hook` implementation
+- ad9bdbd: Align versions across packages
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- b15a64f: Type `hook.metadata` as `unknown`
+- d34c4ac: Finish removal of old Webhook implementation
+- e8a4949: Package restructure
+- 314f0fe: Simplify hook type inference
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- 1ef8597: Add "detail" user data to `Hook`
+- 59ab1dc: Implement new `Webhook` spec
+- 6c9836d: Runtime: fix attempts not being incremented
+- cd4a41c: extract "world" interface packages
+
 ## 0.0.1-alpha.11
 
 ### Patch Changes

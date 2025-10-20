@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-world-postgres",
-  "version": "0.0.1-alpha.7",
+  "version": "0.0.1",
   "description": "A reference World implementation based on PostgreSQL",
   "type": "module",
   "main": "dist/index.js",

@@ -1,5 +1,216 @@
 # @vercel/workflow-next
 
+## 0.0.1
+
+### Patch Changes
+
+- 1cfee6e: Update to latest website URL
+- 0089ee4: Support src/app directory in next loader
+- 0baf0e3: Rebuild packages
+- 435f44b: Setup the new @vercel/workflow meta package
+- eb7625c: Fix dev env not set in time for webpack
+- d9d7863: Only run workflow build once in Next.js
+- 3bb72a8: Always set embedded env for Next.js'
+- 5f59e7e: Update next loader for single package
+- ff71d4d: Rework bundling steps and discovering workflows
+- aff52c1: Add initial readme instructions
+- beb8848: Fix build showing port error and workflow rebuilding with next start
+- ad9bdbd: Align versions across packages
+- 94567d1: Fix initial workflow bundles build with latest canary
+- 24cbea6: Initial Release
+- ca3cffd: Rework .node external handling
+- a08d6a5: Add private world-jazz package for testing jazz integration
+- 8a80797: Docs: add more troubleshooting instructions
+- 9dffdfb: Cleanup base builder workflow and step entry point import paths
+- 5014b6d: Implement dev watcher for Next.js builder
+- 76f83a9: Mark `.node` files as external during esbuild bundling process for step functions
+- 9281a86: Consolidate some external deps across packages
+- 0b462ea: automatically use embedded queue service on `next dev` and `next start`
+- 9dbb1c9: create an embedded backend for the embedded world
+
+  a `World` now consists of the following sub-interfaces:
+  - Queue (how do we queue jobs?)
+  - Storage (how do we store data?)
+  - Streamer (how do we stream data?)
+  - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
+
+  There are two `World` implementations provided in `core`:
+  - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
+  - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
+
+- cf2979d: Add MIT License
+- 1b3dd56: add nextConfig.workflows.embedded that will be propagated as an env var to the embedded workflow world
+- 7f2fd4d: Add README to all packages
+- d19b423: Update core to use new workflow server implementation
+- 3178863: Add workflow-next to workflow package
+- c7eab04: Upgrade next to 15.5.3
+- d2ef1dd: Add troubleshooting doc for external package
+- 265c34e: Support Next.js apps using the `--turbopack` flag
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- Updated dependencies [dd1c069]
+- Updated dependencies [030e899]
+- Updated dependencies [fe2a430]
+- Updated dependencies [1853724]
+- Updated dependencies [cabc890]
+- Updated dependencies [60f4152]
+- Updated dependencies [a946b38]
+- Updated dependencies [1cfee6e]
+- Updated dependencies [779989f]
+- Updated dependencies [0b2ac90]
+- Updated dependencies [4c4d406]
+- Updated dependencies [0089ee4]
+- Updated dependencies [3a342bb]
+- Updated dependencies [0baf0e3]
+- Updated dependencies [290441b]
+- Updated dependencies [435f44b]
+- Updated dependencies [d4914d7]
+- Updated dependencies [c78c8fa]
+- Updated dependencies [72fb2c1]
+- Updated dependencies [c7f0d52]
+- Updated dependencies [d3fe4ea]
+- Updated dependencies [0b462ea]
+- Updated dependencies [c791360]
+- Updated dependencies [8ed4fb6]
+- Updated dependencies [068add4]
+- Updated dependencies [f55ac2c]
+- Updated dependencies [5dd2a38]
+- Updated dependencies [e9c1c72]
+- Updated dependencies [12cb3fb]
+- Updated dependencies [2507779]
+- Updated dependencies [5d04853]
+- Updated dependencies [b15a64f]
+- Updated dependencies [3ee71fa]
+- Updated dependencies [eed8227]
+- Updated dependencies [ff71d4d]
+- Updated dependencies [91190f3]
+- Updated dependencies [0146cb9]
+- Updated dependencies [2c52144]
+- Updated dependencies [689621a]
+- Updated dependencies [c7b8643]
+- Updated dependencies [7b6679a]
+- Updated dependencies [45671a4]
+- Updated dependencies [38337d2]
+- Updated dependencies [a61eaad]
+- Updated dependencies [aff52c1]
+- Updated dependencies [0d96052]
+- Updated dependencies [045e6e4]
+- Updated dependencies [06b74d2]
+- Updated dependencies [1b3dd56]
+- Updated dependencies [ad9bdbd]
+- Updated dependencies [7f756a2]
+- Updated dependencies [ce2dae6]
+- Updated dependencies [07b3283]
+- Updated dependencies [1b61ef5]
+- Updated dependencies [5fc83a5]
+- Updated dependencies [dfa12ae]
+- Updated dependencies [b152b35]
+- Updated dependencies [ae0cbc0]
+- Updated dependencies [24cbea6]
+- Updated dependencies [7c0f71e]
+- Updated dependencies [24d6712]
+- Updated dependencies [ca3cffd]
+- Updated dependencies [a08d6a5]
+- Updated dependencies [94ee3b3]
+- Updated dependencies [37e6ee8]
+- Updated dependencies [b6fee10]
+- Updated dependencies [6cbb277]
+- Updated dependencies [b8b39e7]
+- Updated dependencies [544055f]
+- Updated dependencies [54d1ec1]
+- Updated dependencies [265c34e]
+- Updated dependencies [4effcbd]
+- Updated dependencies [b0641ee]
+- Updated dependencies [ec41c3c]
+- Updated dependencies [954b621]
+- Updated dependencies [75da34e]
+- Updated dependencies [ed5d90f]
+- Updated dependencies [7b18141]
+- Updated dependencies [45251db]
+- Updated dependencies [9dffdfb]
+- Updated dependencies [b0e8a6b]
+- Updated dependencies [1214755]
+- Updated dependencies [be67661]
+- Updated dependencies [1688890]
+- Updated dependencies [01d3679]
+- Updated dependencies [5014b6d]
+- Updated dependencies [b45e33b]
+- Updated dependencies [7e55d63]
+- Updated dependencies [b35f5f8]
+- Updated dependencies [ca7a43e]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [76f83a9]
+- Updated dependencies [9d4653b]
+- Updated dependencies [d66070f]
+- Updated dependencies [bf0c666]
+- Updated dependencies [9281a86]
+- Updated dependencies [e49500b]
+- Updated dependencies [d412985]
+- Updated dependencies [5acebeb]
+- Updated dependencies [5cb48ec]
+- Updated dependencies [40150b0]
+- Updated dependencies [e8a4949]
+- Updated dependencies [326d01f]
+- Updated dependencies [9dbb1c9]
+- Updated dependencies [a88eeba]
+- Updated dependencies [6cd62d1]
+- Updated dependencies [848b776]
+- Updated dependencies [64cf6f1]
+- Updated dependencies [cdfb910]
+- Updated dependencies [743923c]
+- Updated dependencies [2f5b253]
+- Updated dependencies [cf2979d]
+- Updated dependencies [de9b26d]
+- Updated dependencies [7f2fd4d]
+- Updated dependencies [fcc3f5d]
+- Updated dependencies [d808404]
+- Updated dependencies [f56e1e6]
+- Updated dependencies [5a0e901]
+- Updated dependencies [7e1e4cf]
+- Updated dependencies [d19b423]
+- Updated dependencies [eb76cb3]
+- Updated dependencies [b8159cf]
+- Updated dependencies [d338144]
+- Updated dependencies [0a10773]
+- Updated dependencies [af3ca11]
+- Updated dependencies [2fd8dfe]
+- Updated dependencies [5924311]
+- Updated dependencies [705e63c]
+- Updated dependencies [345836a]
+- Updated dependencies [dbb6973]
+- Updated dependencies [fe08f3e]
+- Updated dependencies [e81f3ce]
+- Updated dependencies [1ef8597]
+- Updated dependencies [31f3375]
+- Updated dependencies [47e0ca9]
+- Updated dependencies [3876dab]
+- Updated dependencies [068add4]
+- Updated dependencies [757e454]
+- Updated dependencies [84d7162]
+- Updated dependencies [950d262]
+- Updated dependencies [1fed112]
+- Updated dependencies [bf51020]
+- Updated dependencies [b94f5fc]
+- Updated dependencies [54aaf87]
+- Updated dependencies [265c34e]
+- Updated dependencies [ab7185e]
+- Updated dependencies [466cb68]
+- Updated dependencies [59ab1dc]
+- Updated dependencies [e275561]
+- Updated dependencies [b995531]
+- Updated dependencies [a5197f7]
+- Updated dependencies [a85227c]
+- Updated dependencies [49bf2a5]
+- Updated dependencies [b15a64f]
+- Updated dependencies [2ff07d8]
+- Updated dependencies [f2168a6]
+- Updated dependencies [f63ea6f]
+- Updated dependencies [6c9836d]
+- Updated dependencies [cd4a41c]
+- Updated dependencies [950d262]
+  - @vercel/workflow-core@0.0.1
+  - @vercel/swc-plugin-workflow@0.0.1
+  - @vercel/workflow-cli@0.0.1
+
 ## 0.0.1-alpha.56
 
 ### Patch Changes
@@ -290,14 +501,12 @@
 - 9dbb1c9: create an embedded backend for the embedded world
 
   a `World` now consists of the following sub-interfaces:
-
   - Queue (how do we queue jobs?)
   - Storage (how do we store data?)
   - Streamer (how do we stream data?)
   - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
 
   There are two `World` implementations provided in `core`:
-
   - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
   - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
 
