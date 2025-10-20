@@ -1,5 +1,21 @@
 # @vercel/workflow-errors
 
+## 0.0.1
+
+### Patch Changes
+
+- c781ebe: Re-export errors package in workflow package
+- 1853724: Add docs slug to error message in node module plugin and errors package
+- 1cfee6e: Update to latest website URL
+- 290441b: Add error package to standardize errors
+- 0146cb9: Add default fetch in workflow vm to throw error
+- 045e6e4: Move FatalError and RetryableError from core to errors package
+- ad9bdbd: Align versions across packages
+- e37dc5d: Add `WorkflowRunNotFoundError` error
+- b15a64f: Add new webhook related error slugs
+- 7f2fd4d: Add README to all packages
+- 38aefe6: Fix RetryableError to handle Date object
+
 ## 0.0.1-alpha.8
 
 ### Patch Changes

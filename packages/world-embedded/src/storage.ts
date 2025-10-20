@@ -148,7 +148,8 @@ export function createStorage(basedir: string): Storage {
           updatedAt: now,
         };
 
-        if (data.status === 'running') {
+        // Only set startedAt the first time the run transitions to 'running'
+        if (data.status === 'running' && !updatedRun.startedAt) {
           updatedRun.startedAt = now;
         }
         if (
@@ -225,7 +226,7 @@ export function createStorage(basedir: string): Storage {
           output: undefined,
           error: undefined,
           errorCode: undefined,
-          attempt: 1,
+          attempt: 0,
           startedAt: undefined,
           completedAt: undefined,
           createdAt: now,
@@ -279,7 +280,8 @@ export function createStorage(basedir: string): Storage {
           updatedAt: now,
         };
 
-        if (data.status === 'running') {
+        // Only set startedAt the first time the step transitions to 'running'
+        if (data.status === 'running' && !updatedStep.startedAt) {
           updatedStep.startedAt = now;
         }
         if (data.status === 'completed' || data.status === 'failed') {

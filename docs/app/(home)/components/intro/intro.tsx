@@ -7,34 +7,34 @@ import { WorkflowExample } from './workflow-example';
 
 const tabs = [
   {
-    id: 'without',
-    smallLabel: 'Without WDK',
-    label: 'Without Workflow SDK',
-    children: <NonWorkflowExample />,
-  },
-  {
     id: 'with',
     smallLabel: 'With WDK',
-    label: 'With Workflow SDK',
+    label: 'With Workflow DevKit',
     children: <WorkflowExample />,
+  },
+  {
+    id: 'without',
+    smallLabel: 'Without WDK',
+    label: 'Without Workflow DevKit',
+    children: <NonWorkflowExample />,
   },
 ];
 
 export const Intro = () => (
-  <div className="grid gap-8 p-8 sm:p-12">
-    <div className="text-balance flex flex-col gap-2">
-      <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-4xl">
-        Reliability as code
+  <div className="grid grid-cols-1 lg:grid-cols-[330px_1fr] gap-12 p-8 sm:p-12">
+    <div className=" flex flex-col gap-2">
+      <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl lg:text-[40px]">
+        Reliability-as-code
       </h2>
-      <p className="text-balance text-lg max-w-sm text-muted-foreground">
-        Move from fragile queues and custom retries to durable, resumable code
-        with simple directives.
+      <p className=" text-lg text-muted-foreground md:mt-4">
+        Move from hand-rolled queues and custom retries to durable, resumable
+        code with simple directives.
       </p>
     </div>
     <div className="flex items-center justify-center">
       <Tabs
-        defaultValue={tabs[1].id}
-        className="w-full gap-8"
+        defaultValue={tabs[0].id}
+        className="w-full gap-6"
         onValueChange={(value) => track('Intro tab changed', { tab: value })}
       >
         <TabsList className="w-fit bg-background mx-auto border p-1 rounded-full h-auto">

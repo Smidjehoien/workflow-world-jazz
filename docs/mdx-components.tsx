@@ -2,23 +2,26 @@ import { Heading } from 'fumadocs-ui/components/heading';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import BaseUrl from '@/components/base-url';
+import * as AccordionComponents from '@/components/ui/accordion';
 import * as CalloutComponents from '@/components/ui/callout';
-import * as CardComponents from '@/components/ui/card';
 import { CodeBlock } from '@/components/ui/code-block';
-import * as TabsComponents from '@/components/ui/tabs';
 import { TypeTable } from '@/components/ui/type-table';
 import { TSDoc } from '@/lib/tsdoc';
+import { Step, Steps } from './components/steps';
+import { Badge } from './components/ui/badge';
 import { cn } from './lib/cn';
 
 // use this function to get MDX components, you will need it for rendering MDX
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
+    ...AccordionComponents,
+    Badge,
     BaseUrl,
     TypeTable,
     TSDoc,
     CodeBlock,
-    ...TabsComponents,
-    ...CardComponents,
+    Step,
+    Steps,
     ...CalloutComponents,
     h1: (props) => <Heading as="h1" {...props} />,
     h2: (props) => <Heading as="h2" {...props} />,

@@ -1,5 +1,59 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1
+
+### Patch Changes
+
+- 6c93397: Fix for embedded world pagination
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- 07ebb97: Fix concurrent event writes in embedded world
+- 689621a: Add initial `Hook` implementation
+- f9491a7: Fix race condition in streams implementation
+- ad9bdbd: Align versions across packages
+- 7f756a2: support queue message idempotency, fix storage file overwrites
+  - embedded queue now supports `opts.idempotencyKey` on the `Queue.queue` interface.
+    this means that we don't run the same steps while it's already running.
+  - throw a conflict error `new WorkflowAPIError(msg, { status: 409 })` whenever we try to write
+    to a storage file that already exists, unless we explicitly want to `.update` it. This is
+    required to avoid creating a limbo state in our storage and makes steps work better with idempotency.
+
+- 75da34e: Add hook entity to observability CLI/Web, add hook listing to world interface
+- 7b18141: World config now takes named parameters, and header configuration for vercel was moved into world-vercel
+- 1214755: Improve deeplinking, hook tables, event counting, add events.listByCorrelationId to world
+- 01d3679: Use v1 API endpoint for vercel, add web package, extract shared logic from CLI&web into core package
+- 9281a86: Consolidate some external deps across packages
+- e8a4949: Package restructure
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- 59ab1dc: Implement new `Webhook` spec
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- 6c9836d: Runtime: fix attempts not being incremented
+- cd4a41c: extract "world" interface packages
+- Updated dependencies [dd1c069]
+- Updated dependencies [689621a]
+- Updated dependencies [ad9bdbd]
+- Updated dependencies [75da34e]
+- Updated dependencies [1214755]
+- Updated dependencies [b15a64f]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [e8a4949]
+- Updated dependencies [314f0fe]
+- Updated dependencies [e81f3ce]
+- Updated dependencies [1ef8597]
+- Updated dependencies [59ab1dc]
+- Updated dependencies [6c9836d]
+- Updated dependencies [cd4a41c]
+  - @vercel/workflow-world@0.0.1
+
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-world@0.0.1-alpha.11
+
 ## 0.0.1-alpha.14
 
 ### Patch Changes
@@ -62,7 +116,6 @@
 
 - dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
 - 7f756a2: support queue message idempotency, fix storage file overwrites
-
   - embedded queue now supports `opts.idempotencyKey` on the `Queue.queue` interface.
     this means that we don't run the same steps while it's already running.
 

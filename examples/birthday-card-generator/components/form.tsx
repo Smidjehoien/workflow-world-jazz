@@ -45,7 +45,7 @@ const formSchema = z.object({
     message: 'Please enter a valid email address.',
   }),
   eventDate: z.date({
-    required_error: 'Event date is required.',
+    message: 'Event date is required.',
   }),
   rsvpEmail1: z
     .string()

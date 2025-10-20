@@ -6,6 +6,8 @@ title: "@vercel/workflow"
 
 Core workflow primitives including steps, context management, streaming, webhooks, and error handling.
 
+---
+
 ## Installation
 
 <BaseUrl>
@@ -30,33 +32,35 @@ Core workflow primitives including steps, context management, streaming, webhook
   )}
 </BaseUrl>
 
+---
+
 ## Functions
 
 Workflow contains the following functions you can use inside your workflow functions:
 
 <Cards>
-    <Card href="/docs/api-reference/vercel-workflow-core/get-workflow-metadata" title="getWorkflowMetadata()">
+    <Card href="/docs/api-reference/vercel-workflow/get-workflow-metadata" title="getWorkflowMetadata()">
         A function that returns context about the current workflow execution.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/get-step-metadata" title="getStepMetadata()">
+    <Card href="/docs/api-reference/vercel-workflow/get-step-metadata" title="getStepMetadata()">
         A function that returns context about the current step execution.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/sleep" title="sleep()">
+    <Card href="/docs/api-reference/vercel-workflow/sleep" title="sleep()">
         Sleeping workflows for a specified duration. Deterministic and replay-safe.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/fetch" title="fetch()">
+    <Card href="/docs/api-reference/vercel-workflow/fetch" title="fetch()">
         Make HTTP requests from within a workflow with automatic retry semantics.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/create-hook" title="createHook()">
+    <Card href="/docs/api-reference/vercel-workflow/create-hook" title="createHook()">
         Create a low-level hook to receive arbitrary payloads from external systems.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/define-hook" title="defineHook()">
+    <Card href="/docs/api-reference/vercel-workflow/define-hook" title="defineHook()">
         Type-safe hook helper for consistent payload types.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/create-webhook" title="createWebhook()">
+    <Card href="/docs/api-reference/vercel-workflow/create-webhook" title="createWebhook()">
         Create a webhook that suspends the workflow until an HTTP request is received.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/get-writable" title="getWritable()">
+    <Card href="/docs/api-reference/vercel-workflow/get-writable" title="getWritable()">
         Access the current workflow run's default stream.
     </Card>
 </Cards>
@@ -68,10 +72,10 @@ Workflow contains the following functions you can use inside your workflow funct
 Workflow includes error classes that can be thrown in a workflow or step to change the error exit strategy of a workflow.
 
 <Cards>
-    <Card href="/docs/api-reference/vercel-workflow-core/fatal-error" title="FatalError()">
+    <Card href="/docs/api-reference/vercel-workflow/fatal-error" title="FatalError()">
         When thrown, marks a step as failed and the step is not retried.
     </Card>
-    <Card href="/docs/api-reference/vercel-workflow-core/retryable-error" title="RetryableError()">
+    <Card href="/docs/api-reference/vercel-workflow/retryable-error" title="RetryableError()">
         When thrown, marks a step as retryable with an optional parameter.
     </Card>
 </Cards>

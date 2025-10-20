@@ -11,7 +11,7 @@ import { useTreeContext } from 'fumadocs-ui/contexts/tree';
 import { usePathname } from 'next/navigation';
 import { type ComponentProps, Fragment, type ReactNode, useMemo } from 'react';
 import { cn } from '../../lib/cn';
-import { CopyPageAsMarkdown } from '../copy-page-markdown';
+import { LLMCopyButton, ViewOptions } from '../page-actions';
 
 export interface DocsPageProps {
   toc?: TableOfContents;
@@ -19,79 +19,110 @@ export interface DocsPageProps {
   children: ReactNode;
 }
 
+function findPageFile(tree: PageTree.Root, targetUrl: string): string | null {
+  function search(nodes: PageTree.Node[]): string | null {
+    for (const node of nodes) {
+      if (node.type === 'page' && node.url === targetUrl) {
+        return (node as any).$ref?.file || null;
+      }
+
+      if (node.type === 'folder') {
+        // Check if the folder's index page matches
+        if (node.index && node.index.url === targetUrl) {
+          return (node.index as any).$ref?.file || null;
+        }
+
+        // Recursively search children
+        const result = search(node.children);
+        if (result) return result;
+      }
+    }
+    return null;
+  }
+
+  return search(tree.children);
+}
+
 export function DocsPage({ toc = [], ...props }: DocsPageProps) {
   const { root } = useTreeContext();
   const pathname = usePathname();
-  const breadcrumbItems = useBreadcrumb(pathname, root);
+  const breadcrumbItems = useBreadcrumb(pathname, root, { includePage: true });
 
-  const isIntroduction = pathname.split('/').includes('introduction');
+  const githubFilePath = useMemo(() => {
+    const file = findPageFile(root, pathname);
+    return file || `${pathname.replace('/docs/', '')}.mdx`;
+  }, [root, pathname]);
+
+  const markdownUrl = `/llms.mdx${pathname.replace('/docs', '')}`;
 
   return (
     <AnchorProvider toc={toc}>
       <main className="flex w-full min-w-0 flex-col pt-[var(--fd-nav-height)]">
         <div className="flex flex-row items-center justify-between pr-4">
-          {breadcrumbItems.length > 0 && !isIntroduction ? (
-            <div className="w-full max-w-[860px] px-4 md:mx-auto md:px-6">
-              <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
-                {breadcrumbItems.map((item, i) => (
-                  <Fragment key={i}>
-                    {i !== 0 && (
-                      <svg
-                        className="opacity-50"
-                        fill="none"
-                        height="16"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="16"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    )}
-                    {item.url ? (
-                      <Link
-                        className="transition-colors hover:text-foreground"
-                        href={item.url}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      <span className="text-foreground">{item.name}</span>
-                    )}
-                  </Fragment>
-                ))}
-              </div>
+          <div className="w-full max-w-[860px] px-4 md:mx-auto md:px-6">
+            <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
+              {breadcrumbItems.map((item, i) => (
+                <Fragment key={i}>
+                  {i !== 0 && (
+                    <svg
+                      className="opacity-50"
+                      fill="none"
+                      height="16"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  )}
+                  {item.url ? (
+                    <Link
+                      className="transition-colors hover:text-foreground"
+                      href={item.url}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <span className="text-foreground">{item.name}</span>
+                  )}
+                </Fragment>
+              ))}
             </div>
-          ) : (
-            <div className="w-full max-w-[860px] px-4 text-muted-foreground text-sm md:mx-auto md:px-6">
-              <Link
-                className="transition-colors hover:text-foreground"
-                href="/docs/introduction"
-              >
-                Introduction
-              </Link>
-            </div>
-          )}
-          <CopyPageAsMarkdown />
+          </div>
+          <div className="flex shrink-0 gap-1">
+            <LLMCopyButton markdownUrl={markdownUrl} />
+            <ViewOptions
+              markdownUrl={markdownUrl}
+              githubUrl={`https://github.com/vercel/workflow/blob/main/docs/content/docs/${githubFilePath}`}
+            />
+          </div>
         </div>
         <article className="flex w-full max-w-[860px] flex-1 flex-col gap-6 px-4 pt-4 pb-8 md:mx-auto md:px-6">
           {props.children}
           <Footer />
         </article>
       </main>
-      {toc.length > 0 && (
-        <div className="sticky top-(--fd-nav-height) h-[calc(100dvh-var(--fd-nav-height))] w-[286px] shrink-0 overflow-auto px-4 pt-14 max-xl:hidden">
-          <p className="mb-2 text-fd-foreground text-sm">On this page</p>
-          <div className="flex flex-col">
-            {toc.map((item) => (
-              <TocItem item={item} key={item.url} />
-            ))}
-          </div>
-        </div>
-      )}
+      <div
+        className={cn(
+          'sticky top-(--fd-nav-height) h-[calc(100dvh-var(--fd-nav-height))] w-[286px] shrink-0 overflow-auto px-4 pt-14 max-xl:hidden',
+          toc.length === 0 && 'invisible'
+        )}
+      >
+        {toc.length > 0 && (
+          <>
+            <p className="mb-2 text-fd-foreground text-sm">On this page</p>
+            <div className="flex flex-col">
+              {toc.map((item) => (
+                <TocItem item={item} key={item.url} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </AnchorProvider>
   );
 }

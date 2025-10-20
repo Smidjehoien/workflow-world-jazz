@@ -1,5 +1,17 @@
 # @vercel/workflow-vm
 
+## 0.0.1
+
+### Patch Changes
+
+- 0baf0e3: Rebuild packages
+- 24cbea6: Initial Release
+- 0d96052: Remove `TextEncoderStream`, `TextDecoderStream`, `ReadableStream`, `WritableStream` and `TransformStream` from VM sandbox
+- b34c907: Compile as ESM
+- 9281a86: Consolidate some external deps across packages
+- cf2979d: Add MIT License
+- 7f2fd4d: Add README to all packages
+
 ## 0.0.1-alpha.5
 
 ### Patch Changes

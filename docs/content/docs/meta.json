@@ -4,11 +4,11 @@
     "---",
     "getting-started",
     "foundations",
-    "configuration",
     "how-it-works",
     "observability",
-    "troubleshooting",
-    "self-hosting",
+    "deploying",
+    "errors",
+    "cli-reference",
     "api-reference"
   ]
 }

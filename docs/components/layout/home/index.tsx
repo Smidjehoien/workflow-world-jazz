@@ -81,9 +81,8 @@ export function HomeLayout(
           <Link href="https://vercel.com">
             <svg
               fill="none"
-              height="40"
+              height="18"
               viewBox="0 0 2048 407"
-              width="140"
               xmlns="http://www.w3.org/2000/svg"
             >
               <path
@@ -142,21 +141,18 @@ export function Header({
 
   return (
     <Navbar>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2.5">
         <SidebarToggle />
         <Link href="https://vercel.com">
           <svg
-            className="-translate-y-[0.5px] h-[18px] w-[18px] fill-current"
+            className="fill-current"
             fill="none"
-            height="22"
-            viewBox="0 0 235 203"
+            height="18"
+            viewBox="0 0 75 65"
             xmlns="http://www.w3.org/2000/svg"
           >
             <title>Vercel</title>
-            <path
-              d="M117.082 0L234.164 202.794H0L117.082 0Z"
-              fill="currentColor"
-            />
+            <path d="M37.59.25l36.95 64H.64l36.95-64z" fill="currentColor" />
           </svg>
         </Link>
         <div className="w-4 text-center text-lg text-muted-foreground/25">

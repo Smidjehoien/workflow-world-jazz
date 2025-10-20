@@ -1,5 +1,26 @@
 # @vercel/swc-plugin-workflow
 
+## 0.0.1
+
+### Patch Changes
+
+- 030e899: Dead code elimination v1
+- cabc890: Recursive Dead Code Elimination
+- 435f44b: Setup the new @vercel/workflow meta package
+- 24cbea6: Initial Release
+- 1688890: special case builtin step IDs in transform
+- cf2979d: Add MIT License
+- 7f2fd4d: Add README to all packages
+- d338144: Update SWC transform to use unique IDs and no longer wrap with `start()`
+  - Workflow functions now have a unique `workflowId` field
+  - Step functions also are now registered with unique id.
+  - `registerStepFunction` now takes the step ID as the first argument and the function as the second argument
+  - `start()` runtime method only accepts the literal workflow function now instead of a workflow "name" since it uses an internal ID the transform creates
+
+- 2fd8dfe: Stop importing start worklfow in client mode
+- 5924311: make workflow name machine readable
+- 47e0ca9: Throw compiler errors on non-async steps and workflows
+
 ## 0.0.1-alpha.7
 
 ### Patch Changes
@@ -19,7 +40,6 @@
 
 - 1688890: special case builtin step IDs in transform
 - d338144: Update SWC transform to use unique IDs and no longer wrap with `start()`
-
   - Workflow functions now have a unique `workflowId` field
   - Step functions also are now registered with unique id.
   - `registerStepFunction` now takes the step ID as the first argument and the function as the second argument

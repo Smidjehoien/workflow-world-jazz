@@ -63,8 +63,9 @@ describe('workflow arguments', () => {
       [
         [
           "Date",
-          "",
+          1,
         ],
+        ".",
       ]
     `);
 

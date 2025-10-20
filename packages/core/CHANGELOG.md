@@ -1,5 +1,198 @@
 # @vercel/workflow-core
 
+## 0.0.1
+
+### Patch Changes
+
+- dd1c069: Ensure default sort behavior for list calls is descending by time, and allow optionally sorting by ascending
+- 60f4152: Serialize `Error` instances
+- a946b38: Remove "workflow:step" export condition
+- 1cfee6e: Update to latest website URL
+- 0b2ac90: Set the `deploymentId` option in vqs `send()`
+- 4c4d406: Return from workflow run unless status is "running"
+- 3a342bb: Implement "named webhooks"
+- 0baf0e3: Rebuild packages
+- 290441b: Add error package to standardize errors
+- 435f44b: Setup the new @vercel/workflow meta package
+- d4914d7: Split getContext into getWorkflowContext and getStepContext
+- c78c8fa: Improve workflow logging
+- c7f0d52: Use `world.getDeploymentId()` more consistently to fix local dev
+- 0b462ea: add embedded queue system that can be used with an env var
+- 8ed4fb6: Add support for `startIndex` option in `getWorkflowOutputStream()`
+- 068add4: Reduce amount of world init calls during import time, ensure web UI config persists across reloads
+- 5dd2a38: Rename and re-export workflow and step entrypoints from workflow package
+- 12cb3fb: Rename useContext to getContext
+- 2507779: Fix steps Promise resolution ordering issue
+- 5d04853: Change default max retries from 32 to 3 for workflow steps
+- 3ee71fa: Export fetch directly from workflow packages
+- 0146cb9: Add default fetch in workflow vm to throw error
+- 689621a: Add initial `Hook` implementation
+- c7b8643: Add WorkflowRuntimeError on serialization errors in workflow runtime
+- 7b6679a: Make `getRun()` generic
+- 38337d2: Add "namespace" option to `getWorkflowReadableStream` and `getWorkflowWritableStream`
+- a61eaad: Fix `@link` docs imports
+- aff52c1: Add initial readme instructions
+- 0d96052: Finish serialization/deserialization logic
+- 045e6e4: Move FatalError and RetryableError from core to errors package
+- 06b74d2: Run e2e tests in parallel
+- 1b3dd56: allow to configure the server port. otherwise, a port exposed from the current pid will be used.
+
+  The configuration is done by using a stringified JSON in env vars.
+
+  In case the port is not assigned, we will try to grab the port from the pids,
+  and will choose the lowest exposed port, assuming random ports are in the 5-digit range--while the main server ports are usually in the 4-digit range like 3000.
+
+- ad9bdbd: Align versions across packages
+- 07b3283: standardize prefixes in embedded world
+- 1b61ef5: core: bump devalue
+- b152b35: Optimize `URLSearchParams` serialization
+- 24cbea6: Initial Release
+- 7c0f71e: CLI: Add json mode
+- 24d6712: Work around devalue serialization regression after update
+- 94ee3b3: embedded server: use process.env.PORT if exists
+- 37e6ee8: Rename `createWorkflowOutputStream` to `getWorkflowWritableStream`, and `getWorkflowOutputStream` to `getWorkflowReadableStream`
+- 6cbb277: Refactor WorkflowRunNotFoundError to be thrown in world-vercel
+- b8b39e7: Add `stepStartedAt` to `getContext()`
+- 544055f: Add pid-port dependency for embedded world
+- 54d1ec1: Use `run()` instead of `enterWith()` for AsyncLocalStorage
+- 265c34e: Use `@vercel/oidc` package for retrieving the OIDC token information (instead of `@vercel/functions`)
+- 4effcbd: Add "getReadable" method to Run object
+- b0641ee: Fix step/run name display after convention change
+- ec41c3c: Enable implicitly associated output stream to workflow runs (added `createWorkflowOutputStream()` and `getWorkflowOutputStream()`)
+- 954b621: Make `getWorkflowReturnValue()` return more meaningful errors
+- ed5d90f: Remove `fetch()` from "builtins"
+- 7b18141: World config now takes named parameters, and header configuration for vercel was moved into world-vercel
+- 45251db: Rename getWorkflowContext and getStepContext to getWorkflowMetadata and getStepMetadata
+- b0e8a6b: nit: Better error message
+- 01d3679: Use v1 API endpoint for vercel, add web package, extract shared logic from CLI&web into core package
+- b45e33b: Log `step_failure` events for retryable errors
+- d34c4ac: Finish removal of old Webhook implementation
+- 9d4653b: Unify hydration behavior between CLI and Web UI
+- d66070f: Rename `StepsNotRunError` to `WorkflowSuspension`
+- bf0c666: Bail gracefully when a step completes after the workflow has already finished
+- 9281a86: Consolidate some external deps across packages
+- e49500b: Prevent multiple steps being created with same `invocation_id`
+- d412985: remove http status code from step retry
+- 5acebeb: Use "nanoid" for default hook `token`
+- 40150b0: Moved getWorkflowReturnValue to Run class and rename getWorkflowRun to getRun
+- e8a4949: Package restructure
+- 326d01f: Re-introduce `sleep()` function
+- 9dbb1c9: create an embedded backend for the embedded world
+
+  a `World` now consists of the following sub-interfaces:
+  - Queue (how do we queue jobs?)
+  - Storage (how do we store data?)
+  - Streamer (how do we stream data?)
+  - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
+
+  There are two `World` implementations provided in `core`:
+  - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
+  - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
+
+- a88eeba: automatic oidc token refresh (using newer @vercel/oidc package)
+- 64cf6f1: Add getWorkflowReturnValue
+- cdfb910: Implement `Response.redirect()` inside the workflow context
+- 743923c: Fix core/observability and core/parse-name export for node compatibility
+- 2f5b253: Remove 2 second sleep in `start()` function
+- cf2979d: Add MIT License
+- de9b26d: Make `pid-port` be a regular dependency
+- 7f2fd4d: Add README to all packages
+- fcc3f5d: Remove unused properties from `WorkflowOrchestratorContext`
+- d808404: Fix export for get-webhook
+- f56e1e6: Fully use export condition for workflow versus step
+- 5a0e901: Add OpenTelemetry trace propagation to webhook processing
+- 7e1e4cf: Export WebhookOptions type
+- d19b423: Update core to use new workflow server implementation
+- eb76cb3: Remove workflow context properties from `getStepContext()` to use `getWorkflowContext()` instead
+- b8159cf: Change workflow queue names
+- 0a10773: Changed workflow API routes from /api/generated to /.well-known/workflow/v1
+- af3ca11: Add `RetryableError`
+- 5924311: make workflow name machine readable
+- 705e63c: extend sleep to use an end date
+- 345836a: Allow listing steps/streams/events without a run ID, improve table formatting, show serialized input/output
+- e81f3ce: Use zod v3 compatible ulid schema in embedded world
+- 1ef8597: Add "detail" user data to `Hook`
+- 31f3375: Tidy up `start()` function types
+- 1fed112: Add `@__PURE__` annotation to `contextStorage`
+- bf51020: Use `function` instead of arrow syntax for exported functions
+- b94f5fc: Use `Attribute` pattern for Hook otel spans
+- 54aaf87: Rename getWorkflowWritableStream to getWritable
+- ab7185e: Implement `useWebhook()`
+- 466cb68: Rename `useWebhook()` to `getWebhook()`
+- 59ab1dc: Implement new `Webhook` spec
+- e275561: Refactor world selection logic in core, and unify with CLI use. Polish pagination. Refactor logging.
+- b995531: Change start to return Run object
+- a5197f7: Added inspect commands to cli
+- a85227c: Fix getStepContext and getWorkflowContext exports
+- 49bf2a5: Add OpenTelemetry tracing
+- b15a64f: Add webhook response customization options
+- 2ff07d8: Support `Request` and `Response` constructors in workflow functions
+- f2168a6: Fix vercel proxy paths, add pagination
+- 6c9836d: Runtime: fix attempts not being incremented
+- cd4a41c: extract "world" interface packages
+- 950d262: Implement `useContext()`
+- Updated dependencies [6c93397]
+- Updated dependencies [dd1c069]
+- Updated dependencies [c781ebe]
+- Updated dependencies [1853724]
+- Updated dependencies [1cfee6e]
+- Updated dependencies [07ebb97]
+- Updated dependencies [0baf0e3]
+- Updated dependencies [290441b]
+- Updated dependencies [0146cb9]
+- Updated dependencies [689621a]
+- Updated dependencies [f9491a7]
+- Updated dependencies [045e6e4]
+- Updated dependencies [62c6f6b]
+- Updated dependencies [ad9bdbd]
+- Updated dependencies [24cbea6]
+- Updated dependencies [0d96052]
+- Updated dependencies [6cbb277]
+- Updated dependencies [7f756a2]
+- Updated dependencies [75da34e]
+- Updated dependencies [b34c907]
+- Updated dependencies [7b18141]
+- Updated dependencies [1214755]
+- Updated dependencies [e37dc5d]
+- Updated dependencies [01d3679]
+- Updated dependencies [b15a64f]
+- Updated dependencies [8271d9d]
+- Updated dependencies [d34c4ac]
+- Updated dependencies [b15a64f]
+- Updated dependencies [9281a86]
+- Updated dependencies [19ab8b2]
+- Updated dependencies [e8a4949]
+- Updated dependencies [cf2979d]
+- Updated dependencies [7f2fd4d]
+- Updated dependencies [314f0fe]
+- Updated dependencies [e81f3ce]
+- Updated dependencies [1ef8597]
+- Updated dependencies [59ab1dc]
+- Updated dependencies [e275561]
+- Updated dependencies [6c9836d]
+- Updated dependencies [cd4a41c]
+- Updated dependencies [38aefe6]
+  - @vercel/workflow-world-embedded@0.0.1
+  - @vercel/workflow-world-vercel@0.0.1
+  - @vercel/workflow-world@0.0.1
+  - @vercel/workflow-errors@0.0.1
+  - @vercel/workflow-vm@0.0.1
+
+## 0.0.1-alpha.45
+
+### Patch Changes
+
+- 1b61ef5: core: bump devalue
+- 24d6712: Work around devalue serialization regression after update
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+- Updated dependencies [8271d9d]
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.18
+  - @vercel/workflow-world-embedded@0.0.1-alpha.15
+  - @vercel/workflow-world@0.0.1-alpha.11
+
 ## 0.0.1-alpha.44
 
 ### Patch Changes
@@ -270,14 +463,12 @@
 - 9dbb1c9: create an embedded backend for the embedded world
 
   a `World` now consists of the following sub-interfaces:
-
   - Queue (how do we queue jobs?)
   - Storage (how do we store data?)
   - Streamer (how do we stream data?)
   - AuthProvider (grabbing auth info, this is questionable though, might be removed later)
 
   There are two `World` implementations provided in `core`:
-
   - `Vercel` is used when `process.env.VERCEL_DEPLOYMENT_ID` exists. It communicates with the Vercel Workflow Server for storage and streaming, and using Vercel Queue for queuing jobs.
   - `Embedded` is used otherwise. It uses ephemeral filesystem for storage and streaming, and a local embedded in-memory queue implementation.
 

@@ -11,6 +11,9 @@ import { remarkAutoTypeTable } from 'fumadocs-typescript';
 export const docs = defineDocs({
   docs: {
     schema: frontmatterSchema,
+    postprocess: {
+      includeProcessedMarkdown: true,
+    },
   },
   meta: {
     schema: metaSchema,

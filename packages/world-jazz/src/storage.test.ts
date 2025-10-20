@@ -2235,6 +2235,7 @@ describe('Jazz Storage', () => {
         const created = await storage.hooks.create(testRunId, {
           hookId: 'lifecycle-hook',
           token: 'lifecycle-token',
+          metadata: { response: { message: 'Initial response' } },
         });
 
         expect(created.hookId).toBe('lifecycle-hook');
@@ -2283,6 +2284,37 @@ describe('Jazz Storage', () => {
 
         expect(retrieved1.runId).toBe(testRunId);
         expect(retrieved2.runId).toBe(secondRun.runId);
+      });
+
+      it('should support hooks with varying response complexity', async () => {
+        const simpleHook = await storage.hooks.create(testRunId, {
+          hookId: 'simple-hook',
+          token: 'simple-token',
+        });
+
+        const complexHook = await storage.hooks.create(testRunId, {
+          hookId: 'complex-hook',
+          token: 'complex-token',
+          metadata: {
+            response: {
+              nested: {
+                deeply: {
+                  value: 42,
+                  array: [1, 2, { mixed: 'content' }],
+                },
+              },
+            },
+          },
+        });
+
+        // Verify both can be retrieved
+        const retrievedSimple = await storage.hooks.getByToken('simple-token');
+        const retrievedComplex =
+          await storage.hooks.getByToken('complex-token');
+
+        expect(retrievedSimple).toEqual(simpleHook);
+        expect(retrievedComplex).toEqual(complexHook);
+        // Note: response is stored internally but not returned in Hook type
       });
     });
   });

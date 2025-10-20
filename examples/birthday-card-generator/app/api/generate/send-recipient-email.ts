@@ -13,8 +13,6 @@ type RecipientEmailParams = {
   rsvpReplies: RsvpReply[];
 };
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const sendRecipientEmail = async ({
   recipientEmail,
   cardImage,
@@ -22,6 +20,8 @@ export const sendRecipientEmail = async ({
   rsvpReplies,
 }: RecipientEmailParams) => {
   'use step';
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
     console.log(`[STEP] Sending birthday card to recipient: ${recipientEmail}`);

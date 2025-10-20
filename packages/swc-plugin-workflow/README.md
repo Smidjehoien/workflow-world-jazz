@@ -1,12 +1,13 @@
-# SWC Plugin for Workflow Directives
+# @vercel/swc-plugin-workflow
 
-This is an SWC transform plugin that handles the `"use step"` directive for Vercel Workflow.
+SWC transform plugin to transform the directives for Workflow [Workflow DevKit](https://useworkflow.dev).
 
 ## Development
 
 [Install rust](https://www.rust-lang.org/tools/install)
 
 Add build target using rustup
+
 ```bash
 rustup target add wasm32-unknown-unknown
 ```
@@ -19,4 +20,3 @@ cargo check
 cargo build
 ```
 
-Release builds are done using `pnpm build`

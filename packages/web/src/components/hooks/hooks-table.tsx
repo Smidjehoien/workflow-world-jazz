@@ -1,6 +1,6 @@
 'use client';
 
-import type { Hook } from '@vercel/workflow-world';
+import type { Event, Hook } from '@vercel/workflow-world';
 import { useEffect, useState } from 'react';
 import {
   Tooltip,
@@ -87,7 +87,7 @@ export function HooksTable({
 
             // Count only hook_received events
             const count = events.data.filter(
-              (e) => e.eventType === 'hook_received'
+              (e: Event) => e.eventType === 'hook_received'
             ).length;
 
             return {

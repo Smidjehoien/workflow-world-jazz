@@ -8,17 +8,21 @@ Workflow functions define the entrypoint of a workflow and organize how step fun
 
 Although this may seem limiting initially, this feature is important in order to suspend and accurately resume execution of workflows.
 
+---
+
 ## Defining a Workflow Function
 
 A workflow function is defined by the `"use workflow"` directive.
 
 ```ts lineNumbers
 async function myWorkflow() { 
-    "use workflow" // [!code highlight]
-    // No Node.js access, limited npm package access
-    // ...
+  "use workflow" // [!code highlight]
+  // No Node.js access, limited npm package access
+  // ...
 }
 ```
+
+---
 
 ## Serialization
 
@@ -62,5 +66,7 @@ The following types can be serialized and passed through workflow functions:
 <Callout type="info">
 The serialization system ensures that all data persists correctly across workflow suspensions and resumptions, enabling durable execution.
 </Callout>
+
+---
 
 ## The Workflow Runtime

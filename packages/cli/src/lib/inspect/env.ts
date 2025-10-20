@@ -129,7 +129,7 @@ export const inferVercelProjectAndTeam = async () => {
   }
   logger.debug(`Found project ${project.projectId} and team ${project.orgId}`);
   return {
-    projectId: project.projectId,
+    projectId: project.projectName || project.projectId,
     teamId: project.orgId,
   };
 };
