@@ -1,5 +1,19 @@
 # @vercel/workflow
 
+## 0.0.1-alpha.16
+
+### Patch Changes
+
+- e8a4949: Package restructure
+- Updated dependencies [1b61ef5]
+- Updated dependencies [24d6712]
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-core@0.0.1-alpha.45
+  - @vercel/workflow-cli@0.0.1-alpha.55
+  - @vercel/workflow-next@0.0.1-alpha.56
+  - @vercel/workflow-typescript-plugin@0.0.1-alpha.6
+
 ## 0.0.1-alpha.15
 
 ### Patch Changes

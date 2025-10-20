@@ -1,5 +1,20 @@
 # @vercel/workflow-core
 
+## 0.0.1-alpha.45
+
+### Patch Changes
+
+- 1b61ef5: core: bump devalue
+- 24d6712: Work around devalue serialization regression after update
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+- Updated dependencies [8271d9d]
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-world-vercel@0.0.1-alpha.18
+  - @vercel/workflow-world-embedded@0.0.1-alpha.15
+  - @vercel/workflow-world@0.0.1-alpha.11
+
 ## 0.0.1-alpha.44
 
 ### Patch Changes

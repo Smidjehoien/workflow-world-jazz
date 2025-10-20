@@ -1,5 +1,13 @@
 # @vercel/workflow-web
 
+## 0.0.1-alpha.54
+
+### Patch Changes
+
+- 86a1938: Reduce web install size by moving dependencies to devDependencies
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+
 ## 0.0.1-alpha.53
 
 ### Patch Changes

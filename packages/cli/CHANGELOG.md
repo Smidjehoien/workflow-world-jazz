@@ -1,5 +1,23 @@
 # @vercel/workflow-cli
 
+## 0.0.1-alpha.55
+
+### Patch Changes
+
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+- Updated dependencies [86a1938]
+- Updated dependencies [1b61ef5]
+- Updated dependencies [24d6712]
+- Updated dependencies [8271d9d]
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-web@0.0.1-alpha.54
+  - @vercel/workflow-core@0.0.1-alpha.45
+  - @vercel/workflow-world-vercel@0.0.1-alpha.18
+  - @vercel/workflow-world-embedded@0.0.1-alpha.15
+  - @vercel/workflow-world@0.0.1-alpha.11
+
 ## 0.0.1-alpha.54
 
 ### Patch Changes

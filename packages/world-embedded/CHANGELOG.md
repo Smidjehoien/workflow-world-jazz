@@ -1,5 +1,15 @@
 # @vercel/workflow-world-embedded
 
+## 0.0.1-alpha.15
+
+### Patch Changes
+
+- e8a4949: Package restructure
+- 6c9836d: Runtime: fix attempts not being incremented
+- Updated dependencies [e8a4949]
+- Updated dependencies [6c9836d]
+  - @vercel/workflow-world@0.0.1-alpha.11
+
 ## 0.0.1-alpha.14
 
 ### Patch Changes
