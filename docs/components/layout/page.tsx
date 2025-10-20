@@ -48,11 +48,6 @@ export function DocsPage({ toc = [], ...props }: DocsPageProps) {
   const pathname = usePathname();
   const breadcrumbItems = useBreadcrumb(pathname, root, { includePage: true });
 
-  console.log(props);
-  console.log(pathname);
-  console.log(root.children);
-  console.log(root.children.find((item) => item.$id === pathname));
-
   const githubFilePath = useMemo(() => {
     const file = findPageFile(root, pathname);
     return file || `${pathname.replace('/docs/', '')}.mdx`;
