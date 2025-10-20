@@ -1,4 +1,4 @@
-# Workflow Observability Web UI
+# @vercel/workflow-web
 
 A Next.js-based web interface for inspecting workflow runs, steps, streams, and events. This package is designed to be launched from the `@vercel/workflow-cli` package with the `--web` flag, e.g. `wf i runs --web`. It can also be self-hosted to provide a standalone observability UI.
 

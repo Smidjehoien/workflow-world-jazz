@@ -6,7 +6,7 @@ import { generateDefinition } from "@/lib/tsdoc"
 
 # `getWritable()`
 
-Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using the `readable` property of the [`Run` object](/docs/api-reference/vercel-workflow-core/get-run).
+Retrieves the current workflow run's default writable stream. The writable stream is intended to be passed as an argument to steps which can write to it. Chunks written to this stream can be read outside the workflow by using the `readable` property of the [`Run` object](/docs/api-reference/vercel-workflow-api/get-run).
 
 Use this function in your workflows to produce streaming output that can be consumed by clients in real-time.
 

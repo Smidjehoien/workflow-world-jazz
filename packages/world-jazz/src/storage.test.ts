@@ -1,4 +1,4 @@
-import type { Hook, Step, Storage, WorkflowRun } from '@vercel/workflow-world';
+import type { Step, Storage, WorkflowRun } from '@vercel/workflow-world';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStorage } from './storage.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
@@ -16,6 +16,64 @@ describe('Jazz Storage', () => {
   });
 
   describe('runs', () => {
+    describe('ID conversion behavior', () => {
+      it('should create run with wrun_ prefix in returned runId', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const result = await storage.runs.create(createRequest);
+
+        expect(result.runId).toMatch(/^wrun_/);
+      });
+
+      it('should retrieve run using wrun_ prefix and return wrun_ prefix', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const created = await storage.runs.create(createRequest);
+        const retrieved = await storage.runs.get(created.runId);
+
+        expect(retrieved.runId).toMatch(/^wrun_/);
+        expect(retrieved.runId).toBe(created.runId);
+      });
+
+      it('should update run using wrun_ prefix and return wrun_ prefix', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const created = await storage.runs.create(createRequest);
+        const updated = await storage.runs.update(created.runId, {
+          status: 'running',
+        });
+
+        expect(updated.runId).toMatch(/^wrun_/);
+        expect(updated.runId).toBe(created.runId);
+      });
+
+      it('should list runs with wrun_ prefix in returned runIds', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        await storage.runs.create(createRequest);
+        const listResult = await storage.runs.list();
+
+        expect(listResult.data).toHaveLength(1);
+        expect(listResult.data[0].runId).toMatch(/^wrun_/);
+      });
+    });
+
     describe('create', () => {
       it('should create a new workflow run with all required fields', async () => {
         const createRequest = {
@@ -276,9 +334,9 @@ describe('Jazz Storage', () => {
         expect(result.hasMore).toBe(false);
         expect(result.cursor).toBeNull();
         expect(result.data.map((run) => run.deploymentId)).toEqual([
-          'deployment-1',
-          'deployment-1',
           'deployment-2',
+          'deployment-1',
+          'deployment-1',
         ]);
       });
 
@@ -289,8 +347,8 @@ describe('Jazz Storage', () => {
 
         expect(result.data).toHaveLength(2);
         expect(result.data.map((run) => run.deploymentId)).toEqual([
-          'deployment-1',
           'deployment-2',
+          'deployment-1',
         ]);
         expect(
           result.data.every((run) => run.workflowName === 'workflow-a')
@@ -865,9 +923,9 @@ describe('Jazz Storage', () => {
         expect(result.hasMore).toBe(false);
         expect(result.cursor).toBeNull();
         expect(result.data.map((step) => step.stepId)).toEqual([
-          'step-1',
-          'step-2',
           'step-3',
+          'step-2',
+          'step-1',
         ]);
       });
 
@@ -1059,6 +1117,34 @@ describe('Jazz Storage', () => {
         input: ['test', 'data'],
       });
       testRunId = createdRun.runId;
+    });
+
+    describe('ID conversion behavior', () => {
+      it('should create event with evnt_ prefix in returned eventId', async () => {
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'corr-123',
+          eventData: { result: 'success' },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result.eventId).toMatch(/^evnt_/);
+      });
+
+      it('should list events with evnt_ prefix in returned eventIds', async () => {
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'corr-123',
+          eventData: { result: 'success' },
+        };
+
+        await storage.events.create(testRunId, createRequest);
+        const listResult = await storage.events.list({ runId: testRunId });
+
+        expect(listResult.data).toHaveLength(1);
+        expect(listResult.data[0].eventId).toMatch(/^evnt_/);
+      });
     });
 
     describe('create', () => {
@@ -1288,7 +1374,6 @@ describe('Jazz Storage', () => {
 
         const result = await storage.events.create(testRunId, createRequest);
 
-        // biome-ignore lint/suspicious/noExplicitAny: discriminatedUnion difficulties
         expect((result as any).eventData).toEqual(complexEventData);
       });
     });
@@ -1416,6 +1501,433 @@ describe('Jazz Storage', () => {
         expect(result.data[3].correlationId).toBe('step-2');
         expect(result.data[4].eventType).toBe('step_failed');
         expect(result.data[4].correlationId).toBe('step-2');
+      });
+    });
+
+    describe('listByCorrelationId', () => {
+      let testRunId1: string;
+      let testRunId2: string;
+
+      beforeEach(async () => {
+        // Create two test runs to test cross-run correlation
+        const run1 = await storage.runs.create({
+          deploymentId: 'test-deployment-1',
+          workflowName: 'test-workflow-1',
+          input: ['test', 'data'],
+        });
+        testRunId1 = run1.runId;
+
+        const run2 = await storage.runs.create({
+          deploymentId: 'test-deployment-2',
+          workflowName: 'test-workflow-2',
+          input: ['test', 'data'],
+        });
+        testRunId2 = run2.runId;
+
+        // Create events with different correlation IDs across both runs
+        const events = [
+          // Events for correlation ID 'corr-1' across both runs
+          {
+            runId: testRunId1,
+            eventType: 'step_started' as const,
+            correlationId: 'corr-1',
+          },
+          {
+            runId: testRunId1,
+            eventType: 'step_completed' as const,
+            correlationId: 'corr-1',
+            eventData: { result: 'success-1' },
+          },
+          {
+            runId: testRunId2,
+            eventType: 'step_started' as const,
+            correlationId: 'corr-1',
+          },
+          {
+            runId: testRunId2,
+            eventType: 'step_failed' as const,
+            correlationId: 'corr-1',
+            eventData: { error: 'failed-1' },
+          },
+          // Events for correlation ID 'corr-2' in run1 only
+          {
+            runId: testRunId1,
+            eventType: 'step_started' as const,
+            correlationId: 'corr-2',
+          },
+          {
+            runId: testRunId1,
+            eventType: 'step_completed' as const,
+            correlationId: 'corr-2',
+            eventData: { result: 'success-2' },
+          },
+          // Events without correlation ID
+          {
+            runId: testRunId1,
+            eventType: 'workflow_started' as const,
+          },
+          {
+            runId: testRunId2,
+            eventType: 'workflow_completed' as const,
+          },
+        ];
+
+        for (const event of events) {
+          await storage.events.create(event.runId, event);
+        }
+      });
+
+      it('should list all events with matching correlation ID across all runs', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+        });
+
+        expect(result.data).toHaveLength(4);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+
+        // Verify all events have the correct correlation ID
+        expect(
+          result.data.every((event) => event.correlationId === 'corr-1')
+        ).toBe(true);
+
+        // Verify events come from both runs
+        const runIds = result.data.map((event) => event.runId);
+        expect(runIds).toContain(testRunId1);
+        expect(runIds).toContain(testRunId2);
+
+        // Verify event types
+        const eventTypes = result.data.map((event) => event.eventType);
+        expect(eventTypes).toContain('step_started');
+        expect(eventTypes).toContain('step_completed');
+        expect(eventTypes).toContain('step_failed');
+      });
+
+      it('should list events with correlation ID from single run', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-2',
+        });
+
+        expect(result.data).toHaveLength(2);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+
+        // Verify all events have the correct correlation ID
+        expect(
+          result.data.every((event) => event.correlationId === 'corr-2')
+        ).toBe(true);
+
+        // Verify all events come from the same run
+        expect(result.data.every((event) => event.runId === testRunId1)).toBe(
+          true
+        );
+
+        // Verify event types
+        const eventTypes = result.data.map((event) => event.eventType);
+        expect(eventTypes).toContain('step_started');
+        expect(eventTypes).toContain('step_completed');
+      });
+
+      it('should return empty result when no events match correlation ID', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'non-existent-corr',
+        });
+
+        expect(result.data).toHaveLength(0);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+      });
+
+      it('should handle pagination with limit', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+          pagination: { limit: 2 },
+        });
+
+        expect(result.data).toHaveLength(2);
+        expect(result.hasMore).toBe(true);
+        expect(result.cursor).toBeDefined();
+
+        // Verify all returned events have the correct correlation ID
+        expect(
+          result.data.every((event) => event.correlationId === 'corr-1')
+        ).toBe(true);
+      });
+
+      it('should handle pagination with cursor', async () => {
+        const firstPage = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+          pagination: { limit: 2 },
+        });
+
+        const secondPage = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+          pagination: {
+            limit: 2,
+            cursor: firstPage.cursor ?? undefined,
+          },
+        });
+
+        expect(secondPage.data).toHaveLength(2);
+        expect(secondPage.hasMore).toBe(false);
+        expect(secondPage.cursor).toBeNull();
+
+        // Ensure no overlap between pages
+        const firstPageIds = firstPage.data.map((event) => event.eventId);
+        const secondPageIds = secondPage.data.map((event) => event.eventId);
+        expect(firstPageIds).not.toEqual(expect.arrayContaining(secondPageIds));
+
+        // Verify all events in both pages have the correct correlation ID
+        expect(
+          [...firstPage.data, ...secondPage.data].every(
+            (event) => event.correlationId === 'corr-1'
+          )
+        ).toBe(true);
+      });
+
+      it('should sort events in ascending chronological order by default', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+        });
+
+        expect(result.data).toHaveLength(4);
+
+        // Verify events are sorted by createdAt in ascending order
+        for (let i = 1; i < result.data.length; i++) {
+          expect(result.data[i].createdAt.getTime()).toBeGreaterThanOrEqual(
+            result.data[i - 1].createdAt.getTime()
+          );
+        }
+      });
+
+      it('should sort events in descending chronological order when specified', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+          pagination: { sortOrder: 'desc' },
+        });
+
+        expect(result.data).toHaveLength(4);
+
+        // Verify events are sorted by createdAt in descending order
+        for (let i = 1; i < result.data.length; i++) {
+          expect(result.data[i].createdAt.getTime()).toBeLessThanOrEqual(
+            result.data[i - 1].createdAt.getTime()
+          );
+        }
+      });
+
+      it('should exclude eventData when resolveData is none', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+          resolveData: 'none',
+        });
+
+        expect(result.data).toHaveLength(4);
+
+        // Verify eventData is excluded from all events
+        result.data.forEach((event) => {
+          expect((event as any).eventData).toBeUndefined();
+        });
+
+        // Verify other properties are still present
+        expect(result.data[0].eventId).toBeDefined();
+        expect(result.data[0].eventType).toBeDefined();
+        expect(result.data[0].correlationId).toBe('corr-1');
+        expect(result.data[0].runId).toBeDefined();
+        expect(result.data[0].createdAt).toBeDefined();
+      });
+
+      it('should include eventData when resolveData is not specified', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+        });
+
+        expect(result.data).toHaveLength(4);
+
+        // Verify eventData is included for events that have it
+        const eventsWithData = result.data.filter(
+          (event) =>
+            event.eventType === 'step_completed' ||
+            event.eventType === 'step_failed'
+        );
+
+        eventsWithData.forEach((event) => {
+          expect((event as any).eventData).toBeDefined();
+        });
+      });
+
+      it('should handle complex event data structures', async () => {
+        // Create an event with complex data
+        await storage.events.create(testRunId1, {
+          eventType: 'step_completed',
+          correlationId: 'complex-corr',
+          eventData: {
+            result: {
+              nested: {
+                deeply: {
+                  value: 42,
+                  array: [1, 2, { mixed: 'array' }],
+                  nullValue: null,
+                  booleanValue: true,
+                  numberValue: 3.14,
+                },
+              },
+            },
+          },
+        });
+
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'complex-corr',
+        });
+
+        expect(result.data).toHaveLength(1);
+        expect(result.data[0].correlationId).toBe('complex-corr');
+
+        const eventData = (result.data[0] as any).eventData;
+        expect(eventData.result.nested.deeply.value).toBe(42);
+        expect(eventData.result.nested.deeply.array).toEqual([
+          1,
+          2,
+          { mixed: 'array' },
+        ]);
+        expect(eventData.result.nested.deeply.nullValue).toBeNull();
+        expect(eventData.result.nested.deeply.booleanValue).toBe(true);
+        expect(eventData.result.nested.deeply.numberValue).toBe(3.14);
+      });
+
+      it('should handle events with no correlation ID', async () => {
+        // Events without correlation ID should not be returned
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'corr-1',
+        });
+
+        // Should only return events with correlation ID 'corr-1'
+        expect(
+          result.data.every((event) => event.correlationId === 'corr-1')
+        ).toBe(true);
+
+        // Should not include workflow_started or workflow_completed events
+        const eventTypes = result.data.map((event) => event.eventType);
+        expect(eventTypes).not.toContain('workflow_started');
+        expect(eventTypes).not.toContain('workflow_completed');
+      });
+
+      it('should handle empty correlation ID', async () => {
+        const result = await storage.events.listByCorrelationId({
+          correlationId: '',
+        });
+
+        expect(result.data).toHaveLength(0);
+        expect(result.hasMore).toBe(false);
+        expect(result.cursor).toBeNull();
+      });
+
+      it('should maintain chronological order across different runs', async () => {
+        // Add a delay to ensure different timestamps
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        // Create events in different runs with same correlation ID
+        await storage.events.create(testRunId1, {
+          eventType: 'step_started',
+          correlationId: 'chrono-test',
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 10));
+
+        await storage.events.create(testRunId2, {
+          eventType: 'step_started',
+          correlationId: 'chrono-test',
+        });
+
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'chrono-test',
+        });
+
+        expect(result.data).toHaveLength(2);
+
+        // Verify chronological order is maintained
+        expect(result.data[0].createdAt.getTime()).toBeLessThanOrEqual(
+          result.data[1].createdAt.getTime()
+        );
+      });
+
+      it('should handle large number of events with same correlation ID', async () => {
+        // Create many events with the same correlation ID
+        const eventCount = 10;
+        for (let i = 0; i < eventCount; i++) {
+          await storage.events.create(testRunId1, {
+            eventType: 'step_started',
+            correlationId: 'bulk-corr',
+          });
+        }
+
+        const result = await storage.events.listByCorrelationId({
+          correlationId: 'bulk-corr',
+        });
+
+        expect(result.data).toHaveLength(eventCount);
+        expect(
+          result.data.every((event) => event.correlationId === 'bulk-corr')
+        ).toBe(true);
+        expect(result.data.every((event) => event.runId === testRunId1)).toBe(
+          true
+        );
+      });
+
+      it('should handle pagination with large dataset', async () => {
+        // Create many events with the same correlation ID
+        const eventCount = 15;
+        for (let i = 0; i < eventCount; i++) {
+          await storage.events.create(testRunId1, {
+            eventType: 'step_started',
+            correlationId: 'pagination-test',
+          });
+        }
+
+        const firstPage = await storage.events.listByCorrelationId({
+          correlationId: 'pagination-test',
+          pagination: { limit: 5 },
+        });
+
+        expect(firstPage.data).toHaveLength(5);
+        expect(firstPage.hasMore).toBe(true);
+        expect(firstPage.cursor).toBeDefined();
+
+        const secondPage = await storage.events.listByCorrelationId({
+          correlationId: 'pagination-test',
+          pagination: {
+            limit: 5,
+            cursor: firstPage.cursor ?? undefined,
+          },
+        });
+
+        expect(secondPage.data).toHaveLength(5);
+        expect(secondPage.hasMore).toBe(true);
+
+        const thirdPage = await storage.events.listByCorrelationId({
+          correlationId: 'pagination-test',
+          pagination: {
+            limit: 5,
+            cursor: secondPage.cursor ?? undefined,
+          },
+        });
+
+        expect(thirdPage.data).toHaveLength(5);
+        expect(thirdPage.hasMore).toBe(false);
+        expect(thirdPage.cursor).toBeNull();
+
+        // Verify total count
+        const totalEvents = [
+          ...firstPage.data,
+          ...secondPage.data,
+          ...thirdPage.data,
+        ];
+        expect(totalEvents).toHaveLength(15);
+
+        // Verify no duplicates
+        const eventIds = totalEvents.map((event) => event.eventId);
+        const uniqueEventIds = new Set(eventIds);
+        expect(uniqueEventIds.size).toBe(15);
       });
     });
 
@@ -1723,7 +2235,7 @@ describe('Jazz Storage', () => {
         const created = await storage.hooks.create(testRunId, {
           hookId: 'lifecycle-hook',
           token: 'lifecycle-token',
-          response: { message: 'Initial response' },
+          metadata: { response: { message: 'Initial response' } },
         });
 
         expect(created.hookId).toBe('lifecycle-hook');
@@ -1783,11 +2295,13 @@ describe('Jazz Storage', () => {
         const complexHook = await storage.hooks.create(testRunId, {
           hookId: 'complex-hook',
           token: 'complex-token',
-          response: {
-            nested: {
-              deeply: {
-                value: 42,
-                array: [1, 2, { mixed: 'content' }],
+          metadata: {
+            response: {
+              nested: {
+                deeply: {
+                  value: 42,
+                  array: [1, 2, { mixed: 'content' }],
+                },
               },
             },
           },

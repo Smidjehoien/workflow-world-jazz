@@ -110,7 +110,7 @@ export function StepDetailSidebar({
             <CardContent className="pt-6">
               <h3 className="text-sm font-semibold mb-3">Streams</h3>
               <div className="space-y-2">
-                {streamList.map((streamId) => (
+                {streamList.map((streamId: string) => (
                   <Button
                     key={streamId}
                     variant="outline"

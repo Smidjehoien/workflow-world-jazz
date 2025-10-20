@@ -14,14 +14,12 @@ import {
  * @param stream
  * @returns `"bytes"` if the stream is a byte stream, `undefined` otherwise
  */
-export function getStreamType(stream: ReadableStream) {
+export function getStreamType(stream: ReadableStream): 'bytes' | undefined {
   try {
     const reader = stream.getReader({ mode: 'byob' });
     reader.releaseLock();
     return 'bytes';
-  } catch {
-    return undefined;
-  }
+  } catch {}
 }
 
 export function getSerializeStream(
@@ -212,7 +210,11 @@ function getCommonReducers(global: Record<string, any> = globalThis) {
     Date: (value) => {
       if (!(value instanceof global.Date)) return false;
       const valid = !Number.isNaN(value.getDate());
-      return valid ? value.toISOString() : '';
+      if (valid) return value.toISOString();
+      // Return invalid date as empty string
+      //return '';
+      // NOTE: Temporarily returning a truthy value here due to a regression in devalue
+      return '.';
     },
     Error: (value) => {
       if (!(value instanceof global.Error)) return false;

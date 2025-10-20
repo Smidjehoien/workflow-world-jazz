@@ -72,7 +72,23 @@ export function buildWorkflowSuspensionMessage(
   return `[Workflows] "${runId}" - ${parts.join(' and ')} to be enqueued\n  Workflow will suspend and resume when ${resumeMsg}`;
 }
 
+/**
+ * Generates a stream ID for a workflow run.
+ * User-defined streams include a "user" segment for isolation from future system-defined streams.
+ * Namespaces are base64-encoded to handle characters not allowed in Redis key names.
+ *
+ * @param runId - The workflow run ID
+ * @param namespace - Optional namespace for the stream
+ * @returns The stream ID in format: `strm_{ULID}_user_{base64(namespace)?}`
+ */
 export function getWorkflowRunStreamId(runId: string, namespace?: string) {
-  const streamId = runId.replace('wrun_', 'strm_');
-  return namespace ? `${streamId}_${namespace}` : streamId;
+  const streamId = `${runId.replace('wrun_', 'strm_')}_user`;
+  if (!namespace) {
+    return streamId;
+  }
+  // Base64 encode the namespace to handle special characters that may not be allowed in Redis keys
+  const encodedNamespace = Buffer.from(namespace, 'utf-8').toString(
+    'base64url'
+  );
+  return `${streamId}_${encodedNamespace}`;
 }

@@ -1,6 +1,6 @@
 {
   "name": "@vercel/workflow-typescript-plugin",
-  "version": "0.0.1-alpha.6",
+  "version": "0.0.1",
   "description": "TypeScript Language Service Plugin for Vercel Workflow SDK",
   "main": "dist/index.js",
   "files": [

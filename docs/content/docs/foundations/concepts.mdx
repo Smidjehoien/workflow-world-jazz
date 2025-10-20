@@ -55,9 +55,9 @@ Workflow functions have the ability to automatically suspend while they wait on 
 
 - Waiting on a step function: the workflow yields while the step runs in the step runtime.
 - Using `sleep()` to pause for some fixed duration.
-- Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook), which resumes the workflow when an external system passes data into the workflow.
+- Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow/create-hook), which resumes the workflow when an external system passes data into the workflow.
 
-```typescript
+```typescript lineNumbers
 import { sleep, getWebhook } from '@vercel/workflow'; // [!code highlight]
 
 export async function onboardingWorkflow(userId: string) {
@@ -92,7 +92,7 @@ Step functions perform the actual work in a workflow and have full runtime acces
 Step functions can only be called inside workflow functions.
 </Callout>
 
-```typescript
+```typescript lineNumbers
 async function chargePayment(order: Order) {
   "use step";
 
@@ -127,7 +127,7 @@ A step's behavior on erroring can also be customized, take a look at [Errors & R
 
 A workflow consists of a workflow function and one or more step functions.
 
-```typescript
+```typescript lineNumbers
 // Workflow function (orchestrates the steps)
 export async function greetingWorkflow(name: string) {
   "use workflow";
@@ -180,7 +180,7 @@ You can choose to organize your steps into a single `steps.ts` file or separate 
 
 Workflow extends `Error` classes for more customizable retry behaviors.
 
-```typescript
+```typescript lineNumbers
 import { FatalError, RetryableError } from '@vercel/workflow';
 
 async function callAPI(endpoint: string) {

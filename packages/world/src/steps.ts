@@ -39,6 +39,7 @@ export interface CreateStepRequest {
 }
 
 export interface UpdateStepRequest {
+  attempt?: number;
   status?: StepStatus;
   output?: SerializedData;
   error?: string;

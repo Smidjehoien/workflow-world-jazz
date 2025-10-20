@@ -28,6 +28,10 @@ import {
   JazzWorkflowRun,
 } from './types.js';
 
+const COVALUE_ID_PREFIX = 'co_';
+const RUN_ID_PREFIX = 'wrun_';
+const EVENT_ID_PREFIX = 'evnt_';
+
 export const createStorage = (
   ensureLoaded: JazzStorageAccountResolver
 ): Storage => ({
@@ -75,7 +79,8 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const jwr = await JazzWorkflowRun.load(id, {
+      const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
+      const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
         },
@@ -94,7 +99,8 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const jwr = await JazzWorkflowRun.load(id, {
+      const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
+      const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
         },
@@ -125,7 +131,8 @@ export const createRunStorage = (
         );
       }
 
-      if (data.status === 'running') {
+      // Only set startedAt the first time transitioning to 'running'
+      if (data.status === 'running' && !jwr.startedAt) {
         jwr.$jazz.set('startedAt', now);
       }
       if (
@@ -152,6 +159,7 @@ export const createRunStorage = (
       });
 
       const eligibleRuns = runs.filter((jwr) => jwr !== null);
+
       return paginateItems({
         items: eligibleRuns,
         cursor: params?.pagination?.cursor,
@@ -160,6 +168,8 @@ export const createRunStorage = (
           items.findIndex((jwr) => jwr.$jazz.id === cursor),
         getItemId: (jwr) => jwr.$jazz.id,
         transform: toWorkflowRun,
+        sortBy: (jwr) => jwr.createdAt,
+        sortOrder: params?.pagination?.sortOrder || 'desc',
         filter: (jwr) => {
           // Filter by workflow name
           if (
@@ -283,8 +293,12 @@ export const createStepStorage = (
       if (data.errorCode !== undefined) {
         js.$jazz.set('errorCode', data.errorCode);
       }
+      if (data.attempt !== undefined) {
+        js.$jazz.set('attempt', data.attempt);
+      }
 
-      if (data.status === 'running') {
+      // Only set startedAt the first time the step transitions to 'running'
+      if (data.status === 'running' && !js.startedAt) {
         js.$jazz.set('startedAt', now);
       }
       if (data.status === 'completed' || data.status === 'failed') {
@@ -304,6 +318,7 @@ export const createStepStorage = (
         },
       });
       const eligibleSteps = Object.values(steps).filter((js) => js !== null);
+
       return paginateItems({
         items: eligibleSteps,
         cursor: params?.pagination?.cursor,
@@ -312,6 +327,8 @@ export const createStepStorage = (
           items.findIndex((js) => js.stepId === cursor),
         getItemId: (js) => js.stepId,
         transform: toStep,
+        sortBy: (js) => js.createdAt,
+        sortOrder: params?.pagination?.sortOrder || 'desc',
       });
     },
   };
@@ -397,27 +414,23 @@ export const createHookStorage = (
         }
       }
 
-      // Filter by runId if provided
-      const filteredHooks = params.runId
-        ? allHooks.filter((jh) => jh.runId === params.runId)
-        : allHooks;
-
-      // Sort by createdAt descending by default
-      const sortOrder = params.pagination?.sortOrder || 'desc';
-      const sortedHooks = filteredHooks.sort((a, b) => {
-        const aTime = a.createdAt.getTime();
-        const bTime = b.createdAt.getTime();
-        return sortOrder === 'desc' ? bTime - aTime : aTime - bTime;
-      });
-
       return paginateItems({
-        items: sortedHooks,
+        items: allHooks,
         cursor: params.pagination?.cursor,
         limit: params.pagination?.limit,
         findCursorIndex: (items, cursor) =>
           items.findIndex((jh) => jh.$jazz.id === cursor),
         getItemId: (jh) => jh.$jazz.id,
         transform: toHook,
+        sortBy: (jh) => jh.createdAt,
+        sortOrder: params.pagination?.sortOrder || 'desc',
+        filter: (jh) => {
+          // Filter by runId if provided
+          if (params.runId && jh.runId !== params.runId) {
+            return false;
+          }
+          return true;
+        },
       });
     },
 
@@ -490,7 +503,7 @@ export const createEventStorage = (
         },
       });
       const eligibleEvents = loadedEvents.filter((je) => je !== null);
-      return paginateItems({
+      const result = paginateItems({
         items: eligibleEvents,
         cursor: params?.pagination?.cursor,
         limit: params?.pagination?.limit,
@@ -498,13 +511,75 @@ export const createEventStorage = (
           items.findIndex((je) => je.$jazz.id === cursor),
         getItemId: (je) => je.$jazz.id,
         transform: toEvent,
+        // Events in chronological order (oldest first) by default,
+        // different from the default for other list calls.
+        sortBy: (je) => je.createdAt,
+        sortOrder: params?.pagination?.sortOrder || 'asc',
       });
+
+      // If resolveData is "none", remove eventData from events
+      if (params.resolveData === 'none') {
+        return {
+          ...result,
+          data: result.data.map((event) => {
+            const { eventData: _eventData, ...rest } = event as any;
+            return rest;
+          }),
+        };
+      }
+
+      return result;
     },
 
     async listByCorrelationId(
-      _params: ListEventsByCorrelationIdParams
+      params: ListEventsByCorrelationIdParams
     ): Promise<PaginatedResponse<Event>> {
-      throw new Error('Not implemented');
+      // We need to inspect all events across all runs
+      const allEvents = (
+        await ensureLoaded({
+          root: {
+            events: {
+              $each: true,
+            },
+          },
+        })
+      ).root.events;
+
+      const eligibleEvents: JazzEvent[] = [];
+      for (const runEvents of Object.values(allEvents)) {
+        for (const je of runEvents) {
+          if (je !== null && je.correlationId === params.correlationId) {
+            eligibleEvents.push(je);
+          }
+        }
+      }
+
+      const result = paginateItems({
+        items: eligibleEvents,
+        cursor: params?.pagination?.cursor,
+        limit: params?.pagination?.limit,
+        findCursorIndex: (items, cursor) =>
+          items.findIndex((je) => je.$jazz.id === cursor),
+        getItemId: (je) => je.$jazz.id,
+        transform: toEvent,
+        // Events in chronological order (oldest first) by default,
+        // different from the default for other list calls.
+        sortBy: (je) => je.createdAt,
+        sortOrder: params?.pagination?.sortOrder || 'asc',
+      });
+
+      // If resolveData is "none", remove eventData from events
+      if (params.resolveData === 'none') {
+        return {
+          ...result,
+          data: result.data.map((event) => {
+            const { eventData: _eventData, ...rest } = event as any;
+            return rest;
+          }),
+        };
+      }
+
+      return result;
     },
   };
 };
@@ -517,6 +592,8 @@ function paginateItems<T, TItem>({
   getItemId,
   transform,
   filter,
+  sortBy,
+  sortOrder = 'desc',
 }: {
   items: TItem[];
   cursor?: string;
@@ -525,16 +602,29 @@ function paginateItems<T, TItem>({
   getItemId: (item: TItem) => string;
   transform: (item: TItem) => T;
   filter?: (item: TItem) => boolean;
+  sortBy?: (item: TItem) => number | Date;
+  sortOrder?: 'asc' | 'desc';
 }): PaginatedResponse<T> {
+  // Sort items if sortBy function is provided
+  const sortedItems = sortBy
+    ? [...items].sort((a, b) => {
+        const aValue = sortBy(a);
+        const bValue = sortBy(b);
+        const aTime = aValue instanceof Date ? aValue.getTime() : aValue;
+        const bTime = bValue instanceof Date ? bValue.getTime() : bValue;
+        return sortOrder === 'desc' ? bTime - aTime : aTime - bTime;
+      })
+    : items;
+
   const eligibleItems: TItem[] = [];
 
   let startIndex = 0;
   if (cursor && findCursorIndex) {
-    startIndex = findCursorIndex(items, cursor) + 1;
+    startIndex = findCursorIndex(sortedItems, cursor) + 1;
   }
 
-  for (let i = startIndex; i < items.length; i++) {
-    const item = items[i];
+  for (let i = startIndex; i < sortedItems.length; i++) {
+    const item = sortedItems[i];
     if (!item) {
       console.warn(`Item ${i} is undefined`);
       continue;
@@ -563,7 +653,7 @@ function paginateItems<T, TItem>({
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
-    runId: jwr.$jazz.id,
+    runId: substitutePrefix(jwr.$jazz.id, COVALUE_ID_PREFIX, RUN_ID_PREFIX),
     deploymentId: jwr.deploymentId,
     status: jwr.status,
     workflowName: jwr.workflowName,
@@ -602,7 +692,7 @@ function toStep(js: JazzStep): Step {
 function toEvent(je: JazzEvent): Event {
   return {
     runId: je.runId,
-    eventId: je.$jazz.id,
+    eventId: substitutePrefix(je.$jazz.id, COVALUE_ID_PREFIX, EVENT_ID_PREFIX),
     eventType: je.eventType,
     eventData: je.eventData,
     correlationId: je.correlationId,
@@ -621,4 +711,11 @@ function toHook(jh: JazzHook): Hook {
     metadata: jh.metadata as z.core.util.JSONType,
     createdAt: jh.createdAt,
   };
+}
+
+function substitutePrefix(val: string, from: string, to: string): string {
+  if (val.startsWith(from)) {
+    return to + val.slice(from.length);
+  }
+  return val;
 }

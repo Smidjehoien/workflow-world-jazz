@@ -15,11 +15,12 @@ import { createUseStep } from './step.js';
 import {
   BODY_INIT_SYMBOL,
   WORKFLOW_CREATE_HOOK,
+  WORKFLOW_GET_STREAM_ID,
   WORKFLOW_USE_STEP,
 } from './symbols.js';
 import * as Attribute from './telemetry/semantic-conventions.js';
 import { trace } from './telemetry.js';
-import { withResolvers } from './util.js';
+import { getWorkflowRunStreamId, withResolvers } from './util.js';
 import type { WorkflowMetadata } from './workflow/get-workflow-metadata.js';
 import { WORKFLOW_CONTEXT_SYMBOL } from './workflow/get-workflow-metadata.js';
 import { createCreateHook } from './workflow/hook.js';
@@ -86,6 +87,9 @@ export async function runWorkflow(
     vmGlobalThis[WORKFLOW_USE_STEP] = useStep;
     // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
     vmGlobalThis[WORKFLOW_CREATE_HOOK] = createHook;
+    // @ts-expect-error - `@types/node` says symbol is not valid, but it does work
+    vmGlobalThis[WORKFLOW_GET_STREAM_ID] = (namespace?: string) =>
+      getWorkflowRunStreamId(workflowRun.runId, namespace);
 
     // For the workflow VM, we store the context in a symbol on the `globalThis` object
     const ctx: WorkflowMetadata = {

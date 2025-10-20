@@ -332,3 +332,31 @@ export async function promiseRaceStressTestWorkflow() {
 
   return done;
 }
+
+//////////////////////////////////////////////////////////
+
+async function stepThatRetriesAndSucceeds() {
+  'use step';
+  const { attempt } = getStepMetadata();
+  console.log(`stepThatRetriesAndSucceeds - attempt: ${attempt}`);
+
+  // Fail on attempts 1 and 2, succeed on attempt 3
+  if (attempt < 3) {
+    console.log(`Attempt ${attempt} - throwing error to trigger retry`);
+    throw new Error(`Failed on attempt ${attempt}`);
+  }
+
+  console.log(`Attempt ${attempt} - succeeding`);
+  return attempt;
+}
+
+export async function retryAttemptCounterWorkflow() {
+  'use workflow';
+  console.log('Starting retry attempt counter workflow');
+
+  // This step should fail twice and succeed on the third attempt
+  const finalAttempt = await stepThatRetriesAndSucceeds();
+
+  console.log(`Workflow completed with final attempt: ${finalAttempt}`);
+  return { finalAttempt };
+}

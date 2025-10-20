@@ -1,3 +1,3 @@
 # @vercel/workflow-core
 
-The docs have moved! Refer to them [here](https://useworkflow.dev/)
+Core runtime package for [Workflow DevKit](https://useworkflow.dev).

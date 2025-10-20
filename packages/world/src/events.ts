@@ -46,7 +46,6 @@ const StepRetryingEventSchema = BaseEventSchema.extend({
   eventType: z.literal('step_retrying'),
   correlationId: z.string(),
   eventData: z.object({
-    error: z.any(),
     attempt: z.number().min(1),
   }),
 });

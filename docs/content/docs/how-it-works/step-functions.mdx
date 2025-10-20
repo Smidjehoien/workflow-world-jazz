@@ -6,21 +6,25 @@ title: Step Functions
 
 Step functions are the "unit of work", they execute the actual work in workflows. This type of function has access to the Node.js runtime, can access environment variables, and `npm` dependencies.
 
+---
+
 ## Defining a Step Function
 
 A step function is defined by the `"use step"` directive.
 
 ```ts lineNumbers
 async function myStep() { 
-    "use step" // [!code highlight]
-    // Full Node.js access - use any npm package
-    // ...
+  "use step" // [!code highlight]
+  // Full Node.js access - use any npm package
+  // ...
 }
 ```
 
 <Callout type="warn">
 Step functions can only be called inside workflow functions.
 </Callout>
+
+---
 
 ## Controlling Step Retry Behavior
 

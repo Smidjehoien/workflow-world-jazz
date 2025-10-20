@@ -38,21 +38,26 @@ export const Hero = ({ title, description }: HeroProps) => {
 
   return (
     <section className="mt-[var(--fd-nav-height)] space-y-6 px-4 pt-24 pb-16 text-center">
-      <div className="mx-auto w-full max-w-4xl space-y-4">
+      <div className="mx-auto w-full max-w-4xl space-y-5">
         <Badge variant="secondary" className="rounded-full">
           <div className="size-2 rounded-full bg-muted-foreground" />
-          <p className="tracking-tight">Workflow SDK is in beta</p>
+          <p>Workflow DevKit is in beta</p>
         </Badge>
-        <h1 className="flex flex-col items-center justify-center text-center font-semibold text-4xl! leading-tighter tracking-tight lg:font-semibold sm:text-5xl! xl:text-6xl! xl:tracking-tighter text-balance">
+        <h1 className="flex flex-col items-center justify-center text-center font-semibold text-[40px]! leading-tighter tracking-tight lg:font-semibold sm:text-5xl! xl:text-6xl! text-balance">
           <p>{title}</p>
         </h1>
-        <p className="text-balance max-w-xl mx-auto text-muted-foreground text-xl">
-          {description}
+        <p className="text-balance max-w-3xl mx-auto text-muted-foreground text-xl leading-relaxed">
+          <span className="font-mono text-base bg-accent inline-block px-2 py-0 rounded-sm border border-border">
+            use workflow
+          </span>{' '}
+          brings durability, reliability, and observability to async JavaScript.
+          Build apps and AI Agents that can suspend, resume, and maintain state
+          with ease.
         </p>
       </div>
       <div className="inline-flex w-fit mx-auto items-center gap-3">
-        <Button asChild size="lg" className="h-[46px]">
-          <Link href="/docs/introduction">Get Started</Link>
+        <Button asChild size="lg" className="h-[44px] text-base">
+          <Link href="/docs/getting-started">Get Started</Link>
         </Button>
         <div className="relative bg-background border rounded-md overflow-hidden py-3 pl-4 pr-12 mx-auto inline-flex w-fit">
           <pre className="text-sm">

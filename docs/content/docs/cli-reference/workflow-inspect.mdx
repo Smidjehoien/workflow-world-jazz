@@ -1,0 +1,71 @@
+---
+title: workflow inspect
+---
+
+# `workflow inspect`
+
+Provides detailed views into your workflow runs, steps, and streams.
+
+**Shorthand:** `i`
+
+## Usage
+
+```bash
+npx workflow inspect <resource>
+```
+
+---
+
+## Inspecting Runs
+
+View all workflow runs:
+
+```bash
+npx workflow inspect runs
+# or
+npx wf i runs
+```
+
+And an example output:
+
+```
+runId                       workflowName         status     started        completed
+--------------------------  -------------------  ---------  -------------  -------------
+01DM34QQ1DQCDQB7Z671PME0MX  userSignupWorkflow   completed  7 days ago     6 days ago
+```
+
+---
+
+## Inspecting Steps
+
+View all steps in a workflow run:
+
+```bash
+npx workflow inspect steps <run-id>
+```
+
+---
+
+## Inspecting Streams
+
+View all streams in a workflow run:
+
+```bash
+npx workflow inspect streams -r <run-id>
+```
+
+<Callout>
+The `-r` flag is used to filter by run-id.
+</Callout>
+
+---
+
+## Filtering a Resource
+
+Filters can be applied to runs, steps, and streams by specifiying the resource and the id of the resource.
+
+For example, to view a specific run:
+
+```bash
+npx workflow inspect runs <run-id>
+```
