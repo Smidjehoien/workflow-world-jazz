@@ -2,10 +2,10 @@ import type { Webhook } from '@vercel/workflow';
 import { Resend } from 'resend';
 import { generateRsvpEmailTemplate } from '@/lib/template';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export const requestRsvp = async (email: string, webhook: Webhook<Request>) => {
   'use step';
+
+  const resend = new Resend(process.env.RESEND_API_KEY);
 
   try {
     console.log(`[STEP] Sending RSVP email to: ${email}`);
