@@ -7,6 +7,7 @@ import { ConnectionStatus } from '@/components/display-utils/connection-status';
 import { DynamicBreadcrumbs } from '@/components/dynamic-breadcrumbs';
 import { SettingsSidebar } from '@/components/settings-sidebar';
 import { buildUrlWithConfig, useQueryParamConfig } from '@/lib/config';
+import { Logo } from '../icons/logo';
 
 interface LayoutClientProps {
   children: React.ReactNode;
@@ -100,8 +101,11 @@ export function LayoutClient({ children }: LayoutClientProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-start justify-between">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">
-              Workflow Observability UI
+            <h1
+              className="flex items-center gap-2 mb-2"
+              title="Workflow Observability"
+            >
+              <Logo />
             </h1>
             <ConnectionStatus config={config} />
           </div>

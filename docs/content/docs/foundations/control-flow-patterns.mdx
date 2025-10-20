@@ -8,6 +8,8 @@ Control flows are an important part of building great applications. It allows yo
 
 There are many different ways to manage the control flow of your workflow. The difference between these methods is the way that the [step functions](/docs/how-it-works/step-functions) are orchestrated.
 
+---
+
 ## Sequential Execution
 
 The simplest way to orchestrate steps is to execute them one after another, where each step can be dependent on the previous step.
@@ -23,6 +25,8 @@ export async function dataPipelineWorkflow(data: any) {
   return stored;
 }
 ```
+
+---
 
 ## Parallel Execution
 
@@ -41,6 +45,8 @@ export async function fetchUserData(userId: string) {
   return { user, orders, preferences };
 }
 ```
+
+---
 
 ## Race Conditions
 

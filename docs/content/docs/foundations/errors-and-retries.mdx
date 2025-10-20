@@ -4,7 +4,9 @@ title: Errors & Retries [WIP]
 
 # Errors & Retries
 
-In addition to the default `Error` you can throw in step functions, Workflow provides two new types of errors you can use to further customize the error exit strategy when a step errors. These include [`FatalError`](/docs/api-reference/vercel-workflow-core/fatal-error) and [`RetryableError`](/docs/api-reference/vercel-workflow-core/retryable-error).
+In addition to the default `Error` you can throw in step functions, Workflow provides two new types of errors you can use to further customize the error exit strategy when a step errors. These include [`FatalError`](/docs/api-reference/vercel-workflow/fatal-error) and [`RetryableError`](/docs/api-reference/vercel-workflow/retryable-error).
+
+---
 
 ## Retrying Step Functions
 
@@ -34,7 +36,9 @@ async function callAPI(endpoint: string) {
 }
 ```
 
-To learn more about `RetryableError`, refer to [API Reference: `RetryableError`](/docs/api-reference/vercel-workflow-core/retryable-error).
+To learn more about `RetryableError`, refer to [API Reference: `RetryableError`](/docs/api-reference/vercel-workflow/retryable-error).
+
+---
 
 ## Failing Step Functions
 
@@ -56,7 +60,7 @@ async function callAPI(endpoint: string) {
 }
 ```
 
-To learn more about `FatalError`, refer to [API Reference: `FatalError`](/docs/api-reference/vercel-workflow-core/fatal-error).
+To learn more about `FatalError`, refer to [API Reference: `FatalError`](/docs/api-reference/vercel-workflow/fatal-error).
 
 ---
 
@@ -80,7 +84,7 @@ Here's some examples of when you would use each:
 
 ## Context-Aware Retries
 
-Workflow provides a function [`getStepMetadata`](/docs/api-reference/vercel-workflow-core/get-step-metadata), which can be used to retrieve the current step function metadata.
+Workflow provides a function [`getStepMetadata`](/docs/api-reference/vercel-workflow/get-step-metadata), which can be used to retrieve the current step function metadata.
 
 This function provides a couple of useful properties to give you more control over step retries:
 

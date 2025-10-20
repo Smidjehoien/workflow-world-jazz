@@ -19,11 +19,14 @@
   "pnpm": {
     "overrides": {
       "rfc6902": "5.1.2"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "bun"
+    ]
   },
   "scripts": {
     "prepare": "husky",
-    "build": "turbo build --filter='!examples/*'",
+    "build": "turbo build --filter='apps/*' --filter='packages/*' --filter='docs' --filter='workbench/*'",
     "test": "turbo test",
     "clean": "turbo clean",
     "typecheck": "turbo typecheck",

@@ -120,9 +120,6 @@ export const StepAttempt = SemanticConvention<number>('step.attempt');
 /** Current status of the step */
 export const StepStatus = SemanticConvention<Step['status']>('step.status');
 
-/** Number of times this step has been retried */
-export const StepRetryCount = SemanticConvention<number>('step.retry_count');
-
 /** Maximum number of retries allowed for this step */
 export const StepMaxRetries = SemanticConvention<number>('step.max_retries');
 

@@ -171,7 +171,7 @@ export const UseCases = () => {
         <h2 className="font-semibold text-xl tracking-tight sm:text-2xl md:text-3xl">
           Patterns for
           <Select value={selectedCase} onValueChange={handleCaseChange}>
-            <SelectTrigger className="font-semibold bg-background text-xl tracking-tight sm:text-2xl md:text-3xl mt-1 data-[size=default]:h-auto py-1">
+            <SelectTrigger className="font-semibold bg-background text-xl tracking-tight sm:text-2xl md:text-3xl mt-1 data-[size=default]:h-auto py-1.5 -ml-3">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -183,7 +183,7 @@ export const UseCases = () => {
             </SelectContent>
           </Select>
         </h2>
-        <p className="text-balance text-lg text-muted-foreground">
+        <p className="text-balance text-lg text-muted-foreground mt-2">
           Build reliable, long-running processes with automatic retries, state
           persistence, and observability built in.
         </p>

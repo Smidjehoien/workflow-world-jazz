@@ -34,15 +34,15 @@ export function Navbar(props: ComponentProps<'div'>) {
         id="nd-nav"
         {...props}
         className={cn(
-          'fixed top-(--fd-banner-height) right-(--removed-body-scroll-bar-size,0) left-0 z-40 border-b backdrop-blur-lg transition-colors',
+          'fixed top-(--fd-banner-height) right-(--removed-body-scroll-bar-size,0) left-0 z-40 border-b transition-colors',
           value.length > 0 && 'max-lg:rounded-b-2xl max-lg:shadow-lg',
-          (!isTransparent || value.length > 0) && 'bg-background/80',
+          (!isTransparent || value.length > 0) && 'bg-background',
           props.className
         )}
       >
         <NavigationMenuList
           asChild
-          className="flex h-14 w-full items-center px-4"
+          className="flex h-16 w-full items-center px-6"
         >
           <nav>{props.children}</nav>
         </NavigationMenuList>

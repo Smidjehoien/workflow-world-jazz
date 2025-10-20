@@ -45,7 +45,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             links={[
               {
                 text: 'Docs',
-                url: '/docs/introduction',
+                url: '/docs/getting-started',
                 secondary: false,
               },
               {

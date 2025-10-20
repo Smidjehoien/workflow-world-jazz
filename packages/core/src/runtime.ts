@@ -533,24 +533,17 @@ export const stepEntrypoint =
 
           span?.setAttributes({
             ...Attribute.StepStatus(step.status),
-            ...Attribute.StepRetryCount(step.attempt),
           });
 
           let result: unknown;
+          const attempt = step.attempt + 1;
           try {
-            if (step.status === 'pending') {
-              step = await world.steps.update(workflowRunId, stepId, {
-                status: 'running',
-              });
-              await world.events.create(workflowRunId, {
-                eventType: 'step_started',
-                correlationId: stepId,
-              });
-            }
-
-            if (step.status !== 'running') {
+            if (step.status !== 'pending') {
+              // We should only be running the step if it's pending
+              // (initial state, or state set on re-try), so the step has been
+              // invoked erroneously.
               console.error(
-                `Step "${stepId}" has status "${step.status}", skipping${step.error ? `: ${step.error}` : ''}`
+                `[Workflows] "${workflowRunId}" - Step invoked erroneously, expected status "pending", got "${step.status}" instead, skipping execution`
               );
               span?.setAttributes({
                 ...Attribute.StepSkipped(true),
@@ -559,12 +552,21 @@ export const stepEntrypoint =
               return;
             }
 
+            await world.events.create(workflowRunId, {
+              eventType: 'step_started', // TODO: Replace with 'step_retrying'
+              correlationId: stepId,
+            });
+
+            step = await world.steps.update(workflowRunId, stepId, {
+              attempt,
+              status: 'running',
+            });
+
             if (!step.startedAt) {
               throw new WorkflowRuntimeError(
                 `Step "${stepId}" has no "startedAt" timestamp`
               );
             }
-
             // Hydrate the step input arguments
             const ops: Promise<void>[] = [];
             const args = hydrateStepArguments(step.input, ops);
@@ -578,7 +580,7 @@ export const stepEntrypoint =
                 stepMetadata: {
                   stepId,
                   stepStartedAt: new Date(+step.startedAt),
-                  attempt: metadata.attempt,
+                  attempt,
                 },
                 workflowMetadata: {
                   workflowRunId,
@@ -654,7 +656,6 @@ export const stepEntrypoint =
                 ...Attribute.StepFatalError(true),
               });
             } else {
-              const attempt = metadata.attempt;
               const maxRetries = stepFn.maxRetries ?? 3;
 
               span?.setAttributes({
@@ -706,6 +707,9 @@ export const stepEntrypoint =
                     error: String(err),
                     stack: getErrorStack(err),
                   },
+                });
+                await world.steps.update(workflowRunId, stepId, {
+                  status: 'pending', // TODO: Should be "retrying" once we have that status
                 });
                 const timeoutSeconds = Math.max(
                   1,

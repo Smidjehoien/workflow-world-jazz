@@ -8,7 +8,7 @@ import { generateDefinition } from "@/lib/tsdoc"
 
 Creates a type-safe hook helper that ensures the payload type is consistent between hook creation and resumption.
 
-This is a lightweight wrapper around [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook) and [`resumeHook()`](/docs/api-reference/vercel-workflow-core/resume-hook) to avoid type mismatches.
+This is a lightweight wrapper around [`createHook()`](/docs/api-reference/vercel-workflow/create-hook) and [`resumeHook()`](/docs/api-reference/vercel-workflow-api/resume-hook) to avoid type mismatches.
 
 <Callout>
 We recommend using `defineHook()` over `createHook()` in production codebases for better type safety.
@@ -136,5 +136,5 @@ export async function slackBotWorkflow(channelId: string) {
 
 ## Related Functions
 
-* [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook) - Create a hook in a workflow.
-* [`resumeHook()`](/docs/api-reference/vercel-workflow-core/resume-hook) - Resume a hook with a payload.
+* [`createHook()`](/docs/api-reference/vercel-workflow/create-hook) - Create a hook in a workflow.
+* [`resumeHook()`](/docs/api-reference/vercel-workflow-api/resume-hook) - Resume a hook with a payload.

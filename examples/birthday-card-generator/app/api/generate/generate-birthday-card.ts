@@ -35,7 +35,7 @@ export const generateBirthdayCard = async (
 
     // Send RSVP emails with webhook URLs
     await Promise.all(
-      rsvpEmails.map((friend, i) => requestRsvp(friend, webhooks[i]))
+      rsvpEmails.map((friend, i) => requestRsvp(friend, webhooks[i].url))
     );
 
     // Store webhook promises - they'll resolve when users click the RSVP buttons
@@ -45,12 +45,9 @@ export const generateBirthdayCard = async (
     webhooks.forEach((webhook) => {
       webhook.then((request) => {
         const url = new URL(request.url);
-        const reply = url.searchParams.get('reply');
-        const email = url.searchParams.get('email');
-        rsvpReplies.push({
-          email: email || 'unknown',
-          reply: reply || 'no-response',
-        });
+        const reply = url.searchParams.get('reply') || 'no-response';
+        const email = url.searchParams.get('email') || 'unknown';
+        rsvpReplies.push({ email, reply });
       });
     });
 
@@ -58,8 +55,7 @@ export const generateBirthdayCard = async (
 
     // Step 4: Wait until event date is reached
     console.log('[WORKFLOW] Step 4/5: Waiting until event date is reached');
-    const duration = new Date(eventDate).getTime() - Date.now();
-    await sleep(`${duration}ms`);
+    await sleep(new Date(eventDate));
     console.log('[WORKFLOW] Step 4/5 complete. Event date reached');
 
     // Step 5: Send email to recipient

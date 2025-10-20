@@ -51,11 +51,13 @@ sequenceDiagram
 Each step in the birthday card generation workflow is isolated and runs with automatic retry handling:
 
 **Step 1: Generate Image** (`generate-image.ts`)
+
 - 🎨 Uses Google Gemini 2.5 Flash Image model
 - 🌐 Routed through Vercel AI Gateway
 - 🔄 Automatic retry handling for transient failures
 
 **Step 2: Generate Message** (`generate-message.ts`)
+
 - ✍️ Uses GPT-5-nano model
 - 🌐 Routed through Vercel AI Gateway
 - 🔄 Automatic retry handling for transient failures
@@ -63,6 +65,7 @@ Each step in the birthday card generation workflow is isolated and runs with aut
 ### Orchestration
 
 The main workflow (`generate-birthday-card.ts`) orchestrates both steps sequentially, ensuring:
+
 - 📊 Comprehensive logging and timing metrics
 - 🔄 Error handling with proper error propagation
 - 📈 Performance tracking for the entire workflow

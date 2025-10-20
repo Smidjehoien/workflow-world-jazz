@@ -1,5 +1,4 @@
 {
   "title": "How it Works",
-  "pages": ["workflow-functions", "step-functions", "hooks"],
-  "defaultOpen": true
+  "pages": ["workflow-functions", "step-functions", "hooks"]
 }

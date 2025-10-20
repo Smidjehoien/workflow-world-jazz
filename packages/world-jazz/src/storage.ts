@@ -131,7 +131,8 @@ export const createRunStorage = (
         );
       }
 
-      if (data.status === 'running') {
+      // Only set startedAt the first time transitioning to 'running'
+      if (data.status === 'running' && !jwr.startedAt) {
         jwr.$jazz.set('startedAt', now);
       }
       if (
@@ -292,8 +293,12 @@ export const createStepStorage = (
       if (data.errorCode !== undefined) {
         js.$jazz.set('errorCode', data.errorCode);
       }
+      if (data.attempt !== undefined) {
+        js.$jazz.set('attempt', data.attempt);
+      }
 
-      if (data.status === 'running') {
+      // Only set startedAt the first time the step transitions to 'running'
+      if (data.status === 'running' && !js.startedAt) {
         js.$jazz.set('startedAt', now);
       }
       if (data.status === 'completed' || data.status === 'failed') {
