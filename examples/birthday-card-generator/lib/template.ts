@@ -1,10 +1,14 @@
 export function generateRsvpEmailTemplate(
   recipientEmail: string,
-  webhookToken: string,
-  baseUrl: string
+  url: string
 ): string {
-  const yesUrl = `${baseUrl}?reply=yes&email=${encodeURIComponent(recipientEmail)}`;
-  const noUrl = `${baseUrl}?reply=no&email=${encodeURIComponent(recipientEmail)}`;
+  // Replace https with http for localhost URLs
+  const callbackUrl = url.includes('localhost')
+    ? url.replace('https://', 'http://')
+    : url;
+
+  const yesUrl = `${callbackUrl}?reply=yes&email=${encodeURIComponent(recipientEmail)}`;
+  const noUrl = `${callbackUrl}?reply=no&email=${encodeURIComponent(recipientEmail)}`;
 
   return `
     <!DOCTYPE html>
