@@ -6,6 +6,7 @@ import type {
   Event,
   GetHookParams,
   Hook,
+  ListEventsByCorrelationIdParams,
   ListEventsParams,
   ListHooksParams,
   ListWorkflowRunStepsParams,
@@ -498,6 +499,12 @@ export const createEventStorage = (
         getItemId: (je) => je.$jazz.id,
         transform: toEvent,
       });
+    },
+
+    async listByCorrelationId(
+      _params: ListEventsByCorrelationIdParams
+    ): Promise<PaginatedResponse<Event>> {
+      throw new Error('Not implemented');
     },
   };
 };

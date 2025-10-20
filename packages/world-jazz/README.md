@@ -20,43 +20,39 @@ For production use, use the official [Jazz World](https://github.com/garden-co/v
      }
     ```
 
-2. Add your Jazz API key to the .env.local file:
+2. Add your Jazz API key to the .env.local file and set the WORKFLOW_TARGET_WORLD environment variable to @vercel/workflow-world-jazz:
 
     ```bash
     export JAZZ_API_KEY=<your-api-key>
     echo "JAZZ_API_KEY=$JAZZ_API_KEY" >> .env.local
-    ```
-
-3. Create a worker account (will be used to submit items to the queue):
-
-    ```bash
-    pnpm dlx jazz-run account create --name "Queue Pusher" >> .env.local
-    ```
-
-4. Create a webhook registry:
-
-    ```bash
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook create-registry >> .env.local
-    ```
-
-    Your .env.local file should now have credentials for both the worker and the registry account, as well as a registry ID.
-
-5. Allow the worker created in step 1 to register a webhook:
-
-    ```bash
-    set -a && source .env.local
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook grant --accountID $JAZZ_WORKER_ACCOUNT
-    ```
-
-6. Run the webhook registry:
-
-    ```bash
-    pnpm dlx https://pkg.pr.new/garden-co/jazz/jazz-run@e0ddd47e42ac3848ec3db794bbf390375513f180 webhook run
-    ```
-
-7. Run your app:
-
-    ```bash
     export WORKFLOW_TARGET_WORLD=@vercel/workflow-world-jazz
+    ```
+
+2. Create a jazz worker account:
+
+    ```bash
+    pnpx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 account create --name "Workflow Worker" >> .env.local
+    ```
+
+    Your .env.local file should now contain `JAZZ_WORKER_ACCOUNT` and `JAZZ_WORKER_SECRET`.
+
+3. Create a webhook registry and allow the worker created in step 2 to register a webhook:
+
+    ```bash
+    pnpx env-cmd -f .env.local -x -- pnpx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 webhook create-registry --grant \$JAZZ_WORKER_ACCOUNT >> .env.local
+    ```
+
+    Your .env.local file should now contain `JAZZ_WEBHOOK_REGISTRY_SECRET` and `JAZZ_WEBHOOK_REGISTRY_ID`.
+    ```
+
+4. Run the webhook registry:
+
+    ```bash
+    pnpx env-cmd -f .env.local -- pnpx https://pkg.pr.new/garden-co/jazz/jazz-run@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6 webhook run
+    ```
+
+5. Run your app:
+
+    ```bash
     pnpm dev
     ```
