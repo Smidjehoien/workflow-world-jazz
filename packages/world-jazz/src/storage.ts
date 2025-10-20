@@ -28,6 +28,7 @@ import {
   JazzWorkflowRun,
 } from './types.js';
 
+const COVALUE_ID_PREFIX = 'co_';
 const RUN_ID_PREFIX = 'wrun_';
 const EVENT_ID_PREFIX = 'evnt_';
 
@@ -78,9 +79,7 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const covalueId = id.startsWith(RUN_ID_PREFIX)
-        ? id.slice(RUN_ID_PREFIX.length)
-        : id;
+      const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
       const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
@@ -100,9 +99,7 @@ export const createRunStorage = (
       // Needed because World creation is synchronous
       await ensureLoaded({});
 
-      const covalueId = id.startsWith(RUN_ID_PREFIX)
-        ? id.slice(RUN_ID_PREFIX.length)
-        : id;
+      const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
       const jwr = await JazzWorkflowRun.load(covalueId, {
         resolve: {
           executionContext: true,
@@ -572,7 +569,7 @@ function paginateItems<T, TItem>({
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
   return {
-    runId: RUN_ID_PREFIX + jwr.$jazz.id,
+    runId: substitutePrefix(jwr.$jazz.id, COVALUE_ID_PREFIX, RUN_ID_PREFIX),
     deploymentId: jwr.deploymentId,
     status: jwr.status,
     workflowName: jwr.workflowName,
@@ -611,7 +608,7 @@ function toStep(js: JazzStep): Step {
 function toEvent(je: JazzEvent): Event {
   return {
     runId: je.runId,
-    eventId: EVENT_ID_PREFIX + je.$jazz.id,
+    eventId: substitutePrefix(je.$jazz.id, COVALUE_ID_PREFIX, EVENT_ID_PREFIX),
     eventType: je.eventType,
     eventData: je.eventData,
     correlationId: je.correlationId,
@@ -630,4 +627,11 @@ function toHook(jh: JazzHook): Hook {
     metadata: jh.metadata,
     createdAt: jh.createdAt,
   };
+}
+
+function substitutePrefix(val: string, from: string, to: string): string {
+  if (val.startsWith(from)) {
+    return to + val.slice(from.length);
+  }
+  return val;
 }

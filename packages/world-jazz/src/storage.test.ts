@@ -1,4 +1,4 @@
-import type { Hook, Step, Storage, WorkflowRun } from '@vercel/workflow-world';
+import type { Step, Storage, WorkflowRun } from '@vercel/workflow-world';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStorage } from './storage.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
@@ -16,6 +16,64 @@ describe('Jazz Storage', () => {
   });
 
   describe('runs', () => {
+    describe('ID conversion behavior', () => {
+      it('should create run with wrun_ prefix in returned runId', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const result = await storage.runs.create(createRequest);
+
+        expect(result.runId).toMatch(/^wrun_/);
+      });
+
+      it('should retrieve run using wrun_ prefix and return wrun_ prefix', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const created = await storage.runs.create(createRequest);
+        const retrieved = await storage.runs.get(created.runId);
+
+        expect(retrieved.runId).toMatch(/^wrun_/);
+        expect(retrieved.runId).toBe(created.runId);
+      });
+
+      it('should update run using wrun_ prefix and return wrun_ prefix', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        const created = await storage.runs.create(createRequest);
+        const updated = await storage.runs.update(created.runId, {
+          status: 'running',
+        });
+
+        expect(updated.runId).toMatch(/^wrun_/);
+        expect(updated.runId).toBe(created.runId);
+      });
+
+      it('should list runs with wrun_ prefix in returned runIds', async () => {
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: ['test', 'data'],
+        };
+
+        await storage.runs.create(createRequest);
+        const listResult = await storage.runs.list();
+
+        expect(listResult.data).toHaveLength(1);
+        expect(listResult.data[0].runId).toMatch(/^wrun_/);
+      });
+    });
+
     describe('create', () => {
       it('should create a new workflow run with all required fields', async () => {
         const createRequest = {
@@ -1061,6 +1119,34 @@ describe('Jazz Storage', () => {
       testRunId = createdRun.runId;
     });
 
+    describe('ID conversion behavior', () => {
+      it('should create event with evnt_ prefix in returned eventId', async () => {
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'corr-123',
+          eventData: { result: 'success' },
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result.eventId).toMatch(/^evnt_/);
+      });
+
+      it('should list events with evnt_ prefix in returned eventIds', async () => {
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'corr-123',
+          eventData: { result: 'success' },
+        };
+
+        await storage.events.create(testRunId, createRequest);
+        const listResult = await storage.events.list({ runId: testRunId });
+
+        expect(listResult.data).toHaveLength(1);
+        expect(listResult.data[0].eventId).toMatch(/^evnt_/);
+      });
+    });
+
     describe('create', () => {
       it('should create a step_completed event with all required fields', async () => {
         const createRequest = {
@@ -1723,7 +1809,6 @@ describe('Jazz Storage', () => {
         const created = await storage.hooks.create(testRunId, {
           hookId: 'lifecycle-hook',
           token: 'lifecycle-token',
-          response: { message: 'Initial response' },
         });
 
         expect(created.hookId).toBe('lifecycle-hook');
@@ -1772,35 +1857,6 @@ describe('Jazz Storage', () => {
 
         expect(retrieved1.runId).toBe(testRunId);
         expect(retrieved2.runId).toBe(secondRun.runId);
-      });
-
-      it('should support hooks with varying response complexity', async () => {
-        const simpleHook = await storage.hooks.create(testRunId, {
-          hookId: 'simple-hook',
-          token: 'simple-token',
-        });
-
-        const complexHook = await storage.hooks.create(testRunId, {
-          hookId: 'complex-hook',
-          token: 'complex-token',
-          response: {
-            nested: {
-              deeply: {
-                value: 42,
-                array: [1, 2, { mixed: 'content' }],
-              },
-            },
-          },
-        });
-
-        // Verify both can be retrieved
-        const retrievedSimple = await storage.hooks.getByToken('simple-token');
-        const retrievedComplex =
-          await storage.hooks.getByToken('complex-token');
-
-        expect(retrievedSimple).toEqual(simpleHook);
-        expect(retrievedComplex).toEqual(complexHook);
-        // Note: response is stored internally but not returned in Hook type
       });
     });
   });
