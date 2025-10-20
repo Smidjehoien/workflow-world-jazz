@@ -1,6 +1,7 @@
 import type {
   Queue,
   QueuePrefix,
+  StepInvokePayload,
   ValidQueueName,
 } from '@vercel/workflow-world';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -12,6 +13,8 @@ import { JazzQueue, type JazzStorageAccountResolver } from './types.js';
 function createQueueName(name: string): ValidQueueName {
   return `__wkf_step_${name}` as ValidQueueName;
 }
+
+const testMessage = { data: 'test message' } as unknown as StepInvokePayload;
 
 describe('Jazz Queue', () => {
   // Mock the registerWebhook function from jazz-webhook
@@ -41,7 +44,7 @@ describe('Jazz Queue', () => {
   describe('queue', () => {
     it('should enqueue a simple message', async () => {
       const queueName = createQueueName('test-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
 
       const result = await queue.queue(queueName, message);
 
@@ -52,7 +55,7 @@ describe('Jazz Queue', () => {
 
     it('should enqueue a message with deployment ID', async () => {
       const queueName = createQueueName('test-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
       const deploymentId = 'deployment-123';
 
       const result = await queue.queue(queueName, message, {
@@ -65,7 +68,7 @@ describe('Jazz Queue', () => {
 
     it('should enqueue a message with idempotency key', async () => {
       const queueName = createQueueName('test-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
       const idempotencyKey = 'idempotent-key-123';
 
       const result = await queue.queue(queueName, message, {
@@ -78,7 +81,7 @@ describe('Jazz Queue', () => {
 
     it('should enqueue a message with both deployment ID and idempotency key', async () => {
       const queueName = createQueueName('test-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
       const deploymentId = 'deployment-123';
       const idempotencyKey = 'idempotent-key-123';
 
@@ -105,7 +108,7 @@ describe('Jazz Queue', () => {
         },
         simple: 'string',
         numbers: [1, 2, 3],
-      };
+      } as unknown as StepInvokePayload;
 
       const result = await queue.queue(queueName, complexMessage);
 
@@ -117,29 +120,43 @@ describe('Jazz Queue', () => {
       const queueName = createQueueName('test-queue');
 
       // Test string
-      const stringResult = await queue.queue(queueName, 'simple string');
+      const stringResult = await queue.queue(
+        queueName,
+        'simple string' as unknown as StepInvokePayload
+      );
       expect(stringResult.messageId).toBeDefined();
 
       // Test number
-      const numberResult = await queue.queue(queueName, 42);
+      const numberResult = await queue.queue(
+        queueName,
+        42 as unknown as StepInvokePayload
+      );
       expect(numberResult.messageId).toBeDefined();
 
       // Test boolean
-      const booleanResult = await queue.queue(queueName, true);
+      const booleanResult = await queue.queue(
+        queueName,
+        true as unknown as StepInvokePayload
+      );
       expect(booleanResult.messageId).toBeDefined();
 
       // Test null
-      const nullResult = await queue.queue(queueName, null);
+      const nullResult = await queue.queue(
+        queueName,
+        null as unknown as StepInvokePayload
+      );
       expect(nullResult.messageId).toBeDefined();
 
       // Test array
-      const arrayResult = await queue.queue(queueName, [1, 2, 3]);
+      const arrayResult = await queue.queue(queueName, [
+        1, 2, 3,
+      ] as unknown as StepInvokePayload);
       expect(arrayResult.messageId).toBeDefined();
     });
 
     it('should create new queue if it does not exist', async () => {
       const queueName = createQueueName('new-queue');
-      const message = { data: 'first message' };
+      const message = { data: 'first message' } as unknown as StepInvokePayload;
 
       const result = await queue.queue(queueName, message);
 
@@ -153,7 +170,7 @@ describe('Jazz Queue', () => {
         { data: 'message 1' },
         { data: 'message 2' },
         { data: 'message 3' },
-      ];
+      ] as unknown as StepInvokePayload[];
 
       const results: { messageId: string }[] = [];
       for (const message of messages) {
@@ -179,7 +196,7 @@ describe('Jazz Queue', () => {
         createQueueName('queue-2'),
         createQueueName('queue-3'),
       ];
-      const message = { data: 'test message' };
+      const message = testMessage;
 
       const results = await Promise.all(
         queueNames.map((queueName) => queue.queue(queueName, message))
@@ -206,7 +223,7 @@ describe('Jazz Queue', () => {
     it('should handle valid webhook payload and process message', async () => {
       // Enqueue a message
       const queueName = createQueueName('test-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
       const queueResult = await queue.queue(queueName, message);
 
       // Get the queue that was created so we can find the covalue ID of its messages to simulate the webhook payload
@@ -323,7 +340,9 @@ describe('Jazz Queue', () => {
       async ({ timeoutSeconds }) => {
         // Enqueue a message
         const queueName = createQueueName(`test-queue-${timeoutSeconds}`);
-        const message = { data: `test message ${timeoutSeconds}` };
+        const message = {
+          data: `test message ${timeoutSeconds}`,
+        } as unknown as StepInvokePayload;
         await queue.queue(queueName, message);
 
         // Get the queue that was created
@@ -387,7 +406,7 @@ describe('Jazz Queue', () => {
         { type: 'start', data: 'workflow started' },
         { type: 'process', data: 'processing data' },
         { type: 'complete', data: 'workflow completed' },
-      ];
+      ] as unknown as StepInvokePayload[];
 
       // Enqueue multiple messages
       const results: { messageId: string }[] = [];
@@ -417,7 +436,7 @@ describe('Jazz Queue', () => {
         null,
         { object: 'message' },
         [1, 2, 3],
-      ];
+      ] as unknown as StepInvokePayload[];
 
       const results: { messageId: string }[] = [];
       for (const message of mixedMessages) {
@@ -434,7 +453,7 @@ describe('Jazz Queue', () => {
 
     it('should handle queue with deployment and idempotency options', async () => {
       const queueName = createQueueName('options-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
 
       const results: { messageId: string }[] = [];
       results.push(
@@ -464,7 +483,7 @@ describe('Jazz Queue', () => {
         { order: 1, data: 'first' },
         { order: 2, data: 'second' },
         { order: 3, data: 'third' },
-      ];
+      ] as unknown as StepInvokePayload[];
 
       // Enqueue messages sequentially to maintain order
       const results: Array<{ messageId: string }> = [];
@@ -486,7 +505,7 @@ describe('Jazz Queue', () => {
       // Note: The ValidQueueName type should prevent invalid names at compile time
       // This test is more about runtime behavior if somehow an invalid name gets through
       const validQueueName = createQueueName('valid-queue');
-      const message = { data: 'test message' };
+      const message = testMessage;
 
       const result = await queue.queue(validQueueName, message);
       expect(result).toHaveProperty('messageId');
@@ -495,7 +514,7 @@ describe('Jazz Queue', () => {
 
     it('should handle empty message gracefully', async () => {
       const queueName = createQueueName('empty-message-queue');
-      const emptyMessage = {};
+      const emptyMessage = {} as unknown as StepInvokePayload;
 
       const result = await queue.queue(queueName, emptyMessage);
       expect(result).toHaveProperty('messageId');
@@ -512,7 +531,7 @@ describe('Jazz Queue', () => {
             value: 'x'.repeat(5000),
           },
         },
-      };
+      } as unknown as StepInvokePayload;
 
       const result = await queue.queue(queueName, largeMessage);
       expect(result).toHaveProperty('messageId');
@@ -526,11 +545,16 @@ describe('Jazz Queue', () => {
       const messageCount = 10;
 
       // Ensure the queue exists
-      await queue.queue(queueName, { data: 'initial message' });
+      await queue.queue(queueName, {
+        data: 'initial message',
+      } as unknown as StepInvokePayload);
 
       // Create multiple concurrent queue operations
       const promises = Array.from({ length: messageCount }, (_, index) =>
-        queue.queue(queueName, { index, data: `message ${index}` })
+        queue.queue(queueName, {
+          index,
+          data: `message ${index}`,
+        } as unknown as StepInvokePayload)
       );
 
       const results = await Promise.all(promises);
@@ -557,7 +581,7 @@ describe('Jazz Queue', () => {
 
       // Create concurrent operations on different queues
       const promises = queueNames.map((queueName) =>
-        queue.queue(queueName, message)
+        queue.queue(queueName, message as unknown as StepInvokePayload)
       );
 
       const results = await Promise.all(promises);
