@@ -55,7 +55,7 @@ Workflow functions have the ability to automatically suspend while they wait on 
 
 - Waiting on a step function: the workflow yields while the step runs in the step runtime.
 - Using `sleep()` to pause for some fixed duration.
-- Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow-core/create-hook), which resumes the workflow when an external system passes data into the workflow.
+- Awaiting on a promise returned by [`createHook()`](/docs/api-reference/vercel-workflow/create-hook), which resumes the workflow when an external system passes data into the workflow.
 
 ```typescript lineNumbers
 import { sleep, getWebhook } from '@vercel/workflow'; // [!code highlight]

@@ -34,7 +34,7 @@ function Card({ title, href, className, children, disabled }: CardProps) {
     <a
       href={href}
       className={cn(
-        'block rounded-lg border border-border p-6 transition-colors hover:border-primary/25 hover:bg-accent no-underline',
+        'block rounded-lg border border-border p-6 transition hover:border-primary/25 hover:bg-accent no-underline duration-200',
         className
       )}
     >

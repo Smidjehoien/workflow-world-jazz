@@ -90,7 +90,7 @@ export function LLMCopyButton({
 }
 
 const optionVariants = cva(
-  'text-sm p-2 rounded-lg inline-flex items-center gap-2 hover:text-fd-accent-foreground hover:bg-fd-accent [&_svg]:size-4'
+  'text-sm p-2 rounded-md inline-flex items-center gap-2 hover:text-fd-accent-foreground hover:bg-fd-accent [&_svg]:size-4'
 );
 
 export function ViewOptions({
@@ -177,7 +177,10 @@ export function ViewOptions({
         Open
         <ChevronDown className="size-3.5 text-fd-muted-foreground" />
       </PopoverTrigger>
-      <PopoverContent className="flex flex-col overflow-auto z-0" align="end">
+      <PopoverContent
+        className="flex flex-col overflow-auto z-0 rounded-lg"
+        align="end"
+      >
         {items.map((item) => (
           <a
             key={item.href}

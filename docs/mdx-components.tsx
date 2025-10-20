@@ -2,6 +2,7 @@ import { Heading } from 'fumadocs-ui/components/heading';
 import type { MDXComponents } from 'mdx/types';
 import Link from 'next/link';
 import BaseUrl from '@/components/base-url';
+import * as AccordionComponents from '@/components/ui/accordion';
 import * as CalloutComponents from '@/components/ui/callout';
 import { CodeBlock } from '@/components/ui/code-block';
 import { TypeTable } from '@/components/ui/type-table';
@@ -13,6 +14,7 @@ import { cn } from './lib/cn';
 // use this function to get MDX components, you will need it for rendering MDX
 export function getMDXComponents(components?: MDXComponents): MDXComponents {
   return {
+    ...AccordionComponents,
     Badge,
     BaseUrl,
     TypeTable,

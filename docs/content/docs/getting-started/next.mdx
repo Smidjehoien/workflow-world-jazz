@@ -25,9 +25,7 @@ Enter the newly made directory:
 cd my-workflow-app
 ```
 
-### Install Dependencies
-
-Install `@vercel/workflow` to get started with Workflow.
+### Install `workflow`
 
 <BaseUrl>
   {(baseUrl) => (
@@ -53,7 +51,7 @@ Install `@vercel/workflow` to get started with Workflow.
 
 ### Configure Next.js
 
-Wrap your `next.config.ts` with `withWorkflow()`. This enables usage of the `"use workflow"` and `"use step"` directives needed by Workflow during local development.
+Wrap your `next.config.ts` with `withWorkflow()`. This enables usage of the `"use workflow"` and `"use step"` directives.
 
 ```typescript title="next.config.ts" lineNumbers
 import { withWorkflow } from '@vercel/workflow/next'; // [!code highlight]
@@ -66,71 +64,110 @@ const nextConfig: NextConfig = {
 export default withWorkflow(nextConfig); // [!code highlight]
 ```
 
+<Accordion type="single" collapsible>
+  <AccordionItem value="typescript-intellisense" className="[&_h3]:my-0">
+    <AccordionTrigger className="[&_p]:my-0 text-lg [&_p]:text-foreground">
+      Setup Typescript Intellisense (Optional)
+    </AccordionTrigger>
+    <AccordionContent className="[&_p]:my-2">
+To enable helpful hints in your IDE, setup the workflow plugin in `tsconfig.json`:
+
+```json title="tsconfig.json" lineNumbers
+{
+  "compilerOptions": {
+    // ... rest of your TypeScript config
+    "plugins": [
+      {
+        "name": "@vercel/workflow" // [!code highlight]
+      }
+    ]
+  }
+}
+```
+
+    </AccordionContent>
+  </AccordionItem>
+</Accordion>
+
 </Step>
 
 <Step>
 
 ## Create Your First Workflow
 
-To create your first workflow, create a new `workflows` directory inside your project root (if using `src` folder then it would be `src/workflows`).
-
-<Callout type="info">
-We use the `workflows` directory name as a convention. You can use a different directory name if needed.
-</Callout>
-
-Create a new file inside the `workflows` directory and add the following code:
+Create a new file for our first workflow:
 
 ```typescript title="workflows/user-signup.ts" lineNumbers
 import { sleep } from "@vercel/workflow";
 
-export async function userSignupWorkflow(email: string) {
+export async function handleUserSignup(email: string) {
  "use workflow"; // [!code highlight]
 
  const user = await createUser(email);
- await sendWelcomeEmail(user.id);
+ await sendWelcomeEmail(user);
 
  await sleep("30s"); // Pause for 30s - doesn't consume any resources
- await sendOnboardingEmail(user.id);
+ await sendOnboardingEmail(user);
 
  return { userId: user.id, status: "onboarded" };
 }
 
+```
+
+We'll fill in those functions next, but let's take a look at this code:
+
+* We define a **workflow** function with the directive `"use workflow"`. Think of the workflow function as the _orchestrator_ of individual **steps**.
+* The Workflow DevKit's `sleep` function allows us to suspend execution of the workflow without using up any resources. A sleep can be a few seconds, hours, days, or even months long.
+
+## Create Your Workflow Steps
+
+Let's now define those missing functions.
+
+```typescript title="workflows/user-signup.ts" lineNumbers
+import { FatalError } from "@vercel/workflow"
+
+// Our workflow function defined earlier
+
 async function createUser(email: string) {
- "use step"; // [!code highlight]
+  "use step"; // [!code highlight]
 
- // Full Node.js access - database calls, APIs, etc.
- console.log(`Creating user with email: ${email}`);
- return { id: crypto.randomUUID(), email };
+  console.log(`Creating user with email: ${email}`);
+
+  // Full Node.js access - database calls, APIs, etc.
+  return { id: crypto.randomUUID(), email };
 }
 
-async function sendWelcomeEmail(userId: string) {
- "use step"; // [!code highlight]
+async function sendWelcomeEmail(user: { id: string; email: string; }) {
+  "use step"; // [!code highlight]
 
- console.log(`Sending welcome email to user: ${userId}`);
+  console.log(`Sending welcome email to user: ${user.id}`);
 
- if (Math.random() < 0.3) {
-  // By default, steps will be retried 3 times for unhandled errors
-  throw new Error("Retryable!");
- }
+  if (Math.random() < 0.3) {
+  // By default, steps will be retried for unhandled errors
+   throw new Error("Retryable!");
+  }
 }
 
-async function sendOnboardingEmail(userId: string) {
+async function sendOnboardingEmail(user: { id: string; email: string}) {
  "use step"; // [!code highlight]
 
- console.log(`Sending onboarding email to user: ${userId}`);
- // Email API call here
+  if (!user.email.includes("@")) {
+    // To skip retrying, throw a FatalError instead
+    throw new FatalError("Invalid Email");
+  }
+
+ console.log(`Sending onboarding email to user: ${user.id}`);
 }
 ```
 
 Taking a look at this code:
 
-* We define a **workflow** function with the directive `"use workflow"`. Think of the workflow function as the *orchestrator* of individual **steps**.
-* Business logic lives inside **steps**, like the `createUser` step. When a step is invoked inside a **workflow**, it gets enqueued to run on a separate request while the workflow is suspended.
-* If a step throws an error, like in `sendWelcomeEmail`, the step will automatically be retried until it succeeds (or hits a default max retry count).
-* The workflow's `sleep` function allows us to suspend execution of the workflow without using up any resources. A sleep can be a few seconds, hours, days, or even months long.
+* Business logic lives inside **steps**. When a step is invoked inside a **workflow**, it gets enqueued to run on a separate request while the workflow is suspended, just like `sleep`.
+* If a step throws an error, like in `sendWelcomeEmail`, the step will automatically be retried until it succeeds (or hits the step's max retry count).
+* Steps can throw a `FatalError` if an error is intentional and should not be retried.
 
 <Callout>
-We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs/foundations/concepts).
+We'll dive deeper into workflows, steps, and other ways to suspend or handle events in [Concepts](/docs/foundations/concepts).
 </Callout>
 
 </Step>
@@ -139,17 +176,18 @@ We'll dive deeper into workflows, steps, retrying, and sleep in [Concepts](/docs
 
 ## Create Your Route Handler
 
-To invoke your new workflow, you'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts`. Then, add the following code:
+To invoke your new workflow, we'll have to add your workflow to a `POST` API Route Handler, `app/api/signup/route.ts` with the following code:
 
 ```typescript title="app/api/signup/route.ts"
 import { start } from '@vercel/workflow/api';
-import { userSignupWorkflow } from "@/workflows/user-signup";
+import { handleUserSignup } from "@/workflows/user-signup";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
  const { email } = await request.json();
 
- await start(userSignupWorkflow, [email]); // Executes asynchronously and doesn't block your app
+ // Executes asynchronously and doesn't block your app
+ await start(handleUserSignup, [email]);
 
  return NextResponse.json({
   message: "User signup workflow started",
@@ -181,14 +219,12 @@ Once your development server is running, you can trigger your workflow by runnin
 curl -X POST --json '{"email":"hello@example.com"}' http://localhost:3000/api/signup
 ```
 
-This terminal command sends a `POST` request to your development server at `http://localhost:3000/api/signup` with the payload email `hello@example.com`, which will be consumed by your workflow function.
+Check the Next.js development server logs to see your workflow execute as well as the steps that are being processed.
 
-Watch the Next.js development server logs to see your workflow execute as well as the steps that are being processed.
-
-Additionally, you can use the [Workflow CLI](/docs/api-reference/cli) to inspect your workflow runs and steps in detail.
+Additionally, you can use the [Workflow CLI](/docs/cli-reference) to inspect your workflow runs and steps in detail.
 
 ```bash
-npx wf i runs
+npx wf i runs # add '--web' for an interactive Web based UI
 ```
 
 </Step>
@@ -197,10 +233,14 @@ npx wf i runs
 
 ---
 
+## Deploying to production
+
+**Workflow DevKit** apps currently work best when deployed to [Vercel](https://vercel.com/home) and needs no special configuration.
+
+Check the [Deploying](/docs/deploying) section to learn how your workflows can be deployed elsewhere.
+
 ## Next Steps
 
 * Learn more about the [Workflow Concepts](/docs/foundations/concepts).
-* Set up [TypeScript editor support](/docs/configuration/typescript).
-* Learn about how to use [Observability](/docs/observability) tools.
-* Check [Troubleshooting](/docs/troubleshooting) if you encounter issues.
+* Check [Errors](/docs/errors) if you encounter issues.
 * Explore the [API Reference](/docs/api-reference).

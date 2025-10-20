@@ -46,7 +46,12 @@ function findPageFile(tree: PageTree.Root, targetUrl: string): string | null {
 export function DocsPage({ toc = [], ...props }: DocsPageProps) {
   const { root } = useTreeContext();
   const pathname = usePathname();
-  const breadcrumbItems = useBreadcrumb(pathname, root);
+  const breadcrumbItems = useBreadcrumb(pathname, root, { includePage: true });
+
+  console.log(props);
+  console.log(pathname);
+  console.log(root.children);
+  console.log(root.children.find((item) => item.$id === pathname));
 
   const githubFilePath = useMemo(() => {
     const file = findPageFile(root, pathname);
@@ -59,44 +64,40 @@ export function DocsPage({ toc = [], ...props }: DocsPageProps) {
     <AnchorProvider toc={toc}>
       <main className="flex w-full min-w-0 flex-col pt-[var(--fd-nav-height)]">
         <div className="flex flex-row items-center justify-between pr-4">
-          {breadcrumbItems.length > 0 ? (
-            <div className="w-full max-w-[860px] px-4 md:mx-auto md:px-6">
-              <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
-                {breadcrumbItems.map((item, i) => (
-                  <Fragment key={i}>
-                    {i !== 0 && (
-                      <svg
-                        className="opacity-50"
-                        fill="none"
-                        height="16"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        viewBox="0 0 24 24"
-                        width="16"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path d="m9 18 6-6-6-6" />
-                      </svg>
-                    )}
-                    {item.url ? (
-                      <Link
-                        className="transition-colors hover:text-foreground"
-                        href={item.url}
-                      >
-                        {item.name}
-                      </Link>
-                    ) : (
-                      <span className="text-foreground">{item.name}</span>
-                    )}
-                  </Fragment>
-                ))}
-              </div>
+          <div className="w-full max-w-[860px] px-4 md:mx-auto md:px-6">
+            <div className="flex flex-row items-center gap-1 text-muted-foreground text-sm">
+              {breadcrumbItems.map((item, i) => (
+                <Fragment key={i}>
+                  {i !== 0 && (
+                    <svg
+                      className="opacity-50"
+                      fill="none"
+                      height="16"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  )}
+                  {item.url ? (
+                    <Link
+                      className="transition-colors hover:text-foreground"
+                      href={item.url}
+                    >
+                      {item.name}
+                    </Link>
+                  ) : (
+                    <span className="text-foreground">{item.name}</span>
+                  )}
+                </Fragment>
+              ))}
             </div>
-          ) : (
-            <div />
-          )}
+          </div>
           <div className="flex shrink-0 gap-1">
             <LLMCopyButton markdownUrl={markdownUrl} />
             <ViewOptions

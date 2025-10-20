@@ -133,7 +133,7 @@ A typical development workflow with embedded world:
    ```
 
 3. **Inspect the results:**
-   - Use the [CLI](/docs/api-reference/cli) or [Web UI](/docs/observability)
+   - Use the [CLI](/docs/cli-reference) or [Web UI](/docs/observability)
    - Check JSON files in `.workflow-data/`
    - View development server logs
 
@@ -162,7 +162,7 @@ The embedded world is designed for development, not production:
 - **Single instance** - Cannot handle distributed deployments
 - **No authentication** - Suitable only for local development
 
-For production deployments, use the [Vercel World](/docs/self-hosting/world/world-vercel).
+For production deployments, use the [Vercel World](/docs/deploying/world/vercel-world).
 
 ## API Reference
 
@@ -196,6 +196,6 @@ const world = createEmbeddedWorld('./my-data', 3000);
 
 ## Learn More
 
-- [World Interface](/docs/self-hosting/world) - Understanding the World interface
-- [Vercel World](/docs/self-hosting/world/world-vercel) - For production deployments
+- [World Interface](/docs/deploying/world) - Understanding the World interface
+- [Vercel World](/docs/deploying/world/vercel-world) - For production deployments
 - [Observability](/docs/observability) - Monitoring and debugging tools
