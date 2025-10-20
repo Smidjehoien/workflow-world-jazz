@@ -30,7 +30,7 @@ Contributions to Workflow DevKit are welcome and highly appreciated. Please use 
 
 ## Authors
 
-Workflow DevKit was buil by engineers at [Vercel](https://vercel.com) and the [Open Source Community](https://github.com/vercel/workflow/graphs/contributors).
+Workflow DevKit was built by engineers at [Vercel](https://vercel.com) and the [Open Source Community](https://github.com/vercel/workflow/graphs/contributors).
 
 The initial core contributing engineers are
 
@@ -43,6 +43,7 @@ The initial core contributing engineers are
 - Pranay Prakash ([@pranaygp](https://github.com/pranaygp))
 
 ---
+
 ## Security
 
 If you believe you have found a security vulnerability in Next.js, we encourage you to **_responsibly disclose this and NOT open a public issue_**.
