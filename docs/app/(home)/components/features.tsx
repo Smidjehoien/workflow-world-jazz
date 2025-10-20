@@ -1,17 +1,18 @@
 const data = [
   {
-    title: 'Reliability, Minus the Plumbing',
+    title: 'Reliability, minus the plumbing',
     description:
       'Start with plain async code. No queues to wire, no schedulers to tune, no YAML. Best‑in‑class DX that compiles reliability into your app with zero config.',
   },
   {
-    title: 'See Every Step, Instantly',
+    title: 'See every step, instantly',
     description:
       'Inspect every run end‑to‑end. Pause, replay, and time‑travel through steps with traces, logs, and metrics automatically captured — no extra services or setup.',
   },
   {
-    title: 'TBD',
-    description: 'Your description here',
+    title: 'Run workflows for minutes, or days',
+    description:
+      'Workflows can power a wide array of apps, from streaming realtime agents, to CI/CD pipelines, or multi day email subscriptions workflows.',
   },
 ];
 

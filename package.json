@@ -19,7 +19,10 @@
   "pnpm": {
     "overrides": {
       "rfc6902": "5.1.2"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "bun"
+    ]
   },
   "scripts": {
     "prepare": "husky",

@@ -27,8 +27,8 @@ export const Intro = () => (
         Reliability-as-code
       </h2>
       <p className=" text-lg text-muted-foreground md:mt-4">
-        Move from fragile queues and custom retries to durable, resumable code
-        with simple directives.
+        Move from hand-rolled queues and custom retries to durable, resumable
+        code with simple directives.
       </p>
     </div>
     <div className="flex items-center justify-center">

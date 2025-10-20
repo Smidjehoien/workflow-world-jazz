@@ -38,7 +38,7 @@ export const Hero = ({ title, description }: HeroProps) => {
 
   return (
     <section className="mt-[var(--fd-nav-height)] space-y-6 px-4 pt-24 pb-16 text-center">
-      <div className="mx-auto w-full max-w-4xl space-y-4">
+      <div className="mx-auto w-full max-w-4xl space-y-5">
         <Badge variant="secondary" className="rounded-full">
           <div className="size-2 rounded-full bg-muted-foreground" />
           <p>Workflow DevKit is in beta</p>
@@ -56,7 +56,7 @@ export const Hero = ({ title, description }: HeroProps) => {
         </p>
       </div>
       <div className="inline-flex w-fit mx-auto items-center gap-3">
-        <Button asChild size="lg" className="h-[46px] text-base">
+        <Button asChild size="lg" className="h-[44px] text-base">
           <Link href="/docs/getting-started">Get Started</Link>
         </Button>
         <div className="relative bg-background border rounded-md overflow-hidden py-3 pl-4 pr-12 mx-auto inline-flex w-fit">
