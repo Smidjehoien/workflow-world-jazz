@@ -18,8 +18,8 @@
     "./serialization": "./dist/serialization.js",
     "./observability": {
       "types": "./dist/observability.d.ts",
-      "default": "./dist/observability.js",
-      "node": "./dist/observability.js"
+      "node": "./dist/observability.js",
+      "default": "./dist/observability.js"
     },
     "./parse-name": {
       "types": "./dist/parse-name.d.ts",
