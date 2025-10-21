@@ -1,6 +1,6 @@
 {
   "name": "workflow-world-jazz",
-  "version": "0.0.1-alpha.8",
+  "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
   "private": true,
@@ -20,21 +20,8 @@
     "test": "vitest run src",
     "typecheck": "tsc --noEmit"
   },
-  "peerDependencies": {
-    "@types/json-schema": "catalog:",
-    "@types/node": "catalog:",
-    "zod": "catalog:"
-  },
   "devDependencies": {
-    "@types/json-schema": "catalog:",
-    "@types/node": "catalog:",
-    "@vercel/workflow-tsconfig": "workspace:*",
+    "@types/node": "^24.9.1",
     "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "@vercel/workflow-world": "workspace:*",
-    "jazz-tools": "^0.18.29",
-    "jazz-webhook": "^0.18.29",
-    "zod": "catalog:"
   }
 }
