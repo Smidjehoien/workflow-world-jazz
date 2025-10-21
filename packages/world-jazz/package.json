@@ -1,5 +1,5 @@
 {
-  "name": "@vercel/workflow-world-jazz",
+  "name": "workflow-world-jazz",
   "version": "0.0.1-alpha.8",
   "type": "module",
   "main": "dist/index.js",
@@ -33,8 +33,8 @@
   },
   "dependencies": {
     "@vercel/workflow-world": "workspace:*",
-    "jazz-tools": "https://pkg.pr.new/garden-co/jazz/jazz-tools@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6",
-    "jazz-webhook": "https://pkg.pr.new/garden-co/jazz/jazz-webhook@4c061d8c81fb6fd1413d4be970c76c3d1d1495c6",
+    "jazz-tools": "^0.18.28",
+    "jazz-webhook": "^0.18.28",
     "zod": "catalog:"
   }
 }
