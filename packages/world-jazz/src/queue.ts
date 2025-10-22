@@ -4,6 +4,7 @@ import {
   type QueuePrefix,
   type ValidQueueName,
 } from '@vercel/workflow-world';
+import { unstable_loadUnique } from 'jazz-tools';
 import { registerWebhook } from 'jazz-webhook';
 import { z } from 'zod';
 import {
@@ -39,26 +40,34 @@ export const createQueue = (
   ): Promise<JazzQueue> => {
     const root = (await ensureLoaded({ root: true })).root;
 
+    let shouldRegisterWebhook = false;
     const unique = `queue/${name}`;
-    let jq = await JazzQueue.loadUnique(unique, root.$jazz.owner.$jazz.id);
-    if (jq) {
-      return jq;
+    const jq = await unstable_loadUnique(JazzQueue, {
+      unique,
+      owner: root.$jazz.owner,
+      onCreateWhenMissing: () => {
+        const messages = JazzQueueMessages.create([]);
+        JazzQueue.create(
+          { name: name as ValidQueueName, messages },
+          { unique, owner: root.$jazz.owner }
+        );
+        shouldRegisterWebhook = true;
+      },
+      resolve: {
+        messages: true,
+      },
+    });
+    if (!jq) {
+      throw new Error(`Failed to load or create queue ${name}`);
     }
 
-    const messages = JazzQueueMessages.create([]);
-    jq = JazzQueue.create(
-      {
-        name: name as ValidQueueName,
-        messages,
-      },
-      { unique, owner: root.$jazz.owner }
-    );
-
-    await registerWebhook({
-      coValueId: messages.$jazz.id,
-      webhookUrl: `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
-      registryId: webhookRegistryId,
-    });
+    if (shouldRegisterWebhook) {
+      await registerWebhook({
+        coValueId: jq.messages.$jazz.id,
+        webhookUrl: `${webhookEndpoint}/.well-known/workflow/v1/${webhookPath}`,
+        registryId: webhookRegistryId,
+      });
+    }
 
     return jq;
   };

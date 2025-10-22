@@ -1,39 +1,33 @@
 import type { Streamer } from '@vercel/workflow-world';
-import { co, type FileStream } from 'jazz-tools';
+import { co, type FileStream, unstable_loadUnique } from 'jazz-tools';
 import { type JazzStorageAccountResolver, JazzStream } from './types.js';
 
 export const createStreamer = (
   ensureLoaded: JazzStorageAccountResolver
 ): Streamer => {
-  // TODO: Remove this cache once loadUnique is safe for concurrent use.
-  const streamCache = new Map<string, Promise<FileStream>>();
   const loadOrCreateStream = async (name: string): Promise<FileStream> => {
-    let streamPromise = streamCache.get(name);
-    if (streamPromise) {
-      return streamPromise;
-    }
-    streamPromise = loadOrCreateStreamRaw(name);
-    streamCache.set(name, streamPromise);
-    return streamPromise;
-  };
-
-  const loadOrCreateStreamRaw = async (name: string): Promise<FileStream> => {
     const root = (await ensureLoaded({ root: true })).root;
 
     const unique = `stream/${name}`;
-    let js = await JazzStream.loadUnique(unique, root.$jazz.owner.$jazz.id);
+    const js = await unstable_loadUnique(JazzStream, {
+      unique,
+      owner: root.$jazz.owner,
+      onCreateWhenMissing: () => {
+        const stream = co.fileStream().create();
+        stream.start({ mimeType: 'application/octet-stream' });
+        JazzStream.create(
+          { name, stream },
+          { unique, owner: root.$jazz.owner }
+        );
+      },
+      resolve: {
+        stream: true,
+      },
+    });
     if (!js) {
-      const stream = co.fileStream().create();
-      stream.start({ mimeType: 'application/octet-stream' });
-      js = JazzStream.create(
-        { name, stream },
-        { unique, owner: root.$jazz.owner }
-      );
+      throw new Error(`Failed to load or create stream ${name}`);
     }
-
-    const stream = (await js.$jazz.ensureLoaded({ resolve: { stream: true } }))
-      .stream;
-    return stream;
+    return js.stream;
   };
 
   return {
