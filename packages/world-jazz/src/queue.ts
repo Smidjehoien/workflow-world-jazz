@@ -60,7 +60,6 @@ export const createQueue = (
     if (!jq) {
       throw new Error(`Failed to load or create queue ${name}`);
     }
-    console.log('shouldRegisterWebhook', shouldRegisterWebhook);
 
     if (shouldRegisterWebhook) {
       await registerWebhook({
