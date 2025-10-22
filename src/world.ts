@@ -1,4 +1,4 @@
-import type { AuthProvider, World } from '@vercel/workflow-world';
+import type { AuthProvider, World } from '@workflow/world';
 import { startWorker } from 'jazz-tools/worker';
 import { loadConfig } from './config.js';
 import { createQueue } from './queue.js';

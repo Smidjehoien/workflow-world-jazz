@@ -3,7 +3,7 @@ import {
   type Queue,
   type QueuePrefix,
   type ValidQueueName,
-} from '@vercel/workflow-world';
+} from '@workflow/world';
 import { unstable_loadUnique } from 'jazz-tools';
 import { registerWebhook } from 'jazz-webhook';
 import { z } from 'zod';

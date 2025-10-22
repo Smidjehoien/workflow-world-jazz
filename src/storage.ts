@@ -17,7 +17,7 @@ import type {
   UpdateStepRequest,
   UpdateWorkflowRunRequest,
   WorkflowRun,
-} from '@vercel/workflow-world';
+} from '@workflow/world';
 import { co } from 'jazz-tools';
 import { z } from 'zod';
 import {

@@ -1,4 +1,4 @@
-import type { Streamer } from '@vercel/workflow-world';
+import type { Streamer } from '@workflow/world';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStreamer } from './streamer.js';
 import { createJazzTestAccountResolver } from './testUtils.js';

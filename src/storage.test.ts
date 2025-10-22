@@ -1,4 +1,4 @@
-import type { Step, Storage, WorkflowRun } from '@vercel/workflow-world';
+import type { Step, Storage, WorkflowRun } from '@workflow/world';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createStorage } from './storage.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
@@ -1939,12 +1939,12 @@ describe('Jazz Storage', () => {
         });
 
         // Step 1 starts and completes
-        const _step1Started = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'step_started',
           correlationId: 'step-1',
         });
 
-        const _step1Completed = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'step_completed',
           correlationId: 'step-1',
           eventData: {
@@ -1953,12 +1953,12 @@ describe('Jazz Storage', () => {
         });
 
         // Step 2 starts and fails
-        const _step2Started = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'step_started',
           correlationId: 'step-2',
         });
 
-        const _step2Failed = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'step_failed',
           correlationId: 'step-2',
           eventData: {
@@ -1968,7 +1968,7 @@ describe('Jazz Storage', () => {
         });
 
         // Workflow fails
-        const _workflowFailed = await storage.events.create(testRunId, {
+        await storage.events.create(testRunId, {
           eventType: 'workflow_failed',
           eventData: {
             error: { message: 'Workflow failed due to step 2' },

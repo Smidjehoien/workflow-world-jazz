@@ -4,7 +4,7 @@ import {
   StepSchema,
   ValidQueueName,
   WorkflowRunSchema,
-} from '@vercel/workflow-world';
+} from '@workflow/world';
 import {
   co,
   Group,

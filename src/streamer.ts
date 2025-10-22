@@ -1,4 +1,4 @@
-import type { Streamer } from '@vercel/workflow-world';
+import type { Streamer } from '@workflow/world';
 import { co, type FileStream, unstable_loadUnique } from 'jazz-tools';
 import { type JazzStorageAccountResolver, JazzStream } from './types.js';
 

@@ -3,7 +3,7 @@ import type {
   QueuePrefix,
   StepInvokePayload,
   ValidQueueName,
-} from '@vercel/workflow-world';
+} from '@workflow/world';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createQueue } from './queue.js';
 import { createJazzTestAccountResolver } from './testUtils.js';
