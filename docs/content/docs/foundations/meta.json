@@ -1,5 +1,0 @@
-{
-  "title": "Foundations",
-  "pages": ["concepts", "control-flow-patterns", "errors-and-retries"],
-  "defaultOpen": true
-}
