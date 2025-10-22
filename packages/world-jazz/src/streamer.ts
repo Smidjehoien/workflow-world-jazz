@@ -20,14 +20,14 @@ export const createStreamer = (
           { unique, owner: root.$jazz.owner }
         );
       },
+      resolve: {
+        stream: true,
+      },
     });
     if (!js) {
       throw new Error(`Failed to load or create stream ${name}`);
     }
-
-    const stream = (await js.$jazz.ensureLoaded({ resolve: { stream: true } }))
-      .stream;
-    return stream;
+    return js.stream;
   };
 
   return {
