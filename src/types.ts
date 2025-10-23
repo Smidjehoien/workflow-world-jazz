@@ -44,7 +44,8 @@ export type JazzStep = co.loaded<typeof JazzStep>;
 export const JazzEvent = co.map({
   runId: z.string(),
   eventType: EventTypeSchema,
-  eventData: z.json(),
+  eventData: z.json().optional(),
+  eventDataFile: co.fileStream().optional(),
   correlationId: z.string().optional(),
   createdAt: z.date(),
 });

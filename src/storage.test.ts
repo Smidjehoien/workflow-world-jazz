@@ -1455,6 +1455,61 @@ describe('Jazz Storage', () => {
 
         expect((result as any).eventData).toEqual(complexEventData);
       });
+
+      it('should handle large eventData values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeEventData = {
+          result: {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large event data test',
+              timestamp: new Date().toISOString(),
+              eventDetails: {
+                processingTime: 5000,
+                recordsProcessed: 1000000,
+                summary: 'Large dataset processing event completed successfully',
+              },
+            },
+          },
+        };
+
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'large-data-corr',
+          eventData: largeEventData,
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_completed',
+          correlationId: 'large-data-corr',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+
+        // Verify the large data is preserved correctly
+        expect((result as any).eventData).toEqual(largeEventData);
+        const resultEventData = (result as any).eventData as typeof largeEventData;
+        expect(resultEventData.result.largeData).toBe(largeString);
+        expect(resultEventData.result.largeData.length).toBe(1048577);
+        expect(resultEventData.result.metadata.size).toBe(1048577);
+        expect(resultEventData.result.metadata.eventDetails.recordsProcessed).toBe(1000000);
+
+        // Verify we can retrieve the event with large eventData through listing
+        const events = await storage.events.list({ runId: testRunId });
+        const createdEvent = events.data.find(e => e.eventId === result.eventId);
+        expect(createdEvent).toBeDefined();
+
+        expect((createdEvent as any)?.eventData).toEqual(largeEventData);
+        const retrievedEventData = (createdEvent as any)?.eventData as typeof largeEventData;
+        expect(retrievedEventData.result.largeData).toBe(largeString);
+        expect(retrievedEventData.result.largeData.length).toBe(1048577);
+        expect(retrievedEventData.result.metadata.size).toBe(1048577);
+      });
     });
 
     describe('list', () => {

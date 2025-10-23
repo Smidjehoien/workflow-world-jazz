@@ -18,7 +18,7 @@ import type {
   UpdateWorkflowRunRequest,
   WorkflowRun,
 } from '@workflow/world';
-import { co } from 'jazz-tools';
+import { co, type FileStream } from 'jazz-tools';
 import { z } from 'zod';
 import {
   JazzEvent,
@@ -487,21 +487,35 @@ export const createEventStorage = (
         throw new Error(`Events for run ${runId} not found`);
       }
       return events;
-    } else {
-      const runEvents = co.list(JazzEvent).create([]);
-      eventsByRunId.$jazz.set(runId, runEvents);
-      return runEvents;
     }
+
+    const runEvents = co.list(JazzEvent).create([]);
+    eventsByRunId.$jazz.set(runId, runEvents);
+    return runEvents;
   };
 
   return {
     async create(runId: string, data: CreateEventRequest): Promise<Event> {
+
+      let eventData: z.core.util.JSONType | undefined;
+      let eventDataFile: FileStream | undefined;
+      if ('eventData' in data && data.eventData !== undefined) {
+        const eventDataStr = JSON.stringify(data.eventData);
+        if (eventDataStr.length > 10 * 1024) { // 10KB
+          eventDataFile = await co.fileStream().createFromBlob(new Blob([eventDataStr]));
+        } else {
+          eventData = data.eventData;
+        }
+      }
+
       const now = new Date();
       const je: JazzEvent = JazzEvent.create({
         runId,
         createdAt: now,
         // biome-ignore lint/suspicious/noExplicitAny: discriminatedUnion difficulties
         ...(data as any),
+        eventData,
+        eventDataFile,
       });
 
       const events = await loadOrCreateEvents(runId);
@@ -514,7 +528,9 @@ export const createEventStorage = (
       const events = await loadOrCreateEvents(params.runId);
       const loadedEvents = await events.$jazz.ensureLoaded({
         resolve: {
-          $each: true,
+          $each: {
+            eventDataFile: true,
+          },
         },
       });
       const eligibleEvents = loadedEvents.filter((je) => je !== null);
@@ -554,7 +570,11 @@ export const createEventStorage = (
         await ensureLoaded({
           root: {
             events: {
-              $each: true,
+              $each: {
+                $each: {
+                  eventDataFile: true,
+                },
+              },
             },
           },
         })
@@ -721,11 +741,19 @@ function toStep(js: JazzStep): Step {
 }
 
 function toEvent(je: JazzEvent): Event {
+  let eventData = je.eventData as z.core.util.JSONType;
+  if (je.eventDataFile) {
+    const fileData = je.eventDataFile.getChunks();
+    if (fileData) {
+      const eventDataStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      eventData = JSON.parse(eventDataStr);
+    }
+  }
   return {
     runId: je.runId,
     eventId: substitutePrefix(je.$jazz.id, COVALUE_ID_PREFIX, EVENT_ID_PREFIX),
     eventType: je.eventType,
-    eventData: je.eventData,
+    eventData,
     correlationId: je.correlationId,
     createdAt: je.createdAt,
   } as Event;
