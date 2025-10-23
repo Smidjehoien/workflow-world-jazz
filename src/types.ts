@@ -23,6 +23,7 @@ export const JazzWorkflowRun = co.map({
   }).shape,
   input: z.array(z.json()),
   output: z.json().optional(),
+  outputFile: co.fileStream().optional(),
   executionContext: co.record(z.string(), z.json()).optional(),
 });
 
@@ -35,6 +36,7 @@ export const JazzStep = co.map({
   }).shape,
   input: z.array(z.json()),
   output: z.json().optional(),
+  outputFile: co.fileStream().optional(),
 });
 
 export type JazzStep = co.loaded<typeof JazzStep>;
