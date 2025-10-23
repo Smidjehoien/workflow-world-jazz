@@ -57,6 +57,7 @@ export const createRunStorage = (
   const loadRun = async (id: string) => {
     const jwr = await JazzWorkflowRun.load(id, {
       resolve: {
+        inputFile: true,
         outputFile: true,
         executionContext: true,
       },
@@ -71,10 +72,22 @@ export const createRunStorage = (
     async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
       const runs = await loadRuns();
 
+      let input: z.core.util.JSONType[] | undefined;
+      let inputFile: FileStream | undefined;
+      if (data.input) {
+        const inputStr = JSON.stringify(data.input);
+        if (inputStr.length > 10 * 1024) { // 10KB
+          inputFile = await co.fileStream().createFromBlob(new Blob([inputStr]));
+        } else {
+          input = data.input as z.core.util.JSONType[];
+        }
+      }
+
       const now = new Date();
       const jwr = JazzWorkflowRun.create({
         ...data,
-        input: data.input as z.core.util.JSONType[], // everything should be JSON serializable
+        input,
+        inputFile,
         executionContext: data.executionContext as Record<
           string,
           z.core.util.JSONType
@@ -687,6 +700,15 @@ function paginateItems<T, TItem>({
 }
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
+  let input = jwr.input as z.core.util.JSONType[];
+  if (jwr.inputFile) {
+    const fileData = jwr.inputFile.getChunks();
+    if (fileData) {
+      const inputStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      input = JSON.parse(inputStr);
+    }
+  }
+
   let output = jwr.output as z.core.util.JSONType;
   if (jwr.outputFile) {
     const fileData = jwr.outputFile.getChunks();
@@ -695,6 +717,7 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
       output = JSON.parse(outputStr);
     }
   }
+
   return {
     runId: substitutePrefix(jwr.$jazz.id, COVALUE_ID_PREFIX, RUN_ID_PREFIX),
     deploymentId: jwr.deploymentId,
@@ -703,7 +726,7 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
     executionContext: jwr.executionContext as
       | Record<string, z.core.util.JSONType>
       | undefined,
-    input: jwr.input as z.core.util.JSONType[],
+    input,
     output,
     error: jwr.error,
     errorCode: jwr.errorCode,

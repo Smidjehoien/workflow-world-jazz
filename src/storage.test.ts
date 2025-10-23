@@ -146,6 +146,61 @@ describe('Jazz Storage', () => {
 
         expect(result.input).toEqual(complexInput);
       });
+
+      it('should handle large input values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeInput = [
+          {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large run input test data',
+              timestamp: new Date().toISOString(),
+              inputDetails: {
+                source: 'external-api',
+                recordCount: 1000000,
+                summary: 'Large dataset input for workflow processing',
+              },
+            },
+          },
+          'additional-param',
+          { config: { processingMode: 'batch' } },
+        ];
+
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: largeInput,
+        };
+
+        const result = await storage.runs.create(createRequest);
+
+        expect(result).toMatchObject({
+          status: 'pending',
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+        });
+        expect(result.runId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+
+        // Verify the large input data is preserved correctly
+        expect(result.input).toEqual(largeInput);
+        const inputData = result.input[0] as { largeData: string; metadata: any };
+        expect(inputData.largeData).toBe(largeString);
+        expect(inputData.largeData.length).toBe(1048577);
+        expect(inputData.metadata.size).toBe(1048577);
+        expect(inputData.metadata.inputDetails.recordCount).toBe(1000000);
+
+        // Verify we can retrieve the run with large input data
+        const retrieved = await storage.runs.get(result.runId);
+        expect(retrieved.input).toEqual(largeInput);
+        const retrievedInputData = retrieved.input[0] as { largeData: string; metadata: any };
+        expect(retrievedInputData.largeData).toBe(largeString);
+        expect(retrievedInputData.largeData.length).toBe(1048577);
+        expect(retrievedInputData.metadata.size).toBe(1048577);
+      });
     });
 
     describe('get', () => {
