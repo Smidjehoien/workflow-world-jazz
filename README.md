@@ -2,7 +2,7 @@
 
 A Jazz-based World implementation for the [Workflow Development Kit](https://useworkflow.dev).
 
-You can follow these steps to try out Jazz as the backend for the [examples in the Workflow Development Kit](https://github.com/vercel/workflow/tree/main/examples) or when building your own apps using Workflows.
+You can follow these steps to try out Jazz as the backend for the [Workflow Development Kit examples](https://github.com/vercel/workflow-examples) or when building your own apps using Workflows.
 
 ## Installation
 
