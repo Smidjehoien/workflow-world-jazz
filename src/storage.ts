@@ -54,6 +54,19 @@ export const createRunStorage = (
     ).root.runs;
   };
 
+  const loadRun = async (id: string) => {
+    const jwr = await JazzWorkflowRun.load(id, {
+      resolve: {
+        outputFile: true,
+        executionContext: true,
+      },
+    });
+    if (!jwr) {
+      throw new Error(`Workflow run ${id} not found`);
+    }
+    return jwr;
+  };
+
   return {
     async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
       const runs = await loadRuns();
@@ -80,14 +93,7 @@ export const createRunStorage = (
       await ensureLoaded({});
 
       const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
-      const jwr = await JazzWorkflowRun.load(covalueId, {
-        resolve: {
-          executionContext: true,
-        },
-      });
-      if (!jwr) {
-        throw new Error(`Workflow run ${id} not found`);
-      }
+      const jwr = await loadRun(covalueId);
 
       return toWorkflowRun(jwr);
     },
@@ -100,14 +106,7 @@ export const createRunStorage = (
       await ensureLoaded({});
 
       const covalueId = substitutePrefix(id, RUN_ID_PREFIX, COVALUE_ID_PREFIX);
-      const jwr = await JazzWorkflowRun.load(covalueId, {
-        resolve: {
-          executionContext: true,
-        },
-      });
-      if (!jwr) {
-        throw new Error(`Workflow run ${id} not found`);
-      }
+      const jwr = await loadRun(covalueId);
 
       const now = new Date();
       jwr.$jazz.set('updatedAt', now);
@@ -116,7 +115,13 @@ export const createRunStorage = (
         jwr.$jazz.set('status', data.status);
       }
       if (data.output !== undefined) {
-        jwr.$jazz.set('output', data.output as z.core.util.JSONType);
+        const outputStr = JSON.stringify(data.output);
+        if (outputStr.length > 10 * 1024) { // 10KB
+          const outputFile = await co.fileStream().createFromBlob(new Blob([outputStr]));
+          jwr.$jazz.set('outputFile', outputFile);
+        } else {
+          jwr.$jazz.set('output', data.output as z.core.util.JSONType);
+        }
       }
       if (data.error !== undefined) {
         jwr.$jazz.set('error', data.error);
@@ -153,6 +158,7 @@ export const createRunStorage = (
       const runs = await shallowRuns.$jazz.ensureLoaded({
         resolve: {
           $each: {
+            outputFile: true,
             executionContext: true,
           },
         },
@@ -321,7 +327,9 @@ export const createStepStorage = (
       const steps = await loadOrCreateSteps(params.runId);
       await steps.$jazz.ensureLoaded({
         resolve: {
-          $each: true,
+          $each: {
+            outputFile: true,
+          },
         },
       });
       const eligibleSteps = Object.values(steps).filter((js) => js !== null);
@@ -659,6 +667,14 @@ function paginateItems<T, TItem>({
 }
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
+  let output = jwr.output as z.core.util.JSONType;
+  if (jwr.outputFile) {
+    const fileData = jwr.outputFile.getChunks();
+    if (fileData) {
+      const outputStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      output = JSON.parse(outputStr);
+    }
+  }
   return {
     runId: substitutePrefix(jwr.$jazz.id, COVALUE_ID_PREFIX, RUN_ID_PREFIX),
     deploymentId: jwr.deploymentId,
@@ -668,7 +684,7 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
       | Record<string, z.core.util.JSONType>
       | undefined,
     input: jwr.input as z.core.util.JSONType[],
-    output: jwr.output,
+    output,
     error: jwr.error,
     errorCode: jwr.errorCode,
     startedAt: jwr.startedAt,

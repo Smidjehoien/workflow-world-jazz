@@ -299,6 +299,46 @@ describe('Jazz Storage', () => {
         expect(updated.executionContext).toEqual({ initial: 'context' });
         expect(updated.completedAt).toBeInstanceOf(Date);
       });
+
+      it('should handle large output values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeOutput = {
+          largeData: largeString,
+          metadata: {
+            size: largeString.length,
+            description: 'Large run output test data',
+            timestamp: new Date().toISOString(),
+            workflowResult: {
+              processedRecords: 1000000,
+              summary: 'Large dataset processing completed successfully',
+            },
+          },
+        };
+
+        const updated = await storage.runs.update(createdRun.runId, {
+          status: 'completed',
+          output: largeOutput,
+        });
+
+        expect(updated.output).toEqual(largeOutput);
+        expect(updated.status).toBe('completed');
+        expect(updated.completedAt).toBeInstanceOf(Date);
+
+        // Verify the large data is preserved correctly
+        const updatedOutput = updated.output as typeof largeOutput;
+        expect(updatedOutput.largeData).toBe(largeString);
+        expect(updatedOutput.largeData.length).toBe(1048577);
+        expect(updatedOutput.metadata.size).toBe(1048577);
+
+        // Verify we can retrieve the run with large output data
+        const retrieved = await storage.runs.get(createdRun.runId);
+        expect(retrieved.output).toEqual(largeOutput);
+        const retrievedOutput = retrieved.output as typeof largeOutput;
+        expect(retrievedOutput.largeData).toBe(largeString);
+        expect(retrievedOutput.largeData.length).toBe(1048577);
+        expect(retrievedOutput.metadata.workflowResult.processedRecords).toBe(1000000);
+      });
     });
 
     describe('list', () => {
