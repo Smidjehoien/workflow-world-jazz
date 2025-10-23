@@ -9,8 +9,8 @@ import type {
   ListEventsByCorrelationIdParams,
   ListEventsParams,
   ListHooksParams,
-  ListWorkflowRunStepsParams,
   ListWorkflowRunsParams,
+  ListWorkflowRunStepsParams,
   PaginatedResponse,
   Step,
   Storage,
@@ -18,7 +18,7 @@ import type {
   UpdateWorkflowRunRequest,
   WorkflowRun,
 } from '@workflow/world';
-import { co, FileStream } from 'jazz-tools';
+import { co } from 'jazz-tools';
 import { z } from 'zod';
 import {
   JazzEvent,
