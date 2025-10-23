@@ -63,7 +63,13 @@ This setup uses Jazz Cloud to persist workflow state, so you only need to run & 
 
         - set the `JAZZ_WEBHOOK_ENDPOINT` env var in your production environment to the public URL of your app.
 
-5. Run your app:
+6. Install `workflow-world-jazz`
+
+    ```bash
+    pnpm add workflow-world-jazz
+    ```
+
+7. Run your app:
 
     ```bash
     pnpm dev
@@ -109,7 +115,13 @@ You can also use the open-source self-hostable version of Jazz. This requires ru
     pnpx env-cmd -f .env.local -- pnpx jazz-run webhook run --peer http://localhost:4200
     ```
 
-6. Run your app:
+6. Install `workflow-world-jazz`
+
+    ```bash
+    pnpm add workflow-world-jazz
+    ```
+
+7. Run your app:
 
     ```bash
     pnpm dev
