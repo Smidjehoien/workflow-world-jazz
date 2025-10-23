@@ -21,7 +21,8 @@ export const JazzWorkflowRun = co.map({
     output: true,
     executionContext: true,
   }).shape,
-  input: z.array(z.json()),
+  input: z.array(z.json()).optional(),
+  inputFile: co.fileStream().optional(),
   output: z.json().optional(),
   outputFile: co.fileStream().optional(),
   executionContext: co.record(z.string(), z.json()).optional(),
@@ -34,7 +35,8 @@ export const JazzStep = co.map({
     input: true,
     output: true,
   }).shape,
-  input: z.array(z.json()),
+  input: z.array(z.json()).optional(),
+  inputFile: co.fileStream().optional(),
   output: z.json().optional(),
   outputFile: co.fileStream().optional(),
 });
@@ -44,7 +46,8 @@ export type JazzStep = co.loaded<typeof JazzStep>;
 export const JazzEvent = co.map({
   runId: z.string(),
   eventType: EventTypeSchema,
-  eventData: z.json(),
+  eventData: z.json().optional(),
+  eventDataFile: co.fileStream().optional(),
   correlationId: z.string().optional(),
   createdAt: z.date(),
 });

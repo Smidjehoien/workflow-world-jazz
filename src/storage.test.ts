@@ -146,6 +146,61 @@ describe('Jazz Storage', () => {
 
         expect(result.input).toEqual(complexInput);
       });
+
+      it('should handle large input values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeInput = [
+          {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large run input test data',
+              timestamp: new Date().toISOString(),
+              inputDetails: {
+                source: 'external-api',
+                recordCount: 1000000,
+                summary: 'Large dataset input for workflow processing',
+              },
+            },
+          },
+          'additional-param',
+          { config: { processingMode: 'batch' } },
+        ];
+
+        const createRequest = {
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+          input: largeInput,
+        };
+
+        const result = await storage.runs.create(createRequest);
+
+        expect(result).toMatchObject({
+          status: 'pending',
+          deploymentId: 'test-deployment',
+          workflowName: 'test-workflow',
+        });
+        expect(result.runId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+
+        // Verify the large input data is preserved correctly
+        expect(result.input).toEqual(largeInput);
+        const inputData = result.input[0] as { largeData: string; metadata: any };
+        expect(inputData.largeData).toBe(largeString);
+        expect(inputData.largeData.length).toBe(1048577);
+        expect(inputData.metadata.size).toBe(1048577);
+        expect(inputData.metadata.inputDetails.recordCount).toBe(1000000);
+
+        // Verify we can retrieve the run with large input data
+        const retrieved = await storage.runs.get(result.runId);
+        expect(retrieved.input).toEqual(largeInput);
+        const retrievedInputData = retrieved.input[0] as { largeData: string; metadata: any };
+        expect(retrievedInputData.largeData).toBe(largeString);
+        expect(retrievedInputData.largeData.length).toBe(1048577);
+        expect(retrievedInputData.metadata.size).toBe(1048577);
+      });
     });
 
     describe('get', () => {
@@ -721,6 +776,62 @@ describe('Jazz Storage', () => {
         expect(step2.stepId).toBe('step-2');
         expect(step1.stepName).toBe('first-step');
         expect(step2.stepName).toBe('second-step');
+      });
+
+      it('should handle large input values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeInput = [
+          {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large step input test data',
+              timestamp: new Date().toISOString(),
+              stepDetails: {
+                processingType: 'data-transformation',
+                recordCount: 1000000,
+                summary: 'Large dataset input for step processing',
+              },
+            },
+          },
+          'additional-param',
+          { config: { processingMode: 'streaming' } },
+        ];
+
+        const createRequest = {
+          stepId: 'step-large-input',
+          stepName: 'large-input-step',
+          input: largeInput,
+        };
+
+        const result = await storage.steps.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          status: 'pending',
+          attempt: 1,
+          stepId: 'step-large-input',
+          stepName: 'large-input-step',
+        });
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+
+        // Verify the large input data is preserved correctly
+        expect(result.input).toEqual(largeInput);
+        const inputData = result.input[0] as { largeData: string; metadata: any };
+        expect(inputData.largeData).toBe(largeString);
+        expect(inputData.largeData.length).toBe(1048577);
+        expect(inputData.metadata.size).toBe(1048577);
+        expect(inputData.metadata.stepDetails.recordCount).toBe(1000000);
+
+        // Verify we can retrieve the step with large input data
+        const retrieved = await storage.steps.get(testRunId, result.stepId);
+        expect(retrieved.input).toEqual(largeInput);
+        const retrievedInputData = retrieved.input[0] as { largeData: string; metadata: any };
+        expect(retrievedInputData.largeData).toBe(largeString);
+        expect(retrievedInputData.largeData.length).toBe(1048577);
+        expect(retrievedInputData.metadata.size).toBe(1048577);
       });
     });
 
@@ -1454,6 +1565,61 @@ describe('Jazz Storage', () => {
         const result = await storage.events.create(testRunId, createRequest);
 
         expect((result as any).eventData).toEqual(complexEventData);
+      });
+
+      it('should handle large eventData values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeEventData = {
+          result: {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large event data test',
+              timestamp: new Date().toISOString(),
+              eventDetails: {
+                processingTime: 5000,
+                recordsProcessed: 1000000,
+                summary: 'Large dataset processing event completed successfully',
+              },
+            },
+          },
+        };
+
+        const createRequest = {
+          eventType: 'step_completed' as const,
+          correlationId: 'large-data-corr',
+          eventData: largeEventData,
+        };
+
+        const result = await storage.events.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          eventType: 'step_completed',
+          correlationId: 'large-data-corr',
+        });
+        expect(result.eventId).toBeDefined();
+        expect(result.createdAt).toBeInstanceOf(Date);
+
+        // Verify the large data is preserved correctly
+        expect((result as any).eventData).toEqual(largeEventData);
+        const resultEventData = (result as any).eventData as typeof largeEventData;
+        expect(resultEventData.result.largeData).toBe(largeString);
+        expect(resultEventData.result.largeData.length).toBe(1048577);
+        expect(resultEventData.result.metadata.size).toBe(1048577);
+        expect(resultEventData.result.metadata.eventDetails.recordsProcessed).toBe(1000000);
+
+        // Verify we can retrieve the event with large eventData through listing
+        const events = await storage.events.list({ runId: testRunId });
+        const createdEvent = events.data.find(e => e.eventId === result.eventId);
+        expect(createdEvent).toBeDefined();
+
+        expect((createdEvent as any)?.eventData).toEqual(largeEventData);
+        const retrievedEventData = (createdEvent as any)?.eventData as typeof largeEventData;
+        expect(retrievedEventData.result.largeData).toBe(largeString);
+        expect(retrievedEventData.result.largeData.length).toBe(1048577);
+        expect(retrievedEventData.result.metadata.size).toBe(1048577);
       });
     });
 

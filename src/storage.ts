@@ -18,7 +18,7 @@ import type {
   UpdateWorkflowRunRequest,
   WorkflowRun,
 } from '@workflow/world';
-import { co } from 'jazz-tools';
+import { co, type FileStream } from 'jazz-tools';
 import { z } from 'zod';
 import {
   JazzEvent,
@@ -57,6 +57,7 @@ export const createRunStorage = (
   const loadRun = async (id: string) => {
     const jwr = await JazzWorkflowRun.load(id, {
       resolve: {
+        inputFile: true,
         outputFile: true,
         executionContext: true,
       },
@@ -71,10 +72,22 @@ export const createRunStorage = (
     async create(data: CreateWorkflowRunRequest): Promise<WorkflowRun> {
       const runs = await loadRuns();
 
+      let input: z.core.util.JSONType[] | undefined;
+      let inputFile: FileStream | undefined;
+      if (data.input) {
+        const inputStr = JSON.stringify(data.input);
+        if (inputStr.length > 10 * 1024) { // 10KB
+          inputFile = await co.fileStream().createFromBlob(new Blob([inputStr]));
+        } else {
+          input = data.input as z.core.util.JSONType[];
+        }
+      }
+
       const now = new Date();
       const jwr = JazzWorkflowRun.create({
         ...data,
-        input: data.input as z.core.util.JSONType[], // everything should be JSON serializable
+        input,
+        inputFile,
         executionContext: data.executionContext as Record<
           string,
           z.core.util.JSONType
@@ -246,6 +259,7 @@ export const createStepStorage = (
         await steps.$jazz.ensureLoaded({
           resolve: {
             [stepId]: {
+              inputFile: true,
               outputFile: true,
             },
           },
@@ -256,12 +270,23 @@ export const createStepStorage = (
 
   return {
     async create(runId: string, data: CreateStepRequest): Promise<Step> {
+      let input: z.core.util.JSONType[] | undefined;
+      let inputFile: FileStream | undefined;
+      if (data.input) {
+        const inputStr = JSON.stringify(data.input);
+        if (inputStr.length > 10 * 1024) { // 10KB
+          inputFile = await co.fileStream().createFromBlob(new Blob([inputStr]));
+        } else {
+          input = data.input as z.core.util.JSONType[];
+        }
+      }
       const now = new Date();
       const js = JazzStep.create({
         ...data,
         runId,
         status: 'pending',
-        input: data.input as z.core.util.JSONType[],
+        input,
+        inputFile,
         attempt: 1,
         createdAt: now,
         updatedAt: now,
@@ -487,21 +512,35 @@ export const createEventStorage = (
         throw new Error(`Events for run ${runId} not found`);
       }
       return events;
-    } else {
-      const runEvents = co.list(JazzEvent).create([]);
-      eventsByRunId.$jazz.set(runId, runEvents);
-      return runEvents;
     }
+
+    const runEvents = co.list(JazzEvent).create([]);
+    eventsByRunId.$jazz.set(runId, runEvents);
+    return runEvents;
   };
 
   return {
     async create(runId: string, data: CreateEventRequest): Promise<Event> {
+
+      let eventData: z.core.util.JSONType | undefined;
+      let eventDataFile: FileStream | undefined;
+      if ('eventData' in data && data.eventData !== undefined) {
+        const eventDataStr = JSON.stringify(data.eventData);
+        if (eventDataStr.length > 10 * 1024) { // 10KB
+          eventDataFile = await co.fileStream().createFromBlob(new Blob([eventDataStr]));
+        } else {
+          eventData = data.eventData;
+        }
+      }
+
       const now = new Date();
       const je: JazzEvent = JazzEvent.create({
         runId,
         createdAt: now,
         // biome-ignore lint/suspicious/noExplicitAny: discriminatedUnion difficulties
         ...(data as any),
+        eventData,
+        eventDataFile,
       });
 
       const events = await loadOrCreateEvents(runId);
@@ -514,7 +553,9 @@ export const createEventStorage = (
       const events = await loadOrCreateEvents(params.runId);
       const loadedEvents = await events.$jazz.ensureLoaded({
         resolve: {
-          $each: true,
+          $each: {
+            eventDataFile: true,
+          },
         },
       });
       const eligibleEvents = loadedEvents.filter((je) => je !== null);
@@ -554,7 +595,11 @@ export const createEventStorage = (
         await ensureLoaded({
           root: {
             events: {
-              $each: true,
+              $each: {
+                $each: {
+                  eventDataFile: true,
+                },
+              },
             },
           },
         })
@@ -667,6 +712,15 @@ function paginateItems<T, TItem>({
 }
 
 function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
+  let input = jwr.input as z.core.util.JSONType[];
+  if (jwr.inputFile) {
+    const fileData = jwr.inputFile.getChunks();
+    if (fileData) {
+      const inputStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      input = JSON.parse(inputStr);
+    }
+  }
+
   let output = jwr.output as z.core.util.JSONType;
   if (jwr.outputFile) {
     const fileData = jwr.outputFile.getChunks();
@@ -675,6 +729,7 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
       output = JSON.parse(outputStr);
     }
   }
+
   return {
     runId: substitutePrefix(jwr.$jazz.id, COVALUE_ID_PREFIX, RUN_ID_PREFIX),
     deploymentId: jwr.deploymentId,
@@ -683,7 +738,7 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
     executionContext: jwr.executionContext as
       | Record<string, z.core.util.JSONType>
       | undefined,
-    input: jwr.input as z.core.util.JSONType[],
+    input,
     output,
     error: jwr.error,
     errorCode: jwr.errorCode,
@@ -695,6 +750,15 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
 }
 
 function toStep(js: JazzStep): Step {
+  let input = js.input as z.core.util.JSONType[];
+  if (js.inputFile) {
+    const fileData = js.inputFile.getChunks();
+    if (fileData) {
+      const inputStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      input = JSON.parse(inputStr);
+    }
+  }
+
   let output = js.output as z.core.util.JSONType;
   if (js.outputFile) {
     const fileData = js.outputFile.getChunks();
@@ -703,12 +767,13 @@ function toStep(js: JazzStep): Step {
       output = JSON.parse(outputStr);
     }
   }
+
   return {
     runId: js.runId,
     stepId: js.stepId,
     stepName: js.stepName,
     status: js.status,
-    input: js.input,
+    input,
     output,
     error: js.error,
     errorCode: js.errorCode,
@@ -721,11 +786,19 @@ function toStep(js: JazzStep): Step {
 }
 
 function toEvent(je: JazzEvent): Event {
+  let eventData = je.eventData as z.core.util.JSONType;
+  if (je.eventDataFile) {
+    const fileData = je.eventDataFile.getChunks();
+    if (fileData) {
+      const eventDataStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      eventData = JSON.parse(eventDataStr);
+    }
+  }
   return {
     runId: je.runId,
     eventId: substitutePrefix(je.$jazz.id, COVALUE_ID_PREFIX, EVENT_ID_PREFIX),
     eventType: je.eventType,
-    eventData: je.eventData,
+    eventData,
     correlationId: je.correlationId,
     createdAt: je.createdAt,
   } as Event;
