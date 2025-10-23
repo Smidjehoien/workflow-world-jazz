@@ -888,6 +888,45 @@ describe('Jazz Storage', () => {
 
         expect(updated.output).toEqual(complexOutput);
       });
+
+      it('should handle large output values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeOutput = {
+          largeData: largeString,
+          metadata: {
+            size: largeString.length,
+            description: 'Large output test data',
+            timestamp: new Date().toISOString(),
+          },
+        };
+
+        const updated = await storage.steps.update(
+          testRunId,
+          createdStep.stepId,
+          {
+            status: 'completed',
+            output: largeOutput,
+          }
+        );
+
+        expect(updated.output).toEqual(largeOutput);
+        expect(updated.status).toBe('completed');
+        expect(updated.completedAt).toBeInstanceOf(Date);
+
+        // Verify the large data is preserved correctly
+        const updatedOutput = updated.output as typeof largeOutput;
+        expect(updatedOutput.largeData).toBe(largeString);
+        expect(updatedOutput.largeData.length).toBe(1048577);
+        expect(updatedOutput.metadata.size).toBe(1048577);
+
+        // Verify we can retrieve the step with large output data
+        const retrieved = await storage.steps.get(testRunId, createdStep.stepId);
+        expect(retrieved.output).toEqual(largeOutput);
+        const retrievedOutput = retrieved.output as typeof largeOutput;
+        expect(retrievedOutput.largeData).toBe(largeString);
+        expect(retrievedOutput.largeData.length).toBe(1048577);
+      });
     });
 
     describe('list', () => {
