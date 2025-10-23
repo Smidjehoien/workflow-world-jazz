@@ -259,6 +259,7 @@ export const createStepStorage = (
         await steps.$jazz.ensureLoaded({
           resolve: {
             [stepId]: {
+              inputFile: true,
               outputFile: true,
             },
           },
@@ -269,12 +270,23 @@ export const createStepStorage = (
 
   return {
     async create(runId: string, data: CreateStepRequest): Promise<Step> {
+      let input: z.core.util.JSONType[] | undefined;
+      let inputFile: FileStream | undefined;
+      if (data.input) {
+        const inputStr = JSON.stringify(data.input);
+        if (inputStr.length > 10 * 1024) { // 10KB
+          inputFile = await co.fileStream().createFromBlob(new Blob([inputStr]));
+        } else {
+          input = data.input as z.core.util.JSONType[];
+        }
+      }
       const now = new Date();
       const js = JazzStep.create({
         ...data,
         runId,
         status: 'pending',
-        input: data.input as z.core.util.JSONType[],
+        input,
+        inputFile,
         attempt: 1,
         createdAt: now,
         updatedAt: now,
@@ -738,6 +750,15 @@ function toWorkflowRun(jwr: JazzWorkflowRun): WorkflowRun {
 }
 
 function toStep(js: JazzStep): Step {
+  let input = js.input as z.core.util.JSONType[];
+  if (js.inputFile) {
+    const fileData = js.inputFile.getChunks();
+    if (fileData) {
+      const inputStr = fileData.chunks.map((chunk) => new TextDecoder().decode(chunk)).join('');
+      input = JSON.parse(inputStr);
+    }
+  }
+
   let output = js.output as z.core.util.JSONType;
   if (js.outputFile) {
     const fileData = js.outputFile.getChunks();
@@ -746,12 +767,13 @@ function toStep(js: JazzStep): Step {
       output = JSON.parse(outputStr);
     }
   }
+
   return {
     runId: js.runId,
     stepId: js.stepId,
     stepName: js.stepName,
     status: js.status,
-    input: js.input,
+    input,
     output,
     error: js.error,
     errorCode: js.errorCode,

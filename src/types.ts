@@ -35,7 +35,8 @@ export const JazzStep = co.map({
     input: true,
     output: true,
   }).shape,
-  input: z.array(z.json()),
+  input: z.array(z.json()).optional(),
+  inputFile: co.fileStream().optional(),
   output: z.json().optional(),
   outputFile: co.fileStream().optional(),
 });

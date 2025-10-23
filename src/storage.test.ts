@@ -777,6 +777,62 @@ describe('Jazz Storage', () => {
         expect(step1.stepName).toBe('first-step');
         expect(step2.stepName).toBe('second-step');
       });
+
+      it('should handle large input values (>1048576 bytes)', async () => {
+        // Generate a large string that exceeds 1MB (1048576 bytes)
+        const largeString = 'x'.repeat(1048577); // 1MB + 1 byte
+        const largeInput = [
+          {
+            largeData: largeString,
+            metadata: {
+              size: largeString.length,
+              description: 'Large step input test data',
+              timestamp: new Date().toISOString(),
+              stepDetails: {
+                processingType: 'data-transformation',
+                recordCount: 1000000,
+                summary: 'Large dataset input for step processing',
+              },
+            },
+          },
+          'additional-param',
+          { config: { processingMode: 'streaming' } },
+        ];
+
+        const createRequest = {
+          stepId: 'step-large-input',
+          stepName: 'large-input-step',
+          input: largeInput,
+        };
+
+        const result = await storage.steps.create(testRunId, createRequest);
+
+        expect(result).toMatchObject({
+          runId: testRunId,
+          status: 'pending',
+          attempt: 1,
+          stepId: 'step-large-input',
+          stepName: 'large-input-step',
+        });
+        expect(result.createdAt).toBeInstanceOf(Date);
+        expect(result.updatedAt).toBeInstanceOf(Date);
+
+        // Verify the large input data is preserved correctly
+        expect(result.input).toEqual(largeInput);
+        const inputData = result.input[0] as { largeData: string; metadata: any };
+        expect(inputData.largeData).toBe(largeString);
+        expect(inputData.largeData.length).toBe(1048577);
+        expect(inputData.metadata.size).toBe(1048577);
+        expect(inputData.metadata.stepDetails.recordCount).toBe(1000000);
+
+        // Verify we can retrieve the step with large input data
+        const retrieved = await storage.steps.get(testRunId, result.stepId);
+        expect(retrieved.input).toEqual(largeInput);
+        const retrievedInputData = retrieved.input[0] as { largeData: string; metadata: any };
+        expect(retrievedInputData.largeData).toBe(largeString);
+        expect(retrievedInputData.largeData.length).toBe(1048577);
+        expect(retrievedInputData.metadata.size).toBe(1048577);
+      });
     });
 
     describe('get', () => {
